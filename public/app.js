@@ -44,6 +44,10 @@ function formatNumber(value) {
   return Number(value || 0).toLocaleString('pt-MZ', { maximumFractionDigits: 2 });
 }
 
+function formatMts(value) {
+  return `${formatNumber(value)} MTS`;
+}
+
 function renderNumbers() {
   const grid = $('#numberGrid');
   grid.innerHTML = '';
@@ -79,7 +83,7 @@ function renderWithdrawals(items = []) {
   history.innerHTML = items.map(item => `
     <div class="history-row">
       <span>${formatDate(item.createdAt)}</span>
-      <span>Quantidade <strong>${formatNumber(item.amount)}</strong></span>
+      <span>Valor <strong>${formatMts(item.amount)}</strong></span>
       <strong>${labels[item.status] || item.status}</strong>
     </div>
   `).join('');
@@ -104,8 +108,8 @@ function renderPlayer(data) {
         <span>${formatDate(bet.createdAt)}</span>
         <span>Escolhido <strong>${bet.selectedNumber}</strong></span>
         <span>Sorteado <strong>${bet.drawnNumber}</strong></span>
-        <span>Aposta <strong>${formatNumber(bet.amount)}</strong></span>
-        <strong class="${bet.won ? 'win' : 'loss'}">${bet.won ? `+${formatNumber(bet.payout)}` : 'Não ganhou'}</strong>
+        <span>Aposta <strong>${formatMts(bet.amount)}</strong></span>
+        <strong class="${bet.won ? 'win' : 'loss'}">${bet.won ? `+${formatMts(bet.payout)}` : 'Não ganhou'}</strong>
       </div>
     `).join('');
   }
@@ -184,7 +188,7 @@ $('#creditForm').addEventListener('submit', async event => {
         note: $('#creditNote').value
       })
     });
-    setMessage(creditMessage, `Pedido de ${formatNumber(data.request.amount)} créditos enviado. Aguarda aprovação do administrador.`, 'success');
+    setMessage(creditMessage, `Pedido de ${formatMts(data.request.amount)} de demonstração enviado. Aguarda aprovação do administrador.`, 'success');
     $('#creditNote').value = '';
     await loadPlayer();
   } catch (error) {
@@ -204,7 +208,7 @@ $('#withdrawalForm').addEventListener('submit', async event => {
         amount: $('#withdrawalAmount').value
       })
     });
-    setMessage(withdrawalMessage, `Pedido de ${formatNumber(data.request.amount)} créditos ficou pendente para aprovação.`, 'success');
+    setMessage(withdrawalMessage, `Pedido de ${formatMts(data.request.amount)} ficou pendente para aprovação.`, 'success');
     await loadPlayer();
   } catch (error) {
     setMessage(withdrawalMessage, error.message, 'error');
@@ -236,7 +240,7 @@ $('#betForm').addEventListener('submit', async event => {
     $('#chosenResult').textContent = data.bet.selectedNumber;
     $('#drawnResult').textContent = data.bet.drawnNumber;
     $('#winResult').textContent = data.bet.won
-      ? `Ganhou ${formatNumber(data.bet.payout)}`
+      ? `Ganhou ${formatMts(data.bet.payout)}`
       : 'Não ganhou';
     $('#drawResult').classList.remove('hidden');
 
