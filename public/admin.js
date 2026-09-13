@@ -1,5 +1,6 @@
 const $ = selector => document.querySelector(selector);
 const API_BASE = 'https://bxndjyzghgrmkelshtdp.supabase.co/functions/v1/jogos-api';
+const MESSAGES_API_BASE = 'https://bxndjyzghgrmkelshtdp.supabase.co/functions/v1/jogos-messages';
 
 const state = {
   token: sessionStorage.getItem('jl_admin_token') || ''
@@ -42,7 +43,8 @@ function escapeHtml(value) {
 }
 
 async function request(url, options = {}) {
-  const target = url.startsWith('/api/') ? `${API_BASE}${url}` : url;
+  const base = url.startsWith('/api/admin/messages') ? MESSAGES_API_BASE : API_BASE;
+  const target = url.startsWith('/api/') ? `${base}${url}` : url;
   const response = await fetch(target, {
     ...options,
     headers: {
@@ -69,7 +71,7 @@ function showLogin() {
   $('#loginPanel').classList.remove('hidden');
 }
 
-function renderStats(stats) {
+function renderStats(stats, messageCount = 0) {
   const items = [
     ['Jogadores', stats.players],
     ['Apostas', stats.bets],
@@ -77,7 +79,8 @@ function renderStats(stats) {
     ['MTS pagos', formatMts(stats.totalPayout)],
     ['Pedidos de saldo pendentes', stats.pendingCredits],
     ['Levantamentos pendentes', stats.pendingWithdrawals],
-    ['MTS reservados', formatMts(stats.reservedCredits)]
+    ['MTS reservados', formatMts(stats.reservedCredits)],
+    ['Mensagens', messageCount]
   ];
   $('#statsGrid').innerHTML = items.map(([label, value]) => `
     <div class="stat-card"><span>${label}</span><strong>${value}</strong></div>
@@ -194,19 +197,67 @@ function renderAudit(items) {
   `).join('');
 }
 
+function renderMessageThreads(messages = []) {
+  const root = $('#messageThreads');
+  if (!messages.length) {
+    root.className = 'history-list empty-state';
+    root.textContent = 'Ainda não há mensagens.';
+    return;
+  }
+
+  const groups = new Map();
+  for (const item of messages) {
+    const key = item.playerId;
+    if (!groups.has(key)) groups.set(key, { playerId: key, playerName: item.playerName || 'Jogador', items: [] });
+    groups.get(key).items.push(item);
+  }
+
+  root.className = 'history-list';
+  root.innerHTML = [...groups.values()].map(thread => `
+    <div class="card" style="padding:18px;border-radius:16px">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">JOGADOR</p>
+          <h2 style="margin-bottom:4px">${escapeHtml(thread.playerName)}</h2>
+        </div>
+      </div>
+      <div class="history-list">
+        ${thread.items.slice(-12).map(item => `
+          <div class="history-row" style="grid-template-columns:110px minmax(0,1fr) 130px">
+            <strong style="color:${item.sender === 'admin' ? 'var(--accent-2)' : 'var(--info)'}">${item.sender === 'admin' ? 'Admin' : 'Jogador'}</strong>
+            <span style="overflow-wrap:anywhere">${escapeHtml(item.body)}</span>
+            <span>${formatDate(item.createdAt)}</span>
+          </div>
+        `).join('')}
+      </div>
+      <form class="stack-form admin-message-form" data-player-id="${escapeHtml(thread.playerId)}" style="margin-top:14px">
+        <label>
+          Responder a ${escapeHtml(thread.playerName)}
+          <input name="message" maxlength="1000" placeholder="Escreva a resposta" required>
+        </label>
+        <button class="button secondary" type="submit">Enviar resposta</button>
+      </form>
+    </div>
+  `).join('');
+}
+
 async function loadDashboard() {
   if (!state.token) {
     showLogin();
     return;
   }
   try {
-    const data = await request('/api/admin/overview');
-    renderStats(data.stats);
+    const [data, messageData] = await Promise.all([
+      request('/api/admin/overview'),
+      request('/api/admin/messages')
+    ]);
+    renderStats(data.stats, (messageData.messages || []).length);
     renderCredits(data.pendingCredits);
     renderWithdrawals(data.pendingWithdrawals);
     renderNumberStats(data.numberStats);
     renderPlayers(data.players);
     renderBets(data.recentBets);
+    renderMessageThreads(messageData.messages || []);
     renderAudit(data.audit);
     showDashboard();
     setMessage();
@@ -245,6 +296,30 @@ async function logout(callServer = true) {
 $('#adminLoginForm').addEventListener('submit', login);
 $('#refreshAdmin').addEventListener('click', loadDashboard);
 $('#logoutAdmin').addEventListener('click', () => logout(true));
+
+$('#dashboard').addEventListener('submit', async event => {
+  const form = event.target.closest('.admin-message-form');
+  if (!form) return;
+  event.preventDefault();
+  const input = form.querySelector('input[name="message"]');
+  const message = input.value.trim();
+  if (!message) return;
+  const button = form.querySelector('button[type="submit"]');
+  button.disabled = true;
+  try {
+    await request(`/api/admin/messages/${encodeURIComponent(form.dataset.playerId)}`, {
+      method: 'POST',
+      body: JSON.stringify({ message })
+    });
+    input.value = '';
+    await loadDashboard();
+    setMessage('Resposta enviada ao jogador.', 'success');
+  } catch (error) {
+    setMessage(error.message, 'error');
+  } finally {
+    button.disabled = false;
+  }
+});
 
 $('#dashboard').addEventListener('click', async event => {
   const creditButton = event.target.closest('[data-credit-action]');
