@@ -127,17 +127,17 @@
       <div class="card credits-card">
         <p class="eyebrow">SALDO DE TESTE</p>
         <h2>Solicitar saldo</h2>
-        <p>Envie um pedido de saldo para o administrador analisar.</p>
+        <p>Informe o valor e envie uma confirmação ou referência. O pedido ficará pendente até a administração analisar.</p>
         <form id="creditForm" class="stack-form">
           <label>
             Valor (MTS)
             <input id="creditAmount" type="number" min="1" step="1" value="100" required>
           </label>
           <label>
-            Nota opcional
-            <input id="creditNote" maxlength="160" placeholder="Ex.: teste do jogo">
+            Confirmação / referência
+            <input id="creditNote" maxlength="160" placeholder="Informe a confirmação ou referência" required>
           </label>
-          <button type="submit" class="button secondary">Enviar pedido</button>
+          <button type="submit" class="button secondary">Enviar para aprovação</button>
         </form>
         <p id="creditMessage" class="message"></p>
       </div>
