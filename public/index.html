@@ -18,20 +18,20 @@
       <div>
         <p class="eyebrow">PRIMEIRO JOGO</p>
         <h1>Número Lendário</h1>
-        <p class="hero-copy">Escolha um número de <strong>0 a 10</strong>. Se acertar o número sorteado, recebe <strong>10×</strong> o valor apostado em créditos virtuais.</p>
+        <p class="hero-copy">Escolha um número de <strong>0 a 10</strong>. Se acertar o número sorteado, recebe <strong>10×</strong> o valor apostado em MTS de demonstração.</p>
       </div>
       <div class="promo-box">
         <span>Aposte</span>
-        <strong>10</strong>
+        <strong>10 MTS</strong>
         <span>ganhe</span>
-        <strong>100</strong>
-        <small>créditos virtuais</small>
+        <strong>100 MTS</strong>
+        <small>demonstração</small>
       </div>
     </section>
 
     <section id="playerGate" class="card gate">
       <h2>Entrar no jogo</h2>
-      <p>Crie um jogador para começar. O saldo inicial é zero e os créditos de teste são aprovados pelo administrador.</p>
+      <p>Crie um jogador para começar. O saldo inicial é zero e os valores de demonstração são aprovados pelo administrador.</p>
       <form id="playerForm" class="inline-form">
         <input id="playerName" maxlength="60" placeholder="Seu nome" autocomplete="name" required>
         <button type="submit" class="button primary">Criar jogador</button>
@@ -48,8 +48,8 @@
         <div class="balance">
           <span>Saldo total</span>
           <strong id="balanceDisplay">0</strong>
-          <small>créditos</small>
-          <small>Disponível: <strong id="availableDisplay">0</strong> · Reservado: <strong id="reservedDisplay">0</strong></small>
+          <small>MTS · demonstração</small>
+          <small>Disponível: <strong id="availableDisplay">0</strong> MTS · Reservado: <strong id="reservedDisplay">0</strong> MTS</small>
         </div>
         <button id="switchPlayer" class="button ghost" type="button">Trocar jogador</button>
       </div>
@@ -67,7 +67,7 @@
 
         <form id="betForm" class="bet-form">
           <label>
-            Valor da aposta
+            Valor da aposta (MTS)
             <input id="betAmount" type="number" min="1" step="1" value="10" required>
           </label>
           <button id="playButton" type="submit" class="button primary large">Sortear agora</button>
@@ -82,12 +82,12 @@
       </div>
 
       <div class="card credits-card">
-        <p class="eyebrow">CRÉDITOS DE TESTE</p>
+        <p class="eyebrow">SALDO DE DEMONSTRAÇÃO</p>
         <h2>Solicitar saldo</h2>
-        <p>Este protótipo não recebe dinheiro. Envie um pedido de créditos virtuais e o administrador decide se aprova.</p>
+        <p>Este protótipo não recebe dinheiro real. Envie um pedido de saldo em MTS de demonstração e o administrador decide se aprova.</p>
         <form id="creditForm" class="stack-form">
           <label>
-            Quantidade de créditos
+            Valor (MTS)
             <input id="creditAmount" type="number" min="1" step="1" value="100" required>
           </label>
           <label>
@@ -100,12 +100,12 @@
       </div>
 
       <div class="card credits-card">
-        <p class="eyebrow">LEVANTAMENTO DE CRÉDITOS</p>
+        <p class="eyebrow">LEVANTAMENTO</p>
         <h2>Solicitar levantamento</h2>
-        <p>O pedido fica pendente para análise do administrador. Enquanto estiver pendente, os créditos ficam reservados; o saldo total só é reduzido quando o administrador aprovar.</p>
+        <p>O pedido fica pendente para análise do administrador. Enquanto estiver pendente, o valor fica reservado; o saldo total só é reduzido quando o administrador aprovar.</p>
         <form id="withdrawalForm" class="stack-form">
           <label>
-            Quantidade de créditos
+            Valor (MTS)
             <input id="withdrawalAmount" type="number" min="1" step="1" value="50" required>
           </label>
           <button type="submit" class="button secondary">Solicitar levantamento</button>
@@ -131,12 +131,12 @@
         <p class="eyebrow">SORTEIO JUSTO</p>
         <h2>Todos os 11 números têm a mesma chance</h2>
       </div>
-      <p>O backend usa um gerador criptograficamente seguro para sortear um inteiro de 0 a 10. O valor apostado em cada número não altera o resultado.</p>
+      <p>O backend usa um gerador criptograficamente seguro para sortear um inteiro de 0 a 10. O valor escolhido em cada número não altera o resultado.</p>
     </section>
   </main>
 
   <footer>
-    <span>Jogos Lendários · Protótipo com créditos virtuais</span>
+    <span>Jogos Lendários · Demonstração em MTS</span>
     <a href="/admin.html">Administração</a>
   </footer>
 
