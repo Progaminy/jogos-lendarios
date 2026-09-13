@@ -52,9 +52,7 @@
           </div>
           <div class="table-wrap">
             <table>
-              <thead>
-                <tr><th>Jogador</th><th>MTS</th><th>Nota</th><th>Data</th><th>Ações</th></tr>
-              </thead>
+              <thead><tr><th>Jogador</th><th>MTS</th><th>Nota</th><th>Data</th><th>Ações</th></tr></thead>
               <tbody id="creditRows"></tbody>
             </table>
           </div>
@@ -70,9 +68,7 @@
           <p style="color:var(--muted)">Enquanto o pedido estiver pendente, o valor fica reservado. O saldo total só é reduzido após aprovação.</p>
           <div class="table-wrap">
             <table>
-              <thead>
-                <tr><th>Jogador</th><th>MTS</th><th>Data</th><th>Ações</th></tr>
-              </thead>
+              <thead><tr><th>Jogador</th><th>MTS</th><th>Data</th><th>Ações</th></tr></thead>
               <tbody id="withdrawalRows"></tbody>
             </table>
           </div>
@@ -86,13 +82,18 @@
         </section>
 
         <section class="card admin-card full-span">
+          <p class="eyebrow">MENSAGENS</p>
+          <h2>Conversas com jogadores</h2>
+          <p style="color:var(--muted)">Cada conversa é privada entre o jogador e a administração.</p>
+          <div id="messageThreads" class="history-list empty-state">Ainda não há mensagens.</div>
+        </section>
+
+        <section class="card admin-card full-span">
           <p class="eyebrow">JOGADORES</p>
           <h2>Contas e saldos em MTS de demonstração</h2>
           <div class="table-wrap">
             <table>
-              <thead>
-                <tr><th>Jogador</th><th>Saldo MTS</th><th>Estado</th><th>Criado</th><th>Ações</th></tr>
-              </thead>
+              <thead><tr><th>Jogador</th><th>Saldo MTS</th><th>Estado</th><th>Criado</th><th>Ações</th></tr></thead>
               <tbody id="playerRows"></tbody>
             </table>
           </div>
@@ -103,9 +104,7 @@
           <h2>Últimas apostas</h2>
           <div class="table-wrap">
             <table>
-              <thead>
-                <tr><th>Data</th><th>Jogador</th><th>Escolha</th><th>Sorteado</th><th>Aposta MTS</th><th>Resultado</th></tr>
-              </thead>
+              <thead><tr><th>Data</th><th>Jogador</th><th>Escolha</th><th>Sorteado</th><th>Aposta MTS</th><th>Resultado</th></tr></thead>
               <tbody id="betRows"></tbody>
             </table>
           </div>
@@ -116,9 +115,7 @@
           <h2>Registo de ações</h2>
           <div class="table-wrap">
             <table>
-              <thead>
-                <tr><th>Data</th><th>Ação</th><th>Detalhes</th></tr>
-              </thead>
+              <thead><tr><th>Data</th><th>Ação</th><th>Detalhes</th></tr></thead>
               <tbody id="auditRows"></tbody>
             </table>
           </div>
