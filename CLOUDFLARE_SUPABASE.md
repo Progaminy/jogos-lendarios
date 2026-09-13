@@ -1,77 +1,91 @@
 # Jogos Lendários — Cloudflare + Supabase
 
-Esta branch prepara o protótipo para rodar com:
+Arquitetura desta branch:
 
-- GitHub como fonte do código;
-- Cloudflare Pages para os ficheiros estáticos em `public/`;
-- Cloudflare Pages Functions para `/api/*`;
-- Supabase Postgres para persistência;
+- GitHub: código-fonte;
+- Cloudflare Pages: frontend estático em `public/`;
+- Supabase Postgres: persistência;
+- Supabase Edge Function `jogos-api`: backend HTTP;
 - valores apresentados como **MTS de demonstração**, sem processamento de dinheiro real.
 
-## 1. Supabase
+## Supabase
 
-Recomenda-se um projeto separado chamado `jogos-lendarios`.
+Projeto: `jogos-lendarios`
 
-Aplicar a migration:
+Project ref:
+
+`bxndjyzghgrmkelshtdp`
+
+Banco criado em `eu-west-1`.
+
+A migration inicial está em:
 
 `supabase/migrations/001_virtual_credits.sql`
 
-Os nomes internos do banco podem continuar a usar `credit_*`, mas a interface apresenta saldo em MTS de demonstração. O browser não acessa as tabelas diretamente. As tabelas têm RLS ativo e as Functions usam uma service role guardada como segredo no Cloudflare.
+O browser não acessa as tabelas diretamente. Todas as tabelas têm RLS ativo e sem políticas públicas. A Edge Function usa a service role interna do Supabase.
 
-## 2. Cloudflare Pages
+A autenticação do admin não grava o código no GitHub. O banco guarda somente o hash do código e as sessões administrativas usam tokens temporários guardados por hash.
 
-Criar um projeto Pages a partir do repositório:
+## Backend
+
+Edge Function:
+
+`jogos-api`
+
+Base da API:
+
+`https://bxndjyzghgrmkelshtdp.supabase.co/functions/v1/jogos-api`
+
+Health endpoint:
+
+`/api/health`
+
+O frontend em `public/app.js` e `public/admin.js` já aponta para esta API.
+
+## Cloudflare Pages
+
+Criar um projeto Pages a partir de:
 
 `Progaminy/jogos-lendarios`
 
-Configuração recomendada:
+Configuração:
 
 - Production branch: `cloudflare-supabase`
 - Framework preset: None
-- Build command: deixar vazio
+- Build command: vazio
 - Build output directory: `public`
 - Root directory: `/`
 
-O diretório `functions/` é detetado automaticamente pelo Cloudflare Pages Functions.
+Não é necessário colocar `SUPABASE_SERVICE_ROLE_KEY`, código administrativo ou outro segredo no Cloudflare. O Cloudflare serve apenas o frontend estático.
 
-## 3. Variáveis e segredos
+O ficheiro `public/_headers` permite chamadas somente ao domínio Supabase necessário, além da própria origem.
 
-No projeto Cloudflare, configurar as seguintes variáveis para Production e Preview:
-
-- `SUPABASE_URL` — URL do projeto Supabase
-- `SUPABASE_SERVICE_ROLE_KEY` — segredo server-side do Supabase; nunca colocar no GitHub
-- `ADMIN_CODE` — código administrativo; nunca colocar no GitHub
-- `ADMIN_TOKEN_SECRET` — segredo aleatório longo para assinar as sessões do admin
-
-Nunca colocar estes valores em ficheiros versionados.
-
-## 4. Fluxo de levantamento em MTS de demonstração
+## Levantamento em MTS de demonstração
 
 1. O jogador solicita um valor.
-2. O pedido nasce com estado `pending`.
-3. Enquanto está pendente, o valor fica reservado e deixa de estar disponível para novas apostas ou novos levantamentos.
+2. O pedido nasce `pending`.
+3. O valor fica reservado e não pode ser usado em novas apostas ou novos levantamentos.
 4. O saldo total ainda não é reduzido.
-5. Se o admin aprovar, a operação é feita numa transação no Postgres e o saldo é reduzido.
+5. Se o admin aprovar, o banco reduz o saldo numa operação transacional.
 6. Se o admin rejeitar, a reserva desaparece e o saldo total permanece igual.
 
-Este mecanismo evita gasto duplo do saldo durante uma aprovação pendente.
+## Sorteio
 
-## 5. Sorteio
+O sorteio é uniforme entre 0 e 10 e usa Web Crypto no backend. O volume apostado por número não altera o resultado.
 
-O sorteio continua uniforme entre 0 e 10. A Cloudflare Function gera o número com Web Crypto e rejeição de módulo para evitar viés de distribuição. O volume apostado por número não altera o resultado.
+## Domínio
 
-## 6. Domínio
-
-Depois do primeiro deploy estar saudável, adicionar um domínio personalizado no Cloudflare Pages. Exemplo recomendado:
+Sugestão:
 
 `jogos.adadpsf.shop`
 
-Antes de trocar o domínio público, testar:
+Depois do primeiro deploy no Cloudflare, testar:
 
-- `/api/health`
-- criação de jogador
-- pedido/aprovação de saldo de demonstração
-- aposta
-- pedido de levantamento pendente
-- aprovação e rejeição de levantamento
-- painel administrativo
+- criação de jogador;
+- pedido/aprovação de saldo de demonstração;
+- aposta;
+- pedido de levantamento pendente;
+- aprovação e rejeição de levantamento;
+- painel administrativo;
+- bloqueio/desbloqueio de jogador;
+- ajuste administrativo de saldo.
