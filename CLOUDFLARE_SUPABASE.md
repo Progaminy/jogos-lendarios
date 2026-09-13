@@ -6,7 +6,7 @@ Esta branch prepara o protótipo para rodar com:
 - Cloudflare Pages para os ficheiros estáticos em `public/`;
 - Cloudflare Pages Functions para `/api/*`;
 - Supabase Postgres para persistência;
-- créditos virtuais apenas.
+- valores apresentados como **MTS de demonstração**, sem processamento de dinheiro real.
 
 ## 1. Supabase
 
@@ -16,7 +16,7 @@ Aplicar a migration:
 
 `supabase/migrations/001_virtual_credits.sql`
 
-O browser não acessa as tabelas diretamente. As tabelas têm RLS ativo e as Functions usam uma service role guardada como segredo no Cloudflare.
+Os nomes internos do banco podem continuar a usar `credit_*`, mas a interface apresenta saldo em MTS de demonstração. O browser não acessa as tabelas diretamente. As tabelas têm RLS ativo e as Functions usam uma service role guardada como segredo no Cloudflare.
 
 ## 2. Cloudflare Pages
 
@@ -45,16 +45,16 @@ No projeto Cloudflare, configurar as seguintes variáveis para Production e Prev
 
 Nunca colocar estes valores em ficheiros versionados.
 
-## 4. Fluxo de levantamento de créditos
+## 4. Fluxo de levantamento em MTS de demonstração
 
-1. O jogador solicita uma quantidade de créditos.
+1. O jogador solicita um valor.
 2. O pedido nasce com estado `pending`.
-3. Enquanto está pendente, a quantidade fica reservada e deixa de estar disponível para novas apostas ou novos levantamentos.
+3. Enquanto está pendente, o valor fica reservado e deixa de estar disponível para novas apostas ou novos levantamentos.
 4. O saldo total ainda não é reduzido.
 5. Se o admin aprovar, a operação é feita numa transação no Postgres e o saldo é reduzido.
 6. Se o admin rejeitar, a reserva desaparece e o saldo total permanece igual.
 
-Este mecanismo evita gasto duplo de créditos durante uma aprovação pendente.
+Este mecanismo evita gasto duplo do saldo durante uma aprovação pendente.
 
 ## 5. Sorteio
 
@@ -70,7 +70,7 @@ Antes de trocar o domínio público, testar:
 
 - `/api/health`
 - criação de jogador
-- pedido/aprovação de créditos
+- pedido/aprovação de saldo de demonstração
 - aposta
 - pedido de levantamento pendente
 - aprovação e rejeição de levantamento
