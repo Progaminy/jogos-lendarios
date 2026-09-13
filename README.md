@@ -1,74 +1,229 @@
 # Jogos Lendários
 
-Projeto reconstruído para funcionar de forma simples no desenvolvimento e na publicação:
+Projeto organizado para funcionar primeiro com **GitHub Pages + Supabase**. O Cloudflare fica para depois, quando o jogo estiver estável.
 
-- **Frontend estático no GitHub Pages**
-- **Banco de dados e lógica segura no Supabase**
-- **Sem Node.js no frontend**
-- **Sem pasta `public/`**
-- **Sem Cloudflare nesta fase**
+## Arquitetura
 
-A ideia é que o fluxo de trabalho seja o mesmo de outros projetos simples: editar os ficheiros, testar localmente, fazer `git add`, `git commit`, `git push` e ver a nova versão no GitHub Pages.
+```text
+GitHub Pages = interface do jogador e administração
+Supabase     = banco de dados, contas, saldos, apostas e sorteio
+Cloudflare   = somente depois, para domínio/CDN
+```
 
-## Jogo atual: Número Lendário
-
-O jogador escolhe um número inteiro entre **0 e 10**. Depois informa o valor da aposta e clica em **Apostar**.
-
-A conta **não é exigida antes de escolher o número**. O fluxo correto é:
-
-1. jogador escolhe um número de 0 a 10;
-2. informa o valor da aposta;
-3. clica em **Apostar**;
-4. se ainda não tiver sessão, aparece o cadastro;
-5. no cadastro informa nome, número de celular, PIN e confirmação do PIN;
-6. depois do cadastro/login, a aposta pendente continua automaticamente;
-7. o valor é descontado do saldo;
-8. quando a rodada fecha, não são aceites novas apostas;
-9. o administrador executa o sorteio;
-10. o resultado é publicado para todos;
-11. quem acertar recebe **10× o valor apostado**.
+Não existe `server.js`, `package.json` nem pasta `public/` para publicar o frontend. Os ficheiros do site ficam diretamente na raiz do repositório.
 
 ## Estrutura
 
 ```text
 jogos-lendarios/
-├── index.html      # página principal do jogador
-├── styles.css      # visual responsivo
-├── config.js       # URL e publishable key do Supabase
-├── app.js          # lógica do jogador
-├── admin.html      # painel administrativo
-├── admin.js        # lógica administrativa
+├── index.html
+├── styles.css
+├── config.js
+├── app.js
+├── admin.html
+├── admin.js
 ├── README.md
 └── .nojekyll
 ```
 
-Não existe necessidade de `server.js`, `package.json` nem `public/` para publicar este frontend no GitHub Pages.
+## Jogo: Número Lendário
+
+O jogador escolhe um número inteiro de **0 a 10**, informa o valor e clica em **Apostar**.
+
+Fluxo do jogador:
+
+1. escolhe um número de 0 a 10;
+2. informa o valor da aposta;
+3. clica em **Apostar**;
+4. se ainda não tiver conta, aparece o cadastro;
+5. informa nome, telefone, PIN e confirmação do PIN;
+6. depois do cadastro/login, a aposta pendente continua;
+7. o valor é descontado do saldo;
+8. o jogador acompanha o cronómetro da rodada;
+9. na hora definida pelo administrador, as apostas fecham automaticamente;
+10. o Supabase sorteia automaticamente um número;
+11. os vencedores são calculados e os prémios são creditados;
+12. o resultado é publicado automaticamente para os jogadores.
+
+Quem acertar recebe **10× o valor apostado**.
+
+# SORTEIO AUTOMÁTICO
+
+Esta é uma regra principal do projeto:
+
+**o administrador NÃO escolhe quando clicar para sortear depois de ver as apostas.**
+
+Ao abrir uma rodada, o administrador define a **data e hora do sorteio**. A partir daí o sistema trabalha sozinho.
+
+Exemplo:
+
+```text
+Abrir rodada: 18:00
+Hora definida para sorteio: 19:30
+```
+
+Até 19:30 os jogadores podem apostar. Quando a hora chega:
+
+```text
+1. apostas são encerradas
+2. número é sorteado
+3. apostas vencedoras são identificadas
+4. prémios são calculados
+5. saldo dos vencedores é atualizado
+6. resultado é publicado
+```
+
+Tudo isso acontece no banco de dados, sem botão manual de “Sortear” e sem botão manual de “Publicar resultado”.
+
+O painel mantém apenas um botão de emergência **Encerrar e sortear agora**. Esse botão antecipa o mesmo processo automático e não permite escolher o número.
+
+## Agendamento no Supabase
+
+O Supabase usa `pg_cron` com o trabalho:
+
+```text
+jogos_lendarios_auto_draw
+```
+
+Ele verifica continuamente as rodadas vencidas. A função interna responsável é:
+
+```text
+jl_finalize_due_rounds()
+```
+
+Ela não é exposta diretamente aos jogadores.
+
+Além do agendamento, as consultas de estado também verificam se a hora já passou. Isso cria uma segunda proteção: se uma rodada venceu, a próxima atualização do site também força a finalização automática.
+
+## Aleatoriedade
+
+Os números possíveis são:
+
+```text
+0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
+```
+
+O valor apostado em cada número **não influencia o resultado**.
+
+O banco usa `pgcrypto` para gerar aleatoriedade criptográfica. Para evitar viés de módulo:
+
+```text
+1. gera um byte aleatório entre 0 e 255
+2. aceita apenas valores entre 0 e 252
+3. calcula valor % 11
+4. resultado final fica entre 0 e 10
+```
+
+Como `253 = 23 × 11`, cada número recebe exatamente a mesma quantidade de valores possíveis nessa transformação.
+
+Cada rodada é sorteada apenas uma vez.
+
+## Administração
+
+O painel está em:
+
+```text
+/admin.html
+```
+
+O administrador pode:
+
+- definir data e hora do sorteio;
+- abrir uma rodada;
+- acompanhar o tempo restante;
+- encerrar e sortear imediatamente em caso de necessidade;
+- ver total apostado em cada número;
+- ver quantidade de apostas por número;
+- ver último resultado;
+- aprovar ou rejeitar depósitos;
+- autorizar ou rejeitar saques;
+- ajustar saldo;
+- bloquear ou desbloquear jogador;
+- ver apostas recentes.
+
+Não existem botões de sorteio repetido nem escolha manual do número vencedor.
+
+## Cadastro e login
+
+A conta usa:
+
+- nome;
+- número de telefone;
+- PIN de 4 a 8 dígitos.
+
+O PIN não é guardado em texto puro. O banco guarda hash. As sessões também usam tokens cujo valor original não fica armazenado diretamente no banco.
+
+## Depósitos
+
+O sistema atual registra **pedidos de depósito**.
+
+Fluxo:
+
+```text
+jogador pede depósito
+        ↓
+pedido fica pendente
+        ↓
+administrador aprova ou rejeita
+        ↓
+se aprovado, saldo aumenta
+```
+
+Nesta fase o sistema ainda não executa automaticamente uma transferência real por M-Pesa ou banco.
+
+## Saques
+
+Ao pedir saque:
+
+- saldo insuficiente → rejeição automática;
+- saldo suficiente → valor é reservado e pedido fica pendente;
+- administrador aprova → saque permanece debitado;
+- administrador rejeita → valor volta ao saldo.
+
+Isso evita que o mesmo saldo seja usado para vários pedidos simultâneos.
+
+## Banco de dados
+
+Principais tabelas:
+
+- `players`
+- `player_sessions`
+- `game_rounds`
+- `bets`
+- `deposit_requests`
+- `withdrawal_requests`
+- `transactions`
+- `admin_sessions`
+- `admin_config`
+- `audit_log`
+
+As tabelas usam RLS. O navegador não recebe acesso direto às tabelas privadas; utiliza funções RPC específicas.
 
 ## Testar localmente
 
-### Opção recomendada
-
-Dentro da pasta clonada:
+Depois de clonar:
 
 ```bash
+git clone https://github.com/Progaminy/jogos-lendarios.git
+cd jogos-lendarios
 python3 -m http.server 8080
 ```
 
-Depois abrir:
+Abrir:
 
 ```text
 http://localhost:8080
 ```
 
-O painel administrativo fica em:
+Administração:
 
 ```text
 http://localhost:8080/admin.html
 ```
 
-Como todos os caminhos são relativos (`./styles.css`, `./app.js`, etc.), a mesma estrutura funciona localmente e no GitHub Pages.
+Os caminhos são relativos (`./styles.css`, `./app.js`, etc.), portanto o mesmo frontend funciona localmente e no GitHub Pages.
 
-## Publicar no GitHub
+## Fazer alterações
 
 Fluxo normal:
 
@@ -78,186 +233,60 @@ git commit -m "melhoria do jogo"
 git push origin main
 ```
 
-No GitHub, em **Settings → Pages**:
+O GitHub Pages publica a branch `main` a partir de `/ (root)`.
 
-- Source: **Deploy from a branch**
-- Branch: **main**
-- Folder: **/ (root)**
-
-O GitHub Pages deve então servir diretamente o `index.html` que está na raiz do repositório.
-
-URL esperada:
+Página esperada:
 
 ```text
 https://progaminy.github.io/jogos-lendarios/
 ```
 
-O README não deve aparecer como página do jogo porque agora existe um `index.html` na raiz.
+## Supabase no frontend
 
-## Supabase
-
-O frontend usa o projeto Supabase `jogos-lendarios`.
-
-`config.js` contém apenas:
+`config.js` contém somente:
 
 - URL pública do projeto;
-- **publishable key** do Supabase.
+- publishable key.
 
-A publishable key pode existir no frontend. **Nunca colocar `service_role`, senha do banco ou outras chaves privadas no GitHub.**
+A publishable key pode ficar no frontend. Nunca colocar no GitHub:
 
-### Segurança
-
-As tabelas têm RLS ativo e não são acessadas diretamente pelo navegador.
-
-O frontend usa funções RPC `SECURITY DEFINER` específicas. Assim, a publishable key não dá acesso livre às tabelas.
-
-O PIN do jogador não é guardado em texto puro. Ele é transformado em hash no banco.
-
-As sessões também não são guardadas em texto puro no banco: apenas o hash do token é armazenado.
-
-## Principais tabelas
-
-- `players` — contas, telefone, hash do PIN, saldo e bloqueio;
-- `player_sessions` — sessões dos jogadores;
-- `game_rounds` — rodadas, horário de fechamento e resultado;
-- `bets` — apostas realizadas;
-- `deposit_requests` — pedidos de depósito;
-- `withdrawal_requests` — pedidos de saque;
-- `transactions` — histórico financeiro interno;
-- `admin_sessions` — sessões administrativas;
-- `admin_config` — configuração segura do acesso administrativo.
-
-## Funções do jogador
-
-O navegador utiliza principalmente:
-
-- `jl_public_state()` — rodada atual e último resultado publicado;
-- `jl_register_player(...)` — cria conta;
-- `jl_login_player(...)` — login com telefone e PIN;
-- `jl_player_state(...)` — saldo, histórico e estado da rodada;
-- `jl_place_bet(...)` — registra aposta e desconta saldo;
-- `jl_request_deposit(...)` — envia pedido de depósito;
-- `jl_request_withdrawal(...)` — envia pedido de saque;
-- `jl_logout_player(...)` — encerra sessão.
-
-## Depósitos
-
-O sistema atual **não executa automaticamente uma transferência M-Pesa ou bancária**.
-
-O jogador solicita um depósito. O sistema devolve uma confirmação com o ID do pedido. No painel administrativo, o pedido aparece como pendente.
-
-Quando o administrador aprova:
-
-- o pedido muda para `approved`;
-- o saldo do jogador é aumentado;
-- uma transação é registrada.
-
-Quando rejeita, o saldo não é alterado.
-
-## Saques
-
-Ao pedir saque:
-
-- se o saldo for insuficiente, o pedido é **rejeitado automaticamente**;
-- se houver saldo, o valor é reservado imediatamente e o pedido fica pendente;
-- o administrador recebe o pedido no painel;
-- se aprovar, o valor permanece retirado;
-- se rejeitar, o valor é devolvido automaticamente ao saldo.
-
-Isso evita que o jogador peça vários saques usando o mesmo saldo.
-
-## Administração
-
-O painel fica em:
-
-```text
-/admin.html
-```
-
-Depois de autenticar, o administrador pode:
-
-- ver a rodada atual;
-- definir data e hora de encerramento;
-- abrir uma nova rodada;
-- fechar apostas manualmente;
-- ver o tempo restante;
-- ver quantidade de apostas por número;
-- ver valor total apostado em cada número;
-- sortear o número vencedor;
-- publicar o resultado;
-- aprovar/rejeitar depósitos;
-- autorizar/rejeitar saques;
-- ajustar saldo manualmente;
-- bloquear/desbloquear jogadores;
-- ver apostas recentes.
-
-## Lógica do sorteio
-
-O sorteio não depende de quanto foi apostado em cada número.
-
-Os números possíveis são:
-
-```text
-0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
-```
-
-Cada rodada só pode ser sorteada **uma vez**.
-
-O banco gera um byte criptograficamente aleatório com `pgcrypto`. Para evitar viés de módulo, valores de byte fora da faixa divisível igualmente por 11 são descartados e outro byte é gerado.
-
-Em termos simplificados:
-
-```text
-1. gerar um byte aleatório entre 0 e 255
-2. aceitar apenas valores de 0 a 252
-3. calcular valor % 11
-4. resultado final fica entre 0 e 10
-```
-
-Como existem 253 valores aceitos e `253 = 23 × 11`, cada número de 0 a 10 recebe exatamente a mesma quantidade de possibilidades nessa transformação.
-
-Depois do sorteio:
-
-- todas as apostas do número vencedor recebem `won = true`;
-- prêmio = `valor apostado × 10`;
-- o prêmio é creditado no saldo;
-- o administrador apenas publica o resultado já sorteado.
-
-**Não existe botão de “sortear outra vez” para a mesma rodada.** Isso é intencional para impedir que o resultado seja escolhido depois de ver as apostas.
-
-## Cronómetro
-
-Cada rodada tem `closes_at`.
-
-O frontend mostra a contagem regressiva. Mesmo que o navegador do jogador tente enviar a aposta no último segundo, o próprio banco verifica a hora antes de aceitar.
-
-Portanto, esconder ou alterar o relógio pelo navegador não reabre uma rodada.
-
-## Atualização automática
-
-A página do jogador e o painel administrativo consultam o Supabase periodicamente. Assim, saldo, pedidos, encerramento e resultado aparecem sem ser necessário recarregar manualmente toda a página.
+- `service_role`;
+- senha do banco;
+- chaves privadas;
+- segredos administrativos.
 
 ## Cloudflare
 
-Cloudflare fica **fora desta etapa**.
+Nesta fase não é necessário Cloudflare.
 
-Primeiro o projeto deve funcionar corretamente em:
-
-1. local;
-2. GitHub;
-3. GitHub Pages;
-4. Supabase.
-
-Depois disso podemos ligar Cloudflare apenas como camada de domínio/CDN, sem mudar a estrutura do projeto nem criar outra versão paralela.
-
-## Próximos passos
-
-Antes de colocar dinheiro real em produção ainda faltam integrações externas, especialmente confirmação real de pagamentos/saques e validação das regras legais aplicáveis ao serviço.
-
-A base atual já separa corretamente:
+A ordem é:
 
 ```text
-GitHub Pages = interface
-Supabase = dados + autenticação por PIN + regras do jogo + administração
-Cloudflare = somente depois
+1. funcionar localmente
+2. funcionar no GitHub
+3. funcionar no GitHub Pages
+4. funcionar corretamente com Supabase
+5. somente depois ligar Cloudflare
 ```
+
+Assim evitamos voltar a ter versões diferentes do mesmo site em vários lugares.
+
+## Regra central da rodada
+
+```text
+ADMIN define a hora
+        ↓
+JOGO fica aberto
+        ↓
+cronómetro chega a zero
+        ↓
+SISTEMA fecha apostas
+        ↓
+SISTEMA sorteia
+        ↓
+SISTEMA paga vencedores
+        ↓
+SISTEMA publica resultado
+```
+
+**O sorteio é automático ao chegar a hora definida.**
