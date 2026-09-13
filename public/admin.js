@@ -27,6 +27,10 @@ function formatNumber(value) {
   return Number(value || 0).toLocaleString('pt-MZ', { maximumFractionDigits: 2 });
 }
 
+function formatMts(value) {
+  return `${formatNumber(value)} MTS`;
+}
+
 function escapeHtml(value) {
   return String(value ?? '')
     .replaceAll('&', '&amp;')
@@ -67,11 +71,11 @@ function renderStats(stats) {
   const items = [
     ['Jogadores', stats.players],
     ['Apostas', stats.bets],
-    ['Créditos apostados', formatNumber(stats.totalStaked)],
-    ['Créditos pagos', formatNumber(stats.totalPayout)],
-    ['Créditos pendentes', stats.pendingCredits],
+    ['MTS apostados', formatMts(stats.totalStaked)],
+    ['MTS pagos', formatMts(stats.totalPayout)],
+    ['Pedidos de saldo pendentes', stats.pendingCredits],
     ['Levantamentos pendentes', stats.pendingWithdrawals],
-    ['Créditos reservados', formatNumber(stats.reservedCredits)]
+    ['MTS reservados', formatMts(stats.reservedCredits)]
   ];
   $('#statsGrid').innerHTML = items.map(([label, value]) => `
     <div class="stat-card"><span>${label}</span><strong>${value}</strong></div>
@@ -87,7 +91,7 @@ function renderCredits(requests) {
   rows.innerHTML = requests.map(item => `
     <tr>
       <td>${escapeHtml(item.playerName)}</td>
-      <td><strong>${formatNumber(item.amount)}</strong></td>
+      <td><strong>${formatMts(item.amount)}</strong></td>
       <td>${escapeHtml(item.note || '—')}</td>
       <td>${formatDate(item.createdAt)}</td>
       <td>
@@ -109,7 +113,7 @@ function renderWithdrawals(requests) {
   rows.innerHTML = requests.map(item => `
     <tr>
       <td>${escapeHtml(item.playerName)}</td>
-      <td><strong>${formatNumber(item.amount)}</strong></td>
+      <td><strong>${formatMts(item.amount)}</strong></td>
       <td>${formatDate(item.createdAt)}</td>
       <td>
         <div class="actions">
@@ -126,7 +130,7 @@ function renderNumberStats(items) {
     <div class="number-stat">
       <strong>${item.number}</strong>
       <span>${item.bets} apostas</span>
-      <span>${formatNumber(item.staked)} créditos</span>
+      <span>${formatMts(item.staked)}</span>
     </div>
   `).join('');
 }
@@ -140,7 +144,7 @@ function renderPlayers(players) {
   rows.innerHTML = players.map(player => `
     <tr>
       <td>${escapeHtml(player.name)}</td>
-      <td><strong>${formatNumber(player.balance)}</strong></td>
+      <td><strong>${formatMts(player.balance)}</strong></td>
       <td>${player.blocked ? '<span class="status denied">Bloqueado</span>' : '<span class="status approved">Ativo</span>'}</td>
       <td>${formatDate(player.createdAt)}</td>
       <td>
@@ -167,8 +171,8 @@ function renderBets(bets) {
       <td>${escapeHtml(bet.playerName)}</td>
       <td>${bet.selectedNumber}</td>
       <td><strong>${bet.drawnNumber}</strong></td>
-      <td>${formatNumber(bet.amount)}</td>
-      <td>${bet.won ? `<strong style="color:var(--success)">Ganhou ${formatNumber(bet.payout)}</strong>` : '<span style="color:var(--muted)">Não ganhou</span>'}</td>
+      <td>${formatMts(bet.amount)}</td>
+      <td>${bet.won ? `<strong style="color:var(--success)">Ganhou ${formatMts(bet.payout)}</strong>` : '<span style="color:var(--muted)">Não ganhou</span>'}</td>
     </tr>
   `).join('');
 }
@@ -247,7 +251,7 @@ $('#dashboard').addEventListener('click', async event => {
     try {
       await request(`/api/admin/credit-requests/${encodeURIComponent(creditButton.dataset.id)}/${creditButton.dataset.creditAction}`, { method: 'POST' });
       await loadDashboard();
-      setMessage('Pedido de créditos analisado.', 'success');
+      setMessage('Pedido de saldo analisado.', 'success');
     } catch (error) {
       setMessage(error.message, 'error');
       creditButton.disabled = false;
@@ -285,7 +289,7 @@ $('#dashboard').addEventListener('click', async event => {
 
   const adjustButton = event.target.closest('[data-adjust]');
   if (adjustButton) {
-    const value = window.prompt(`Ajuste do saldo virtual de ${adjustButton.dataset.name}. Use valor positivo para adicionar e negativo para retirar.`);
+    const value = window.prompt(`Ajuste do saldo de demonstração de ${adjustButton.dataset.name} em MTS. Use valor positivo para adicionar e negativo para retirar.`);
     if (value === null) return;
     const delta = Number(value);
     if (!Number.isFinite(delta) || delta === 0) {
@@ -298,7 +302,7 @@ $('#dashboard').addEventListener('click', async event => {
         body: JSON.stringify({ delta })
       });
       await loadDashboard();
-      setMessage('Saldo virtual ajustado.', 'success');
+      setMessage('Saldo de demonstração ajustado.', 'success');
     } catch (error) {
       setMessage(error.message, 'error');
     }
