@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111827">
+  <title>Administração — Jogos Lendários</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/">Jogos <strong>Lendários</strong></a>
+    <span class="demo-badge">ADMIN · DEMONSTRAÇÃO</span>
+  </header>
+
+  <main class="admin-shell">
+    <section id="loginPanel" class="admin-login card">
+      <p class="eyebrow">ÁREA RESTRITA</p>
+      <h2>Entrar na administração</h2>
+      <p>O código é validado pelo servidor e não fica gravado no repositório.</p>
+      <form id="adminLoginForm">
+        <label>
+          Código do administrador
+          <input id="adminCode" type="password" inputmode="numeric" autocomplete="current-password" required>
+        </label>
+        <button class="button primary" type="submit">Entrar</button>
+      </form>
+      <p id="loginMessage" class="message"></p>
+    </section>
+
+    <section id="dashboard" class="hidden">
+      <div class="admin-header">
+        <div>
+          <p class="eyebrow">CONTROLO</p>
+          <h1>Painel administrativo</h1>
+        </div>
+        <div class="actions">
+          <button id="refreshAdmin" class="button ghost" type="button">Atualizar</button>
+          <button id="logoutAdmin" class="button danger" type="button">Sair</button>
+        </div>
+      </div>
+
+      <div id="statsGrid" class="stats-grid"></div>
+
+      <div class="admin-grid">
+        <section class="card admin-card">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">APROVAÇÃO MANUAL</p>
+              <h2>Pedidos de créditos</h2>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Jogador</th><th>Créditos</th><th>Nota</th><th>Data</th><th>Ações</th></tr>
+              </thead>
+              <tbody id="creditRows"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="card admin-card">
+          <p class="eyebrow">DISTRIBUIÇÃO</p>
+          <h2>Apostas por número</h2>
+          <p style="color:var(--muted)">Informação estatística apenas. Ela não interfere no sorteio.</p>
+          <div id="numberStats" class="number-stats"></div>
+        </section>
+
+        <section class="card admin-card full-span">
+          <p class="eyebrow">JOGADORES</p>
+          <h2>Contas e saldos virtuais</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Jogador</th><th>Saldo</th><th>Estado</th><th>Criado</th><th>Ações</th></tr>
+              </thead>
+              <tbody id="playerRows"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="card admin-card full-span">
+          <p class="eyebrow">JOGADAS</p>
+          <h2>Últimas apostas</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Data</th><th>Jogador</th><th>Escolha</th><th>Sorteado</th><th>Aposta</th><th>Resultado</th></tr>
+              </thead>
+              <tbody id="betRows"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="card admin-card full-span">
+          <p class="eyebrow">AUDITORIA</p>
+          <h2>Registo de ações</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Data</th><th>Ação</th><th>Detalhes</th></tr>
+              </thead>
+              <tbody id="auditRows"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+      <p id="adminMessage" class="message"></p>
+    </section>
+  </main>
+
+  <script src="/admin.js" defer></script>
+</body>
+</html>
