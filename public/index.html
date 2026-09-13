@@ -46,9 +46,10 @@
           <h2 id="playerDisplay">—</h2>
         </div>
         <div class="balance">
-          <span>Saldo</span>
+          <span>Saldo total</span>
           <strong id="balanceDisplay">0</strong>
           <small>créditos</small>
+          <small>Disponível: <strong id="availableDisplay">0</strong> · Reservado: <strong id="reservedDisplay">0</strong></small>
         </div>
         <button id="switchPlayer" class="button ghost" type="button">Trocar jogador</button>
       </div>
@@ -73,18 +74,9 @@
         </form>
 
         <div id="drawResult" class="draw-result hidden" aria-live="polite">
-          <div>
-            <span>Número escolhido</span>
-            <strong id="chosenResult">—</strong>
-          </div>
-          <div class="drawn">
-            <span>Número sorteado</span>
-            <strong id="drawnResult">—</strong>
-          </div>
-          <div>
-            <span>Resultado</span>
-            <strong id="winResult">—</strong>
-          </div>
+          <div><span>Número escolhido</span><strong id="chosenResult">—</strong></div>
+          <div class="drawn"><span>Número sorteado</span><strong id="drawnResult">—</strong></div>
+          <div><span>Resultado</span><strong id="winResult">—</strong></div>
         </div>
         <p id="gameMessage" class="message"></p>
       </div>
@@ -105,6 +97,21 @@
           <button type="submit" class="button secondary">Enviar pedido</button>
         </form>
         <p id="creditMessage" class="message"></p>
+      </div>
+
+      <div class="card credits-card">
+        <p class="eyebrow">LEVANTAMENTO DE CRÉDITOS</p>
+        <h2>Solicitar levantamento</h2>
+        <p>O pedido fica pendente para análise do administrador. Enquanto estiver pendente, os créditos ficam reservados; o saldo total só é reduzido quando o administrador aprovar.</p>
+        <form id="withdrawalForm" class="stack-form">
+          <label>
+            Quantidade de créditos
+            <input id="withdrawalAmount" type="number" min="1" step="1" value="50" required>
+          </label>
+          <button type="submit" class="button secondary">Solicitar levantamento</button>
+        </form>
+        <p id="withdrawalMessage" class="message"></p>
+        <div id="withdrawalHistory" class="history-list empty-state">Ainda não há pedidos de levantamento.</div>
       </div>
 
       <div class="card history-card">
