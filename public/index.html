@@ -117,6 +117,26 @@
       <div class="card history-card">
         <div class="section-heading">
           <div>
+            <p class="eyebrow">MENSAGENS</p>
+            <h2>Falar com a administração</h2>
+          </div>
+          <button id="refreshMessages" type="button" class="button ghost">Atualizar mensagens</button>
+        </div>
+        <p style="color:var(--muted)">Esta conversa é privada entre o jogador e a administração.</p>
+        <div id="messageHistory" class="history-list empty-state">Ainda não há mensagens.</div>
+        <form id="messageForm" class="stack-form" style="margin-top:16px">
+          <label>
+            Sua mensagem
+            <input id="messageInput" maxlength="1000" placeholder="Escreva uma mensagem para a administração" required>
+          </label>
+          <button type="submit" class="button secondary">Enviar mensagem</button>
+        </form>
+        <p id="messageStatus" class="message"></p>
+      </div>
+
+      <div class="card history-card">
+        <div class="section-heading">
+          <div>
             <p class="eyebrow">HISTÓRICO</p>
             <h2>Minhas últimas jogadas</h2>
           </div>
