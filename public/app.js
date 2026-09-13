@@ -1,5 +1,6 @@
 const $ = selector => document.querySelector(selector);
 const API_BASE = 'https://bxndjyzghgrmkelshtdp.supabase.co/functions/v1/jogos-api';
+const MESSAGES_API_BASE = 'https://bxndjyzghgrmkelshtdp.supabase.co/functions/v1/jogos-messages';
 
 const state = {
   playerId: localStorage.getItem('jl_player_id') || '',
@@ -14,14 +15,25 @@ const gateMessage = $('#gateMessage');
 const gameMessage = $('#gameMessage');
 const creditMessage = $('#creditMessage');
 const withdrawalMessage = $('#withdrawalMessage');
+const messageStatus = $('#messageStatus');
 
 function setMessage(el, text = '', type = '') {
   el.textContent = text;
   el.className = `message ${type}`.trim();
 }
 
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
+
 async function request(url, options = {}) {
-  const target = url.startsWith('/api/') ? `${API_BASE}${url}` : url;
+  const base = url.startsWith('/api/messages/') ? MESSAGES_API_BASE : API_BASE;
+  const target = url.startsWith('/api/') ? `${base}${url}` : url;
   const response = await fetch(target, {
     ...options,
     headers: {
@@ -76,11 +88,7 @@ function renderWithdrawals(items = []) {
     history.textContent = 'Ainda não há pedidos de levantamento.';
     return;
   }
-  const labels = {
-    pending: 'Pendente',
-    approved: 'Aprovado',
-    rejected: 'Rejeitado'
-  };
+  const labels = { pending: 'Pendente', approved: 'Aprovado', rejected: 'Rejeitado' };
   history.className = 'history-list';
   history.innerHTML = items.map(item => `
     <div class="history-row">
@@ -89,6 +97,35 @@ function renderWithdrawals(items = []) {
       <strong>${labels[item.status] || item.status}</strong>
     </div>
   `).join('');
+}
+
+function renderMessages(items = []) {
+  const history = $('#messageHistory');
+  if (!history) return;
+  if (!items.length) {
+    history.className = 'history-list empty-state';
+    history.textContent = 'Ainda não há mensagens.';
+    return;
+  }
+  history.className = 'history-list';
+  history.innerHTML = items.map(item => `
+    <div class="history-row" style="grid-template-columns:120px minmax(0,1fr) 130px">
+      <strong style="color:${item.sender === 'admin' ? 'var(--accent-2)' : 'var(--info)'}">${item.sender === 'admin' ? 'Administração' : 'Você'}</strong>
+      <span style="overflow-wrap:anywhere">${escapeHtml(item.body)}</span>
+      <span>${formatDate(item.createdAt)}</span>
+    </div>
+  `).join('');
+  history.scrollTop = history.scrollHeight;
+}
+
+async function loadMessages() {
+  if (!state.playerId || !state.playerToken) return;
+  try {
+    const data = await request(`/api/messages/${encodeURIComponent(state.playerId)}`);
+    renderMessages(data.messages || []);
+  } catch (error) {
+    if (messageStatus) setMessage(messageStatus, error.message, 'error');
+  }
 }
 
 function renderPlayer(data) {
@@ -119,6 +156,7 @@ function renderPlayer(data) {
   renderWithdrawals(data.withdrawals || []);
   playerGate.classList.add('hidden');
   gameArea.classList.remove('hidden');
+  loadMessages();
 }
 
 function clearPlayerSession() {
@@ -176,6 +214,27 @@ $('#switchPlayer').addEventListener('click', () => {
 });
 
 $('#refreshPlayer').addEventListener('click', loadPlayer);
+$('#refreshMessages').addEventListener('click', loadMessages);
+
+$('#messageForm').addEventListener('submit', async event => {
+  event.preventDefault();
+  if (!state.playerId) return;
+  const input = $('#messageInput');
+  const message = input.value.trim();
+  if (!message) return;
+  setMessage(messageStatus, 'Enviando mensagem...');
+  try {
+    await request(`/api/messages/${encodeURIComponent(state.playerId)}`, {
+      method: 'POST',
+      body: JSON.stringify({ message })
+    });
+    input.value = '';
+    setMessage(messageStatus, 'Mensagem enviada à administração.', 'success');
+    await loadMessages();
+  } catch (error) {
+    setMessage(messageStatus, error.message, 'error');
+  }
+});
 
 $('#creditForm').addEventListener('submit', async event => {
   event.preventDefault();
@@ -205,10 +264,7 @@ $('#withdrawalForm').addEventListener('submit', async event => {
   try {
     const data = await request('/api/withdrawals', {
       method: 'POST',
-      body: JSON.stringify({
-        playerId: state.playerId,
-        amount: $('#withdrawalAmount').value
-      })
+      body: JSON.stringify({ playerId: state.playerId, amount: $('#withdrawalAmount').value })
     });
     setMessage(withdrawalMessage, `Pedido de ${formatMts(data.request.amount)} ficou pendente para aprovação.`, 'success');
     await loadPlayer();
@@ -232,25 +288,16 @@ $('#betForm').addEventListener('submit', async event => {
   try {
     const data = await request('/api/bets', {
       method: 'POST',
-      body: JSON.stringify({
-        playerId: state.playerId,
-        number: state.selectedNumber,
-        amount: $('#betAmount').value
-      })
+      body: JSON.stringify({ playerId: state.playerId, number: state.selectedNumber, amount: $('#betAmount').value })
     });
 
     $('#chosenResult').textContent = data.bet.selectedNumber;
     $('#drawnResult').textContent = data.bet.drawnNumber;
-    $('#winResult').textContent = data.bet.won
-      ? `Ganhou ${formatMts(data.bet.payout)}`
-      : 'Não ganhou';
+    $('#winResult').textContent = data.bet.won ? `Ganhou ${formatMts(data.bet.payout)}` : 'Não ganhou';
     $('#drawResult').classList.remove('hidden');
 
-    if (data.bet.won) {
-      setMessage(gameMessage, 'Acertou o Número Lendário!', 'success');
-    } else {
-      setMessage(gameMessage, 'O número não coincidiu desta vez.');
-    }
+    if (data.bet.won) setMessage(gameMessage, 'Acertou o Número Lendário!', 'success');
+    else setMessage(gameMessage, 'O número não coincidiu desta vez.');
     await loadPlayer();
   } catch (error) {
     setMessage(gameMessage, error.message, 'error');
