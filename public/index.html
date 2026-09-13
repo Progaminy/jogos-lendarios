@@ -11,7 +11,7 @@
 <body>
   <header class="topbar">
     <a class="brand" href="/">Jogos <strong>Lendários</strong></a>
-    <span class="demo-badge">DEMONSTRAÇÃO</span>
+    <span class="demo-badge">MODO TESTE</span>
   </header>
 
   <main class="page-shell">
@@ -19,14 +19,14 @@
       <div>
         <p class="eyebrow">PRIMEIRO JOGO</p>
         <h1>Número Lendário</h1>
-        <p class="hero-copy">Escolha um número de <strong>0 a 10</strong>. Se acertar o número sorteado, recebe <strong>10×</strong> o valor apostado em MTS de demonstração.</p>
+        <p class="hero-copy">Escolha um número de <strong>0 a 10</strong>. Se acertar o número sorteado, recebe <strong>10×</strong> o valor apostado em MTS de teste.</p>
       </div>
       <div class="promo-box">
         <span>Aposte</span>
         <strong>10 MTS</strong>
         <span>ganhe</span>
         <strong>100 MTS</strong>
-        <small>demonstração</small>
+        <small>modo teste</small>
       </div>
     </section>
 
@@ -35,67 +35,99 @@
         <div>
           <p class="eyebrow">PASSO 1</p>
           <h2>Escolha seu número</h2>
-          <p>Toque numa bola de <strong>0 a 10</strong>. A escolha fica guardada quando entrar no jogo.</p>
+          <p>Toque numa bola de <strong>0 a 10</strong>.</p>
         </div>
         <span id="selectionLabel" class="selection-pill">Nenhum escolhido</span>
       </div>
       <div id="numberGrid" class="number-grid" aria-label="Números de 0 a 10"></div>
     </section>
 
-    <section id="playerGate" class="card gate">
+    <section class="card gate">
       <p class="eyebrow">PASSO 2</p>
-      <h2>Entrar no jogo</h2>
-      <p>Crie um jogador para começar. O saldo inicial é zero e os valores de demonstração são aprovados pelo administrador.</p>
-      <form id="playerForm" class="inline-form">
-        <input id="playerName" maxlength="60" placeholder="Seu nome" autocomplete="name" required>
-        <button type="submit" class="button primary">Criar jogador</button>
+      <h2>Valor da aposta</h2>
+      <form id="preBetForm" class="bet-form">
+        <label>
+          Valor (MTS)
+          <input id="preBetAmount" type="number" min="1" step="1" value="10" inputmode="decimal" required>
+        </label>
+        <button id="startBetButton" type="submit" class="button primary large">Apostar</button>
       </form>
-      <p id="gateMessage" class="message"></p>
+      <p id="preBetMessage" class="message"></p>
+    </section>
+
+    <section id="authGate" class="card gate hidden">
+      <p class="eyebrow">PASSO 3</p>
+      <h2>Criar conta</h2>
+      <p>Crie sua conta para continuar com o número e o valor escolhidos.</p>
+
+      <form id="registerForm" class="stack-form">
+        <label>
+          Nome
+          <input id="registerName" maxlength="60" autocomplete="name" required>
+        </label>
+        <label>
+          Número de celular
+          <input id="registerPhone" inputmode="tel" autocomplete="tel" placeholder="Ex.: 84xxxxxxx" required>
+        </label>
+        <label>
+          Configurar PIN
+          <input id="registerPin" type="password" inputmode="numeric" minlength="4" maxlength="8" autocomplete="new-password" required>
+        </label>
+        <label>
+          Confirmar PIN
+          <input id="registerPinConfirm" type="password" inputmode="numeric" minlength="4" maxlength="8" autocomplete="new-password" required>
+        </label>
+        <button type="submit" class="button primary">Criar conta e continuar</button>
+      </form>
+
+      <div class="auth-divider"><span>ou</span></div>
+
+      <button id="showLogin" type="button" class="button ghost">Já tenho conta</button>
+      <form id="loginForm" class="stack-form hidden" style="margin-top:14px">
+        <label>
+          Número de celular
+          <input id="loginPhone" inputmode="tel" autocomplete="tel" required>
+        </label>
+        <label>
+          PIN
+          <input id="loginPin" type="password" inputmode="numeric" minlength="4" maxlength="8" autocomplete="current-password" required>
+        </label>
+        <button type="submit" class="button secondary">Entrar e continuar</button>
+      </form>
+      <p id="authMessage" class="message"></p>
     </section>
 
     <section id="gameArea" class="game-grid hidden">
       <div class="card wallet-card">
         <div>
-          <p class="eyebrow">JOGADOR</p>
+          <p class="eyebrow">CONTA</p>
           <h2 id="playerDisplay">—</h2>
+          <small id="playerPhoneDisplay" style="color:var(--muted)">—</small>
         </div>
         <div class="balance">
           <span>Saldo total</span>
           <strong id="balanceDisplay">0</strong>
-          <small>MTS · demonstração</small>
+          <small>MTS · teste</small>
           <small>Disponível: <strong id="availableDisplay">0</strong> MTS · Reservado: <strong id="reservedDisplay">0</strong> MTS</small>
         </div>
-        <button id="switchPlayer" class="button ghost" type="button">Trocar jogador</button>
+        <button id="switchPlayer" class="button ghost" type="button">Sair / trocar conta</button>
       </div>
 
       <div class="card play-card">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">APOSTA</p>
-            <h2>Confirmar jogada</h2>
-          </div>
-        </div>
-
-        <form id="betForm" class="bet-form">
-          <label>
-            Valor da aposta (MTS)
-            <input id="betAmount" type="number" min="1" step="1" value="10" required>
-          </label>
-          <button id="playButton" type="submit" class="button primary large">Sortear agora</button>
-        </form>
-
+        <p class="eyebrow">ÚLTIMA JOGADA</p>
+        <h2>Resultado</h2>
         <div id="drawResult" class="draw-result hidden" aria-live="polite">
           <div><span>Número escolhido</span><strong id="chosenResult">—</strong></div>
           <div class="drawn"><span>Número sorteado</span><strong id="drawnResult">—</strong></div>
           <div><span>Resultado</span><strong id="winResult">—</strong></div>
         </div>
-        <p id="gameMessage" class="message"></p>
+        <p id="gameMessage" class="message">Escolha um número acima, informe o valor e toque em Apostar.</p>
       </div>
 
       <div class="card credits-card">
-        <p class="eyebrow">SALDO DE DEMONSTRAÇÃO</p>
+        <p class="eyebrow">SALDO DE TESTE</p>
         <h2>Solicitar saldo</h2>
-        <p>Este protótipo não recebe dinheiro real. Envie um pedido de saldo em MTS de demonstração e o administrador decide se aprova.</p>
+        <p>Envie um pedido de saldo para o administrador analisar.</p>
         <form id="creditForm" class="stack-form">
           <label>
             Valor (MTS)
@@ -111,9 +143,9 @@
       </div>
 
       <div class="card credits-card">
-        <p class="eyebrow">LEVANTAMENTO</p>
+        <p class="eyebrow">LEVANTAMENTO DE TESTE</p>
         <h2>Solicitar levantamento</h2>
-        <p>O pedido fica pendente para análise do administrador. Enquanto estiver pendente, o valor fica reservado; o saldo total só é reduzido quando o administrador aprovar.</p>
+        <p>O pedido fica pendente. Enquanto estiver pendente, o valor fica reservado; o saldo só é reduzido quando o administrador aprovar.</p>
         <form id="withdrawalForm" class="stack-form">
           <label>
             Valor (MTS)
@@ -122,7 +154,7 @@
           <button type="submit" class="button secondary">Solicitar levantamento</button>
         </form>
         <p id="withdrawalMessage" class="message"></p>
-        <div id="withdrawalHistory" class="history-list empty-state">Ainda não há pedidos de levantamento.</div>
+        <div id="withdrawalHistory" class="history-list empty-state">Ainda não há pedidos.</div>
       </div>
 
       <div class="card history-card">
@@ -131,14 +163,14 @@
             <p class="eyebrow">MENSAGENS</p>
             <h2>Falar com a administração</h2>
           </div>
-          <button id="refreshMessages" type="button" class="button ghost">Atualizar mensagens</button>
+          <button id="refreshMessages" type="button" class="button ghost">Atualizar</button>
         </div>
-        <p style="color:var(--muted)">Esta conversa é privada entre o jogador e a administração.</p>
+        <p style="color:var(--muted)">Esta conversa é privada entre a sua conta e a administração.</p>
         <div id="messageHistory" class="history-list empty-state">Ainda não há mensagens.</div>
         <form id="messageForm" class="stack-form" style="margin-top:16px">
           <label>
             Sua mensagem
-            <input id="messageInput" maxlength="1000" placeholder="Escreva uma mensagem para a administração" required>
+            <input id="messageInput" maxlength="1000" placeholder="Escreva uma mensagem" required>
           </label>
           <button type="submit" class="button secondary">Enviar mensagem</button>
         </form>
@@ -159,15 +191,15 @@
 
     <section class="fairness card">
       <div>
-        <p class="eyebrow">SORTEIO JUSTO</p>
+        <p class="eyebrow">SORTEIO</p>
         <h2>Todos os 11 números têm a mesma chance</h2>
       </div>
-      <p>O backend usa um gerador criptograficamente seguro para sortear um inteiro de 0 a 10. O valor escolhido em cada número não altera o resultado.</p>
+      <p>O backend sorteia um inteiro de 0 a 10 usando geração criptograficamente segura. O valor apostado em cada número não altera o resultado.</p>
     </section>
   </main>
 
   <footer>
-    <span>Jogos Lendários · Demonstração em MTS</span>
+    <span>Jogos Lendários · Modo teste</span>
     <a href="/admin.html">Administração</a>
   </footer>
 

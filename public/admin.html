@@ -11,7 +11,7 @@
 <body>
   <header class="topbar">
     <a class="brand" href="/">Jogos <strong>Lendários</strong></a>
-    <span class="demo-badge">ADMIN · DEMONSTRAÇÃO</span>
+    <span class="demo-badge">ADMIN · MODO TESTE</span>
   </header>
 
   <main class="admin-shell">
@@ -45,34 +45,20 @@
 
       <div class="admin-grid">
         <section class="card admin-card">
-          <div class="section-heading">
-            <div>
-              <p class="eyebrow">APROVAÇÃO MANUAL</p>
-              <h2>Pedidos de saldo</h2>
-            </div>
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>Jogador</th><th>MTS</th><th>Nota</th><th>Data</th><th>Ações</th></tr></thead>
-              <tbody id="creditRows"></tbody>
-            </table>
-          </div>
+          <div class="section-heading"><div><p class="eyebrow">APROVAÇÃO MANUAL</p><h2>Pedidos de saldo</h2></div></div>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Jogador</th><th>MTS</th><th>Nota</th><th>Data</th><th>Ações</th></tr></thead>
+            <tbody id="creditRows"></tbody>
+          </table></div>
         </section>
 
         <section class="card admin-card">
-          <div class="section-heading">
-            <div>
-              <p class="eyebrow">APROVAÇÃO MANUAL</p>
-              <h2>Pedidos de levantamento</h2>
-            </div>
-          </div>
-          <p style="color:var(--muted)">Enquanto o pedido estiver pendente, o valor fica reservado. O saldo total só é reduzido após aprovação.</p>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>Jogador</th><th>MTS</th><th>Data</th><th>Ações</th></tr></thead>
-              <tbody id="withdrawalRows"></tbody>
-            </table>
-          </div>
+          <div class="section-heading"><div><p class="eyebrow">APROVAÇÃO MANUAL</p><h2>Pedidos de levantamento</h2></div></div>
+          <p style="color:var(--muted)">Enquanto o pedido estiver pendente, o valor fica reservado. O saldo só é reduzido após aprovação.</p>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Jogador</th><th>MTS</th><th>Data</th><th>Ações</th></tr></thead>
+            <tbody id="withdrawalRows"></tbody>
+          </table></div>
         </section>
 
         <section class="card admin-card">
@@ -91,35 +77,29 @@
 
         <section class="card admin-card full-span">
           <p class="eyebrow">JOGADORES</p>
-          <h2>Contas e saldos em MTS de demonstração</h2>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>Jogador</th><th>Saldo MTS</th><th>Estado</th><th>Criado</th><th>Ações</th></tr></thead>
-              <tbody id="playerRows"></tbody>
-            </table>
-          </div>
+          <h2>Contas e saldos em MTS de teste</h2>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Jogador</th><th>Saldo MTS</th><th>Estado</th><th>Criado</th><th>Ações</th></tr></thead>
+            <tbody id="playerRows"></tbody>
+          </table></div>
         </section>
 
         <section class="card admin-card full-span">
           <p class="eyebrow">JOGADAS</p>
           <h2>Últimas apostas</h2>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>Data</th><th>Jogador</th><th>Escolha</th><th>Sorteado</th><th>Aposta MTS</th><th>Resultado</th></tr></thead>
-              <tbody id="betRows"></tbody>
-            </table>
-          </div>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Data</th><th>Jogador</th><th>Escolha</th><th>Sorteado</th><th>Aposta MTS</th><th>Resultado</th></tr></thead>
+            <tbody id="betRows"></tbody>
+          </table></div>
         </section>
 
         <section class="card admin-card full-span">
           <p class="eyebrow">AUDITORIA</p>
           <h2>Registo de ações</h2>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>Data</th><th>Ação</th><th>Detalhes</th></tr></thead>
-              <tbody id="auditRows"></tbody>
-            </table>
-          </div>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Data</th><th>Ação</th><th>Detalhes</th></tr></thead>
+            <tbody id="auditRows"></tbody>
+          </table></div>
         </section>
       </div>
       <p id="adminMessage" class="message"></p>

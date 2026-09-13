@@ -6,18 +6,22 @@ const state = {
   playerId: localStorage.getItem('jl_player_id') || '',
   playerToken: localStorage.getItem('jl_player_token') || '',
   player: null,
-  selectedNumber: null
+  selectedNumber: null,
+  pendingAmount: Number(localStorage.getItem('jl_pending_amount') || 10),
+  pendingBet: false
 };
 
-const playerGate = $('#playerGate');
+const authGate = $('#authGate');
 const gameArea = $('#gameArea');
-const gateMessage = $('#gateMessage');
+const preBetMessage = $('#preBetMessage');
+const authMessage = $('#authMessage');
 const gameMessage = $('#gameMessage');
 const creditMessage = $('#creditMessage');
 const withdrawalMessage = $('#withdrawalMessage');
 const messageStatus = $('#messageStatus');
 
 function setMessage(el, text = '', type = '') {
+  if (!el) return;
   el.textContent = text;
   el.className = `message ${type}`.trim();
 }
@@ -53,14 +57,10 @@ function formatDate(value) {
     day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
   }).format(new Date(value));
 }
-
 function formatNumber(value) {
   return Number(value || 0).toLocaleString('pt-MZ', { maximumFractionDigits: 2 });
 }
-
-function formatMts(value) {
-  return `${formatNumber(value)} MTS`;
-}
+function formatMts(value) { return `${formatNumber(value)} MTS`; }
 
 function renderNumbers() {
   const grid = $('#numberGrid');
@@ -75,17 +75,40 @@ function renderNumbers() {
       state.selectedNumber = number;
       renderNumbers();
       $('#selectionLabel').textContent = `Escolhido: ${number}`;
-      setMessage(gameMessage);
+      setMessage(preBetMessage);
     });
     grid.appendChild(button);
   }
+}
+
+function showAuth() {
+  authGate.classList.remove('hidden');
+  setTimeout(() => authGate.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+}
+function hideAuth() {
+  authGate.classList.add('hidden');
+  setMessage(authMessage);
+}
+function saveSession(data) {
+  state.playerId = data.player.id;
+  state.playerToken = data.token;
+  localStorage.setItem('jl_player_id', state.playerId);
+  localStorage.setItem('jl_player_token', state.playerToken);
+}
+function clearSession() {
+  localStorage.removeItem('jl_player_id');
+  localStorage.removeItem('jl_player_token');
+  state.playerId = '';
+  state.playerToken = '';
+  state.player = null;
+  gameArea.classList.add('hidden');
 }
 
 function renderWithdrawals(items = []) {
   const history = $('#withdrawalHistory');
   if (!items.length) {
     history.className = 'history-list empty-state';
-    history.textContent = 'Ainda não há pedidos de levantamento.';
+    history.textContent = 'Ainda não há pedidos.';
     return;
   }
   const labels = { pending: 'Pendente', approved: 'Aprovado', rejected: 'Rejeitado' };
@@ -101,7 +124,6 @@ function renderWithdrawals(items = []) {
 
 function renderMessages(items = []) {
   const history = $('#messageHistory');
-  if (!history) return;
   if (!items.length) {
     history.className = 'history-list empty-state';
     history.textContent = 'Ainda não há mensagens.';
@@ -115,7 +137,6 @@ function renderMessages(items = []) {
       <span>${formatDate(item.createdAt)}</span>
     </div>
   `).join('');
-  history.scrollTop = history.scrollHeight;
 }
 
 async function loadMessages() {
@@ -124,13 +145,14 @@ async function loadMessages() {
     const data = await request(`/api/messages/${encodeURIComponent(state.playerId)}`);
     renderMessages(data.messages || []);
   } catch (error) {
-    if (messageStatus) setMessage(messageStatus, error.message, 'error');
+    setMessage(messageStatus, error.message, 'error');
   }
 }
 
 function renderPlayer(data) {
   state.player = data.player;
   $('#playerDisplay').textContent = data.player.name;
+  $('#playerPhoneDisplay').textContent = data.player.phone ? `+${data.player.phone}` : '';
   $('#balanceDisplay').textContent = formatNumber(data.player.balance);
   $('#availableDisplay').textContent = formatNumber(data.availableBalance ?? data.player.balance);
   $('#reservedDisplay').textContent = formatNumber(data.reservedBalance || 0);
@@ -152,65 +174,155 @@ function renderPlayer(data) {
       </div>
     `).join('');
   }
-
   renderWithdrawals(data.withdrawals || []);
-  playerGate.classList.add('hidden');
   gameArea.classList.remove('hidden');
+  hideAuth();
   loadMessages();
-}
-
-function clearPlayerSession() {
-  localStorage.removeItem('jl_player_id');
-  localStorage.removeItem('jl_player_token');
-  state.playerId = '';
-  state.playerToken = '';
-  state.player = null;
 }
 
 async function loadPlayer() {
   if (!state.playerId || !state.playerToken) {
-    playerGate.classList.remove('hidden');
     gameArea.classList.add('hidden');
-    return;
+    return false;
   }
   try {
     const data = await request(`/api/players/${encodeURIComponent(state.playerId)}`);
     renderPlayer(data);
-  } catch (error) {
-    clearPlayerSession();
-    playerGate.classList.remove('hidden');
-    gameArea.classList.add('hidden');
-    setMessage(gateMessage, 'A sessão anterior não foi encontrada. Crie um jogador novamente.', 'error');
+    return true;
+  } catch {
+    clearSession();
+    return false;
   }
 }
 
-$('#playerForm').addEventListener('submit', async event => {
-  event.preventDefault();
-  setMessage(gateMessage, 'Criando jogador...');
+async function placePendingBet() {
+  if (!state.playerId || !state.playerToken) {
+    showAuth();
+    return;
+  }
+  if (state.selectedNumber === null) {
+    setMessage(preBetMessage, 'Escolha primeiro uma bola de 0 a 10.', 'error');
+    return;
+  }
+  const value = Number($('#preBetAmount').value);
+  if (!Number.isFinite(value) || value < 1) {
+    setMessage(preBetMessage, 'Informe um valor válido.', 'error');
+    return;
+  }
+
+  const button = $('#startBetButton');
+  button.disabled = true;
+  button.textContent = 'Apostando...';
+  setMessage(preBetMessage);
+
   try {
-    const data = await request('/api/players', {
+    const data = await request('/api/bets', {
       method: 'POST',
-      body: JSON.stringify({ name: $('#playerName').value })
+      body: JSON.stringify({
+        playerId: state.playerId,
+        number: state.selectedNumber,
+        amount: value
+      })
     });
-    state.playerId = data.player.id;
-    state.playerToken = data.token;
-    localStorage.setItem('jl_player_id', state.playerId);
-    localStorage.setItem('jl_player_token', state.playerToken);
+    $('#chosenResult').textContent = data.bet.selectedNumber;
+    $('#drawnResult').textContent = data.bet.drawnNumber;
+    $('#winResult').textContent = data.bet.won ? `Ganhou ${formatMts(data.bet.payout)}` : 'Não ganhou';
+    $('#drawResult').classList.remove('hidden');
+    setMessage(gameMessage, data.bet.won ? 'Acertou o Número Lendário!' : 'O número não coincidiu desta vez.', data.bet.won ? 'success' : '');
+    state.pendingBet = false;
     await loadPlayer();
+    gameArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
   } catch (error) {
-    setMessage(gateMessage, error.message, 'error');
+    setMessage(preBetMessage, error.message, 'error');
+    setMessage(gameMessage, error.message, 'error');
+    await loadPlayer();
+    if (/saldo/i.test(error.message)) {
+      const card = $('#creditForm')?.closest('.credits-card');
+      card?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  } finally {
+    button.disabled = false;
+    button.textContent = 'Apostar';
+  }
+}
+
+$('#preBetForm').addEventListener('submit', async event => {
+  event.preventDefault();
+  if (state.selectedNumber === null) {
+    setMessage(preBetMessage, 'Escolha primeiro uma bola de 0 a 10.', 'error');
+    return;
+  }
+  const value = Number($('#preBetAmount').value);
+  if (!Number.isFinite(value) || value < 1) {
+    setMessage(preBetMessage, 'Informe um valor válido.', 'error');
+    return;
+  }
+  state.pendingAmount = value;
+  state.pendingBet = true;
+  localStorage.setItem('jl_pending_amount', String(value));
+
+  if (!state.playerId || !state.playerToken) {
+    showAuth();
+    return;
+  }
+  await placePendingBet();
+});
+
+$('#registerForm').addEventListener('submit', async event => {
+  event.preventDefault();
+  const pin = $('#registerPin').value;
+  const confirmPin = $('#registerPinConfirm').value;
+  if (pin !== confirmPin) {
+    setMessage(authMessage, 'Os PINs não coincidem.', 'error');
+    return;
+  }
+  setMessage(authMessage, 'Criando conta...');
+  try {
+    const data = await request('/api/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({
+        name: $('#registerName').value,
+        phone: $('#registerPhone').value,
+        pin,
+        confirmPin
+      })
+    });
+    saveSession(data);
+    setMessage(authMessage, 'Conta criada.', 'success');
+    await loadPlayer();
+    if (state.pendingBet) await placePendingBet();
+  } catch (error) {
+    setMessage(authMessage, error.message, 'error');
+  }
+});
+
+$('#showLogin').addEventListener('click', () => {
+  $('#loginForm').classList.toggle('hidden');
+});
+
+$('#loginForm').addEventListener('submit', async event => {
+  event.preventDefault();
+  setMessage(authMessage, 'Entrando...');
+  try {
+    const data = await request('/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({
+        phone: $('#loginPhone').value,
+        pin: $('#loginPin').value
+      })
+    });
+    saveSession(data);
+    setMessage(authMessage, 'Sessão iniciada.', 'success');
+    await loadPlayer();
+    if (state.pendingBet) await placePendingBet();
+  } catch (error) {
+    setMessage(authMessage, error.message, 'error');
   }
 });
 
 $('#switchPlayer').addEventListener('click', () => {
-  clearPlayerSession();
-  state.selectedNumber = null;
-  $('#drawResult').classList.add('hidden');
-  $('#selectionLabel').textContent = 'Nenhum escolhido';
-  renderNumbers();
-  gameArea.classList.add('hidden');
-  playerGate.classList.remove('hidden');
-  $('#playerName').focus();
+  clearSession();
+  showAuth();
 });
 
 $('#refreshPlayer').addEventListener('click', loadPlayer);
@@ -222,14 +334,14 @@ $('#messageForm').addEventListener('submit', async event => {
   const input = $('#messageInput');
   const message = input.value.trim();
   if (!message) return;
-  setMessage(messageStatus, 'Enviando mensagem...');
+  setMessage(messageStatus, 'Enviando...');
   try {
     await request(`/api/messages/${encodeURIComponent(state.playerId)}`, {
       method: 'POST',
       body: JSON.stringify({ message })
     });
     input.value = '';
-    setMessage(messageStatus, 'Mensagem enviada à administração.', 'success');
+    setMessage(messageStatus, 'Mensagem enviada.', 'success');
     await loadMessages();
   } catch (error) {
     setMessage(messageStatus, error.message, 'error');
@@ -249,7 +361,7 @@ $('#creditForm').addEventListener('submit', async event => {
         note: $('#creditNote').value
       })
     });
-    setMessage(creditMessage, `Pedido de ${formatMts(data.request.amount)} de demonstração enviado. Aguarda aprovação do administrador.`, 'success');
+    setMessage(creditMessage, `Pedido de ${formatMts(data.request.amount)} enviado. Aguarda aprovação.`, 'success');
     $('#creditNote').value = '';
     await loadPlayer();
   } catch (error) {
@@ -264,48 +376,18 @@ $('#withdrawalForm').addEventListener('submit', async event => {
   try {
     const data = await request('/api/withdrawals', {
       method: 'POST',
-      body: JSON.stringify({ playerId: state.playerId, amount: $('#withdrawalAmount').value })
+      body: JSON.stringify({
+        playerId: state.playerId,
+        amount: $('#withdrawalAmount').value
+      })
     });
-    setMessage(withdrawalMessage, `Pedido de ${formatMts(data.request.amount)} ficou pendente para aprovação.`, 'success');
+    setMessage(withdrawalMessage, `Pedido de ${formatMts(data.request.amount)} ficou pendente.`, 'success');
     await loadPlayer();
   } catch (error) {
     setMessage(withdrawalMessage, error.message, 'error');
   }
 });
 
-$('#betForm').addEventListener('submit', async event => {
-  event.preventDefault();
-  if (state.selectedNumber === null) {
-    setMessage(gameMessage, 'Escolha primeiro um número de 0 a 10.', 'error');
-    return;
-  }
-
-  const playButton = $('#playButton');
-  playButton.disabled = true;
-  playButton.textContent = 'Sorteando...';
-  setMessage(gameMessage);
-
-  try {
-    const data = await request('/api/bets', {
-      method: 'POST',
-      body: JSON.stringify({ playerId: state.playerId, number: state.selectedNumber, amount: $('#betAmount').value })
-    });
-
-    $('#chosenResult').textContent = data.bet.selectedNumber;
-    $('#drawnResult').textContent = data.bet.drawnNumber;
-    $('#winResult').textContent = data.bet.won ? `Ganhou ${formatMts(data.bet.payout)}` : 'Não ganhou';
-    $('#drawResult').classList.remove('hidden');
-
-    if (data.bet.won) setMessage(gameMessage, 'Acertou o Número Lendário!', 'success');
-    else setMessage(gameMessage, 'O número não coincidiu desta vez.');
-    await loadPlayer();
-  } catch (error) {
-    setMessage(gameMessage, error.message, 'error');
-  } finally {
-    playButton.disabled = false;
-    playButton.textContent = 'Sortear agora';
-  }
-});
-
+$('#preBetAmount').value = String(state.pendingAmount || 10);
 renderNumbers();
 loadPlayer();
