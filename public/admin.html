@@ -54,7 +54,7 @@
 
         <section class="card admin-card">
           <div class="section-heading"><div><p class="eyebrow">APROVAÇÃO MANUAL</p><h2>Pedidos de levantamento</h2></div></div>
-          <p style="color:var(--muted)">Enquanto o pedido estiver pendente, o valor fica reservado. O saldo só é reduzido após aprovação.</p>
+          <p style="color:var(--muted)">Pedidos com saldo disponível ficam pendentes e geram notificação no painel. Pedidos acima do saldo disponível são rejeitados automaticamente.</p>
           <div class="table-wrap"><table>
             <thead><tr><th>Jogador</th><th>MTS</th><th>Data</th><th>Ações</th></tr></thead>
             <tbody id="withdrawalRows"></tbody>
@@ -107,5 +107,6 @@
   </main>
 
   <script src="/admin.js" defer></script>
+  <script src="/enhancements.js" defer></script>
 </body>
 </html>
