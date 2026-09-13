@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0a0d14">
+  <meta name="description" content="Número Lendário — escolha um número, faça a sua aposta e acompanhe o resultado da rodada.">
+  <title>Número Lendário — Jogos Lendários</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div id="toast" class="toast" aria-live="polite"></div>
+
+  <header class="topbar">
+    <a class="brand" href="./index.html" aria-label="Jogos Lendários">Jogos <strong>Lendários</strong></a>
+    <div class="top-actions">
+      <span id="roundBadge" class="badge muted">Carregando rodada…</span>
+      <button id="accountButton" class="button ghost small" type="button">Entrar</button>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section class="hero card">
+      <div>
+        <p class="eyebrow">PRIMEIRO JOGO</p>
+        <h1>Número Lendário</h1>
+        <p class="lead">Escolha um número de <strong>0 a 10</strong>, informe o valor e clique em <strong>Apostar</strong>. Se ainda não tiver conta, o cadastro aparece só depois.</p>
+      </div>
+      <div class="hero-stat">
+        <span>Se acertar</span>
+        <strong>10×</strong>
+        <small>o valor apostado</small>
+      </div>
+    </section>
+
+    <section id="resultBanner" class="result-banner card hidden" aria-live="polite">
+      <div>
+        <p class="eyebrow">ÚLTIMO RESULTADO</p>
+        <h2 id="resultTitle">Rodada —</h2>
+      </div>
+      <div id="resultNumber" class="result-ball">—</div>
+    </section>
+
+    <section class="game-layout">
+      <div class="card play-card">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">ESCOLHA O SEU NÚMERO</p>
+            <h2>Qual número vai sair?</h2>
+          </div>
+          <div class="round-clock">
+            <span id="roundStatus">—</span>
+            <strong id="countdown">--:--:--</strong>
+          </div>
+        </div>
+
+        <div id="numberGrid" class="number-grid" aria-label="Números de 0 a 10"></div>
+
+        <form id="betForm" class="bet-row">
+          <label class="field">
+            <span>Valor da aposta</span>
+            <div class="money-input"><span>MZN</span><input id="betAmount" type="number" min="1" step="1" value="10" inputmode="decimal" required></div>
+          </label>
+          <button id="betButton" class="button primary large" type="submit" disabled>Apostar</button>
+        </form>
+        <p id="selectionText" class="selection-text">Escolha primeiro um número.</p>
+      </div>
+
+      <aside class="card info-card">
+        <p class="eyebrow">COMO FUNCIONA</p>
+        <h2>Simples e transparente</h2>
+        <ol class="steps">
+          <li><span>1</span><div>Escolha um número entre 0 e 10.</div></li>
+          <li><span>2</span><div>Informe o valor e clique em <b>Apostar</b>.</div></li>
+          <li><span>3</span><div>Se não tiver conta, cadastre nome, telefone e PIN.</div></li>
+          <li><span>4</span><div>Depois do encerramento, o sistema sorteia uma única vez e o administrador publica o resultado.</div></li>
+        </ol>
+      </aside>
+    </section>
+
+    <section id="playerArea" class="player-area hidden">
+      <div class="card wallet-card">
+        <div>
+          <p class="eyebrow">MINHA CONTA</p>
+          <h2 id="playerName">—</h2>
+          <p id="playerPhone" class="muted-text">—</p>
+        </div>
+        <div class="balance-box">
+          <span>Saldo disponível</span>
+          <strong id="balance">0,00</strong>
+          <small>MZN</small>
+        </div>
+        <button id="logoutButton" class="button ghost" type="button">Sair</button>
+      </div>
+
+      <div class="account-grid">
+        <div class="card action-card">
+          <p class="eyebrow">DEPÓSITO</p>
+          <h2>Solicitar depósito</h2>
+          <p class="muted-text">O pedido é enviado ao administrador. O saldo só aumenta depois da aprovação.</p>
+          <form id="depositForm" class="stack-form">
+            <label class="field"><span>Valor</span><div class="money-input"><span>MZN</span><input id="depositAmount" type="number" min="1" step="1" required></div></label>
+            <label class="field"><span>Nota opcional</span><input id="depositNote" maxlength="160" placeholder="Ex.: referência do pagamento"></label>
+            <button class="button secondary" type="submit">Enviar pedido</button>
+          </form>
+          <p id="depositMessage" class="form-message"></p>
+        </div>
+
+        <div class="card action-card">
+          <p class="eyebrow">SAQUE</p>
+          <h2>Solicitar saque</h2>
+          <p class="muted-text">Se o saldo for insuficiente, o pedido é rejeitado automaticamente.</p>
+          <form id="withdrawForm" class="stack-form">
+            <label class="field"><span>Valor</span><div class="money-input"><span>MZN</span><input id="withdrawAmount" type="number" min="1" step="1" required></div></label>
+            <button class="button secondary" type="submit">Pedir saque</button>
+          </form>
+          <p id="withdrawMessage" class="form-message"></p>
+        </div>
+      </div>
+
+      <div class="card history-card">
+        <div class="section-head">
+          <div><p class="eyebrow">HISTÓRICO</p><h2>Minhas apostas</h2></div>
+          <button id="refreshButton" class="button ghost small" type="button">Atualizar</button>
+        </div>
+        <div id="betHistory" class="history-list"><div class="empty">Ainda não há apostas.</div></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span>Jogos Lendários</span>
+    <a href="./admin.html">Administração</a>
+  </footer>
+
+  <div id="authModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+    <div class="modal-card">
+      <button id="closeAuth" class="modal-close" type="button" aria-label="Fechar">×</button>
+      <p class="eyebrow">CONTA DO JOGADOR</p>
+      <h2 id="authTitle">Entre ou crie a sua conta</h2>
+      <div class="tabs">
+        <button id="registerTab" class="tab active" type="button">Criar conta</button>
+        <button id="loginTab" class="tab" type="button">Já tenho conta</button>
+      </div>
+
+      <form id="registerForm" class="stack-form">
+        <label class="field"><span>Nome</span><input id="registerName" maxlength="60" autocomplete="name" required></label>
+        <label class="field"><span>Número de celular</span><input id="registerPhone" inputmode="tel" autocomplete="tel" placeholder="Ex.: 84xxxxxxx" required></label>
+        <label class="field"><span>Definir PIN</span><input id="registerPin" type="password" inputmode="numeric" pattern="[0-9]{4,8}" minlength="4" maxlength="8" autocomplete="new-password" required></label>
+        <label class="field"><span>Confirmar PIN</span><input id="registerPinConfirm" type="password" inputmode="numeric" pattern="[0-9]{4,8}" minlength="4" maxlength="8" autocomplete="new-password" required></label>
+        <button class="button primary" type="submit">Criar conta e continuar</button>
+      </form>
+
+      <form id="loginForm" class="stack-form hidden">
+        <label class="field"><span>Número de celular</span><input id="loginPhone" inputmode="tel" autocomplete="tel" required></label>
+        <label class="field"><span>PIN</span><input id="loginPin" type="password" inputmode="numeric" minlength="4" maxlength="8" autocomplete="current-password" required></label>
+        <button class="button primary" type="submit">Entrar</button>
+      </form>
+      <p id="authMessage" class="form-message"></p>
+    </div>
+  </div>
+
+  <script src="./config.js"></script>
+  <script src="./app.js" defer></script>
+</body>
+</html>
