@@ -1,4 +1,5 @@
 const $ = selector => document.querySelector(selector);
+const API_BASE = 'https://bxndjyzghgrmkelshtdp.supabase.co/functions/v1/jogos-api';
 
 const state = {
   playerId: localStorage.getItem('jl_player_id') || '',
@@ -20,7 +21,8 @@ function setMessage(el, text = '', type = '') {
 }
 
 async function request(url, options = {}) {
-  const response = await fetch(url, {
+  const target = url.startsWith('/api/') ? `${API_BASE}${url}` : url;
+  const response = await fetch(target, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
