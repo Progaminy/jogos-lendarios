@@ -30,7 +30,20 @@
       </div>
     </section>
 
+    <section class="card gate number-picker-card">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">PASSO 1</p>
+          <h2>Escolha seu número</h2>
+          <p>Toque numa bola de <strong>0 a 10</strong>. A escolha fica guardada quando entrar no jogo.</p>
+        </div>
+        <span id="selectionLabel" class="selection-pill">Nenhum escolhido</span>
+      </div>
+      <div id="numberGrid" class="number-grid" aria-label="Números de 0 a 10"></div>
+    </section>
+
     <section id="playerGate" class="card gate">
+      <p class="eyebrow">PASSO 2</p>
       <h2>Entrar no jogo</h2>
       <p>Crie um jogador para começar. O saldo inicial é zero e os valores de demonstração são aprovados pelo administrador.</p>
       <form id="playerForm" class="inline-form">
@@ -58,13 +71,10 @@
       <div class="card play-card">
         <div class="section-heading">
           <div>
-            <p class="eyebrow">ESCOLHA</p>
-            <h2>Qual número vai sair?</h2>
+            <p class="eyebrow">APOSTA</p>
+            <h2>Confirmar jogada</h2>
           </div>
-          <span id="selectionLabel" class="selection-pill">Nenhum escolhido</span>
         </div>
-
-        <div id="numberGrid" class="number-grid" aria-label="Números de 0 a 10"></div>
 
         <form id="betForm" class="bet-form">
           <label>
