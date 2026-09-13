@@ -33,23 +33,22 @@
       <div class="admin-grid">
         <div class="card metric"><span>Rodada</span><strong id="metricRound">—</strong></div>
         <div class="card metric"><span>Estado</span><strong id="metricStatus">—</strong></div>
-        <div class="card metric"><span>Fecha em</span><strong id="metricCountdown">—</strong></div>
-        <div class="card metric"><span>Número sorteado</span><strong id="metricDraw">—</strong></div>
+        <div class="card metric"><span>Sorteio em</span><strong id="metricCountdown">—</strong></div>
+        <div class="card metric"><span>Último resultado</span><strong id="metricDraw">—</strong></div>
       </div>
 
       <section class="card admin-card">
         <div class="section-head">
-          <div><p class="eyebrow">CONTROLE DA RODADA</p><h2>Abrir, fechar, sortear e publicar</h2></div>
+          <div><p class="eyebrow">CONTROLE DA RODADA</p><h2>Definir hora e abrir o jogo</h2></div>
           <button id="refreshAdmin" class="button ghost small" type="button">Atualizar</button>
         </div>
-        <p class="muted-text">O sorteio é único. Depois de sorteado, o sistema não permite sortear novamente a mesma rodada.</p>
+        <p class="muted-text">O sorteio é automático. Ao chegar a hora definida, o sistema encerra as apostas, sorteia um número de 0 a 10, calcula os vencedores, credita os prêmios e publica o resultado sem intervenção do administrador.</p>
         <div class="admin-actions">
-          <label class="field"><span>Data e hora de encerramento</span><input id="closeAt" type="datetime-local"></label>
+          <label class="field"><span>Data e hora do sorteio</span><input id="closeAt" type="datetime-local"></label>
           <button id="openRound" class="button success" type="button">Abrir jogo</button>
-          <button id="closeRound" class="button danger" type="button">Fechar apostas</button>
-          <button id="drawRound" class="button secondary" type="button">Sortear número</button>
-          <button id="publishRound" class="button primary" type="button">Publicar resultado</button>
+          <button id="closeRound" class="button danger" type="button">Encerrar e sortear agora</button>
         </div>
+        <p class="muted-text" style="margin-top:12px">O botão de encerramento manual antecipa o mesmo processo automático. Não existe botão para escolher ou repetir o número sorteado.</p>
       </section>
 
       <section class="card admin-card">
