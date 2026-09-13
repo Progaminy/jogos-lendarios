@@ -1,0 +1,13 @@
+{
+  "name": "jogos-lendarios",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Protótipo seguro do Jogos Lendários com créditos virtuais.",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "UNLICENSED"
+}
