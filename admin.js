@@ -10,8 +10,9 @@
     toast: $('toast'), adminLogin: $('adminLogin'), adminApp: $('adminApp'), adminLogout: $('adminLogout'),
     adminLoginForm: $('adminLoginForm'), adminCode: $('adminCode'), adminLoginMessage: $('adminLoginMessage'),
     metricRound: $('metricRound'), metricStatus: $('metricStatus'), metricCountdown: $('metricCountdown'), metricDraw: $('metricDraw'),
-    closeAt: $('closeAt'), openRound: $('openRound'), closeRound: $('closeRound'), drawRound: $('drawRound'), publishRound: $('publishRound'), refreshAdmin: $('refreshAdmin'),
-    numberStats: $('numberStats'), depositRequests: $('depositRequests'), withdrawRequests: $('withdrawRequests'), playersList: $('playersList'), recentBets: $('recentBets')
+    closeAt: $('closeAt'), openRound: $('openRound'), closeRound: $('closeRound'), refreshAdmin: $('refreshAdmin'),
+    numberStats: $('numberStats'), depositRequests: $('depositRequests'), withdrawRequests: $('withdrawRequests'),
+    playersList: $('playersList'), recentBets: $('recentBets')
   };
 
   function money(value) {
@@ -73,31 +74,29 @@
 
   function renderRound() {
     const round = state.data?.round;
+    const last = state.data?.last_result;
     clearInterval(state.countdownTimer);
+
+    els.metricDraw.textContent = last?.drawn_number ?? '—';
+
     if (!round) {
-      els.metricRound.textContent = '—';
-      els.metricStatus.textContent = 'Sem rodada';
+      els.metricRound.textContent = last ? `#${last.round_no}` : '—';
+      els.metricStatus.textContent = last ? 'Finalizada' : 'Sem rodada';
       els.metricCountdown.textContent = '—';
-      els.metricDraw.textContent = '—';
       els.openRound.disabled = false;
       els.closeRound.disabled = true;
-      els.drawRound.disabled = true;
-      els.publishRound.disabled = true;
       return;
     }
 
-    const labels = { open: 'Aberta', closed: 'Fechada', drawn: 'Sorteada' };
+    const labels = { open: 'Aberta', closed: 'Encerrada' };
     els.metricRound.textContent = `#${round.round_no}`;
     els.metricStatus.textContent = labels[round.status] || round.status;
-    els.metricDraw.textContent = round.drawn_number ?? '—';
     els.openRound.disabled = true;
     els.closeRound.disabled = round.status !== 'open';
-    els.drawRound.disabled = round.status !== 'closed';
-    els.publishRound.disabled = round.status !== 'drawn';
 
     const tick = () => {
       if (round.status !== 'open') {
-        els.metricCountdown.textContent = round.status === 'drawn' ? 'Aguardando publicação' : 'Encerrada';
+        els.metricCountdown.textContent = 'Processando sorteio automático…';
         return;
       }
       const left = new Date(round.closes_at).getTime() - Date.now();
@@ -110,7 +109,7 @@
       const h = Math.floor((total % 86400) / 3600);
       const m = Math.floor((total % 3600) / 60);
       const s = total % 60;
-      const clock = [h,m,s].map((v) => String(v).padStart(2,'0')).join(':');
+      const clock = [h, m, s].map((v) => String(v).padStart(2, '0')).join(':');
       els.metricCountdown.textContent = days ? `${days}d ${clock}` : clock;
     };
     tick();
@@ -118,13 +117,17 @@
   }
 
   function renderStats() {
+    if (!state.data?.round) {
+      els.numberStats.innerHTML = '<div class="empty">Abra uma rodada para acompanhar as apostas por número.</div>';
+      return;
+    }
     const stats = state.data?.number_stats || [];
-    els.numberStats.innerHTML = stats.length ? stats.map((item) => `
+    els.numberStats.innerHTML = stats.map((item) => `
       <div class="number-stat">
         <strong>${item.number}</strong>
         <span>${item.bets} aposta${Number(item.bets) === 1 ? '' : 's'}</span>
         <small>MZN ${money(item.total)}</small>
-      </div>`).join('') : '<div class="empty">Sem apostas nesta rodada.</div>';
+      </div>`).join('');
   }
 
   function renderRequests() {
@@ -200,7 +203,7 @@
   async function runAction(fn, args, success) {
     try {
       const result = await rpc(fn, { p_token: state.token, ...args });
-      toast(success || result?.message || 'Operação concluída.', 'success');
+      toast(result?.message || success || 'Operação concluída.', 'success');
       await refresh(true);
       return result;
     } catch (error) {
@@ -232,15 +235,22 @@
   });
 
   els.refreshAdmin.addEventListener('click', () => refresh());
+
   els.openRound.addEventListener('click', async () => {
-    if (!els.closeAt.value) return toast('Defina a data e hora de encerramento.', 'error');
+    if (!els.closeAt.value) return toast('Defina a data e hora do sorteio.', 'error');
     const closesAt = new Date(els.closeAt.value);
-    if (Number.isNaN(closesAt.getTime())) return toast('Data de encerramento inválida.', 'error');
-    await runAction('jl_admin_open_round', { p_closes_at: closesAt.toISOString() }, 'Nova rodada aberta.');
+    if (Number.isNaN(closesAt.getTime())) return toast('Data e hora inválidas.', 'error');
+    await runAction(
+      'jl_admin_open_round',
+      { p_closes_at: closesAt.toISOString() },
+      'Jogo aberto. O sorteio será automático na hora definida.'
+    );
   });
-  els.closeRound.addEventListener('click', () => runAction('jl_admin_close_round', {}, 'Apostas encerradas.'));
-  els.drawRound.addEventListener('click', () => runAction('jl_admin_draw_round', {}, 'Número sorteado. O sorteio desta rodada ficou bloqueado para nova tentativa.'));
-  els.publishRound.addEventListener('click', () => runAction('jl_admin_publish_round', {}, 'Resultado publicado para os jogadores.'));
+
+  els.closeRound.addEventListener('click', async () => {
+    if (!window.confirm('Encerrar as apostas e executar o sorteio automático agora?')) return;
+    await runAction('jl_admin_close_round', {}, 'Rodada encerrada e sorteada automaticamente.');
+  });
 
   els.depositRequests.addEventListener('click', async (event) => {
     const button = event.target.closest('[data-deposit]');
