@@ -2,6 +2,7 @@ const $ = selector => document.querySelector(selector);
 
 const state = {
   playerId: localStorage.getItem('jl_player_id') || '',
+  playerToken: localStorage.getItem('jl_player_token') || '',
   player: null,
   selectedNumber: null
 };
@@ -11,6 +12,7 @@ const gameArea = $('#gameArea');
 const gateMessage = $('#gateMessage');
 const gameMessage = $('#gameMessage');
 const creditMessage = $('#creditMessage');
+const withdrawalMessage = $('#withdrawalMessage');
 
 function setMessage(el, text = '', type = '') {
   el.textContent = text;
@@ -22,6 +24,7 @@ async function request(url, options = {}) {
     ...options,
     headers: {
       'Content-Type': 'application/json',
+      ...(state.playerToken ? { 'X-Player-Token': state.playerToken } : {}),
       ...(options.headers || {})
     }
   });
@@ -35,6 +38,10 @@ function formatDate(value) {
   return new Intl.DateTimeFormat('pt-MZ', {
     day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
   }).format(new Date(value));
+}
+
+function formatNumber(value) {
+  return Number(value || 0).toLocaleString('pt-MZ', { maximumFractionDigits: 2 });
 }
 
 function renderNumbers() {
@@ -56,10 +63,34 @@ function renderNumbers() {
   }
 }
 
+function renderWithdrawals(items = []) {
+  const history = $('#withdrawalHistory');
+  if (!items.length) {
+    history.className = 'history-list empty-state';
+    history.textContent = 'Ainda não há pedidos de levantamento.';
+    return;
+  }
+  const labels = {
+    pending: 'Pendente',
+    approved: 'Aprovado',
+    rejected: 'Rejeitado'
+  };
+  history.className = 'history-list';
+  history.innerHTML = items.map(item => `
+    <div class="history-row">
+      <span>${formatDate(item.createdAt)}</span>
+      <span>Quantidade <strong>${formatNumber(item.amount)}</strong></span>
+      <strong>${labels[item.status] || item.status}</strong>
+    </div>
+  `).join('');
+}
+
 function renderPlayer(data) {
   state.player = data.player;
   $('#playerDisplay').textContent = data.player.name;
-  $('#balanceDisplay').textContent = Number(data.player.balance).toLocaleString('pt-MZ');
+  $('#balanceDisplay').textContent = formatNumber(data.player.balance);
+  $('#availableDisplay').textContent = formatNumber(data.availableBalance ?? data.player.balance);
+  $('#reservedDisplay').textContent = formatNumber(data.reservedBalance || 0);
 
   const history = $('#betHistory');
   const bets = data.bets || [];
@@ -73,18 +104,27 @@ function renderPlayer(data) {
         <span>${formatDate(bet.createdAt)}</span>
         <span>Escolhido <strong>${bet.selectedNumber}</strong></span>
         <span>Sorteado <strong>${bet.drawnNumber}</strong></span>
-        <span>Aposta <strong>${Number(bet.amount).toLocaleString('pt-MZ')}</strong></span>
-        <strong class="${bet.won ? 'win' : 'loss'}">${bet.won ? `+${Number(bet.payout).toLocaleString('pt-MZ')}` : 'Não ganhou'}</strong>
+        <span>Aposta <strong>${formatNumber(bet.amount)}</strong></span>
+        <strong class="${bet.won ? 'win' : 'loss'}">${bet.won ? `+${formatNumber(bet.payout)}` : 'Não ganhou'}</strong>
       </div>
     `).join('');
   }
 
+  renderWithdrawals(data.withdrawals || []);
   playerGate.classList.add('hidden');
   gameArea.classList.remove('hidden');
 }
 
+function clearPlayerSession() {
+  localStorage.removeItem('jl_player_id');
+  localStorage.removeItem('jl_player_token');
+  state.playerId = '';
+  state.playerToken = '';
+  state.player = null;
+}
+
 async function loadPlayer() {
-  if (!state.playerId) {
+  if (!state.playerId || !state.playerToken) {
     playerGate.classList.remove('hidden');
     gameArea.classList.add('hidden');
     return;
@@ -93,8 +133,7 @@ async function loadPlayer() {
     const data = await request(`/api/players/${encodeURIComponent(state.playerId)}`);
     renderPlayer(data);
   } catch (error) {
-    localStorage.removeItem('jl_player_id');
-    state.playerId = '';
+    clearPlayerSession();
     playerGate.classList.remove('hidden');
     gameArea.classList.add('hidden');
     setMessage(gateMessage, 'A sessão anterior não foi encontrada. Crie um jogador novamente.', 'error');
@@ -110,7 +149,9 @@ $('#playerForm').addEventListener('submit', async event => {
       body: JSON.stringify({ name: $('#playerName').value })
     });
     state.playerId = data.player.id;
+    state.playerToken = data.token;
     localStorage.setItem('jl_player_id', state.playerId);
+    localStorage.setItem('jl_player_token', state.playerToken);
     await loadPlayer();
   } catch (error) {
     setMessage(gateMessage, error.message, 'error');
@@ -118,9 +159,7 @@ $('#playerForm').addEventListener('submit', async event => {
 });
 
 $('#switchPlayer').addEventListener('click', () => {
-  localStorage.removeItem('jl_player_id');
-  state.playerId = '';
-  state.player = null;
+  clearPlayerSession();
   state.selectedNumber = null;
   $('#drawResult').classList.add('hidden');
   $('#selectionLabel').textContent = 'Nenhum escolhido';
@@ -145,10 +184,30 @@ $('#creditForm').addEventListener('submit', async event => {
         note: $('#creditNote').value
       })
     });
-    setMessage(creditMessage, `Pedido de ${data.request.amount} créditos enviado. Aguarda aprovação do administrador.`, 'success');
+    setMessage(creditMessage, `Pedido de ${formatNumber(data.request.amount)} créditos enviado. Aguarda aprovação do administrador.`, 'success');
     $('#creditNote').value = '';
+    await loadPlayer();
   } catch (error) {
     setMessage(creditMessage, error.message, 'error');
+  }
+});
+
+$('#withdrawalForm').addEventListener('submit', async event => {
+  event.preventDefault();
+  if (!state.playerId) return;
+  setMessage(withdrawalMessage, 'Enviando pedido...');
+  try {
+    const data = await request('/api/withdrawals', {
+      method: 'POST',
+      body: JSON.stringify({
+        playerId: state.playerId,
+        amount: $('#withdrawalAmount').value
+      })
+    });
+    setMessage(withdrawalMessage, `Pedido de ${formatNumber(data.request.amount)} créditos ficou pendente para aprovação.`, 'success');
+    await loadPlayer();
+  } catch (error) {
+    setMessage(withdrawalMessage, error.message, 'error');
   }
 });
 
@@ -177,7 +236,7 @@ $('#betForm').addEventListener('submit', async event => {
     $('#chosenResult').textContent = data.bet.selectedNumber;
     $('#drawnResult').textContent = data.bet.drawnNumber;
     $('#winResult').textContent = data.bet.won
-      ? `Ganhou ${Number(data.bet.payout).toLocaleString('pt-MZ')}`
+      ? `Ganhou ${formatNumber(data.bet.payout)}`
       : 'Não ganhou';
     $('#drawResult').classList.remove('hidden');
 
