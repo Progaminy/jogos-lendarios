@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111827">
+  <title>Número Lendário — Jogos Lendários</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/">Jogos <strong>Lendários</strong></a>
+    <span class="demo-badge">DEMONSTRAÇÃO</span>
+  </header>
+
+  <main class="page-shell">
+    <section class="hero card">
+      <div>
+        <p class="eyebrow">PRIMEIRO JOGO</p>
+        <h1>Número Lendário</h1>
+        <p class="hero-copy">Escolha um número de <strong>0 a 10</strong>. Se acertar o número sorteado, recebe <strong>10×</strong> o valor apostado em créditos virtuais.</p>
+      </div>
+      <div class="promo-box">
+        <span>Aposte</span>
+        <strong>10</strong>
+        <span>ganhe</span>
+        <strong>100</strong>
+        <small>créditos virtuais</small>
+      </div>
+    </section>
+
+    <section id="playerGate" class="card gate">
+      <h2>Entrar no jogo</h2>
+      <p>Crie um jogador para começar. O saldo inicial é zero e os créditos de teste são aprovados pelo administrador.</p>
+      <form id="playerForm" class="inline-form">
+        <input id="playerName" maxlength="60" placeholder="Seu nome" autocomplete="name" required>
+        <button type="submit" class="button primary">Criar jogador</button>
+      </form>
+      <p id="gateMessage" class="message"></p>
+    </section>
+
+    <section id="gameArea" class="game-grid hidden">
+      <div class="card wallet-card">
+        <div>
+          <p class="eyebrow">JOGADOR</p>
+          <h2 id="playerDisplay">—</h2>
+        </div>
+        <div class="balance">
+          <span>Saldo</span>
+          <strong id="balanceDisplay">0</strong>
+          <small>créditos</small>
+        </div>
+        <button id="switchPlayer" class="button ghost" type="button">Trocar jogador</button>
+      </div>
+
+      <div class="card play-card">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">ESCOLHA</p>
+            <h2>Qual número vai sair?</h2>
+          </div>
+          <span id="selectionLabel" class="selection-pill">Nenhum escolhido</span>
+        </div>
+
+        <div id="numberGrid" class="number-grid" aria-label="Números de 0 a 10"></div>
+
+        <form id="betForm" class="bet-form">
+          <label>
+            Valor da aposta
+            <input id="betAmount" type="number" min="1" step="1" value="10" required>
+          </label>
+          <button id="playButton" type="submit" class="button primary large">Sortear agora</button>
+        </form>
+
+        <div id="drawResult" class="draw-result hidden" aria-live="polite">
+          <div>
+            <span>Número escolhido</span>
+            <strong id="chosenResult">—</strong>
+          </div>
+          <div class="drawn">
+            <span>Número sorteado</span>
+            <strong id="drawnResult">—</strong>
+          </div>
+          <div>
+            <span>Resultado</span>
+            <strong id="winResult">—</strong>
+          </div>
+        </div>
+        <p id="gameMessage" class="message"></p>
+      </div>
+
+      <div class="card credits-card">
+        <p class="eyebrow">CRÉDITOS DE TESTE</p>
+        <h2>Solicitar saldo</h2>
+        <p>Este protótipo não recebe dinheiro. Envie um pedido de créditos virtuais e o administrador decide se aprova.</p>
+        <form id="creditForm" class="stack-form">
+          <label>
+            Quantidade de créditos
+            <input id="creditAmount" type="number" min="1" step="1" value="100" required>
+          </label>
+          <label>
+            Nota opcional
+            <input id="creditNote" maxlength="160" placeholder="Ex.: teste do jogo">
+          </label>
+          <button type="submit" class="button secondary">Enviar pedido</button>
+        </form>
+        <p id="creditMessage" class="message"></p>
+      </div>
+
+      <div class="card history-card">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">HISTÓRICO</p>
+            <h2>Minhas últimas jogadas</h2>
+          </div>
+          <button id="refreshPlayer" type="button" class="button ghost">Atualizar</button>
+        </div>
+        <div id="betHistory" class="history-list empty-state">Ainda não há jogadas.</div>
+      </div>
+    </section>
+
+    <section class="fairness card">
+      <div>
+        <p class="eyebrow">SORTEIO JUSTO</p>
+        <h2>Todos os 11 números têm a mesma chance</h2>
+      </div>
+      <p>O backend usa um gerador criptograficamente seguro para sortear um inteiro de 0 a 10. O valor apostado em cada número não altera o resultado.</p>
+    </section>
+  </main>
+
+  <footer>
+    <span>Jogos Lendários · Protótipo com créditos virtuais</span>
+    <a href="/admin.html">Administração</a>
+  </footer>
+
+  <script src="/app.js" defer></script>
+</body>
+</html>
