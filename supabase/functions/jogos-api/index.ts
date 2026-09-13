@@ -127,9 +127,7 @@ async function requireAdmin(request: Request) {
   const rows = await supabase(`admin_sessions?token_hash=eq.${tokenHash}&select=id,expires_at&limit=1`) as Array<{ id: string; expires_at: string }>;
   const session = Array.isArray(rows) ? rows[0] : null;
   if (!session || new Date(session.expires_at).getTime() <= Date.now()) {
-    if (session) {
-      await supabase(`admin_sessions?id=eq.${encodeURIComponent(session.id)}`, { method: 'DELETE' }).catch(() => null);
-    }
+    if (session) await supabase(`admin_sessions?id=eq.${encodeURIComponent(session.id)}`, { method: 'DELETE' }).catch(() => null);
     throw new ApiError(401, 'Sessão administrativa inválida ou expirada.');
   }
   return { tokenHash, session };
@@ -159,6 +157,12 @@ function secureRandomInt11() {
   const values = new Uint32Array(1);
   do crypto.getRandomValues(values); while (values[0] >= limit);
   return values[0] % 11;
+}
+
+function messageText(value: unknown) {
+  const text = String(value || '').trim();
+  if (!text || text.length > 1000) return null;
+  return text;
 }
 
 function playerView(row: Record<string, unknown>) {
@@ -210,6 +214,17 @@ function betView(row: Record<string, unknown>, playerName = '') {
   };
 }
 
+function messageView(row: Record<string, unknown>, playerName = '') {
+  return {
+    id: row.id,
+    playerId: row.player_id,
+    playerName,
+    sender: row.sender_role,
+    body: row.body,
+    createdAt: row.created_at,
+  };
+}
+
 async function rpc(name: string, body: Record<string, unknown>) {
   return await supabase(`rpc/${name}`, {
     method: 'POST',
@@ -220,14 +235,13 @@ async function rpc(name: string, body: Record<string, unknown>) {
 
 async function playerSnapshot(request: Request, playerId: string) {
   const player = await requirePlayer(request, playerId);
-  const [credits, withdrawals, bets] = await Promise.all([
+  const [credits, withdrawals, bets, messagesDesc] = await Promise.all([
     supabase(`credit_requests?player_id=eq.${playerId}&select=*&order=created_at.desc&limit=10`) as Promise<Array<Record<string, unknown>>>,
     supabase(`withdrawal_requests?player_id=eq.${playerId}&select=*&order=created_at.desc&limit=10`) as Promise<Array<Record<string, unknown>>>,
     supabase(`bets?player_id=eq.${playerId}&select=*&order=created_at.desc&limit=20`) as Promise<Array<Record<string, unknown>>>,
+    supabase(`messages?player_id=eq.${playerId}&select=*&order=created_at.desc&limit=100`) as Promise<Array<Record<string, unknown>>>,
   ]);
-  const reserved = withdrawals
-    .filter((item) => item.status === 'pending')
-    .reduce((sum, item) => sum + Number(item.amount), 0);
+  const reserved = withdrawals.filter((item) => item.status === 'pending').reduce((sum, item) => sum + Number(item.amount), 0);
   return {
     player: playerView(player),
     availableBalance: Math.max(0, Number(player.balance) - reserved),
@@ -235,16 +249,18 @@ async function playerSnapshot(request: Request, playerId: string) {
     requests: credits.map((row) => creditView(row)),
     withdrawals: withdrawals.map((row) => withdrawalView(row)),
     bets: bets.map((row) => betView(row)),
+    messages: messagesDesc.reverse().map((row) => messageView(row)),
   };
 }
 
 async function adminOverview() {
-  const [players, deposits, withdrawals, bets, audit] = await Promise.all([
+  const [players, deposits, withdrawals, bets, audit, messages] = await Promise.all([
     supabase('players?select=id,name,balance,blocked,created_at&order=created_at.desc') as Promise<Array<Record<string, unknown>>>,
     supabase('credit_requests?status=eq.pending&select=*&order=created_at.asc') as Promise<Array<Record<string, unknown>>>,
     supabase('withdrawal_requests?status=eq.pending&select=*&order=created_at.asc') as Promise<Array<Record<string, unknown>>>,
     supabase('bets?select=*&order=created_at.desc&limit=200') as Promise<Array<Record<string, unknown>>>,
     supabase('audit_log?select=*&order=created_at.desc&limit=200') as Promise<Array<Record<string, unknown>>>,
+    supabase('messages?select=*&order=created_at.desc&limit=300') as Promise<Array<Record<string, unknown>>>,
   ]);
 
   const names = new Map(players.map((player) => [String(player.id), String(player.name)]));
@@ -252,11 +268,7 @@ async function adminOverview() {
   const totalPayout = bets.reduce((sum, bet) => sum + Number(bet.payout), 0);
   const numberStats = Array.from({ length: 11 }, (_, number) => {
     const selected = bets.filter((bet) => Number(bet.selected_number) === number);
-    return {
-      number,
-      bets: selected.length,
-      staked: selected.reduce((sum, bet) => sum + Number(bet.amount), 0),
-    };
+    return { number, bets: selected.length, staked: selected.reduce((sum, bet) => sum + Number(bet.amount), 0) };
   });
 
   return {
@@ -268,18 +280,15 @@ async function adminOverview() {
       pendingCredits: deposits.length,
       pendingWithdrawals: withdrawals.length,
       reservedCredits: withdrawals.reduce((sum, item) => sum + Number(item.amount), 0),
+      messages: messages.length,
     },
     pendingCredits: deposits.map((row) => creditView(row, names.get(String(row.player_id)) || '—')),
     pendingWithdrawals: withdrawals.map((row) => withdrawalView(row, names.get(String(row.player_id)) || '—')),
     numberStats,
     players: players.map(playerView),
     recentBets: bets.slice(0, 100).map((row) => betView(row, names.get(String(row.player_id)) || '—')),
-    audit: audit.map((item) => ({
-      id: item.id,
-      action: item.action,
-      details: item.details,
-      createdAt: item.created_at,
-    })),
+    messages: messages.reverse().map((row) => messageView(row, names.get(String(row.player_id)) || '—')),
+    audit: audit.map((item) => ({ id: item.id, action: item.action, details: item.details, createdAt: item.created_at })),
   };
 }
 
@@ -297,7 +306,7 @@ async function route(request: Request) {
   if (method === 'OPTIONS') return noContent();
 
   if (method === 'GET' && path === '/api/health') {
-    return json({ ok: true, game: 'Numero Lendario', mode: 'mts-demo', platform: 'cloudflare-supabase-edge' });
+    return json({ ok: true, game: 'Numero Lendario', mode: 'mts-demo', platform: 'cloudflare-supabase-edge', messaging: true });
   }
 
   if (method === 'POST' && path === '/api/players') {
@@ -307,22 +316,36 @@ async function route(request: Request) {
     const token = randomToken();
     const secretHash = await sha256(token);
     const rows = await supabase('players?select=id,name,balance,blocked,created_at', {
-      method: 'POST',
-      headers: { Prefer: 'return=representation' },
-      body: JSON.stringify({ name, secret_hash: secretHash }),
+      method: 'POST', headers: { Prefer: 'return=representation' }, body: JSON.stringify({ name, secret_hash: secretHash }),
     }) as Array<Record<string, unknown>>;
     const player = rows[0];
     await supabase('audit_log', {
-      method: 'POST',
-      headers: { Prefer: 'return=minimal' },
-      body: JSON.stringify({ action: 'player.created', details: { playerId: player.id, name } }),
+      method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ action: 'player.created', details: { playerId: player.id, name } }),
     });
     return json({ player: playerView(player), token }, 201);
   }
 
   const playerMatch = path.match(/^\/api\/players\/([^/]+)$/);
-  if (method === 'GET' && playerMatch) {
-    return json(await playerSnapshot(request, decodeURIComponent(playerMatch[1])));
+  if (method === 'GET' && playerMatch) return json(await playerSnapshot(request, decodeURIComponent(playerMatch[1])));
+
+  const messageMatch = path.match(/^\/api\/messages\/([^/]+)$/);
+  if (messageMatch && method === 'GET') {
+    const playerId = decodeURIComponent(messageMatch[1]);
+    await requirePlayer(request, playerId);
+    const rows = await supabase(`messages?player_id=eq.${playerId}&select=*&order=created_at.desc&limit=100`) as Array<Record<string, unknown>>;
+    return json({ messages: rows.reverse().map((row) => messageView(row)) });
+  }
+  if (messageMatch && method === 'POST') {
+    const playerId = decodeURIComponent(messageMatch[1]);
+    const player = await requirePlayer(request, playerId);
+    if (player.blocked) throw new ApiError(403, 'Jogador bloqueado.');
+    const body = await readJson(request) as Record<string, unknown>;
+    const text = messageText(body.message);
+    if (!text) throw new ApiError(400, 'A mensagem deve ter entre 1 e 1000 caracteres.');
+    const rows = await supabase('messages?select=*', {
+      method: 'POST', headers: { Prefer: 'return=representation' }, body: JSON.stringify({ player_id: playerId, sender_role: 'player', body: text }),
+    }) as Array<Record<string, unknown>>;
+    return json({ message: messageView(rows[0]) }, 201);
   }
 
   if (method === 'POST' && path === '/api/credit-requests') {
@@ -336,15 +359,11 @@ async function route(request: Request) {
     const pending = await supabase(`credit_requests?player_id=eq.${playerId}&status=eq.pending&select=id&limit=4`) as Array<unknown>;
     if (pending.length >= 3) throw new ApiError(409, 'Existem pedidos pendentes demais para este jogador.');
     const rows = await supabase('credit_requests?select=*', {
-      method: 'POST',
-      headers: { Prefer: 'return=representation' },
-      body: JSON.stringify({ player_id: playerId, amount: value, note }),
+      method: 'POST', headers: { Prefer: 'return=representation' }, body: JSON.stringify({ player_id: playerId, amount: value, note }),
     }) as Array<Record<string, unknown>>;
     const item = rows[0];
     await supabase('audit_log', {
-      method: 'POST',
-      headers: { Prefer: 'return=minimal' },
-      body: JSON.stringify({ action: 'deposit.requested', details: { requestId: item.id, playerId, amount: value } }),
+      method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ action: 'deposit.requested', details: { requestId: item.id, playerId, amount: value } }),
     });
     return json({ request: creditView(item) }, 201);
   }
@@ -364,18 +383,11 @@ async function route(request: Request) {
     const playerId = String(body.playerId || '');
     const selected = Number(body.number);
     const value = amount(body.amount);
-    if (!Number.isInteger(selected) || selected < 0 || selected > 10) {
-      throw new ApiError(400, 'Escolha um número inteiro entre 0 e 10.');
-    }
+    if (!Number.isInteger(selected) || selected < 0 || selected > 10) throw new ApiError(400, 'Escolha um número inteiro entre 0 e 10.');
     if (!value) throw new ApiError(400, 'Valor da aposta inválido.');
     await requirePlayer(request, playerId);
     const drawn = secureRandomInt11();
-    const result = await rpc('jl_place_bet', {
-      p_player_id: playerId,
-      p_selected_number: selected,
-      p_amount: value,
-      p_drawn_number: drawn,
-    });
+    const result = await rpc('jl_place_bet', { p_player_id: playerId, p_selected_number: selected, p_amount: value, p_drawn_number: drawn });
     return json({ bet: result }, 201);
   }
 
@@ -388,9 +400,7 @@ async function route(request: Request) {
     const tokenHash = await sha256(token);
     const expiresAt = new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString();
     await supabase('admin_sessions', {
-      method: 'POST',
-      headers: { Prefer: 'return=minimal' },
-      body: JSON.stringify({ token_hash: tokenHash, expires_at: expiresAt }),
+      method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ token_hash: tokenHash, expires_at: expiresAt }),
     });
     return json({ token, expiresIn: 28800 });
   }
@@ -406,36 +416,39 @@ async function route(request: Request) {
     return noContent();
   }
 
-  if (method === 'GET' && path === '/api/admin/overview') {
-    return json(await adminOverview());
+  if (method === 'GET' && path === '/api/admin/overview') return json(await adminOverview());
+
+  const adminMessageMatch = path.match(/^\/api\/admin\/messages\/([^/]+)$/);
+  if (method === 'POST' && adminMessageMatch) {
+    const playerId = decodeURIComponent(adminMessageMatch[1]);
+    const playerRows = await supabase(`players?id=eq.${encodeURIComponent(playerId)}&select=id,name&limit=1`) as Array<Record<string, unknown>>;
+    if (!playerRows.length) throw new ApiError(404, 'Jogador não encontrado.');
+    const body = await readJson(request) as Record<string, unknown>;
+    const text = messageText(body.message);
+    if (!text) throw new ApiError(400, 'A mensagem deve ter entre 1 e 1000 caracteres.');
+    const rows = await supabase('messages?select=*', {
+      method: 'POST', headers: { Prefer: 'return=representation' }, body: JSON.stringify({ player_id: playerId, sender_role: 'admin', body: text }),
+    }) as Array<Record<string, unknown>>;
+    return json({ message: messageView(rows[0], String(playerRows[0].name || '')) }, 201);
   }
 
   const creditReview = path.match(/^\/api\/admin\/credit-requests\/([^/]+)\/(approve|deny)$/);
   if (method === 'POST' && creditReview) {
     const decision = creditReview[2] === 'approve' ? 'approved' : 'rejected';
-    const result = await rpc('jl_review_credit', {
-      p_request_id: decodeURIComponent(creditReview[1]),
-      p_decision: decision,
-    });
+    const result = await rpc('jl_review_credit', { p_request_id: decodeURIComponent(creditReview[1]), p_decision: decision });
     return json({ request: result });
   }
 
   const withdrawalReview = path.match(/^\/api\/admin\/withdrawals\/([^/]+)\/(approve|deny)$/);
   if (method === 'POST' && withdrawalReview) {
     const decision = withdrawalReview[2] === 'approve' ? 'approved' : 'rejected';
-    const result = await rpc('jl_review_withdrawal', {
-      p_request_id: decodeURIComponent(withdrawalReview[1]),
-      p_decision: decision,
-    });
+    const result = await rpc('jl_review_withdrawal', { p_request_id: decodeURIComponent(withdrawalReview[1]), p_decision: decision });
     return json({ request: result });
   }
 
   const blockMatch = path.match(/^\/api\/admin\/players\/([^/]+)\/(block|unblock)$/);
   if (method === 'POST' && blockMatch) {
-    const result = await rpc('jl_set_blocked', {
-      p_player_id: decodeURIComponent(blockMatch[1]),
-      p_blocked: blockMatch[2] === 'block',
-    });
+    const result = await rpc('jl_set_blocked', { p_player_id: decodeURIComponent(blockMatch[1]), p_blocked: blockMatch[2] === 'block' });
     return json(result);
   }
 
@@ -443,13 +456,8 @@ async function route(request: Request) {
   if (method === 'POST' && adjustMatch) {
     const body = await readJson(request) as Record<string, unknown>;
     const delta = Number(body.delta);
-    if (!Number.isFinite(delta) || delta === 0 || Math.abs(delta) > 1000000) {
-      throw new ApiError(400, 'Ajuste inválido.');
-    }
-    const result = await rpc('jl_adjust_balance', {
-      p_player_id: decodeURIComponent(adjustMatch[1]),
-      p_delta: delta,
-    });
+    if (!Number.isFinite(delta) || delta === 0 || Math.abs(delta) > 1000000) throw new ApiError(400, 'Ajuste inválido.');
+    const result = await rpc('jl_adjust_balance', { p_player_id: decodeURIComponent(adjustMatch[1]), p_delta: delta });
     return json(result);
   }
 
