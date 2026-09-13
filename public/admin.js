@@ -1,4 +1,5 @@
 const $ = selector => document.querySelector(selector);
+const API_BASE = 'https://bxndjyzghgrmkelshtdp.supabase.co/functions/v1/jogos-api';
 
 const state = {
   token: sessionStorage.getItem('jl_admin_token') || ''
@@ -41,7 +42,8 @@ function escapeHtml(value) {
 }
 
 async function request(url, options = {}) {
-  const response = await fetch(url, {
+  const target = url.startsWith('/api/') ? `${API_BASE}${url}` : url;
+  const response = await fetch(target, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
