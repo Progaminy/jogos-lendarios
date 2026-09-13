@@ -1,5 +1,7 @@
 data/store.json
 data/*.tmp
 .env
+.dev.vars
+.wrangler/
 node_modules/
 .DS_Store
