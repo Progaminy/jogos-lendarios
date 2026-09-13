@@ -47,9 +47,7 @@ async function request(url, options = {}) {
   });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    if (response.status === 401 && url !== '/api/admin/login') {
-      logout(false);
-    }
+    if (response.status === 401 && url !== '/api/admin/login') logout(false);
     throw new Error(data.error || 'Não foi possível concluir o pedido.');
   }
   return data;
@@ -71,7 +69,9 @@ function renderStats(stats) {
     ['Apostas', stats.bets],
     ['Créditos apostados', formatNumber(stats.totalStaked)],
     ['Créditos pagos', formatNumber(stats.totalPayout)],
-    ['Pedidos pendentes', stats.pendingCredits]
+    ['Créditos pendentes', stats.pendingCredits],
+    ['Levantamentos pendentes', stats.pendingWithdrawals],
+    ['Créditos reservados', formatNumber(stats.reservedCredits)]
   ];
   $('#statsGrid').innerHTML = items.map(([label, value]) => `
     <div class="stat-card"><span>${label}</span><strong>${value}</strong></div>
@@ -94,6 +94,27 @@ function renderCredits(requests) {
         <div class="actions">
           <button class="button success" data-credit-action="approve" data-id="${escapeHtml(item.id)}">Aprovar</button>
           <button class="button danger" data-credit-action="deny" data-id="${escapeHtml(item.id)}">Rejeitar</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function renderWithdrawals(requests) {
+  const rows = $('#withdrawalRows');
+  if (!requests.length) {
+    rows.innerHTML = '<tr><td colspan="4">Nenhum levantamento pendente.</td></tr>';
+    return;
+  }
+  rows.innerHTML = requests.map(item => `
+    <tr>
+      <td>${escapeHtml(item.playerName)}</td>
+      <td><strong>${formatNumber(item.amount)}</strong></td>
+      <td>${formatDate(item.createdAt)}</td>
+      <td>
+        <div class="actions">
+          <button class="button success" data-withdrawal-action="approve" data-id="${escapeHtml(item.id)}">Aprovar</button>
+          <button class="button danger" data-withdrawal-action="deny" data-id="${escapeHtml(item.id)}">Rejeitar</button>
         </div>
       </td>
     </tr>
@@ -176,6 +197,7 @@ async function loadDashboard() {
     const data = await request('/api/admin/overview');
     renderStats(data.stats);
     renderCredits(data.pendingCredits);
+    renderWithdrawals(data.pendingWithdrawals);
     renderNumberStats(data.numberStats);
     renderPlayers(data.players);
     renderBets(data.recentBets);
@@ -207,9 +229,7 @@ async function login(event) {
 
 async function logout(callServer = true) {
   if (callServer && state.token) {
-    try {
-      await request('/api/admin/logout', { method: 'POST' });
-    } catch {}
+    try { await request('/api/admin/logout', { method: 'POST' }); } catch {}
   }
   state.token = '';
   sessionStorage.removeItem('jl_admin_token');
@@ -225,14 +245,26 @@ $('#dashboard').addEventListener('click', async event => {
   if (creditButton) {
     creditButton.disabled = true;
     try {
-      await request(`/api/admin/credit-requests/${encodeURIComponent(creditButton.dataset.id)}/${creditButton.dataset.creditAction}`, {
-        method: 'POST'
-      });
+      await request(`/api/admin/credit-requests/${encodeURIComponent(creditButton.dataset.id)}/${creditButton.dataset.creditAction}`, { method: 'POST' });
       await loadDashboard();
-      setMessage('Pedido analisado.', 'success');
+      setMessage('Pedido de créditos analisado.', 'success');
     } catch (error) {
       setMessage(error.message, 'error');
       creditButton.disabled = false;
+    }
+    return;
+  }
+
+  const withdrawalButton = event.target.closest('[data-withdrawal-action]');
+  if (withdrawalButton) {
+    withdrawalButton.disabled = true;
+    try {
+      await request(`/api/admin/withdrawals/${encodeURIComponent(withdrawalButton.dataset.id)}/${withdrawalButton.dataset.withdrawalAction}`, { method: 'POST' });
+      await loadDashboard();
+      setMessage('Pedido de levantamento analisado.', 'success');
+    } catch (error) {
+      setMessage(error.message, 'error');
+      withdrawalButton.disabled = false;
     }
     return;
   }
@@ -241,9 +273,7 @@ $('#dashboard').addEventListener('click', async event => {
   if (blockButton) {
     blockButton.disabled = true;
     try {
-      await request(`/api/admin/players/${encodeURIComponent(blockButton.dataset.id)}/${blockButton.dataset.block}`, {
-        method: 'POST'
-      });
+      await request(`/api/admin/players/${encodeURIComponent(blockButton.dataset.id)}/${blockButton.dataset.block}`, { method: 'POST' });
       await loadDashboard();
       setMessage('Estado do jogador atualizado.', 'success');
     } catch (error) {
