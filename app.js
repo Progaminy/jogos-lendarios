@@ -10,6 +10,7 @@
     selectedNumber: null,
     pendingBet: null,
     countdownTimer: null,
+    roundRefreshTimer: null,
     refreshTimer: null
   };
 
@@ -35,6 +36,16 @@
   function formatDate(value) {
     if (!value) return '—';
     return new Date(value).toLocaleString('pt-MZ', { dateStyle: 'short', timeStyle: 'short' });
+  }
+
+  function formatCountdown(ms) {
+    const total = Math.max(0, Math.floor(ms / 1000));
+    const days = Math.floor(total / 86400);
+    const hours = Math.floor((total % 86400) / 3600);
+    const minutes = Math.floor((total % 3600) / 60);
+    const seconds = total % 60;
+    const clock = [hours, minutes, seconds].map((v) => String(v).padStart(2, '0')).join(':');
+    return days > 0 ? `${days}d ${clock}` : clock;
   }
 
   function escapeHtml(value) {
@@ -115,6 +126,8 @@
   function renderRound() {
     const round = currentRound();
     clearInterval(state.countdownTimer);
+    clearTimeout(state.roundRefreshTimer);
+
     if (!round) {
       els.roundBadge.textContent = 'Sem rodada ativa';
       els.roundBadge.className = 'badge muted';
@@ -124,31 +137,33 @@
       return;
     }
 
-    const labels = { open: 'Apostas abertas', closed: 'Apostas fechadas', drawn: 'Sorteado — aguardando publicação' };
-    els.roundStatus.textContent = labels[round.status] || round.status;
     els.roundBadge.textContent = `Rodada ${round.round_no}`;
-    els.roundBadge.className = `badge ${round.status === 'open' ? 'success' : 'danger'}`;
+    const closeAt = new Date(round.closes_at).getTime();
+    const drawAt = new Date(round.draw_at || round.closes_at).getTime();
+
+    if (Number.isFinite(drawAt)) {
+      const refreshDelay = Math.max(250, drawAt - Date.now() + 350);
+      state.roundRefreshTimer = setTimeout(() => refresh(true), refreshDelay);
+    }
 
     const tick = () => {
-      const left = new Date(round.closes_at).getTime() - Date.now();
-      if (round.status !== 'open' || left <= 0) {
+      const now = Date.now();
+      if (round.status === 'open' && now < closeAt) {
+        els.roundStatus.textContent = 'Apostas abertas';
+        els.roundBadge.className = 'badge success';
+        els.countdown.textContent = formatCountdown(closeAt - now);
+      } else if (now < drawAt) {
+        els.roundStatus.textContent = 'Apostas bloqueadas · sorteio em';
+        els.roundBadge.className = 'badge danger';
+        els.countdown.textContent = formatCountdown(drawAt - now);
+      } else {
+        els.roundStatus.textContent = 'Sorteando e publicando…';
+        els.roundBadge.className = 'badge danger';
         els.countdown.textContent = '00:00:00';
-        if (round.status === 'open' && left <= 0) {
-          els.roundStatus.textContent = 'Apostas fechadas';
-          els.roundBadge.className = 'badge danger';
-        }
-        updateBetButton();
-        return;
       }
-      const total = Math.floor(left / 1000);
-      const days = Math.floor(total / 86400);
-      const hours = Math.floor((total % 86400) / 3600);
-      const minutes = Math.floor((total % 3600) / 60);
-      const seconds = total % 60;
-      const clock = [hours, minutes, seconds].map((v) => String(v).padStart(2, '0')).join(':');
-      els.countdown.textContent = days > 0 ? `${days}d ${clock}` : clock;
       updateBetButton();
     };
+
     tick();
     state.countdownTimer = setInterval(tick, 1000);
   }
@@ -269,7 +284,7 @@
     if (state.selectedNumber === null) return showToast('Escolha um número primeiro.', 'error');
     if (!Number.isFinite(amount) || amount < 1) return showToast('Informe um valor de aposta válido.', 'error');
     const round = currentRound();
-    if (!round || round.status !== 'open' || new Date(round.closes_at).getTime() <= Date.now()) return showToast('As apostas estão fechadas.', 'error');
+    if (!round || round.status !== 'open' || new Date(round.closes_at).getTime() <= Date.now()) return showToast('As apostas estão bloqueadas ou fechadas.', 'error');
 
     if (!state.token) {
       state.pendingBet = { number: state.selectedNumber, amount };
