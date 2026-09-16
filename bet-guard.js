@@ -14,12 +14,11 @@
   }
 
   function parseMoney(value) {
-    const normalized = String(value ?? '')
-      .replace(/\s/g, '')
-      .replace(/\./g, '')
-      .replace(',', '.')
-      .replace(/[^0-9.-]/g, '');
-    const number = Number(normalized);
+    const raw = String(value ?? '').trim();
+    const normalized = raw.includes(',')
+      ? raw.replace(/\s/g, '').replace(/\./g, '').replace(',', '.')
+      : raw.replace(/\s/g, '').replace(/[^0-9.-]/g, '');
+    const number = Number(normalized.replace(/[^0-9.-]/g, ''));
     return Number.isFinite(number) ? number : NaN;
   }
 
@@ -35,40 +34,44 @@
     window.setTimeout(() => depositAmount?.focus({ preventScroll: true }), 450);
   }
 
-  const betForm = document.getElementById('betForm');
-  betForm?.addEventListener('submit', (event) => {
-    const betAmount = document.getElementById('betAmount');
-    const amount = Number(betAmount?.value);
+  function guardForm(formId, amountId) {
+    const form = document.getElementById(formId);
+    form?.addEventListener('submit', (event) => {
+      const amountInput = document.getElementById(amountId);
+      const amount = Number(amountInput?.value);
 
-    if (!Number.isFinite(amount) || amount < MIN_BET || amount > MAX_BET) {
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      showToast(`A aposta deve ser entre ${MIN_BET} e ${MAX_BET} MZN.`, 'error');
-      betAmount?.focus();
-      return;
-    }
+      if (!Number.isFinite(amount) || amount < MIN_BET || amount > MAX_BET) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        showToast(`A aposta deve ser entre ${MIN_BET} e ${MAX_BET} MZN.`, 'error');
+        amountInput?.focus();
+        return;
+      }
 
-    // Se o jogador já está autenticado, evita uma chamada desnecessária
-    // quando o saldo visível já é inferior ao valor escolhido.
-    const playerArea = document.getElementById('playerArea');
-    if (!playerArea || playerArea.classList.contains('hidden')) return;
+      const playerArea = document.getElementById('playerArea');
+      if (!playerArea || playerArea.classList.contains('hidden')) return;
 
-    const balance = parseMoney(document.getElementById('balance')?.textContent);
-    if (Number.isFinite(balance) && balance < amount) {
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      goToDeposit();
-    }
-  }, true);
+      const balance = parseMoney(document.getElementById('balance')?.textContent);
+      if (Number.isFinite(balance) && balance < amount) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        goToDeposit();
+      }
+    }, true);
+  }
 
-  // Proteção adicional: se o saldo mudou entretanto e o Supabase rejeitar
-  // a aposta, o jogador também é levado automaticamente ao depósito.
+  guardForm('betForm', 'betAmount');
+  guardForm('pairBetForm', 'pairBetAmount');
+
+  // Se o saldo mudar entre a leitura do ecrã e a gravação no banco,
+  // a rejeição do Supabase também envia o jogador para Depósito.
   const originalFetch = window.fetch.bind(window);
   window.fetch = async (...args) => {
     const response = await originalFetch(...args);
     const url = typeof args[0] === 'string' ? args[0] : args[0]?.url || '';
+    const isBetRpc = url.includes('/rest/v1/rpc/jl_place_bet') || url.includes('/rest/v1/rpc/jl_place_pair_bet');
 
-    if (url.includes('/rest/v1/rpc/jl_place_bet') && !response.ok) {
+    if (isBetRpc && !response.ok) {
       response.clone().text().then((text) => {
         if (/saldo insuficiente/i.test(text)) goToDeposit();
       }).catch(() => {});
