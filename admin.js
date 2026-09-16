@@ -11,6 +11,9 @@
     adminLoginForm: $('adminLoginForm'), adminCode: $('adminCode'), adminLoginMessage: $('adminLoginMessage'),
     metricRound: $('metricRound'), metricStatus: $('metricStatus'), metricCountdown: $('metricCountdown'), metricDraw: $('metricDraw'),
     closeAt: $('closeAt'), openRound: $('openRound'), closeRound: $('closeRound'), refreshAdmin: $('refreshAdmin'),
+    scheduleStart: $('scheduleStart'), scheduleEnd: $('scheduleEnd'), scheduleInterval: $('scheduleInterval'),
+    quick12: $('quick12'), quick24: $('quick24'), schedulePeriod: $('schedulePeriod'),
+    singleDrawAt: $('singleDrawAt'), addDrawTime: $('addDrawTime'), clearSchedule: $('clearSchedule'), drawSchedule: $('drawSchedule'),
     numberStats: $('numberStats'), depositRequests: $('depositRequests'), withdrawRequests: $('withdrawRequests'),
     playersList: $('playersList'), recentBets: $('recentBets')
   };
@@ -34,6 +37,22 @@
     els.adminLoginMessage.textContent = message;
     els.adminLoginMessage.className = `form-message ${type}`.trim();
   }
+  function toLocalInput(date) {
+    return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+  }
+  function fromInput(input) {
+    const value = new Date(input.value);
+    return Number.isNaN(value.getTime()) ? null : value;
+  }
+  function clock(ms) {
+    const total = Math.max(0, Math.floor(ms / 1000));
+    const days = Math.floor(total / 86400);
+    const h = Math.floor((total % 86400) / 3600);
+    const m = Math.floor((total % 3600) / 60);
+    const s = total % 60;
+    const text = [h, m, s].map((v) => String(v).padStart(2, '0')).join(':');
+    return days ? `${days}d ${text}` : text;
+  }
 
   async function rpc(name, args = {}) {
     const response = await fetch(`${cfg.supabaseUrl}/rest/v1/rpc/${name}`, {
@@ -49,7 +68,7 @@
     const raw = await response.text();
     let payload;
     try { payload = raw ? JSON.parse(raw) : null; } catch { payload = raw; }
-    if (!response.ok) throw new Error(payload?.message || payload?.error || `Erro ${response.status}`);
+    if (!response.ok) throw new Error(payload?.message || payload?.error || payload?.hint || `Erro ${response.status}`);
     return payload;
   }
 
@@ -65,60 +84,99 @@
     els.adminLogout.classList.toggle('hidden', !show);
   }
 
-  function setDefaultCloseTime() {
-    const d = new Date(Date.now() + 30 * 60 * 1000);
-    d.setSeconds(0, 0);
-    const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-    els.closeAt.value = local;
+  function setDefaultTimes() {
+    const manual = new Date(Date.now() + 30 * 60 * 1000);
+    manual.setSeconds(0, 0);
+    els.closeAt.value = toLocalInput(manual);
+    els.singleDrawAt.value = toLocalInput(manual);
+
+    const start = new Date();
+    start.setMinutes(0, 0, 0);
+    start.setHours(start.getHours() + 1);
+    const end = new Date(start.getTime() + 12 * 60 * 60 * 1000);
+    els.scheduleStart.value = toLocalInput(start);
+    els.scheduleEnd.value = toLocalInput(end);
+    els.scheduleInterval.value = '60';
+  }
+
+  function setScheduleWindow(hours) {
+    let start = fromInput(els.scheduleStart);
+    if (!start || start.getTime() <= Date.now() + 10000) {
+      start = new Date();
+      start.setMinutes(0, 0, 0);
+      start.setHours(start.getHours() + 1);
+      els.scheduleStart.value = toLocalInput(start);
+    }
+    const end = new Date(start.getTime() + hours * 60 * 60 * 1000);
+    els.scheduleEnd.value = toLocalInput(end);
+    if (!els.scheduleInterval.value) els.scheduleInterval.value = '60';
   }
 
   function renderRound() {
     const round = state.data?.round;
     const last = state.data?.last_result;
+    const schedule = state.data?.draw_schedule || [];
     clearInterval(state.countdownTimer);
 
     els.metricDraw.textContent = last?.drawn_number ?? '—';
 
     if (!round) {
       els.metricRound.textContent = last ? `#${last.round_no}` : '—';
-      els.metricStatus.textContent = last ? 'Finalizada' : 'Sem rodada';
-      els.metricCountdown.textContent = '—';
-      els.openRound.disabled = false;
+      els.metricStatus.textContent = schedule.length ? 'Aguardando programação' : (last ? 'Finalizada' : 'Sem rodada');
+      els.metricCountdown.textContent = schedule.length ? dateTime(schedule[0].draw_at) : '—';
+      els.openRound.disabled = schedule.length > 0;
       els.closeRound.disabled = true;
       return;
     }
 
-    const labels = { open: 'Aberta', closed: 'Encerrada' };
     els.metricRound.textContent = `#${round.round_no}`;
-    els.metricStatus.textContent = labels[round.status] || round.status;
     els.openRound.disabled = true;
-    els.closeRound.disabled = round.status !== 'open';
+    els.closeRound.disabled = false;
 
+    const closeAt = new Date(round.closes_at).getTime();
+    const drawAt = new Date(round.draw_at || round.closes_at).getTime();
     const tick = () => {
-      if (round.status !== 'open') {
-        els.metricCountdown.textContent = 'Processando sorteio automático…';
-        return;
-      }
-      const left = new Date(round.closes_at).getTime() - Date.now();
-      if (left <= 0) {
+      const now = Date.now();
+      if (now < closeAt && round.status === 'open') {
+        els.metricStatus.textContent = 'Aberta';
+        els.metricCountdown.textContent = `Bloqueio ${clock(closeAt - now)}`;
+      } else if (now < drawAt) {
+        els.metricStatus.textContent = 'Apostas bloqueadas';
+        els.metricCountdown.textContent = `Sorteio ${clock(drawAt - now)}`;
+      } else {
+        els.metricStatus.textContent = 'Processando sorteio';
         els.metricCountdown.textContent = '00:00:00';
-        return;
       }
-      const total = Math.floor(left / 1000);
-      const days = Math.floor(total / 86400);
-      const h = Math.floor((total % 86400) / 3600);
-      const m = Math.floor((total % 3600) / 60);
-      const s = total % 60;
-      const clock = [h, m, s].map((v) => String(v).padStart(2, '0')).join(':');
-      els.metricCountdown.textContent = days ? `${days}d ${clock}` : clock;
     };
     tick();
     state.countdownTimer = setInterval(tick, 1000);
   }
 
+  function renderSchedule() {
+    const items = state.data?.draw_schedule || [];
+    els.clearSchedule.disabled = !items.some((item) => item.status === 'pending');
+    if (!items.length) {
+      els.drawSchedule.innerHTML = '<div class="empty">Nenhum horário futuro programado.</div>';
+      return;
+    }
+
+    els.drawSchedule.innerHTML = items.map((item) => {
+      const active = item.status === 'active';
+      const label = active ? 'RODADA ATIVA' : 'PROGRAMADO';
+      const action = item.status === 'pending'
+        ? `<button class="button danger small" data-cancel-draw="${item.id}">Cancelar</button>`
+        : '<span class="badge success">Em execução</span>';
+      return `<div class="request-row">
+        <div><strong>${dateTime(item.draw_at)}</strong><br><small>${label}${active && item.round_id ? ' · rodada vinculada' : ''}</small></div>
+        <strong>${active ? 'Agora' : 'Futuro'}</strong>
+        <div class="row-actions">${action}</div>
+      </div>`;
+    }).join('');
+  }
+
   function renderStats() {
     if (!state.data?.round) {
-      els.numberStats.innerHTML = '<div class="empty">Abra uma rodada para acompanhar as apostas por número.</div>';
+      els.numberStats.innerHTML = '<div class="empty">Abra ou programe uma rodada para acompanhar as apostas por número.</div>';
       return;
     }
     const stats = state.data?.number_stats || [];
@@ -179,6 +237,7 @@
 
   function render() {
     renderRound();
+    renderSchedule();
     renderStats();
     renderRequests();
     renderPlayers();
@@ -237,19 +296,51 @@
   els.refreshAdmin.addEventListener('click', () => refresh());
 
   els.openRound.addEventListener('click', async () => {
-    if (!els.closeAt.value) return toast('Defina a data e hora do sorteio.', 'error');
-    const closesAt = new Date(els.closeAt.value);
-    if (Number.isNaN(closesAt.getTime())) return toast('Data e hora inválidas.', 'error');
+    const drawAt = fromInput(els.closeAt);
+    if (!drawAt) return toast('Defina uma data e hora válida para o sorteio.', 'error');
     await runAction(
       'jl_admin_open_round',
-      { p_closes_at: closesAt.toISOString() },
-      'Jogo aberto. O sorteio será automático na hora definida.'
+      { p_closes_at: drawAt.toISOString() },
+      'Jogo aberto. As apostas serão bloqueadas 3 segundos antes do sorteio.'
     );
   });
 
   els.closeRound.addEventListener('click', async () => {
-    if (!window.confirm('Encerrar as apostas e executar o sorteio automático agora?')) return;
-    await runAction('jl_admin_close_round', {}, 'Rodada encerrada e sorteada automaticamente.');
+    if (!window.confirm('Encerrar as apostas e executar o sorteio agora?')) return;
+    await runAction('jl_admin_close_round', {}, 'Rodada encerrada e sorteada.');
+  });
+
+  els.quick12.addEventListener('click', () => setScheduleWindow(12));
+  els.quick24.addEventListener('click', () => setScheduleWindow(24));
+
+  els.schedulePeriod.addEventListener('click', async () => {
+    const start = fromInput(els.scheduleStart);
+    const end = fromInput(els.scheduleEnd);
+    const interval = Number(els.scheduleInterval.value);
+    if (!start || !end) return toast('Informe o primeiro e o último horário.', 'error');
+    if (!Number.isInteger(interval) || interval < 1 || interval > 1440) return toast('Intervalo inválido.', 'error');
+    await runAction('jl_admin_schedule_draws', {
+      p_start_at: start.toISOString(),
+      p_end_at: end.toISOString(),
+      p_interval_minutes: interval
+    }, 'Programação criada.');
+  });
+
+  els.addDrawTime.addEventListener('click', async () => {
+    const drawAt = fromInput(els.singleDrawAt);
+    if (!drawAt) return toast('Informe um horário válido.', 'error');
+    await runAction('jl_admin_add_draw_time', { p_draw_at: drawAt.toISOString() }, 'Horário adicionado.');
+  });
+
+  els.clearSchedule.addEventListener('click', async () => {
+    if (!window.confirm('Cancelar todos os horários futuros ainda não ativados? A rodada atualmente ativa não será cancelada.')) return;
+    await runAction('jl_admin_clear_draw_schedule', {}, 'Horários futuros cancelados.');
+  });
+
+  els.drawSchedule.addEventListener('click', async (event) => {
+    const button = event.target.closest('[data-cancel-draw]');
+    if (!button) return;
+    await runAction('jl_admin_cancel_draw_time', { p_schedule_id: button.dataset.cancelDraw }, 'Horário cancelado.');
   });
 
   els.depositRequests.addEventListener('click', async (event) => {
@@ -282,8 +373,8 @@
     }
   });
 
-  setDefaultCloseTime();
+  setDefaultTimes();
   showApp(Boolean(state.token));
   if (state.token) refresh(true);
-  state.timer = setInterval(() => { if (state.token) refresh(true); }, 10000);
+  state.timer = setInterval(() => { if (state.token) refresh(true); }, 5000);
 })();
