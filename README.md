@@ -1,13 +1,13 @@
 # Jogos Lendários
 
-Projeto do jogo **Número Lendário**, com frontend no GitHub, dados e lógica sensível no Supabase e publicação de produção no Cloudflare Workers.
+Projeto do jogo **Número Lendário**, com frontend no GitHub, dados e lógica sensível no Supabase e publicação em produção no Cloudflare Workers.
 
 ## Arquitetura atual
 
 ```text
 GitHub — branch main
         │
-        │ fonte oficial do frontend e da configuração versionada
+        │ fonte oficial do frontend e configuração versionada
         ▼
 Cloudflare Workers + Static Assets
         │
@@ -24,14 +24,14 @@ Supabase
         ├── programação de sorteios
         ├── transações
         ├── auditoria
-        └── lógica real do sorteio
+        └── lógica real do jogo
 ```
 
 A branch `main` do GitHub é a fonte oficial do frontend. O Supabase é a fonte oficial dos dados e da lógica do banco. Não manter cópias diferentes do site editadas manualmente no Cloudflare.
 
 ## Endereços
 
-Produção principal:
+Produção:
 
 ```text
 https://jogoslendarios.adadpsf.shop
@@ -43,26 +43,30 @@ Administração:
 https://jogoslendarios.adadpsf.shop/admin.html
 ```
 
-URL técnica do Worker:
+URL técnica:
 
 ```text
 https://jogos-lendarios.pensadorsemfronteiras0.workers.dev
 ```
 
-# Estrutura do frontend
+# Estrutura do projeto
 
 ```text
 jogos-lendarios/
-├── index.html        # interface do jogador
-├── styles.css        # aparência
-├── config.js         # URL e publishable key do Supabase
-├── app.js            # interação do jogador e chamadas RPC
-├── admin.html        # painel administrativo
-├── admin.js          # chamadas administrativas
-├── wrangler.jsonc    # configuração do Cloudflare Worker
+├── index.html
+├── styles.css
+├── config.js
+├── app.js
+├── admin.html
+├── admin.js
+├── wrangler.jsonc
 ├── .assetsignore
 ├── .gitignore
 ├── .nojekyll
+├── supabase/
+│   └── migrations/
+│       ├── 20260916_scheduled_rounds_with_three_second_lock.sql
+│       └── 20260916_add_locked_round_state.sql
 └── README.md
 ```
 
@@ -74,29 +78,28 @@ Não existe backend Node separado. O frontend é HTML/CSS/JavaScript estático. 
 2. informa o valor da aposta;
 3. clica em **Apostar**;
 4. se ainda não estiver autenticado, abre **Criar conta / Já tenho conta**;
-5. o cadastro usa nome, telefone, PIN e confirmação do PIN;
-6. depois do cadastro/login, a aposta pendente continua automaticamente;
-7. o Supabase valida rodada, horário e saldo;
-8. o valor é descontado do saldo;
-9. a aposta é gravada em `public.bets`;
-10. **3 segundos antes do sorteio** novas apostas são bloqueadas;
-11. na hora marcada o Supabase sorteia automaticamente um número;
-12. identifica vencedores, calcula os prémios e credita os saldos;
-13. publica o resultado;
-14. se houver outro horário programado, a rodada seguinte é aberta automaticamente.
+5. depois do cadastro/login, a aposta pendente continua automaticamente;
+6. o Supabase valida rodada, horário e saldo;
+7. desconta o valor do saldo;
+8. grava a aposta em `public.bets`;
+9. **3 segundos antes do sorteio** novas apostas são bloqueadas;
+10. na hora marcada o Supabase executa o sorteio;
+11. identifica vencedores, calcula prémios e credita saldos;
+12. publica o resultado;
+13. se existir outro horário programado, abre automaticamente a rodada seguinte.
 
-Quem acerta recebe **10× o valor apostado**.
+Quem ganha recebe **10× o valor apostado**.
 
-# Regra dos 3 segundos antes do sorteio
+# Bloqueio de 3 segundos antes do sorteio
 
-A partir da programação atual, existem dois horários diferentes em cada rodada:
+Cada rodada possui dois horários:
 
 ```text
 closes_at = momento em que novas apostas são bloqueadas
-draw_at   = momento em que o número é sorteado
+draw_at   = momento em que o sorteio é executado
 ```
 
-A diferença é fixa:
+A diferença é:
 
 ```text
 draw_at - closes_at = 3 segundos
@@ -105,42 +108,35 @@ draw_at - closes_at = 3 segundos
 Exemplo:
 
 ```text
-Sorteio programado: 14:00:00
-Bloqueio de apostas: 13:59:57
-Sorteio:             14:00:00
+Sorteio: 14:00:00
+Bloqueio: 13:59:57
 ```
 
-Fluxo:
+O estado da rodada passa por:
 
 ```text
-APOSTAS ABERTAS
-      ↓
-13:59:57
-      ↓
-APOSTAS BLOQUEADAS
-      ↓
+OPEN
+  ↓
+closes_at
+  ↓
+LOCKED
+  ↓
 3 segundos
-      ↓
-14:00:00
-      ↓
-SORTEIO AUTOMÁTICO
-      ↓
-PAGAMENTO / PUBLICAÇÃO
-      ↓
-PRÓXIMA RODADA, se programada
+  ↓
+draw_at
+  ↓
+PUBLISHED
 ```
 
-O frontend mostra visualmente esse estado, mas a regra verdadeira fica no banco. Mesmo que alguém tente chamar a API diretamente, `jl_place_bet(...)` só aceita aposta se a rodada estiver `open` e `closes_at > now()`.
+Durante `LOCKED`, o jogador já não consegue apostar. A proteção real está no banco: `jl_place_bet(...)` exige `status = 'open'` e `closes_at > now()`.
 
-# Administração flexível e programação de vários sorteios
+# Administração flexível
 
-O administrador não precisa abrir uma rodada de cada vez.
+O administrador pode abrir uma rodada manual ou programar várias de uma vez.
 
-O painel permite duas formas principais.
+## Rodada manual
 
-## 1. Abrir uma rodada manual
-
-O administrador escolhe uma data/hora de sorteio e clica em **Abrir jogo**.
+Escolhe a hora exata do sorteio e clica em **Abrir jogo**.
 
 O banco cria:
 
@@ -150,9 +146,9 @@ closes_at = draw_at - 3 segundos
 status    = open
 ```
 
-## 2. Programar um período inteiro
+## Programar um período
 
-O administrador pode informar:
+O painel aceita:
 
 ```text
 primeiro sorteio
@@ -168,7 +164,7 @@ Fim:       15:00
 Intervalo: 60 minutos
 ```
 
-O sistema programa:
+Cria:
 
 ```text
 12:00
@@ -177,109 +173,107 @@ O sistema programa:
 15:00
 ```
 
-Também existem atalhos no painel para preparar períodos de **12 horas** e **24 horas**.
+O painel também oferece atalhos para períodos de **12 horas** e **24 horas**.
 
-O intervalo é flexível. Pode ser, por exemplo:
+O intervalo pode ser ajustado, por exemplo:
 
 ```text
-15 minutos
-30 minutos
-60 minutos
-120 minutos
+15 min
+30 min
+60 min
+120 min
 ```
 
-O banco limita cada lote a 250 horários e aceita programação dentro dos próximos 7 dias.
+Cada lote pode criar até 250 horários e pode cobrir os próximos 7 dias.
 
-## 3. Adicionar um horário avulso
+## Horário avulso
 
-O administrador também pode adicionar apenas um horário futuro sem recriar toda a programação.
+Também é possível adicionar apenas um horário futuro sem recriar a programação inteira.
 
-## 4. Cancelar programação futura
+## Cancelamento
 
-Horários ainda com estado `pending` podem ser cancelados individualmente ou todos de uma vez.
+Horários com estado `pending` podem ser cancelados individualmente ou todos de uma vez.
 
-Uma rodada já ativa não é cancelada por esse botão; para ela existe a ação administrativa de emergência **Encerrar e sortear agora**.
+A rodada já ativa não é cancelada por esse botão. Para ela existe **Encerrar e sortear agora**.
 
-# Como a programação automática funciona no banco
-
-A tabela responsável pelos horários é:
+# Tabela de programação
 
 ```text
 public.draw_schedule
 ```
 
-Principais campos:
+Campos principais:
 
 ```text
-id         identificador do horário
-draw_at    hora exata do sorteio
+id         identificador
+draw_at    hora do sorteio
 status     pending | active | completed | cancelled | missed
 round_id   rodada ligada ao horário
 created_at criação
-updated_at última atualização
+updated_at atualização
 ```
 
 Estados:
 
 ```text
-pending   → horário futuro aguardando
-active    → horário já virou a rodada atual
-completed → sorteio executado
-cancelled → cancelado pelo administrador
-missed    → horário passou sem possibilidade de abrir rodada
+pending   → aguardando
+active    → horário transformado em rodada atual
+completed → sorteio concluído
+cancelled → cancelado pelo admin
+missed    → horário passou sem ser ativado
 ```
 
-A rodada ativa possui também:
+# Motor automático
 
-```text
-public.game_rounds.draw_at
-public.game_rounds.closes_at
-public.game_rounds.schedule_id
-```
-
-# Motor automático do jogo
-
-O motor principal é:
+A função central é:
 
 ```text
 jl_process_game_engine()
 ```
 
-Ele é executado pelo Supabase Cron em intervalo de **1 segundo**.
-
-O job atual é:
+O Supabase Cron executa o job:
 
 ```text
 jogos_lendarios_engine
 ```
 
-Fluxo do motor:
+com intervalo:
 
 ```text
-verificar rodada aberta
-        ↓
-closes_at chegou?
-        ↓ sim
-mudar para CLOSED / bloquear apostas
-        ↓
-draw_at chegou?
-        ↓ sim
-jl_finalize_due_rounds()
-        ↓
-sortear e publicar
-        ↓
-marcar horário como completed
-        ↓
-jl_open_next_scheduled_round()
-        ↓
-abrir próximo horário pending
+1 second
 ```
 
-Além do Cron, `jl_public_state()` e `jl_admin_dashboard()` também chamam o motor. Isso dá redundância operacional: quando o site ou o painel consulta o estado, o banco também confere se existe alguma transição pendente.
+O motor é serializado com `pg_try_advisory_xact_lock(...)` para evitar que duas requisições simultâneas abram duas rodadas.
 
-O Supabase Cron suporta agendamentos sub-minuto, incluindo intervalos de 1 a 59 segundos.
+Fluxo:
 
-# Funções principais do Supabase
+```text
+rodada OPEN
+      ↓
+closes_at chegou?
+      ↓ sim
+status = LOCKED
+      ↓
+draw_at chegou?
+      ↓ sim
+jl_finalize_due_rounds()
+      ↓
+sorteio
+      ↓
+pagamentos
+      ↓
+status = PUBLISHED
+      ↓
+schedule = completed
+      ↓
+jl_open_next_scheduled_round()
+      ↓
+próxima rodada OPEN
+```
+
+`jl_public_state()` e `jl_admin_dashboard()` também chamam o motor, portanto as consultas ao site ajudam a processar transições pendentes além do Cron.
+
+# Funções principais
 
 ```text
 jl_admin_open_round(...)
@@ -295,39 +289,39 @@ jl_admin_cancel_draw_time(...)
     cancela um horário pending
 
 jl_admin_clear_draw_schedule(...)
-    cancela todos os horários pending
+    cancela horários pending
 
 jl_open_next_scheduled_round()
-    transforma o próximo horário pending em rodada open
+    abre a próxima rodada programada
 
 jl_process_game_engine()
-    controla bloqueio, sorteio e abertura da próxima rodada
+    controla OPEN → LOCKED → sorteio → próxima rodada
 
 jl_place_bet(...)
-    valida e grava aposta
+    valida e grava apostas
 
 jl_finalize_due_rounds()
-    executa o sorteio e pagamentos quando draw_at chega
+    finaliza a rodada e paga vencedores
 
 jl_secure_number()
-    gera o número vencedor 0..10
+    determina o número vencedor
 
 jl_public_state()
-    devolve o estado público do jogo
+    estado público
 
 jl_admin_dashboard(...)
-    devolve estado, programação, apostas, saldos e pedidos ao admin
+    estado administrativo
 ```
 
-# Onde está a lógica do sorteio
+# Lógica atual do número vencedor
 
-A função que gera o número é:
+A lógica real fica em:
 
 ```text
 public.jl_secure_number()
 ```
 
-Para ver o código no SQL Editor:
+Para ver o código:
 
 ```sql
 select pg_get_functiondef(
@@ -335,90 +329,82 @@ select pg_get_functiondef(
 );
 ```
 
-A lógica é equivalente a:
+## Regra atual
 
-```sql
-loop
-  b := get_byte(extensions.gen_random_bytes(1), 0);
-  if b < 253 then
-    return b % 11;
-  end if;
-end loop;
-```
+A função **não sorteia diretamente entre todos os números de 0 a 10**.
 
-Funcionamento:
+Primeiro ela calcula o total apostado em cada número da rodada ativa:
 
 ```text
-1. gera um byte aleatório entre 0 e 255
-2. aceita apenas 0..252
-3. 253, 254 e 255 são rejeitados e gerados novamente
-4. calcula valor % 11
-5. resultado final fica entre 0 e 10
+0  → total apostado no 0
+1  → total apostado no 1
+...
+10 → total apostado no 10
 ```
 
-Como `253 = 23 × 11`, cada número recebe a mesma quantidade de possibilidades na transformação aceita.
+Depois encontra o menor total.
 
-**O total apostado em cada número não entra no cálculo do número vencedor.**
-
-# Finalização da rodada
-
-Para ver a função completa:
-
-```sql
-select pg_get_functiondef(
-  'public.jl_finalize_due_rounds()'::regprocedure
-);
-```
-
-Hoje ela finaliza rodadas quando:
-
-```sql
-draw_at <= now()
-```
-
-Ela:
+Exemplo:
 
 ```text
-fecha a rodada se ainda estiver open
-      ↓
-gera o número com jl_secure_number()
-      ↓
-grava drawn_number
-      ↓
-marca apostas vencedoras
-      ↓
-payout = amount × 10
-      ↓
-credita saldos
-      ↓
-registra transações de payout
-      ↓
-registra auditoria
-      ↓
-marca schedule como completed
-      ↓
-publica a rodada
+0 → 500 MZN
+1 → 100 MZN
+2 → 100 MZN
+3 → 300 MZN
+...
 ```
 
-# Como as apostas e os valores são guardados
+O menor total é `100 MZN`, então os candidatos seriam:
 
-O sistema não guarda apenas um total por número. **Cada aposta é uma linha individual** em:
+```text
+1 e 2
+```
+
+A função usa `extensions.gen_random_bytes(1)` para escolher aleatoriamente **entre os candidatos empatados com o menor total apostado**.
+
+Ela usa rejeição antes do módulo para evitar favorecer uma posição da lista quando a quantidade de candidatos não divide 256 exatamente.
+
+Fluxo atual:
+
+```text
+pegar rodada OPEN ou LOCKED
+      ↓
+calcular SUM(amount) para 0..10
+      ↓
+encontrar menor total
+      ↓
+montar lista dos números com esse menor total
+      ↓
+gerar byte criptográfico
+      ↓
+escolher uniformemente entre os candidatos
+      ↓
+retornar número vencedor
+```
+
+**Portanto, na lógica atual, os valores apostados influenciam quais números entram na lista de candidatos do sorteio.**
+
+Isso deve ser mantido documentado para que a regra real do banco e o README nunca entrem em contradição.
+
+# Como as apostas são guardadas
+
+Cada aposta é uma linha individual em:
 
 ```text
 public.bets
 ```
 
-Principais colunas:
+Campos principais:
 
 ```text
-id               identificador da aposta
-round_id         rodada
-player_id        jogador
-selected_number  número escolhido 0..10
-amount           valor apostado
-won              resultado da aposta
-payout           prémio
-created_at       data/hora
+id
+round_id
+player_id
+selected_number
+amount
+won
+payout
+created_at
 ```
 
 Exemplo:
@@ -429,9 +415,9 @@ Jogador B → número 0 →  50 MZN
 Jogador C → número 7 →  20 MZN
 ```
 
-O banco guarda três linhas.
+São três linhas diferentes.
 
-Para o número `0`, o total é calculado:
+O total do `0` é calculado:
 
 ```text
 100 + 50 = 150 MZN
@@ -439,13 +425,11 @@ Para o número `0`, o total é calculado:
 
 # Função que grava a aposta
 
-A função é:
-
 ```text
 jl_place_bet(text, integer, numeric)
 ```
 
-Para vê-la:
+Para ver:
 
 ```sql
 select pg_get_functiondef(
@@ -453,27 +437,19 @@ select pg_get_functiondef(
 );
 ```
 
-Ela recebe:
+Ela valida:
 
 ```text
-p_token            sessão
-p_selected_number  número
-p_amount            valor
-```
-
-Valida:
-
-```text
-número 0..10
+número entre 0 e 10
 valor válido
 rodada open
-closes_at ainda não alcançado
+closes_at ainda no futuro
 jogador autenticado
 jogador não bloqueado
 saldo suficiente
 ```
 
-Depois desconta o saldo:
+Depois desconta:
 
 ```sql
 update public.players
@@ -483,7 +459,7 @@ set
 where id = v_player_id;
 ```
 
-E grava a aposta:
+E grava:
 
 ```sql
 insert into public.bets(
@@ -501,11 +477,9 @@ values(
 returning id into v_bet_id;
 ```
 
-Também grava a movimentação em `public.transactions` com `kind = 'bet'` e valor negativo.
+Também registra a saída em `public.transactions` com `kind = 'bet'`.
 
-# Como o total de cada número é calculado
-
-Consulta básica:
+# Como ver o total apostado por número
 
 ```sql
 select
@@ -517,19 +491,7 @@ group by selected_number
 order by selected_number;
 ```
 
-A função `jl_admin_dashboard(...)` calcula esses valores para a rodada atual e combina com `generate_series(0,10)`, por isso o admin também vê os números que ainda têm zero apostas.
-
-Exemplo:
-
-```text
-Número 0  → 3 apostas → 170 MZN
-Número 1  → 0 apostas →   0 MZN
-Número 2  → 5 apostas → 420 MZN
-...
-Número 10 → 2 apostas →  80 MZN
-```
-
-## Ver totais da rodada aberta
+Para a rodada atual com todos os números de `0` a `10`, inclusive os que têm zero:
 
 ```sql
 with rodada_atual as (
@@ -553,7 +515,9 @@ group by n
 order by n;
 ```
 
-## Ver apostas individuais
+O painel administrativo usa a mesma ideia dentro de `jl_admin_dashboard(...)`.
+
+# Ver apostas individuais
 
 ```sql
 select
@@ -568,29 +532,55 @@ join public.game_rounds r
 order by b.created_at desc;
 ```
 
-# Independência entre dinheiro apostado e sorteio
+# Finalização e pagamento
 
-Os totais são apenas informação administrativa.
+Para ver a função:
 
-```text
-total no número 0 → não influencia jl_secure_number()
-total no número 7 → não influencia jl_secure_number()
+```sql
+select pg_get_functiondef(
+  'public.jl_finalize_due_rounds()'::regprocedure
+);
 ```
 
-O sorteio não procura o número mais barato, mais caro, mais apostado ou menos apostado.
+Ela processa rodadas quando:
+
+```sql
+draw_at <= now()
+```
+
+Fluxo:
+
+```text
+jl_secure_number()
+      ↓
+grava drawn_number
+      ↓
+won = selected_number == drawn_number
+      ↓
+payout = amount × 10 para vencedores
+      ↓
+credita saldo
+      ↓
+registra transaction payout
+      ↓
+registra audit_log
+      ↓
+marca schedule completed
+      ↓
+publica rodada
+```
 
 # Administração
 
-O painel administrativo pode:
+O administrador pode:
 
-- abrir uma rodada manual;
-- programar vários sorteios de uma vez;
+- abrir rodada manual;
+- programar vários sorteios;
 - definir início, fim e intervalo;
 - usar atalhos de 12h e 24h;
 - adicionar horário avulso;
 - cancelar horários futuros;
-- acompanhar rodada e contagem;
-- ver o bloqueio de 3 segundos;
+- acompanhar OPEN / LOCKED / sorteio;
 - encerrar e sortear agora em emergência;
 - ver quantidade de apostas por número;
 - ver total apostado por número;
@@ -601,17 +591,15 @@ O painel administrativo pode:
 - ajustar saldo;
 - bloquear/desbloquear jogador.
 
-Não existe uma ação normal para escolher manualmente o número vencedor.
-
 # Depósitos
 
 ```text
-jogador solicita depósito
-        ↓
-pedido pending
-        ↓
+jogador solicita
+      ↓
+pending
+      ↓
 admin aprova ou rejeita
-        ↓
+      ↓
 aprovado → saldo aumenta
 ```
 
@@ -622,9 +610,7 @@ Nesta fase não existe transferência automática real por M-Pesa ou banco.
 Saldo insuficiente:
 
 ```text
-pedido
-  ↓
-rejeição automática
+pedido → rejeição automática
 ```
 
 Saldo suficiente:
@@ -632,12 +618,12 @@ Saldo suficiente:
 ```text
 valor reservado
       ↓
-pedido pending
+pending
       ↓
 admin aprova ou rejeita
       ↓
 aprovado = débito permanece
-rejeitado = valor volta ao saldo
+rejeitado = valor retorna ao saldo
 ```
 
 # Principais tabelas
@@ -656,9 +642,7 @@ admin_config
 audit_log
 ```
 
-# Como clonar e rodar localmente
-
-Primeira vez:
+# Como clonar
 
 ```bash
 git clone https://github.com/Progaminy/jogos-lendarios.git
@@ -682,19 +666,19 @@ git switch main
 git pull origin main
 ```
 
-# Fluxo obrigatório de cada retificação
+# Fluxo de cada retificação
 
 ```text
 1. atualizar main
-2. fazer alteração
+2. alterar somente o necessário
 3. testar localmente
 4. git status / git diff
 5. commit claro
 6. push origin main
-7. Cloudflare detecta o commit
-8. Cloudflare faz deploy
+7. Cloudflare detecta
+8. deploy automático
 9. testar produção
-10. se envolver banco, confirmar também Supabase
+10. se envolver banco, testar também Supabase
 ```
 
 Comandos:
@@ -703,7 +687,7 @@ Comandos:
 git switch main
 git pull origin main
 
-# editar e testar
+# editar/testar
 
 git status
 git diff
@@ -712,32 +696,31 @@ git commit -m "Descrição clara da retificação"
 git push origin main
 ```
 
-# Como colocar online e em produção
+# Produção
 
-A primeira configuração já está feita:
+Configuração já existente:
 
 ```text
 GitHub:     Progaminy/jogos-lendarios
 Branch:     main
 Cloudflare: Worker jogos-lendarios
-Assets:     raiz do repositório
 Domínio:    jogoslendarios.adadpsf.shop
 Supabase:   bxndjyzghgrmkelshtdp
 ```
 
-Depois disso não é necessário fazer upload manual no Cloudflare.
+Depois da configuração inicial, não fazer upload manual de cada alteração.
 
 ```text
-commit/push para main
-        ↓
+push main
+   ↓
 Cloudflare detecta
-        ↓
-build/deploy automático
-        ↓
+   ↓
+build/deploy
+   ↓
 produção atualizada
 ```
 
-Confirmar deploy em:
+Confirmar em:
 
 ```text
 Cloudflare
@@ -746,7 +729,7 @@ Cloudflare
 → Implantações
 ```
 
-Testar:
+Testar sempre:
 
 ```text
 https://jogoslendarios.adadpsf.shop
@@ -755,33 +738,34 @@ https://jogoslendarios.adadpsf.shop/admin.html
 
 # Retificações no Supabase
 
-Mudanças estruturais de banco devem ser feitas como migration.
+Mudanças de estrutura ou lógica devem virar migration.
 
 Exemplos:
 
 ```text
 nova tabela
 nova coluna
-nova função RPC
-alteração da lógica do jogo
+nova RPC
+mudança de regra
 novo índice
-mudança do Cron
+mudança de Cron
 ```
 
-Depois de uma migration:
+As migrations relacionadas à programação atual estão versionadas em:
 
 ```text
-1. validar funções
-2. validar tabelas
-3. validar Cron
-4. testar fluxo do jogador
-5. testar painel admin
-6. atualizar README/código correspondente
-7. push main
-8. testar produção completa
+supabase/migrations/
 ```
 
-# Consultas úteis para auditoria
+# Consultas úteis
+
+Ver função do número vencedor:
+
+```sql
+select pg_get_functiondef(
+  'public.jl_secure_number()'::regprocedure
+);
+```
 
 Ver motor:
 
@@ -791,19 +775,11 @@ select pg_get_functiondef(
 );
 ```
 
-Ver abertura automática da próxima rodada:
+Ver próxima rodada:
 
 ```sql
 select pg_get_functiondef(
   'public.jl_open_next_scheduled_round()'::regprocedure
-);
-```
-
-Ver função que programa vários horários:
-
-```sql
-select pg_get_functiondef(
-  'public.jl_admin_schedule_draws(text,timestamp with time zone,timestamp with time zone,integer)'::regprocedure
 );
 ```
 
@@ -841,7 +817,7 @@ order by round_no desc;
 
 # Segurança
 
-`config.js` pode conter apenas dados públicos necessários ao navegador:
+`config.js` deve conter somente dados públicos necessários ao navegador:
 
 - URL pública do Supabase;
 - publishable key.
@@ -854,9 +830,11 @@ Nunca colocar no GitHub:
 - tokens administrativos;
 - segredos de infraestrutura.
 
-# Rollback de frontend
+Funções internas como `jl_secure_number()`, `jl_finalize_due_rounds()`, `jl_process_game_engine()` e `jl_open_next_scheduled_round()` não precisam ser chamadas diretamente pelo navegador.
 
-Se um commit causar problema:
+# Rollback
+
+Frontend:
 
 ```bash
 git log --oneline
@@ -864,51 +842,52 @@ git revert <SHA_DO_COMMIT>
 git push origin main
 ```
 
-O Cloudflare publica o revert como uma nova versão.
+Banco: corrigir com uma nova migration compatível. Não apagar dados de produção sem verificar dependências.
 
-Rollback de banco deve ser feito com uma migration de correção compatível. Não apagar dados de produção sem verificar dependências.
+# Checklist de retificação
 
-# Checklist antes de considerar uma retificação concluída
-
-- `main` atualizada;
-- alteração feita apenas onde necessário;
-- teste local realizado;
+- main atualizada;
+- alteração testada;
 - `git diff` conferido;
-- nenhum segredo adicionado ao repositório;
+- nenhum segredo incluído;
 - commit claro;
 - push concluído;
-- build do Cloudflare concluído;
-- domínio de produção testado;
-- painel admin testado quando aplicável;
+- Cloudflare implantou;
+- produção testada;
+- admin testado quando aplicável;
 - Supabase testado quando aplicável;
-- fluxo principal afetado testado do início ao fim.
+- fluxo afetado testado de ponta a ponta.
 
-# Regra central
+# Regra central atual
 
 ```text
 ADMIN define um ou vários horários
         ↓
-SUPABASE cria a programação
+SUPABASE programa
         ↓
-RODADA abre
+RODADA OPEN
         ↓
 JOGADORES apostam
         ↓
 3 segundos antes
         ↓
-APOSTAS são bloqueadas
+RODADA LOCKED
         ↓
-HORA exata chega
+HORA exata
         ↓
-SISTEMA sorteia automaticamente
+SISTEMA calcula os totais apostados por número
+        ↓
+SISTEMA encontra o menor total
+        ↓
+SISTEMA sorteia entre os números empatados nesse menor total
         ↓
 SISTEMA calcula vencedores
         ↓
-SISTEMA paga vencedores
+SISTEMA paga 10×
         ↓
 SISTEMA publica resultado
         ↓
-SISTEMA abre a próxima rodada programada
+SISTEMA abre próxima rodada programada
 ```
 
-**A programação pode cobrir várias horas de uma vez, o bloqueio ocorre 3 segundos antes do sorteio e o número vencedor continua sendo gerado independentemente dos valores apostados em cada número.**
+**O administrador pode programar várias horas de uma vez; as apostas bloqueiam 3 segundos antes de cada sorteio; e o README deve sempre refletir exatamente a lógica que está realmente ativa no Supabase.**
