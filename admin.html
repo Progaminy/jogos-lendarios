@@ -33,22 +33,49 @@
       <div class="admin-grid">
         <div class="card metric"><span>Rodada</span><strong id="metricRound">—</strong></div>
         <div class="card metric"><span>Estado</span><strong id="metricStatus">—</strong></div>
-        <div class="card metric"><span>Sorteio em</span><strong id="metricCountdown">—</strong></div>
+        <div class="card metric"><span>Próxima ação</span><strong id="metricCountdown">—</strong></div>
         <div class="card metric"><span>Último resultado</span><strong id="metricDraw">—</strong></div>
       </div>
 
       <section class="card admin-card">
         <div class="section-head">
-          <div><p class="eyebrow">CONTROLE DA RODADA</p><h2>Definir hora e abrir o jogo</h2></div>
+          <div><p class="eyebrow">CONTROLE IMEDIATO</p><h2>Abrir uma rodada manual</h2></div>
           <button id="refreshAdmin" class="button ghost small" type="button">Atualizar</button>
         </div>
-        <p class="muted-text">O sorteio é automático. Ao chegar a hora definida, o sistema encerra as apostas, sorteia um número de 0 a 10, calcula os vencedores, credita os prêmios e publica o resultado sem intervenção do administrador.</p>
+        <p class="muted-text">Defina a hora exata do sorteio. As apostas serão bloqueadas automaticamente 3 segundos antes, o número será sorteado na hora marcada e o resultado será publicado sem escolha manual do número.</p>
         <div class="admin-actions">
           <label class="field"><span>Data e hora do sorteio</span><input id="closeAt" type="datetime-local"></label>
           <button id="openRound" class="button success" type="button">Abrir jogo</button>
           <button id="closeRound" class="button danger" type="button">Encerrar e sortear agora</button>
         </div>
-        <p class="muted-text" style="margin-top:12px">O botão de encerramento manual antecipa o mesmo processo automático. Não existe botão para escolher ou repetir o número sorteado.</p>
+        <p class="muted-text" style="margin-top:12px">O encerramento manual é uma ação de emergência: ele antecipa o sorteio da rodada atual. Não permite escolher nem repetir o número vencedor.</p>
+      </section>
+
+      <section class="card admin-card">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">PROGRAMAÇÃO AUTOMÁTICA</p>
+            <h2>Programar vários sorteios</h2>
+          </div>
+          <button id="clearSchedule" class="button danger small" type="button">Cancelar horários futuros</button>
+        </div>
+        <p class="muted-text">Pode programar um período inteiro, por exemplo 12:00, 13:00, 14:00 e 15:00. Em cada horário o sistema bloqueia novas apostas 3 segundos antes, sorteia automaticamente e, se houver outro horário programado, abre a rodada seguinte.</p>
+
+        <div class="admin-actions">
+          <label class="field"><span>Primeiro sorteio</span><input id="scheduleStart" type="datetime-local"></label>
+          <label class="field"><span>Último sorteio</span><input id="scheduleEnd" type="datetime-local"></label>
+          <label class="field" style="max-width:180px"><span>Intervalo em minutos</span><input id="scheduleInterval" type="number" min="1" max="1440" step="1" value="60"></label>
+          <button id="quick12" class="button ghost" type="button">Período 12h</button>
+          <button id="quick24" class="button ghost" type="button">Período 24h</button>
+          <button id="schedulePeriod" class="button success" type="button">Programar período</button>
+        </div>
+
+        <div class="admin-actions">
+          <label class="field"><span>Adicionar um horário avulso</span><input id="singleDrawAt" type="datetime-local"></label>
+          <button id="addDrawTime" class="button ghost" type="button">Adicionar horário</button>
+        </div>
+
+        <div id="drawSchedule" class="request-list"><div class="empty">Nenhum horário futuro programado.</div></div>
       </section>
 
       <section class="card admin-card">
