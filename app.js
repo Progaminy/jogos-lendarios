@@ -19,81 +19,30 @@
   };
 
   const els = {
-    toast: $('toast'),
-    accountButton: $('accountButton'),
-    numberRoundBadge: $('numberRoundBadge'),
-    pairRoundBadge: $('pairRoundBadge'),
-
-    numberResultBanner: $('numberResultBanner'),
-    numberResultTitle: $('numberResultTitle'),
-    numberResultNumber: $('numberResultNumber'),
-    pairResultBanner: $('pairResultBanner'),
-    pairResultTitle: $('pairResultTitle'),
-    pairResultA: $('pairResultA'),
-    pairResultB: $('pairResultB'),
-
-    numberRoundStatus: $('numberRoundStatus'),
-    numberCountdown: $('numberCountdown'),
-    numberRuleText: $('numberRuleText'),
-    numberPrizeText: $('numberPrizeText'),
-    numberGrid: $('numberGrid'),
-    betForm: $('betForm'),
-    betAmount: $('betAmount'),
-    betButton: $('betButton'),
-    selectionText: $('selectionText'),
-
-    pairRoundStatus: $('pairRoundStatus'),
-    pairCountdown: $('pairCountdown'),
-    pairRuleText: $('pairRuleText'),
-    pairPrizeText: $('pairPrizeText'),
-    pairNumberGrid: $('pairNumberGrid'),
-    pairBetForm: $('pairBetForm'),
-    pairBetAmount: $('pairBetAmount'),
-    pairBetButton: $('pairBetButton'),
-    pairSelectionText: $('pairSelectionText'),
-
-    playerArea: $('playerArea'),
-    playerName: $('playerName'),
-    playerPhone: $('playerPhone'),
-    balance: $('balance'),
-    logoutButton: $('logoutButton'),
-    refreshButton: $('refreshButton'),
-    betHistory: $('betHistory'),
-
-    depositForm: $('depositForm'),
-    depositAmount: $('depositAmount'),
-    depositNote: $('depositNote'),
-    depositMessage: $('depositMessage'),
-    withdrawForm: $('withdrawForm'),
-    withdrawAmount: $('withdrawAmount'),
-    withdrawMessage: $('withdrawMessage'),
-
-    authModal: $('authModal'),
-    closeAuth: $('closeAuth'),
-    registerTab: $('registerTab'),
-    loginTab: $('loginTab'),
-    registerForm: $('registerForm'),
-    loginForm: $('loginForm'),
-    authMessage: $('authMessage'),
-    registerName: $('registerName'),
-    registerPhone: $('registerPhone'),
-    registerPin: $('registerPin'),
-    registerPinConfirm: $('registerPinConfirm'),
-    loginPhone: $('loginPhone'),
-    loginPin: $('loginPin')
+    toast: $('toast'), accountButton: $('accountButton'),
+    numberRoundBadge: $('numberRoundBadge'), pairRoundBadge: $('pairRoundBadge'),
+    numberResultBanner: $('numberResultBanner'), numberResultTitle: $('numberResultTitle'), numberResultNumber: $('numberResultNumber'),
+    pairResultBanner: $('pairResultBanner'), pairResultTitle: $('pairResultTitle'), pairResultA: $('pairResultA'), pairResultB: $('pairResultB'),
+    numberRoundStatus: $('numberRoundStatus'), numberCountdown: $('numberCountdown'), numberRuleText: $('numberRuleText'), numberPrizeText: $('numberPrizeText'),
+    numberGrid: $('numberGrid'), betForm: $('betForm'), betAmount: $('betAmount'), betButton: $('betButton'), selectionText: $('selectionText'),
+    pairRoundStatus: $('pairRoundStatus'), pairCountdown: $('pairCountdown'), pairRuleText: $('pairRuleText'), pairPrizeText: $('pairPrizeText'),
+    pairNumberGrid: $('pairNumberGrid'), pairBetForm: $('pairBetForm'), pairBetAmount: $('pairBetAmount'), pairBetButton: $('pairBetButton'), pairSelectionText: $('pairSelectionText'),
+    playerArea: $('playerArea'), playerName: $('playerName'), playerPhone: $('playerPhone'), balance: $('balance'),
+    logoutButton: $('logoutButton'), refreshButton: $('refreshButton'), betHistory: $('betHistory'),
+    depositForm: $('depositForm'), depositAmount: $('depositAmount'), depositNote: $('depositNote'), depositMessage: $('depositMessage'),
+    withdrawForm: $('withdrawForm'), withdrawAmount: $('withdrawAmount'), withdrawMessage: $('withdrawMessage'),
+    authModal: $('authModal'), closeAuth: $('closeAuth'), registerTab: $('registerTab'), loginTab: $('loginTab'),
+    registerForm: $('registerForm'), loginForm: $('loginForm'), authMessage: $('authMessage'),
+    registerName: $('registerName'), registerPhone: $('registerPhone'), registerPin: $('registerPin'), registerPinConfirm: $('registerPinConfirm'),
+    loginPhone: $('loginPhone'), loginPin: $('loginPin')
   };
 
   function formatMoney(value) {
-    return Number(value || 0).toLocaleString('pt-MZ', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
+    return Number(value || 0).toLocaleString('pt-MZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
   function formatDate(value) {
-    return value
-      ? new Date(value).toLocaleString('pt-MZ', { dateStyle: 'short', timeStyle: 'short' })
-      : '—';
+    return value ? new Date(value).toLocaleString('pt-MZ', { dateStyle: 'short', timeStyle: 'short' }) : '—';
   }
 
   function formatCountdown(ms) {
@@ -107,12 +56,11 @@
   }
 
   function escapeHtml(value) {
-    return String(value ?? '').replace(/[&<>'"]/g, (c) => ({
-      '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
-    }[c]));
+    return String(value ?? '').replace(/[&<>'"]/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[c]));
   }
 
   function showToast(message, type = '') {
+    if (!els.toast) return;
     els.toast.textContent = message;
     els.toast.className = `toast show ${type}`.trim();
     clearTimeout(showToast.timer);
@@ -140,9 +88,7 @@
     const raw = await response.text();
     let payload = null;
     try { payload = raw ? JSON.parse(raw) : null; } catch { payload = raw; }
-    if (!response.ok) {
-      throw new Error(payload?.message || payload?.error || payload?.hint || `Erro ${response.status}`);
-    }
+    if (!response.ok) throw new Error(payload?.message || payload?.error || payload?.hint || `Erro ${response.status}`);
     return payload;
   }
 
@@ -152,34 +98,21 @@
     else localStorage.removeItem(TOKEN_KEY);
   }
 
-  function game(type) {
-    return state.data?.games?.[type] || null;
-  }
-
-  function gameSettings(type) {
-    return game(type)?.settings || {};
-  }
-
-  function gameRound(type) {
-    return game(type)?.current_round || null;
-  }
+  const game = (type) => state.data?.games?.[type] || null;
+  const gameSettings = (type) => game(type)?.settings || {};
+  const gameRound = (type) => game(type)?.current_round || null;
 
   function gameIsOpen(type) {
     const g = game(type);
     const round = g?.current_round;
-    return Boolean(
-      g?.settings?.enabled &&
-      round &&
-      round.status === 'open' &&
-      new Date(round.closes_at).getTime() > Date.now()
-    );
+    return Boolean(g?.settings?.enabled && round && round.status === 'open' && new Date(round.closes_at).getTime() > Date.now());
   }
 
   function modeDescription(settings) {
     if (settings?.draw_mode === 'house_safe_random') {
-      return 'Sorteio aleatório apenas entre resultados seguros: o pagamento vencedor deve manter a rodada com saldo positivo para a casa.';
+      return 'Sorteio aleatório apenas entre resultados financeiramente seguros para a rodada.';
     }
-    return 'Sorteio entre os resultados com menor exposição financeira. Em empate, a escolha entre eles é aleatória.';
+    return 'Sorteio entre os resultados com menor exposição financeira; em empate, a escolha é aleatória.';
   }
 
   function buildNumbers() {
@@ -204,7 +137,7 @@
 
   function buildPairNumbers() {
     els.pairNumberGrid.innerHTML = '';
-    for (let n = 1; n <= 10; n += 1) {
+    for (let n = 0; n <= 10; n += 1) {
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'number-button';
@@ -226,10 +159,9 @@
           item.classList.toggle('selected', state.selectedPair.includes(Number(item.dataset.pairNumber)));
         });
 
-        if (!state.selectedPair.length) els.pairSelectionText.textContent = 'Escolha dois números diferentes.';
+        if (!state.selectedPair.length) els.pairSelectionText.textContent = 'Escolha dois números diferentes de 0 a 10.';
         else if (state.selectedPair.length === 1) els.pairSelectionText.textContent = `Escolhido ${state.selectedPair[0]}. Falta o segundo número.`;
         else els.pairSelectionText.textContent = `Combinação ${state.selectedPair[0]} + ${state.selectedPair[1]}. A ordem não importa.`;
-
         updateBetButtons();
       });
       els.pairNumberGrid.appendChild(button);
@@ -243,8 +175,7 @@
     if (numberSettings.min_bet != null) {
       els.betAmount.min = numberSettings.min_bet;
       els.betAmount.max = numberSettings.max_bet;
-      if (Number(els.betAmount.value) < Number(numberSettings.min_bet) ||
-          Number(els.betAmount.value) > Number(numberSettings.max_bet)) {
+      if (Number(els.betAmount.value) < Number(numberSettings.min_bet) || Number(els.betAmount.value) > Number(numberSettings.max_bet)) {
         els.betAmount.value = numberSettings.min_bet;
       }
       els.numberPrizeText.textContent = `${Number(numberSettings.multiplier)}×`;
@@ -254,8 +185,7 @@
     if (pairSettings.min_bet != null) {
       els.pairBetAmount.min = pairSettings.min_bet;
       els.pairBetAmount.max = pairSettings.max_bet;
-      if (Number(els.pairBetAmount.value) < Number(pairSettings.min_bet) ||
-          Number(els.pairBetAmount.value) > Number(pairSettings.max_bet)) {
+      if (Number(els.pairBetAmount.value) < Number(pairSettings.min_bet) || Number(els.pairBetAmount.value) > Number(pairSettings.max_bet)) {
         els.pairBetAmount.value = pairSettings.min_bet;
       }
       els.pairPrizeText.textContent = `${Number(pairSettings.multiplier)}×`;
@@ -302,10 +232,7 @@
     badge.textContent = `${label} · rodada ${round.round_no}`;
     const closeAt = new Date(round.closes_at).getTime();
     const drawAt = new Date(round.draw_at).getTime();
-
-    if (Number.isFinite(drawAt)) {
-      timer.refresh = setTimeout(() => refresh(true), Math.max(250, drawAt - Date.now() + 500));
-    }
+    if (Number.isFinite(drawAt)) timer.refresh = setTimeout(() => refresh(true), Math.max(250, drawAt - Date.now() + 500));
 
     const tick = () => {
       const now = Date.now();
@@ -324,37 +251,31 @@
       }
       updateBetButtons();
     };
-
     tick();
     timer.countdown = setInterval(tick, 1000);
   }
 
   function renderResults() {
-    const numberResult = game('number')?.last_result;
-    if (numberResult?.drawn_number != null) {
-      els.numberResultTitle.textContent = `Rodada ${numberResult.round_no} · ${formatDate(numberResult.published_at)}`;
-      els.numberResultNumber.textContent = numberResult.drawn_number;
+    const nr = game('number')?.last_result;
+    if (nr?.drawn_number != null) {
+      els.numberResultTitle.textContent = `Rodada ${nr.round_no} · ${formatDate(nr.published_at)}`;
+      els.numberResultNumber.textContent = nr.drawn_number;
       els.numberResultBanner.classList.remove('hidden');
-    } else {
-      els.numberResultBanner.classList.add('hidden');
-    }
+    } else els.numberResultBanner.classList.add('hidden');
 
-    const pairResult = game('pair')?.last_result;
-    if (pairResult?.pair_drawn_a != null && pairResult?.pair_drawn_b != null) {
-      els.pairResultTitle.textContent = `Rodada ${pairResult.round_no} · ${formatDate(pairResult.published_at)}`;
-      els.pairResultA.textContent = pairResult.pair_drawn_a;
-      els.pairResultB.textContent = pairResult.pair_drawn_b;
+    const pr = game('pair')?.last_result;
+    if (pr?.pair_drawn_a != null && pr?.pair_drawn_b != null) {
+      els.pairResultTitle.textContent = `Rodada ${pr.round_no} · ${formatDate(pr.published_at)}`;
+      els.pairResultA.textContent = pr.pair_drawn_a;
+      els.pairResultB.textContent = pr.pair_drawn_b;
       els.pairResultBanner.classList.remove('hidden');
-    } else {
-      els.pairResultBanner.classList.add('hidden');
-    }
+    } else els.pairResultBanner.classList.add('hidden');
   }
 
   function renderHistory() {
     const singles = (state.data?.bets || []).map((bet) => ({ ...bet, game_type: 'number' }));
     const pairs = (state.data?.pair_bets || []).map((bet) => ({ ...bet, game_type: 'pair' }));
     const bets = [...singles, ...pairs].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-
     if (!bets.length) {
       els.betHistory.innerHTML = '<div class="empty">Ainda não há apostas.</div>';
       return;
@@ -367,7 +288,6 @@
       let resultClass = 'pending';
       let resultLabel = 'Aguardando resultado';
       let resultValue = `MZN ${formatMoney(bet.amount)}`;
-
       if (bet.won === true) {
         resultClass = 'win';
         resultLabel = `Ganhou MZN ${formatMoney(bet.payout)}`;
@@ -377,17 +297,10 @@
         resultLabel = 'Não premiada';
         resultValue = pair ? `Saiu ${bet.pair_drawn_a}+${bet.pair_drawn_b}` : `Saiu ${bet.drawn_number}`;
       }
-
       return `<div class="history-item">
         <div class="history-number">${escapeHtml(choice)}</div>
-        <div class="history-main">
-          <strong>${gameName} · Rodada ${bet.round_no} · MZN ${formatMoney(bet.amount)}</strong>
-          <span>${formatDate(bet.created_at)}</span>
-        </div>
-        <div class="history-result ${resultClass}">
-          <strong>${escapeHtml(resultLabel)}</strong>
-          <span>${escapeHtml(resultValue)}</span>
-        </div>
+        <div class="history-main"><strong>${gameName} · Rodada ${bet.round_no} · MZN ${formatMoney(bet.amount)}</strong><span>${formatDate(bet.created_at)}</span></div>
+        <div class="history-result ${resultClass}"><strong>${escapeHtml(resultLabel)}</strong><span>${escapeHtml(resultValue)}</span></div>
       </div>`;
     }).join('');
   }
@@ -399,7 +312,6 @@
       els.accountButton.textContent = 'Entrar';
       return;
     }
-
     els.playerArea.classList.remove('hidden');
     els.playerName.textContent = player.name;
     els.playerPhone.textContent = `+${player.phone}`;
@@ -419,18 +331,14 @@
 
   async function refresh(silent = false) {
     try {
-      state.data = state.token
-        ? await rpc('jl_player_state', { p_token: state.token })
-        : await rpc('jl_public_state');
+      state.data = state.token ? await rpc('jl_player_state', { p_token: state.token }) : await rpc('jl_public_state');
       render();
     } catch (error) {
       if (state.token && /sessão|session/i.test(error.message)) {
         saveToken('');
         state.data = await rpc('jl_public_state');
         render();
-      } else if (!silent) {
-        showToast(error.message, 'error');
-      }
+      } else if (!silent) showToast(error.message, 'error');
     }
   }
 
@@ -458,11 +366,7 @@
   async function placeNumberBet(number, amount) {
     try {
       els.betButton.disabled = true;
-      const result = await rpc('jl_place_bet', {
-        p_token: state.token,
-        p_selected_number: Number(number),
-        p_amount: Number(amount)
-      });
+      const result = await rpc('jl_place_bet', { p_token: state.token, p_selected_number: Number(number), p_amount: Number(amount) });
       state.pendingBet = null;
       showToast(`Número Lendário: aposta ${result.selected_number} confirmada.`, 'success');
       await refresh(true);
@@ -476,12 +380,7 @@
     try {
       els.pairBetButton.disabled = true;
       const [a, b] = [...numbers].sort((x, y) => x - y);
-      const result = await rpc('jl_place_pair_bet', {
-        p_token: state.token,
-        p_number_a: a,
-        p_number_b: b,
-        p_amount: Number(amount)
-      });
+      const result = await rpc('jl_place_pair_bet', { p_token: state.token, p_number_a: a, p_number_b: b, p_amount: Number(amount) });
       state.pendingBet = null;
       showToast(`Dupla Lendária: ${result.number_a}+${result.number_b} confirmada.`, 'success');
       await refresh(true);
@@ -503,11 +402,8 @@
     const settings = gameSettings('number');
     const amount = Number(els.betAmount.value);
     if (state.selectedNumber === null) return showToast('Escolha um número primeiro.', 'error');
-    if (!Number.isFinite(amount) || amount < Number(settings.min_bet) || amount > Number(settings.max_bet)) {
-      return showToast(`A aposta deve ser entre ${settings.min_bet} e ${settings.max_bet} MZN.`, 'error');
-    }
+    if (!Number.isFinite(amount) || amount < Number(settings.min_bet) || amount > Number(settings.max_bet)) return showToast(`A aposta deve ser entre ${settings.min_bet} e ${settings.max_bet} MZN.`, 'error');
     if (!gameIsOpen('number')) return showToast('Número Lendário está sem apostas abertas.', 'error');
-
     if (!state.token) {
       state.pendingBet = { type: 'number', number: state.selectedNumber, amount };
       openAuth('register');
@@ -521,11 +417,8 @@
     const settings = gameSettings('pair');
     const amount = Number(els.pairBetAmount.value);
     if (state.selectedPair.length !== 2) return showToast('Escolha dois números para a Dupla Lendária.', 'error');
-    if (!Number.isFinite(amount) || amount < Number(settings.min_bet) || amount > Number(settings.max_bet)) {
-      return showToast(`A aposta deve ser entre ${settings.min_bet} e ${settings.max_bet} MZN.`, 'error');
-    }
+    if (!Number.isFinite(amount) || amount < Number(settings.min_bet) || amount > Number(settings.max_bet)) return showToast(`A aposta deve ser entre ${settings.min_bet} e ${settings.max_bet} MZN.`, 'error');
     if (!gameIsOpen('pair')) return showToast('Dupla Lendária está sem apostas abertas.', 'error');
-
     if (!state.token) {
       state.pendingBet = { type: 'pair', numbers: [...state.selectedPair], amount };
       openAuth('register');
@@ -537,86 +430,54 @@
   els.registerForm.addEventListener('submit', async (event) => {
     event.preventDefault();
     const pin = els.registerPin.value.trim();
-    if (pin !== els.registerPinConfirm.value.trim()) {
-      return setMessage(els.authMessage, 'Os PINs não coincidem.', 'error');
-    }
-
+    if (pin !== els.registerPinConfirm.value.trim()) return setMessage(els.authMessage, 'Os PINs não coincidem.', 'error');
     try {
       setMessage(els.authMessage, 'Criando conta…');
-      const result = await rpc('jl_register_player', {
-        p_name: els.registerName.value.trim(),
-        p_phone: els.registerPhone.value.trim(),
-        p_pin: pin
-      });
+      const result = await rpc('jl_register_player', { p_name: els.registerName.value.trim(), p_phone: els.registerPhone.value.trim(), p_pin: pin });
       saveToken(result.token);
       closeAuth();
       await refresh(true);
       showToast('Conta criada com sucesso.', 'success');
       await continuePendingBet();
-    } catch (error) {
-      setMessage(els.authMessage, error.message, 'error');
-    }
+    } catch (error) { setMessage(els.authMessage, error.message, 'error'); }
   });
 
   els.loginForm.addEventListener('submit', async (event) => {
     event.preventDefault();
     try {
       setMessage(els.authMessage, 'Entrando…');
-      const result = await rpc('jl_login_player', {
-        p_phone: els.loginPhone.value.trim(),
-        p_pin: els.loginPin.value.trim()
-      });
+      const result = await rpc('jl_login_player', { p_phone: els.loginPhone.value.trim(), p_pin: els.loginPin.value.trim() });
       saveToken(result.token);
       closeAuth();
       await refresh(true);
       showToast('Sessão iniciada.', 'success');
       await continuePendingBet();
-    } catch (error) {
-      setMessage(els.authMessage, error.message, 'error');
-    }
+    } catch (error) { setMessage(els.authMessage, error.message, 'error'); }
   });
 
   els.depositForm.addEventListener('submit', async (event) => {
     event.preventDefault();
     try {
-      const result = await rpc('jl_request_deposit', {
-        p_token: state.token,
-        p_amount: Number(els.depositAmount.value),
-        p_note: els.depositNote.value.trim()
-      });
-      setMessage(
-        els.depositMessage,
-        `${result.message} Confirmação: ${result.request_id.slice(0, 8).toUpperCase()}`,
-        'success'
-      );
+      const result = await rpc('jl_request_deposit', { p_token: state.token, p_amount: Number(els.depositAmount.value), p_note: els.depositNote.value.trim() });
+      setMessage(els.depositMessage, `${result.message} Confirmação: ${result.request_id.slice(0, 8).toUpperCase()}`, 'success');
       els.depositForm.reset();
       await refresh(true);
-    } catch (error) {
-      setMessage(els.depositMessage, error.message, 'error');
-    }
+    } catch (error) { setMessage(els.depositMessage, error.message, 'error'); }
   });
 
   els.withdrawForm.addEventListener('submit', async (event) => {
     event.preventDefault();
     try {
-      const result = await rpc('jl_request_withdrawal', {
-        p_token: state.token,
-        p_amount: Number(els.withdrawAmount.value)
-      });
+      const result = await rpc('jl_request_withdrawal', { p_token: state.token, p_amount: Number(els.withdrawAmount.value) });
       setMessage(els.withdrawMessage, result.message, result.ok ? 'success' : 'error');
       els.withdrawForm.reset();
       await refresh(true);
-    } catch (error) {
-      setMessage(els.withdrawMessage, error.message, 'error');
-    }
+    } catch (error) { setMessage(els.withdrawMessage, error.message, 'error'); }
   });
 
   els.accountButton.addEventListener('click', () => {
-    if (state.token && state.data?.player) {
-      els.playerArea.scrollIntoView({ behavior: 'smooth' });
-    } else {
-      openAuth('login');
-    }
+    if (state.token && state.data?.player) els.playerArea.scrollIntoView({ behavior: 'smooth' });
+    else openAuth('login');
   });
 
   els.logoutButton.addEventListener('click', async () => {
@@ -632,12 +493,8 @@
   els.closeAuth.addEventListener('click', closeAuth);
   els.registerTab.addEventListener('click', () => switchAuth('register'));
   els.loginTab.addEventListener('click', () => switchAuth('login'));
-  els.authModal.addEventListener('click', (event) => {
-    if (event.target === els.authModal) closeAuth();
-  });
-  document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && !els.authModal.classList.contains('hidden')) closeAuth();
-  });
+  els.authModal.addEventListener('click', (event) => { if (event.target === els.authModal) closeAuth(); });
+  document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && !els.authModal.classList.contains('hidden')) closeAuth(); });
 
   buildNumbers();
   buildPairNumbers();
