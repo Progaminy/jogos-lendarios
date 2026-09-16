@@ -23,7 +23,7 @@
     <section id="adminLogin" class="card admin-login">
       <p class="eyebrow">ACESSO RESTRITO</p>
       <h1 style="font-size:clamp(2.3rem,7vw,4rem)">Painel administrativo</h1>
-      <p class="muted-text">Cada jogo é configurado separadamente. O saldo dos jogadores continua comum.</p>
+      <p class="muted-text">Número Lendário e Dupla Lendária têm o mesmo nível de controlo, mas funcionam de forma independente.</p>
       <form id="adminLoginForm" class="stack-form" style="margin-top:20px">
         <label class="field"><span>Código</span><input id="adminCode" type="password" autocomplete="current-password" required></label>
         <button class="button primary" type="submit">Entrar</button>
@@ -34,14 +34,21 @@
     <section id="adminApp" class="hidden">
 
       <section class="card admin-card">
-        <p class="eyebrow">NÚMERO LENDÁRIO</p>
-        <h2>Administração independente</h2>
+        <p class="eyebrow">NÚMERO LENDÁRIO · 0 A 10</p>
+        <h2>Administração completa</h2>
 
         <div class="admin-grid">
           <div class="card metric"><span>Rodada</span><strong id="numberMetricRound">—</strong></div>
           <div class="card metric"><span>Estado</span><strong id="numberMetricStatus">—</strong></div>
           <div class="card metric"><span>Próxima ação</span><strong id="numberMetricCountdown">—</strong></div>
           <div class="card metric"><span>Último resultado</span><strong id="numberMetricResult">—</strong></div>
+        </div>
+
+        <div class="admin-grid">
+          <div class="card metric"><span>Total apostado</span><strong id="numberTotalStaked">0,00</strong><small>MZN</small></div>
+          <div class="card metric"><span>Menor exposição</span><strong id="numberMinExposure">0,00</strong><small>MZN</small></div>
+          <div class="card metric"><span>Margem no menor</span><strong id="numberHouseFloor">0,00</strong><small>MZN</small></div>
+          <div class="card metric"><span>Resultados seguros</span><strong id="numberSafeOutcomes">—</strong></div>
         </div>
 
         <div class="card admin-card" style="box-shadow:none">
@@ -51,17 +58,11 @@
             <label class="field"><span>Aposta máxima</span><input id="numberMaxBet" type="number" min="1" step="1"></label>
             <label class="field"><span>Multiplicador</span><input id="numberMultiplier" type="number" min="2" step="1"></label>
             <label class="field"><span>Bloqueio antes do sorteio (s)</span><input id="numberLockSeconds" type="number" min="1" max="60" step="1"></label>
-            <label class="field">
-              <span>Modo de sorteio</span>
-              <select id="numberDrawMode">
-                <option value="house_min">Menor exposição</option>
-                <option value="house_safe_random">Aleatório entre resultados seguros</option>
-              </select>
-            </label>
+            <label class="field"><span>Modo de sorteio</span><select id="numberDrawMode"><option value="house_min">Menor exposição</option><option value="house_safe_random">Aleatório entre resultados seguros</option></select></label>
             <label class="field"><span>Ativo</span><select id="numberEnabled"><option value="true">Sim</option><option value="false">Não</option></select></label>
             <button id="numberSaveSettings" class="button primary" type="button">Guardar regras</button>
           </div>
-          <p class="muted-text">As regras só podem ser alteradas quando este jogo não tiver rodada ativa.</p>
+          <p class="muted-text">As regras só mudam quando não há rodada ativa. A proteção financeira pertence somente ao Número Lendário.</p>
         </div>
 
         <div class="card admin-card" style="box-shadow:none">
@@ -74,14 +75,13 @@
         </div>
 
         <div class="card admin-card" style="box-shadow:none">
-          <div class="section-head">
-            <div><p class="eyebrow">PROGRAMAÇÃO</p><h2>Horários do Número Lendário</h2></div>
-            <button id="numberClearSchedule" class="button danger small" type="button">Cancelar futuros</button>
-          </div>
+          <div class="section-head"><div><p class="eyebrow">PROGRAMAÇÃO</p><h2>Horários do Número Lendário</h2></div><button id="numberClearSchedule" class="button danger small" type="button">Cancelar futuros</button></div>
           <div class="admin-actions">
             <label class="field"><span>Primeiro sorteio</span><input id="numberScheduleStart" type="datetime-local"></label>
             <label class="field"><span>Último sorteio</span><input id="numberScheduleEnd" type="datetime-local"></label>
             <label class="field"><span>Intervalo (min)</span><input id="numberScheduleInterval" type="number" min="1" max="1440" value="60"></label>
+            <button id="numberQuick12" class="button ghost" type="button">Próximas 12h</button>
+            <button id="numberQuick24" class="button ghost" type="button">Próximas 24h</button>
             <button id="numberSchedulePeriod" class="button success" type="button">Programar período</button>
           </div>
           <div class="admin-actions">
@@ -91,28 +91,26 @@
           <div id="numberSchedule" class="request-list"><div class="empty">Nenhum horário.</div></div>
         </div>
 
-        <div class="card admin-card" style="box-shadow:none">
-          <p class="eyebrow">EXPOSIÇÃO</p>
-          <h2>Total por número</h2>
-          <div id="numberStats" class="stat-grid"></div>
-        </div>
-
-        <div class="card admin-card" style="box-shadow:none">
-          <p class="eyebrow">MOVIMENTO</p>
-          <h2>Últimas apostas do Número Lendário</h2>
-          <div id="numberRecentBets" class="request-list"></div>
-        </div>
+        <div class="card admin-card" style="box-shadow:none"><p class="eyebrow">EXPOSIÇÃO</p><h2>Total por número</h2><div id="numberStats" class="stat-grid"></div></div>
+        <div class="card admin-card" style="box-shadow:none"><p class="eyebrow">MOVIMENTO</p><h2>Últimas apostas do Número Lendário</h2><div id="numberRecentBets" class="request-list"></div></div>
       </section>
 
       <section class="card admin-card">
-        <p class="eyebrow">DUPLA LENDÁRIA</p>
-        <h2>Administração independente</h2>
+        <p class="eyebrow">DUPLA LENDÁRIA · 0 A 10</p>
+        <h2>Administração completa</h2>
 
         <div class="admin-grid">
           <div class="card metric"><span>Rodada</span><strong id="pairMetricRound">—</strong></div>
           <div class="card metric"><span>Estado</span><strong id="pairMetricStatus">—</strong></div>
           <div class="card metric"><span>Próxima ação</span><strong id="pairMetricCountdown">—</strong></div>
           <div class="card metric"><span>Último resultado</span><strong id="pairMetricResult">—</strong></div>
+        </div>
+
+        <div class="admin-grid">
+          <div class="card metric"><span>Total apostado</span><strong id="pairTotalStaked">0,00</strong><small>MZN</small></div>
+          <div class="card metric"><span>Menor exposição</span><strong id="pairMinExposure">0,00</strong><small>MZN</small></div>
+          <div class="card metric"><span>Margem no menor</span><strong id="pairHouseFloor">0,00</strong><small>MZN</small></div>
+          <div class="card metric"><span>Resultados seguros</span><strong id="pairSafeOutcomes">—</strong></div>
         </div>
 
         <div class="card admin-card" style="box-shadow:none">
@@ -122,17 +120,11 @@
             <label class="field"><span>Aposta máxima</span><input id="pairMaxBet" type="number" min="1" step="1"></label>
             <label class="field"><span>Multiplicador</span><input id="pairMultiplier" type="number" min="2" step="1"></label>
             <label class="field"><span>Bloqueio antes do sorteio (s)</span><input id="pairLockSeconds" type="number" min="1" max="60" step="1"></label>
-            <label class="field">
-              <span>Modo de sorteio</span>
-              <select id="pairDrawMode">
-                <option value="house_min">Menor exposição</option>
-                <option value="house_safe_random">Aleatório entre resultados seguros</option>
-              </select>
-            </label>
+            <label class="field"><span>Modo de sorteio</span><select id="pairDrawMode"><option value="house_min">Menor exposição</option><option value="house_safe_random">Aleatório entre resultados seguros</option></select></label>
             <label class="field"><span>Ativo</span><select id="pairEnabled"><option value="true">Sim</option><option value="false">Não</option></select></label>
             <button id="pairSaveSettings" class="button primary" type="button">Guardar regras</button>
           </div>
-          <p class="muted-text">Com o multiplicador padrão 50×, a proteção de exposição pode recusar uma aposta que eliminaria a última combinação segura.</p>
+          <p class="muted-text">As regras só mudam quando não há rodada ativa. A proteção financeira pertence somente à Dupla Lendária.</p>
         </div>
 
         <div class="card admin-card" style="box-shadow:none">
@@ -145,14 +137,13 @@
         </div>
 
         <div class="card admin-card" style="box-shadow:none">
-          <div class="section-head">
-            <div><p class="eyebrow">PROGRAMAÇÃO</p><h2>Horários da Dupla Lendária</h2></div>
-            <button id="pairClearSchedule" class="button danger small" type="button">Cancelar futuros</button>
-          </div>
+          <div class="section-head"><div><p class="eyebrow">PROGRAMAÇÃO</p><h2>Horários da Dupla Lendária</h2></div><button id="pairClearSchedule" class="button danger small" type="button">Cancelar futuros</button></div>
           <div class="admin-actions">
             <label class="field"><span>Primeiro sorteio</span><input id="pairScheduleStart" type="datetime-local"></label>
             <label class="field"><span>Último sorteio</span><input id="pairScheduleEnd" type="datetime-local"></label>
             <label class="field"><span>Intervalo (min)</span><input id="pairScheduleInterval" type="number" min="1" max="1440" value="60"></label>
+            <button id="pairQuick12" class="button ghost" type="button">Próximas 12h</button>
+            <button id="pairQuick24" class="button ghost" type="button">Próximas 24h</button>
             <button id="pairSchedulePeriod" class="button success" type="button">Programar período</button>
           </div>
           <div class="admin-actions">
@@ -162,41 +153,21 @@
           <div id="pairSchedule" class="request-list"><div class="empty">Nenhum horário.</div></div>
         </div>
 
-        <div class="card admin-card" style="box-shadow:none">
-          <p class="eyebrow">EXPOSIÇÃO</p>
-          <h2>Total por combinação</h2>
-          <div id="pairStats" class="stat-grid"></div>
-        </div>
-
-        <div class="card admin-card" style="box-shadow:none">
-          <p class="eyebrow">MOVIMENTO</p>
-          <h2>Últimas apostas da Dupla Lendária</h2>
-          <div id="pairRecentBets" class="request-list"></div>
-        </div>
+        <div class="card admin-card" style="box-shadow:none"><p class="eyebrow">EXPOSIÇÃO</p><h2>Total por combinação — 55 combinações</h2><div id="pairStats" class="stat-grid"></div></div>
+        <div class="card admin-card" style="box-shadow:none"><p class="eyebrow">MOVIMENTO</p><h2>Últimas apostas da Dupla Lendária</h2><div id="pairRecentBets" class="request-list"></div></div>
       </section>
 
       <div class="admin-two">
-        <section class="card admin-card">
-          <p class="eyebrow">DEPÓSITOS</p>
-          <h2>Pedidos pendentes</h2>
-          <div id="depositRequests" class="request-list"></div>
-        </section>
-        <section class="card admin-card">
-          <p class="eyebrow">SAQUES</p>
-          <h2>Pedidos pendentes</h2>
-          <div id="withdrawRequests" class="request-list"></div>
-        </section>
+        <section class="card admin-card"><p class="eyebrow">DEPÓSITOS</p><h2>Pedidos pendentes</h2><div id="depositRequests" class="request-list"></div></section>
+        <section class="card admin-card"><p class="eyebrow">SAQUES</p><h2>Pedidos pendentes</h2><div id="withdrawRequests" class="request-list"></div></section>
       </div>
 
-      <section class="card admin-card">
-        <p class="eyebrow">JOGADORES</p>
-        <h2>Contas e saldo comum</h2>
-        <div id="playersList" class="player-list"></div>
-      </section>
+      <section class="card admin-card"><p class="eyebrow">JOGADORES</p><h2>Contas e saldo comum</h2><div id="playersList" class="player-list"></div></section>
     </section>
   </main>
 
   <script src="./config.js"></script>
   <script src="./admin.js" defer></script>
+  <script src="./admin-power.js" defer></script>
 </body>
 </html>
