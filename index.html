@@ -58,8 +58,8 @@
 
         <form id="betForm" class="bet-row">
           <label class="field">
-            <span>Valor da aposta</span>
-            <div class="money-input"><span>MZN</span><input id="betAmount" type="number" min="1" step="1" value="10" inputmode="decimal" required></div>
+            <span>Valor da aposta (10–500 MZN)</span>
+            <div class="money-input"><span>MZN</span><input id="betAmount" type="number" min="10" max="500" step="1" value="10" inputmode="decimal" required></div>
           </label>
           <button id="betButton" class="button primary large" type="submit" disabled>Apostar</button>
         </form>
@@ -160,6 +160,7 @@
   </div>
 
   <script src="./config.js"></script>
+  <script src="./bet-guard.js"></script>
   <script src="./app.js" defer></script>
 </body>
 </html>
