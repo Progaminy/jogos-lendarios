@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#0a0d14">
-  <meta name="description" content="Número Lendário — escolha um número, faça a sua aposta e acompanhe o resultado da rodada.">
-  <title>Número Lendário — Jogos Lendários</title>
+  <meta name="description" content="Jogos Lendários — Número Lendário e Dupla Lendária.">
+  <title>Jogos Lendários</title>
   <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
@@ -22,14 +22,16 @@
   <main class="shell">
     <section class="hero card">
       <div>
-        <p class="eyebrow">JOGOS LENDARIOS - NÚMERO LENDÁRIO</p>
-        <h1>Número Lendário</h1>
-        <p class="lead">Escolha um número de <strong>0 á 10</strong>, informe o valor e clique em <strong>Apostar</strong>. Se ainda não tiver conta, cadastre-se.</p>
+        <p class="eyebrow">JOGOS LENDÁRIOS</p>
+        <h1>Escolha o seu jogo</h1>
+        <p class="lead">No <strong>Número Lendário</strong>, escolha 1 número de 0 a 10 e ganhe 10×. Na <strong>Dupla Lendária</strong>, escolha 2 números diferentes de 1 a 10 e ganhe 50× se acertar a combinação.</p>
       </div>
       <div class="hero-stat">
-        <span>Se acertar</span>
+        <span>Prémios</span>
         <strong>10×</strong>
-        <small>o valor apostado</small>
+        <small>Número Lendário</small>
+        <strong style="font-size:3rem;margin-top:10px">50×</strong>
+        <small>Dupla Lendária</small>
       </div>
     </section>
 
@@ -38,15 +40,28 @@
         <p class="eyebrow">ÚLTIMO RESULTADO</p>
         <h2 id="resultTitle">Rodada —</h2>
       </div>
-      <div id="resultNumber" class="result-ball">—</div>
+      <div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
+        <div style="text-align:center">
+          <small class="muted-text">Número Lendário</small>
+          <div id="resultNumber" class="result-ball" style="margin:6px auto 0">—</div>
+        </div>
+        <div id="pairResultBox" class="hidden" style="text-align:center">
+          <small class="muted-text">Dupla Lendária</small>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:6px">
+            <div id="pairResultA" class="result-ball">—</div>
+            <strong>+</strong>
+            <div id="pairResultB" class="result-ball">—</div>
+          </div>
+        </div>
+      </div>
     </section>
 
     <section class="game-layout">
       <div class="card play-card">
         <div class="section-head">
           <div>
-            <p class="eyebrow">ESCOLHA O SEU NÚMERO</p>
-            <h2>Qual número vai sair?</h2>
+            <p class="eyebrow">NÚMERO LENDÁRIO · PRÉMIO 10×</p>
+            <h2>Escolha 1 número de 0 a 10</h2>
           </div>
           <div class="round-clock">
             <span id="roundStatus">—</span>
@@ -61,19 +76,57 @@
             <span>Valor da aposta (10–500 MZN)</span>
             <div class="money-input"><span>MZN</span><input id="betAmount" type="number" min="10" max="500" step="1" value="10" inputmode="decimal" required></div>
           </label>
-          <button id="betButton" class="button primary large" type="submit" disabled>Apostar</button>
+          <button id="betButton" class="button primary large" type="submit" disabled>Apostar 10×</button>
         </form>
         <p id="selectionText" class="selection-text">Escolha primeiro um número.</p>
       </div>
 
       <aside class="card info-card">
-        <p class="eyebrow">COMO FUNCIONA</p>
-        <h2>Simples e transparente</h2>
+        <p class="eyebrow">NÚMERO LENDÁRIO</p>
+        <h2>Como funciona</h2>
         <ol class="steps">
-          <li><span>1</span><div>Escolha um número entre 0 á 10.</div></li>
-          <li><span>2</span><div>Informe o valor e clique em <b>Apostar</b>.</div></li>
-          <li><span>3</span><div>Se não tiver conta, cadastre nome, telefone e PIN.</div></li>
-          <li><span>4</span><div>Depois do sorteio, paga os vencedores e publicamos o resultado.</div></li>
+          <li><span>1</span><div>Escolha um número de 0 a 10.</div></li>
+          <li><span>2</span><div>Aposte entre 10 e 500 MZN.</div></li>
+          <li><span>3</span><div>Se acertar o número vencedor, recebe <b>10×</b> o valor apostado.</div></li>
+          <li><span>4</span><div>As apostas fecham 3 segundos antes do sorteio.</div></li>
+        </ol>
+      </aside>
+    </section>
+
+    <section class="game-layout">
+      <div class="card play-card">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">DUPLA LENDÁRIA · PRÉMIO 50×</p>
+            <h2>Escolha 2 números de 1 a 10</h2>
+          </div>
+          <div class="round-clock">
+            <span>MESMA RODADA</span>
+            <strong>50×</strong>
+          </div>
+        </div>
+
+        <p class="muted-text">Escolha dois números diferentes. A ordem não altera a aposta: <strong>1 + 9</strong> é exatamente a mesma combinação que <strong>9 + 1</strong>.</p>
+        <div id="pairNumberGrid" class="number-grid" aria-label="Escolha dois números de 1 a 10"></div>
+
+        <form id="pairBetForm" class="bet-row">
+          <label class="field">
+            <span>Valor da aposta (10–500 MZN)</span>
+            <div class="money-input"><span>MZN</span><input id="pairBetAmount" type="number" min="10" max="500" step="1" value="10" inputmode="decimal" required></div>
+          </label>
+          <button id="pairBetButton" class="button primary large" type="submit" disabled>Apostar 50×</button>
+        </form>
+        <p id="pairSelectionText" class="selection-text">Escolha dois números.</p>
+      </div>
+
+      <aside class="card info-card">
+        <p class="eyebrow">DUPLA LENDÁRIA</p>
+        <h2>Combinação sem ordem</h2>
+        <ol class="steps">
+          <li><span>1</span><div>Escolha 2 números diferentes entre 1 e 10.</div></li>
+          <li><span>2</span><div>A combinação é guardada em ordem crescente. Por isso 1+9 e 9+1 são iguais.</div></li>
+          <li><span>3</span><div>Se acertar os dois números sorteados, recebe <b>50×</b>. Ex.: 10 MZN → 500 MZN.</div></li>
+          <li><span>4</span><div>Existem 45 combinações possíveis de dois números diferentes entre 1 e 10.</div></li>
         </ol>
       </aside>
     </section>
@@ -97,11 +150,11 @@
         <div class="card action-card">
           <p class="eyebrow">DEPÓSITO</p>
           <h2>Solicitar depósito</h2>
-          <p class="muted-text">Tranfira para <strong>869954518</strong> Nome: <strong>Bernardo Pedro</strong> O saldo é adicionado na sua conta</p>
+          <p class="muted-text">Transfira para <strong>869954518</strong> Nome: <strong>Bernardo Pedro</strong>. O saldo é adicionado na sua conta após aprovação.</p>
           <form id="depositForm" class="stack-form">
             <label class="field"><span>Valor</span><div class="money-input"><span>MZN</span><input id="depositAmount" type="number" min="1" step="1" required></div></label>
-            <label class="field"><span>Cole aqui a referencia de Tranferência ou mensagem de confirmação.</span><input id="depositNote" maxlength="160" placeholder="Ex.: referência do pagamento"></label>
-            <button class="button secondary" type="submit">Enviar Solititação de deposito</button>
+            <label class="field"><span>Cole aqui a referência da transferência ou mensagem de confirmação.</span><input id="depositNote" maxlength="160" placeholder="Ex.: referência do pagamento"></label>
+            <button class="button secondary" type="submit">Enviar solicitação de depósito</button>
           </form>
           <p id="depositMessage" class="form-message"></p>
         </div>
@@ -129,7 +182,7 @@
   </main>
 
   <footer class="footer">
-    <span>Jogos Lendários - Escolha um Número</span>
+    <span>Jogos Lendários</span>
   </footer>
 
   <div id="authModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="authTitle">
