@@ -4,66 +4,123 @@
   const cfg = window.JL_CONFIG || {};
   const TOKEN_KEY = 'jl_player_token';
   const $ = (id) => document.getElementById(id);
+
   const state = {
     token: localStorage.getItem(TOKEN_KEY) || '',
     data: null,
     selectedNumber: null,
     selectedPair: [],
     pendingBet: null,
-    countdownTimer: null,
-    roundRefreshTimer: null,
-    refreshTimer: null
+    refreshTimer: null,
+    timers: {
+      number: { countdown: null, refresh: null },
+      pair: { countdown: null, refresh: null }
+    }
   };
 
   const els = {
-    toast: $('toast'), roundBadge: $('roundBadge'), accountButton: $('accountButton'),
-    resultBanner: $('resultBanner'), resultTitle: $('resultTitle'), resultNumber: $('resultNumber'),
-    pairResultBox: $('pairResultBox'), pairResultA: $('pairResultA'), pairResultB: $('pairResultB'),
-    roundStatus: $('roundStatus'), countdown: $('countdown'), numberGrid: $('numberGrid'),
-    betForm: $('betForm'), betAmount: $('betAmount'), betButton: $('betButton'), selectionText: $('selectionText'),
-    pairNumberGrid: $('pairNumberGrid'), pairBetForm: $('pairBetForm'), pairBetAmount: $('pairBetAmount'),
-    pairBetButton: $('pairBetButton'), pairSelectionText: $('pairSelectionText'),
-    playerArea: $('playerArea'), playerName: $('playerName'), playerPhone: $('playerPhone'), balance: $('balance'),
-    logoutButton: $('logoutButton'), refreshButton: $('refreshButton'), betHistory: $('betHistory'),
-    depositForm: $('depositForm'), depositAmount: $('depositAmount'), depositNote: $('depositNote'), depositMessage: $('depositMessage'),
-    withdrawForm: $('withdrawForm'), withdrawAmount: $('withdrawAmount'), withdrawMessage: $('withdrawMessage'),
-    authModal: $('authModal'), closeAuth: $('closeAuth'), registerTab: $('registerTab'), loginTab: $('loginTab'),
-    registerForm: $('registerForm'), loginForm: $('loginForm'), authMessage: $('authMessage'),
-    registerName: $('registerName'), registerPhone: $('registerPhone'), registerPin: $('registerPin'), registerPinConfirm: $('registerPinConfirm'),
-    loginPhone: $('loginPhone'), loginPin: $('loginPin')
+    toast: $('toast'),
+    accountButton: $('accountButton'),
+    numberRoundBadge: $('numberRoundBadge'),
+    pairRoundBadge: $('pairRoundBadge'),
+
+    numberResultBanner: $('numberResultBanner'),
+    numberResultTitle: $('numberResultTitle'),
+    numberResultNumber: $('numberResultNumber'),
+    pairResultBanner: $('pairResultBanner'),
+    pairResultTitle: $('pairResultTitle'),
+    pairResultA: $('pairResultA'),
+    pairResultB: $('pairResultB'),
+
+    numberRoundStatus: $('numberRoundStatus'),
+    numberCountdown: $('numberCountdown'),
+    numberRuleText: $('numberRuleText'),
+    numberPrizeText: $('numberPrizeText'),
+    numberGrid: $('numberGrid'),
+    betForm: $('betForm'),
+    betAmount: $('betAmount'),
+    betButton: $('betButton'),
+    selectionText: $('selectionText'),
+
+    pairRoundStatus: $('pairRoundStatus'),
+    pairCountdown: $('pairCountdown'),
+    pairRuleText: $('pairRuleText'),
+    pairPrizeText: $('pairPrizeText'),
+    pairNumberGrid: $('pairNumberGrid'),
+    pairBetForm: $('pairBetForm'),
+    pairBetAmount: $('pairBetAmount'),
+    pairBetButton: $('pairBetButton'),
+    pairSelectionText: $('pairSelectionText'),
+
+    playerArea: $('playerArea'),
+    playerName: $('playerName'),
+    playerPhone: $('playerPhone'),
+    balance: $('balance'),
+    logoutButton: $('logoutButton'),
+    refreshButton: $('refreshButton'),
+    betHistory: $('betHistory'),
+
+    depositForm: $('depositForm'),
+    depositAmount: $('depositAmount'),
+    depositNote: $('depositNote'),
+    depositMessage: $('depositMessage'),
+    withdrawForm: $('withdrawForm'),
+    withdrawAmount: $('withdrawAmount'),
+    withdrawMessage: $('withdrawMessage'),
+
+    authModal: $('authModal'),
+    closeAuth: $('closeAuth'),
+    registerTab: $('registerTab'),
+    loginTab: $('loginTab'),
+    registerForm: $('registerForm'),
+    loginForm: $('loginForm'),
+    authMessage: $('authMessage'),
+    registerName: $('registerName'),
+    registerPhone: $('registerPhone'),
+    registerPin: $('registerPin'),
+    registerPinConfirm: $('registerPinConfirm'),
+    loginPhone: $('loginPhone'),
+    loginPin: $('loginPin')
   };
 
   function formatMoney(value) {
-    return Number(value || 0).toLocaleString('pt-MZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return Number(value || 0).toLocaleString('pt-MZ', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
   }
 
   function formatDate(value) {
-    if (!value) return '—';
-    return new Date(value).toLocaleString('pt-MZ', { dateStyle: 'short', timeStyle: 'short' });
+    return value
+      ? new Date(value).toLocaleString('pt-MZ', { dateStyle: 'short', timeStyle: 'short' })
+      : '—';
   }
 
   function formatCountdown(ms) {
     const total = Math.max(0, Math.floor(ms / 1000));
     const days = Math.floor(total / 86400);
-    const hours = Math.floor((total % 86400) / 3600);
-    const minutes = Math.floor((total % 3600) / 60);
-    const seconds = total % 60;
-    const clock = [hours, minutes, seconds].map((v) => String(v).padStart(2, '0')).join(':');
-    return days > 0 ? `${days}d ${clock}` : clock;
+    const h = Math.floor((total % 86400) / 3600);
+    const m = Math.floor((total % 3600) / 60);
+    const s = total % 60;
+    const clock = [h, m, s].map((v) => String(v).padStart(2, '0')).join(':');
+    return days ? `${days}d ${clock}` : clock;
   }
 
   function escapeHtml(value) {
-    return String(value ?? '').replace(/[&<>'"]/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[c]));
+    return String(value ?? '').replace(/[&<>'"]/g, (c) => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+    }[c]));
   }
 
   function showToast(message, type = '') {
     els.toast.textContent = message;
     els.toast.className = `toast show ${type}`.trim();
     clearTimeout(showToast.timer);
-    showToast.timer = setTimeout(() => { els.toast.className = 'toast'; }, 3600);
+    showToast.timer = setTimeout(() => { els.toast.className = 'toast'; }, 3800);
   }
 
   function setMessage(el, message = '', type = '') {
+    if (!el) return;
     el.textContent = message;
     el.className = `form-message ${type}`.trim();
   }
@@ -84,8 +141,7 @@
     let payload = null;
     try { payload = raw ? JSON.parse(raw) : null; } catch { payload = raw; }
     if (!response.ok) {
-      const message = payload?.message || payload?.error || payload?.hint || `Erro ${response.status}`;
-      throw new Error(message);
+      throw new Error(payload?.message || payload?.error || payload?.hint || `Erro ${response.status}`);
     }
     return payload;
   }
@@ -96,6 +152,36 @@
     else localStorage.removeItem(TOKEN_KEY);
   }
 
+  function game(type) {
+    return state.data?.games?.[type] || null;
+  }
+
+  function gameSettings(type) {
+    return game(type)?.settings || {};
+  }
+
+  function gameRound(type) {
+    return game(type)?.current_round || null;
+  }
+
+  function gameIsOpen(type) {
+    const g = game(type);
+    const round = g?.current_round;
+    return Boolean(
+      g?.settings?.enabled &&
+      round &&
+      round.status === 'open' &&
+      new Date(round.closes_at).getTime() > Date.now()
+    );
+  }
+
+  function modeDescription(settings) {
+    if (settings?.draw_mode === 'house_safe_random') {
+      return 'Sorteio aleatório apenas entre resultados seguros: o pagamento vencedor deve manter a rodada com saldo positivo para a casa.';
+    }
+    return 'Sorteio entre os resultados com menor exposição financeira. Em empate, a escolha entre eles é aleatória.';
+  }
+
   function buildNumbers() {
     els.numberGrid.innerHTML = '';
     for (let n = 0; n <= 10; n += 1) {
@@ -104,8 +190,14 @@
       button.className = 'number-button';
       button.textContent = String(n);
       button.dataset.number = String(n);
-      button.setAttribute('aria-label', `Escolher número ${n}`);
-      button.addEventListener('click', () => selectNumber(n));
+      button.addEventListener('click', () => {
+        state.selectedNumber = n;
+        document.querySelectorAll('#numberGrid .number-button').forEach((item) => {
+          item.classList.toggle('selected', Number(item.dataset.number) === n);
+        });
+        els.selectionText.textContent = `Número ${n} escolhido.`;
+        updateBetButtons();
+      });
       els.numberGrid.appendChild(button);
     }
   }
@@ -118,143 +210,148 @@
       button.className = 'number-button';
       button.textContent = String(n);
       button.dataset.pairNumber = String(n);
-      button.setAttribute('aria-label', `Escolher número ${n} para a Dupla Lendária`);
-      button.addEventListener('click', () => selectPairNumber(n));
+      button.addEventListener('click', () => {
+        const index = state.selectedPair.indexOf(n);
+        if (index >= 0) {
+          state.selectedPair.splice(index, 1);
+        } else if (state.selectedPair.length < 2) {
+          state.selectedPair.push(n);
+        } else {
+          showToast('Escolha apenas dois números na Dupla Lendária.', 'error');
+          return;
+        }
+
+        state.selectedPair.sort((a, b) => a - b);
+        document.querySelectorAll('#pairNumberGrid .number-button').forEach((item) => {
+          item.classList.toggle('selected', state.selectedPair.includes(Number(item.dataset.pairNumber)));
+        });
+
+        if (!state.selectedPair.length) els.pairSelectionText.textContent = 'Escolha dois números diferentes.';
+        else if (state.selectedPair.length === 1) els.pairSelectionText.textContent = `Escolhido ${state.selectedPair[0]}. Falta o segundo número.`;
+        else els.pairSelectionText.textContent = `Combinação ${state.selectedPair[0]} + ${state.selectedPair[1]}. A ordem não importa.`;
+
+        updateBetButtons();
+      });
       els.pairNumberGrid.appendChild(button);
     }
   }
 
-  function selectNumber(number) {
-    state.selectedNumber = number;
-    document.querySelectorAll('#numberGrid .number-button').forEach((button) => {
-      button.classList.toggle('selected', Number(button.dataset.number) === number);
-    });
-    els.selectionText.textContent = `Número ${number} escolhido. Agora informe o valor e clique em Apostar.`;
-    updateBetButtons();
-  }
+  function applySettings() {
+    const numberSettings = gameSettings('number');
+    const pairSettings = gameSettings('pair');
 
-  function selectPairNumber(number) {
-    const index = state.selectedPair.indexOf(number);
-    if (index >= 0) {
-      state.selectedPair.splice(index, 1);
-    } else if (state.selectedPair.length < 2) {
-      state.selectedPair.push(number);
-    } else {
-      showToast('Na Dupla Lendária escolha apenas dois números.', 'error');
-      return;
+    if (numberSettings.min_bet != null) {
+      els.betAmount.min = numberSettings.min_bet;
+      els.betAmount.max = numberSettings.max_bet;
+      if (Number(els.betAmount.value) < Number(numberSettings.min_bet) ||
+          Number(els.betAmount.value) > Number(numberSettings.max_bet)) {
+        els.betAmount.value = numberSettings.min_bet;
+      }
+      els.numberPrizeText.textContent = `${Number(numberSettings.multiplier)}×`;
+      els.numberRuleText.textContent = `${modeDescription(numberSettings)} Aposta: ${numberSettings.min_bet}–${numberSettings.max_bet} MZN.`;
     }
 
-    state.selectedPair.sort((a, b) => a - b);
-    document.querySelectorAll('#pairNumberGrid .number-button').forEach((button) => {
-      button.classList.toggle('selected', state.selectedPair.includes(Number(button.dataset.pairNumber)));
-    });
-
-    if (state.selectedPair.length === 0) {
-      els.pairSelectionText.textContent = 'Escolha dois números.';
-    } else if (state.selectedPair.length === 1) {
-      els.pairSelectionText.textContent = `Número ${state.selectedPair[0]} escolhido. Falta escolher mais um.`;
-    } else {
-      els.pairSelectionText.textContent = `Combinação ${state.selectedPair[0]} + ${state.selectedPair[1]} escolhida. A ordem não importa.`;
+    if (pairSettings.min_bet != null) {
+      els.pairBetAmount.min = pairSettings.min_bet;
+      els.pairBetAmount.max = pairSettings.max_bet;
+      if (Number(els.pairBetAmount.value) < Number(pairSettings.min_bet) ||
+          Number(els.pairBetAmount.value) > Number(pairSettings.max_bet)) {
+        els.pairBetAmount.value = pairSettings.min_bet;
+      }
+      els.pairPrizeText.textContent = `${Number(pairSettings.multiplier)}×`;
+      els.pairRuleText.textContent = `${modeDescription(pairSettings)} Aposta: ${pairSettings.min_bet}–${pairSettings.max_bet} MZN.`;
     }
-    updateBetButtons();
-  }
-
-  function currentRound() { return state.data?.current_round || null; }
-
-  function roundIsOpen() {
-    const round = currentRound();
-    return Boolean(round && round.status === 'open' && new Date(round.closes_at).getTime() > Date.now());
   }
 
   function updateBetButtons() {
-    const open = roundIsOpen();
-    els.betButton.disabled = !(open && state.selectedNumber !== null);
-    els.pairBetButton.disabled = !(open && state.selectedPair.length === 2);
+    els.betButton.disabled = !(gameIsOpen('number') && state.selectedNumber !== null);
+    els.pairBetButton.disabled = !(gameIsOpen('pair') && state.selectedPair.length === 2);
   }
 
-  function renderRound() {
-    const round = currentRound();
-    clearInterval(state.countdownTimer);
-    clearTimeout(state.roundRefreshTimer);
+  function renderGameRound(type) {
+    const round = gameRound(type);
+    const timer = state.timers[type];
+    clearInterval(timer.countdown);
+    clearTimeout(timer.refresh);
 
-    if (!round) {
-      els.roundBadge.textContent = 'Sem rodada ativa';
-      els.roundBadge.className = 'badge muted';
-      els.roundStatus.textContent = 'Apostas fechadas';
-      els.countdown.textContent = '--:--:--';
+    const isNumber = type === 'number';
+    const badge = isNumber ? els.numberRoundBadge : els.pairRoundBadge;
+    const status = isNumber ? els.numberRoundStatus : els.pairRoundStatus;
+    const countdown = isNumber ? els.numberCountdown : els.pairCountdown;
+    const label = isNumber ? 'Número' : 'Dupla';
+    const settings = gameSettings(type);
+
+    if (!settings.enabled) {
+      badge.textContent = `${label}: desativado`;
+      badge.className = 'badge danger';
+      status.textContent = 'Jogo desativado';
+      countdown.textContent = '--:--:--';
       updateBetButtons();
       return;
     }
 
-    els.roundBadge.textContent = `Rodada ${round.round_no}`;
+    if (!round) {
+      badge.textContent = `${label}: sem rodada`;
+      badge.className = 'badge muted';
+      status.textContent = 'Apostas fechadas';
+      countdown.textContent = '--:--:--';
+      updateBetButtons();
+      return;
+    }
+
+    badge.textContent = `${label} · rodada ${round.round_no}`;
     const closeAt = new Date(round.closes_at).getTime();
-    const drawAt = new Date(round.draw_at || round.closes_at).getTime();
+    const drawAt = new Date(round.draw_at).getTime();
 
     if (Number.isFinite(drawAt)) {
-      const refreshDelay = Math.max(250, drawAt - Date.now() + 350);
-      state.roundRefreshTimer = setTimeout(() => refresh(true), refreshDelay);
+      timer.refresh = setTimeout(() => refresh(true), Math.max(250, drawAt - Date.now() + 500));
     }
 
     const tick = () => {
       const now = Date.now();
       if (round.status === 'open' && now < closeAt) {
-        els.roundStatus.textContent = 'Apostas abertas';
-        els.roundBadge.className = 'badge success';
-        els.countdown.textContent = formatCountdown(closeAt - now);
+        badge.className = 'badge success';
+        status.textContent = 'Apostas abertas';
+        countdown.textContent = formatCountdown(closeAt - now);
       } else if (now < drawAt) {
-        els.roundStatus.textContent = 'Apostas bloqueadas · sorteio em';
-        els.roundBadge.className = 'badge danger';
-        els.countdown.textContent = formatCountdown(drawAt - now);
+        badge.className = 'badge danger';
+        status.textContent = 'Apostas bloqueadas · sorteio em';
+        countdown.textContent = formatCountdown(drawAt - now);
       } else {
-        els.roundStatus.textContent = 'Sorteando e publicando…';
-        els.roundBadge.className = 'badge danger';
-        els.countdown.textContent = '00:00:00';
+        badge.className = 'badge danger';
+        status.textContent = 'Processando resultado…';
+        countdown.textContent = '00:00:00';
       }
       updateBetButtons();
     };
 
     tick();
-    state.countdownTimer = setInterval(tick, 1000);
+    timer.countdown = setInterval(tick, 1000);
   }
 
-  function renderResult() {
-    const result = state.data?.last_result;
-    if (!result) {
-      els.resultBanner.classList.add('hidden');
-      return;
-    }
-
-    els.resultTitle.textContent = `Rodada ${result.round_no} · publicado ${formatDate(result.published_at)}`;
-    els.resultNumber.textContent = result.drawn_number ?? '—';
-
-    if (result.pair_drawn_a != null && result.pair_drawn_b != null) {
-      els.pairResultA.textContent = result.pair_drawn_a;
-      els.pairResultB.textContent = result.pair_drawn_b;
-      els.pairResultBox.classList.remove('hidden');
+  function renderResults() {
+    const numberResult = game('number')?.last_result;
+    if (numberResult?.drawn_number != null) {
+      els.numberResultTitle.textContent = `Rodada ${numberResult.round_no} · ${formatDate(numberResult.published_at)}`;
+      els.numberResultNumber.textContent = numberResult.drawn_number;
+      els.numberResultBanner.classList.remove('hidden');
     } else {
-      els.pairResultBox.classList.add('hidden');
+      els.numberResultBanner.classList.add('hidden');
     }
 
-    els.resultBanner.classList.remove('hidden');
-  }
-
-  function renderPlayer() {
-    const player = state.data?.player;
-    if (!state.token || !player) {
-      els.playerArea.classList.add('hidden');
-      els.accountButton.textContent = 'Entrar';
-      return;
+    const pairResult = game('pair')?.last_result;
+    if (pairResult?.pair_drawn_a != null && pairResult?.pair_drawn_b != null) {
+      els.pairResultTitle.textContent = `Rodada ${pairResult.round_no} · ${formatDate(pairResult.published_at)}`;
+      els.pairResultA.textContent = pairResult.pair_drawn_a;
+      els.pairResultB.textContent = pairResult.pair_drawn_b;
+      els.pairResultBanner.classList.remove('hidden');
+    } else {
+      els.pairResultBanner.classList.add('hidden');
     }
-    els.playerArea.classList.remove('hidden');
-    els.playerName.textContent = player.name;
-    els.playerPhone.textContent = `+${player.phone}`;
-    els.balance.textContent = formatMoney(player.balance);
-    els.accountButton.textContent = player.name.split(/\s+/)[0] || 'Minha conta';
-    renderHistory();
   }
 
   function renderHistory() {
-    const singles = (state.data?.bets || []).map((bet) => ({ ...bet, game_type: 'single' }));
+    const singles = (state.data?.bets || []).map((bet) => ({ ...bet, game_type: 'number' }));
     const pairs = (state.data?.pair_bets || []).map((bet) => ({ ...bet, game_type: 'pair' }));
     const bets = [...singles, ...pairs].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
@@ -265,6 +362,8 @@
 
     els.betHistory.innerHTML = bets.map((bet) => {
       const pair = bet.game_type === 'pair';
+      const choice = pair ? `${bet.number_a}+${bet.number_b}` : String(bet.selected_number);
+      const gameName = pair ? 'Dupla Lendária' : 'Número Lendário';
       let resultClass = 'pending';
       let resultLabel = 'Aguardando resultado';
       let resultValue = `MZN ${formatMoney(bet.amount)}`;
@@ -272,32 +371,50 @@
       if (bet.won === true) {
         resultClass = 'win';
         resultLabel = `Ganhou MZN ${formatMoney(bet.payout)}`;
-        resultValue = pair
-          ? `Saiu ${bet.pair_drawn_a} + ${bet.pair_drawn_b}`
-          : `Saiu ${bet.drawn_number}`;
+        resultValue = pair ? `Saiu ${bet.pair_drawn_a}+${bet.pair_drawn_b}` : `Saiu ${bet.drawn_number}`;
       } else if (bet.won === false) {
         resultClass = 'lose';
         resultLabel = 'Não premiada';
-        resultValue = pair
-          ? `Saiu ${bet.pair_drawn_a} + ${bet.pair_drawn_b}`
-          : `Saiu ${bet.drawn_number}`;
+        resultValue = pair ? `Saiu ${bet.pair_drawn_a}+${bet.pair_drawn_b}` : `Saiu ${bet.drawn_number}`;
       }
-
-      const choice = pair ? `${bet.number_a}+${bet.number_b}` : String(bet.selected_number);
-      const game = pair ? 'Dupla Lendária · 50×' : 'Número Lendário · 10×';
 
       return `<div class="history-item">
         <div class="history-number">${escapeHtml(choice)}</div>
-        <div class="history-main"><strong>${game} · Rodada ${bet.round_no} · MZN ${formatMoney(bet.amount)}</strong><span>${formatDate(bet.created_at)}</span></div>
-        <div class="history-result ${resultClass}"><strong>${escapeHtml(resultLabel)}</strong><span>${escapeHtml(resultValue)}</span></div>
+        <div class="history-main">
+          <strong>${gameName} · Rodada ${bet.round_no} · MZN ${formatMoney(bet.amount)}</strong>
+          <span>${formatDate(bet.created_at)}</span>
+        </div>
+        <div class="history-result ${resultClass}">
+          <strong>${escapeHtml(resultLabel)}</strong>
+          <span>${escapeHtml(resultValue)}</span>
+        </div>
       </div>`;
     }).join('');
   }
 
+  function renderPlayer() {
+    const player = state.data?.player;
+    if (!state.token || !player) {
+      els.playerArea.classList.add('hidden');
+      els.accountButton.textContent = 'Entrar';
+      return;
+    }
+
+    els.playerArea.classList.remove('hidden');
+    els.playerName.textContent = player.name;
+    els.playerPhone.textContent = `+${player.phone}`;
+    els.balance.textContent = formatMoney(player.balance);
+    els.accountButton.textContent = player.name.split(/\s+/)[0] || 'Minha conta';
+    renderHistory();
+  }
+
   function render() {
-    renderRound();
-    renderResult();
+    applySettings();
+    renderGameRound('number');
+    renderGameRound('pair');
+    renderResults();
     renderPlayer();
+    updateBetButtons();
   }
 
   async function refresh(silent = false) {
@@ -338,7 +455,7 @@
     setMessage(els.authMessage);
   }
 
-  async function placeBet(number, amount) {
+  async function placeNumberBet(number, amount) {
     try {
       els.betButton.disabled = true;
       const result = await rpc('jl_place_bet', {
@@ -346,8 +463,8 @@
         p_selected_number: Number(number),
         p_amount: Number(amount)
       });
-      showToast(`Aposta confirmada: número ${result.selected_number}, MZN ${formatMoney(result.amount)}.`, 'success');
       state.pendingBet = null;
+      showToast(`Número Lendário: aposta ${result.selected_number} confirmada.`, 'success');
       await refresh(true);
     } catch (error) {
       showToast(error.message, 'error');
@@ -361,12 +478,12 @@
       const [a, b] = [...numbers].sort((x, y) => x - y);
       const result = await rpc('jl_place_pair_bet', {
         p_token: state.token,
-        p_number_a: Number(a),
-        p_number_b: Number(b),
+        p_number_a: a,
+        p_number_b: b,
         p_amount: Number(amount)
       });
-      showToast(`Dupla confirmada: ${result.number_a} + ${result.number_b}, MZN ${formatMoney(result.amount)}.`, 'success');
       state.pendingBet = null;
+      showToast(`Dupla Lendária: ${result.number_a}+${result.number_b} confirmada.`, 'success');
       await refresh(true);
     } catch (error) {
       showToast(error.message, 'error');
@@ -378,30 +495,36 @@
     if (!state.pendingBet) return;
     const pending = state.pendingBet;
     if (pending.type === 'pair') await placePairBet(pending.numbers, pending.amount);
-    else await placeBet(pending.number, pending.amount);
+    else await placeNumberBet(pending.number, pending.amount);
   }
 
   els.betForm.addEventListener('submit', async (event) => {
     event.preventDefault();
+    const settings = gameSettings('number');
     const amount = Number(els.betAmount.value);
     if (state.selectedNumber === null) return showToast('Escolha um número primeiro.', 'error');
-    if (!Number.isFinite(amount) || amount < 10 || amount > 500) return showToast('A aposta deve ser entre 10 e 500 MZN.', 'error');
-    if (!roundIsOpen()) return showToast('As apostas estão bloqueadas ou fechadas.', 'error');
+    if (!Number.isFinite(amount) || amount < Number(settings.min_bet) || amount > Number(settings.max_bet)) {
+      return showToast(`A aposta deve ser entre ${settings.min_bet} e ${settings.max_bet} MZN.`, 'error');
+    }
+    if (!gameIsOpen('number')) return showToast('Número Lendário está sem apostas abertas.', 'error');
 
     if (!state.token) {
-      state.pendingBet = { type: 'single', number: state.selectedNumber, amount };
+      state.pendingBet = { type: 'number', number: state.selectedNumber, amount };
       openAuth('register');
       return;
     }
-    await placeBet(state.selectedNumber, amount);
+    await placeNumberBet(state.selectedNumber, amount);
   });
 
   els.pairBetForm.addEventListener('submit', async (event) => {
     event.preventDefault();
+    const settings = gameSettings('pair');
     const amount = Number(els.pairBetAmount.value);
     if (state.selectedPair.length !== 2) return showToast('Escolha dois números para a Dupla Lendária.', 'error');
-    if (!Number.isFinite(amount) || amount < 10 || amount > 500) return showToast('A aposta deve ser entre 10 e 500 MZN.', 'error');
-    if (!roundIsOpen()) return showToast('As apostas estão bloqueadas ou fechadas.', 'error');
+    if (!Number.isFinite(amount) || amount < Number(settings.min_bet) || amount > Number(settings.max_bet)) {
+      return showToast(`A aposta deve ser entre ${settings.min_bet} e ${settings.max_bet} MZN.`, 'error');
+    }
+    if (!gameIsOpen('pair')) return showToast('Dupla Lendária está sem apostas abertas.', 'error');
 
     if (!state.token) {
       state.pendingBet = { type: 'pair', numbers: [...state.selectedPair], amount };
@@ -414,7 +537,10 @@
   els.registerForm.addEventListener('submit', async (event) => {
     event.preventDefault();
     const pin = els.registerPin.value.trim();
-    if (pin !== els.registerPinConfirm.value.trim()) return setMessage(els.authMessage, 'Os PINs não coincidem.', 'error');
+    if (pin !== els.registerPinConfirm.value.trim()) {
+      return setMessage(els.authMessage, 'Os PINs não coincidem.', 'error');
+    }
+
     try {
       setMessage(els.authMessage, 'Criando conta…');
       const result = await rpc('jl_register_player', {
@@ -458,7 +584,11 @@
         p_amount: Number(els.depositAmount.value),
         p_note: els.depositNote.value.trim()
       });
-      setMessage(els.depositMessage, `${result.message} Confirmação: ${result.request_id.slice(0, 8).toUpperCase()}`, 'success');
+      setMessage(
+        els.depositMessage,
+        `${result.message} Confirmação: ${result.request_id.slice(0, 8).toUpperCase()}`,
+        'success'
+      );
       els.depositForm.reset();
       await refresh(true);
     } catch (error) {
@@ -482,8 +612,11 @@
   });
 
   els.accountButton.addEventListener('click', () => {
-    if (state.token && state.data?.player) els.playerArea.scrollIntoView({ behavior: 'smooth' });
-    else openAuth('login');
+    if (state.token && state.data?.player) {
+      els.playerArea.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      openAuth('login');
+    }
   });
 
   els.logoutButton.addEventListener('click', async () => {
@@ -499,8 +632,12 @@
   els.closeAuth.addEventListener('click', closeAuth);
   els.registerTab.addEventListener('click', () => switchAuth('register'));
   els.loginTab.addEventListener('click', () => switchAuth('login'));
-  els.authModal.addEventListener('click', (event) => { if (event.target === els.authModal) closeAuth(); });
-  document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && !els.authModal.classList.contains('hidden')) closeAuth(); });
+  els.authModal.addEventListener('click', (event) => {
+    if (event.target === els.authModal) closeAuth();
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && !els.authModal.classList.contains('hidden')) closeAuth();
+  });
 
   buildNumbers();
   buildPairNumbers();
