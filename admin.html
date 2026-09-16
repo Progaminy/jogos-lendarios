@@ -9,10 +9,12 @@
 </head>
 <body>
   <div id="toast" class="toast" aria-live="polite"></div>
+
   <header class="topbar">
     <a class="brand" href="./index.html">Jogos <strong>Lendários</strong></a>
     <div class="top-actions">
       <span class="badge muted">ADMINISTRAÇÃO</span>
+      <button id="refreshAdmin" class="button ghost small hidden" type="button">Atualizar</button>
       <button id="adminLogout" class="button ghost small hidden" type="button">Sair</button>
     </div>
   </header>
@@ -21,7 +23,7 @@
     <section id="adminLogin" class="card admin-login">
       <p class="eyebrow">ACESSO RESTRITO</p>
       <h1 style="font-size:clamp(2.3rem,7vw,4rem)">Painel administrativo</h1>
-      <p class="muted-text">Digite o código administrativo. O código não fica guardado no navegador; apenas uma sessão temporária é criada.</p>
+      <p class="muted-text">Cada jogo é configurado separadamente. O saldo dos jogadores continua comum.</p>
       <form id="adminLoginForm" class="stack-form" style="margin-top:20px">
         <label class="field"><span>Código</span><input id="adminCode" type="password" autocomplete="current-password" required></label>
         <button class="button primary" type="submit">Entrar</button>
@@ -30,66 +32,147 @@
     </section>
 
     <section id="adminApp" class="hidden">
-      <div class="admin-grid">
-        <div class="card metric"><span>Rodada</span><strong id="metricRound">—</strong></div>
-        <div class="card metric"><span>Estado</span><strong id="metricStatus">—</strong></div>
-        <div class="card metric"><span>Próxima ação</span><strong id="metricCountdown">—</strong></div>
-        <div class="card metric"><span>Último Número Lendário</span><strong id="metricDraw">—</strong></div>
-        <div class="card metric"><span>Última Dupla Lendária</span><strong id="metricPairDraw">—</strong></div>
-      </div>
-
-      <section class="card admin-card">
-        <div class="section-head">
-          <div><p class="eyebrow">CONTROLE IMEDIATO</p><h2>Abrir uma rodada manual</h2></div>
-          <button id="refreshAdmin" class="button ghost small" type="button">Atualizar</button>
-        </div>
-        <p class="muted-text">Defina a hora exata do sorteio. As apostas dos dois jogos serão bloqueadas automaticamente 3 segundos antes. Na hora marcada, o sistema publica o Número Lendário e a Dupla Lendária.</p>
-        <div class="admin-actions">
-          <label class="field"><span>Data e hora do sorteio</span><input id="closeAt" type="datetime-local"></label>
-          <button id="openRound" class="button success" type="button">Abrir jogo</button>
-          <button id="closeRound" class="button danger" type="button">Encerrar e sortear agora</button>
-        </div>
-        <p class="muted-text" style="margin-top:12px">O encerramento manual antecipa o sorteio da rodada atual. O administrador não escolhe os resultados.</p>
-      </section>
-
-      <section class="card admin-card">
-        <div class="section-head">
-          <div>
-            <p class="eyebrow">PROGRAMAÇÃO AUTOMÁTICA</p>
-            <h2>Programar vários sorteios</h2>
-          </div>
-          <button id="clearSchedule" class="button danger small" type="button">Cancelar horários futuros</button>
-        </div>
-        <p class="muted-text">Pode programar um período inteiro. Em cada horário os dois jogos usam a mesma rodada e o mesmo momento de bloqueio, mas cada um tem a sua própria lógica de resultado.</p>
-
-        <div class="admin-actions">
-          <label class="field"><span>Primeiro sorteio</span><input id="scheduleStart" type="datetime-local"></label>
-          <label class="field"><span>Último sorteio</span><input id="scheduleEnd" type="datetime-local"></label>
-          <label class="field" style="max-width:180px"><span>Intervalo em minutos</span><input id="scheduleInterval" type="number" min="1" max="1440" step="1" value="60"></label>
-          <button id="quick12" class="button ghost" type="button">Período 12h</button>
-          <button id="quick24" class="button ghost" type="button">Período 24h</button>
-          <button id="schedulePeriod" class="button success" type="button">Programar período</button>
-        </div>
-
-        <div class="admin-actions">
-          <label class="field"><span>Adicionar um horário avulso</span><input id="singleDrawAt" type="datetime-local"></label>
-          <button id="addDrawTime" class="button ghost" type="button">Adicionar horário</button>
-        </div>
-
-        <div id="drawSchedule" class="request-list"><div class="empty">Nenhum horário futuro programado.</div></div>
-      </section>
 
       <section class="card admin-card">
         <p class="eyebrow">NÚMERO LENDÁRIO</p>
-        <h2>Total apostado em cada número</h2>
-        <div id="numberStats" class="stat-grid"></div>
+        <h2>Administração independente</h2>
+
+        <div class="admin-grid">
+          <div class="card metric"><span>Rodada</span><strong id="numberMetricRound">—</strong></div>
+          <div class="card metric"><span>Estado</span><strong id="numberMetricStatus">—</strong></div>
+          <div class="card metric"><span>Próxima ação</span><strong id="numberMetricCountdown">—</strong></div>
+          <div class="card metric"><span>Último resultado</span><strong id="numberMetricResult">—</strong></div>
+        </div>
+
+        <div class="card admin-card" style="box-shadow:none">
+          <p class="eyebrow">REGRAS</p>
+          <div class="admin-actions">
+            <label class="field"><span>Aposta mínima</span><input id="numberMinBet" type="number" min="1" step="1"></label>
+            <label class="field"><span>Aposta máxima</span><input id="numberMaxBet" type="number" min="1" step="1"></label>
+            <label class="field"><span>Multiplicador</span><input id="numberMultiplier" type="number" min="2" step="1"></label>
+            <label class="field"><span>Bloqueio antes do sorteio (s)</span><input id="numberLockSeconds" type="number" min="1" max="60" step="1"></label>
+            <label class="field">
+              <span>Modo de sorteio</span>
+              <select id="numberDrawMode">
+                <option value="house_min">Menor exposição</option>
+                <option value="house_safe_random">Aleatório entre resultados seguros</option>
+              </select>
+            </label>
+            <label class="field"><span>Ativo</span><select id="numberEnabled"><option value="true">Sim</option><option value="false">Não</option></select></label>
+            <button id="numberSaveSettings" class="button primary" type="button">Guardar regras</button>
+          </div>
+          <p class="muted-text">As regras só podem ser alteradas quando este jogo não tiver rodada ativa.</p>
+        </div>
+
+        <div class="card admin-card" style="box-shadow:none">
+          <p class="eyebrow">RODADA MANUAL</p>
+          <div class="admin-actions">
+            <label class="field"><span>Hora do sorteio</span><input id="numberManualAt" type="datetime-local"></label>
+            <button id="numberOpenRound" class="button success" type="button">Abrir Número Lendário</button>
+            <button id="numberCloseRound" class="button danger" type="button">Encerrar e sortear agora</button>
+          </div>
+        </div>
+
+        <div class="card admin-card" style="box-shadow:none">
+          <div class="section-head">
+            <div><p class="eyebrow">PROGRAMAÇÃO</p><h2>Horários do Número Lendário</h2></div>
+            <button id="numberClearSchedule" class="button danger small" type="button">Cancelar futuros</button>
+          </div>
+          <div class="admin-actions">
+            <label class="field"><span>Primeiro sorteio</span><input id="numberScheduleStart" type="datetime-local"></label>
+            <label class="field"><span>Último sorteio</span><input id="numberScheduleEnd" type="datetime-local"></label>
+            <label class="field"><span>Intervalo (min)</span><input id="numberScheduleInterval" type="number" min="1" max="1440" value="60"></label>
+            <button id="numberSchedulePeriod" class="button success" type="button">Programar período</button>
+          </div>
+          <div class="admin-actions">
+            <label class="field"><span>Horário avulso</span><input id="numberSingleAt" type="datetime-local"></label>
+            <button id="numberAddTime" class="button ghost" type="button">Adicionar horário</button>
+          </div>
+          <div id="numberSchedule" class="request-list"><div class="empty">Nenhum horário.</div></div>
+        </div>
+
+        <div class="card admin-card" style="box-shadow:none">
+          <p class="eyebrow">EXPOSIÇÃO</p>
+          <h2>Total por número</h2>
+          <div id="numberStats" class="stat-grid"></div>
+        </div>
+
+        <div class="card admin-card" style="box-shadow:none">
+          <p class="eyebrow">MOVIMENTO</p>
+          <h2>Últimas apostas do Número Lendário</h2>
+          <div id="numberRecentBets" class="request-list"></div>
+        </div>
       </section>
 
       <section class="card admin-card">
         <p class="eyebrow">DUPLA LENDÁRIA</p>
-        <h2>Total apostado em cada combinação</h2>
-        <p class="muted-text">As combinações são canónicas: 1+9 e 9+1 aparecem apenas como 1+9.</p>
-        <div id="pairStats" class="stat-grid"></div>
+        <h2>Administração independente</h2>
+
+        <div class="admin-grid">
+          <div class="card metric"><span>Rodada</span><strong id="pairMetricRound">—</strong></div>
+          <div class="card metric"><span>Estado</span><strong id="pairMetricStatus">—</strong></div>
+          <div class="card metric"><span>Próxima ação</span><strong id="pairMetricCountdown">—</strong></div>
+          <div class="card metric"><span>Último resultado</span><strong id="pairMetricResult">—</strong></div>
+        </div>
+
+        <div class="card admin-card" style="box-shadow:none">
+          <p class="eyebrow">REGRAS</p>
+          <div class="admin-actions">
+            <label class="field"><span>Aposta mínima</span><input id="pairMinBet" type="number" min="1" step="1"></label>
+            <label class="field"><span>Aposta máxima</span><input id="pairMaxBet" type="number" min="1" step="1"></label>
+            <label class="field"><span>Multiplicador</span><input id="pairMultiplier" type="number" min="2" step="1"></label>
+            <label class="field"><span>Bloqueio antes do sorteio (s)</span><input id="pairLockSeconds" type="number" min="1" max="60" step="1"></label>
+            <label class="field">
+              <span>Modo de sorteio</span>
+              <select id="pairDrawMode">
+                <option value="house_min">Menor exposição</option>
+                <option value="house_safe_random">Aleatório entre resultados seguros</option>
+              </select>
+            </label>
+            <label class="field"><span>Ativo</span><select id="pairEnabled"><option value="true">Sim</option><option value="false">Não</option></select></label>
+            <button id="pairSaveSettings" class="button primary" type="button">Guardar regras</button>
+          </div>
+          <p class="muted-text">Com o multiplicador padrão 50×, a proteção de exposição pode recusar uma aposta que eliminaria a última combinação segura.</p>
+        </div>
+
+        <div class="card admin-card" style="box-shadow:none">
+          <p class="eyebrow">RODADA MANUAL</p>
+          <div class="admin-actions">
+            <label class="field"><span>Hora do sorteio</span><input id="pairManualAt" type="datetime-local"></label>
+            <button id="pairOpenRound" class="button success" type="button">Abrir Dupla Lendária</button>
+            <button id="pairCloseRound" class="button danger" type="button">Encerrar e sortear agora</button>
+          </div>
+        </div>
+
+        <div class="card admin-card" style="box-shadow:none">
+          <div class="section-head">
+            <div><p class="eyebrow">PROGRAMAÇÃO</p><h2>Horários da Dupla Lendária</h2></div>
+            <button id="pairClearSchedule" class="button danger small" type="button">Cancelar futuros</button>
+          </div>
+          <div class="admin-actions">
+            <label class="field"><span>Primeiro sorteio</span><input id="pairScheduleStart" type="datetime-local"></label>
+            <label class="field"><span>Último sorteio</span><input id="pairScheduleEnd" type="datetime-local"></label>
+            <label class="field"><span>Intervalo (min)</span><input id="pairScheduleInterval" type="number" min="1" max="1440" value="60"></label>
+            <button id="pairSchedulePeriod" class="button success" type="button">Programar período</button>
+          </div>
+          <div class="admin-actions">
+            <label class="field"><span>Horário avulso</span><input id="pairSingleAt" type="datetime-local"></label>
+            <button id="pairAddTime" class="button ghost" type="button">Adicionar horário</button>
+          </div>
+          <div id="pairSchedule" class="request-list"><div class="empty">Nenhum horário.</div></div>
+        </div>
+
+        <div class="card admin-card" style="box-shadow:none">
+          <p class="eyebrow">EXPOSIÇÃO</p>
+          <h2>Total por combinação</h2>
+          <div id="pairStats" class="stat-grid"></div>
+        </div>
+
+        <div class="card admin-card" style="box-shadow:none">
+          <p class="eyebrow">MOVIMENTO</p>
+          <h2>Últimas apostas da Dupla Lendária</h2>
+          <div id="pairRecentBets" class="request-list"></div>
+        </div>
       </section>
 
       <div class="admin-two">
@@ -107,26 +190,13 @@
 
       <section class="card admin-card">
         <p class="eyebrow">JOGADORES</p>
-        <h2>Contas e saldos</h2>
+        <h2>Contas e saldo comum</h2>
         <div id="playersList" class="player-list"></div>
-      </section>
-
-      <section class="card admin-card">
-        <p class="eyebrow">NÚMERO LENDÁRIO</p>
-        <h2>Últimas apostas</h2>
-        <div id="recentBets" class="request-list"></div>
-      </section>
-
-      <section class="card admin-card">
-        <p class="eyebrow">DUPLA LENDÁRIA</p>
-        <h2>Últimas apostas de combinações</h2>
-        <div id="recentPairBets" class="request-list"></div>
       </section>
     </section>
   </main>
 
   <script src="./config.js"></script>
   <script src="./admin.js" defer></script>
-  <script src="./admin-pair.js" defer></script>
 </body>
 </html>
