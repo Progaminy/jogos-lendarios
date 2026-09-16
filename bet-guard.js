@@ -1,9 +1,6 @@
 (() => {
   'use strict';
 
-  const MIN_BET = 10;
-  const MAX_BET = 500;
-
   function showToast(message, type = 'error') {
     const toast = document.getElementById('toast');
     if (!toast) return;
@@ -28,7 +25,6 @@
     const depositAmount = document.getElementById('depositAmount');
 
     if (!depositForm || playerArea?.classList.contains('hidden')) return;
-
     showToast(message, 'error');
     depositForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
     window.setTimeout(() => depositAmount?.focus({ preventScroll: true }), 450);
@@ -39,11 +35,15 @@
     form?.addEventListener('submit', (event) => {
       const amountInput = document.getElementById(amountId);
       const amount = Number(amountInput?.value);
+      const min = Number(amountInput?.min);
+      const max = Number(amountInput?.max);
 
-      if (!Number.isFinite(amount) || amount < MIN_BET || amount > MAX_BET) {
+      if (!Number.isFinite(amount) ||
+          (Number.isFinite(min) && amount < min) ||
+          (Number.isFinite(max) && amount > max)) {
         event.preventDefault();
         event.stopImmediatePropagation();
-        showToast(`A aposta deve ser entre ${MIN_BET} e ${MAX_BET} MZN.`, 'error');
+        showToast(`A aposta deve ficar entre ${min} e ${max} MZN.`, 'error');
         amountInput?.focus();
         return;
       }
@@ -63,13 +63,13 @@
   guardForm('betForm', 'betAmount');
   guardForm('pairBetForm', 'pairBetAmount');
 
-  // Se o saldo mudar entre a leitura do ecrã e a gravação no banco,
-  // a rejeição do Supabase também envia o jogador para Depósito.
   const originalFetch = window.fetch.bind(window);
   window.fetch = async (...args) => {
     const response = await originalFetch(...args);
     const url = typeof args[0] === 'string' ? args[0] : args[0]?.url || '';
-    const isBetRpc = url.includes('/rest/v1/rpc/jl_place_bet') || url.includes('/rest/v1/rpc/jl_place_pair_bet');
+    const isBetRpc =
+      url.includes('/rest/v1/rpc/jl_place_bet') ||
+      url.includes('/rest/v1/rpc/jl_place_pair_bet');
 
     if (isBetRpc && !response.ok) {
       response.clone().text().then((text) => {
