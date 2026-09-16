@@ -4,54 +4,135 @@
   const cfg = window.JL_CONFIG || {};
   const TOKEN_KEY = 'jl_admin_token';
   const $ = (id) => document.getElementById(id);
-  const state = { token: localStorage.getItem(TOKEN_KEY) || '', data: null, timer: null, countdownTimer: null };
 
-  const els = {
-    toast: $('toast'), adminLogin: $('adminLogin'), adminApp: $('adminApp'), adminLogout: $('adminLogout'),
-    adminLoginForm: $('adminLoginForm'), adminCode: $('adminCode'), adminLoginMessage: $('adminLoginMessage'),
-    metricRound: $('metricRound'), metricStatus: $('metricStatus'), metricCountdown: $('metricCountdown'), metricDraw: $('metricDraw'),
-    closeAt: $('closeAt'), openRound: $('openRound'), closeRound: $('closeRound'), refreshAdmin: $('refreshAdmin'),
-    scheduleStart: $('scheduleStart'), scheduleEnd: $('scheduleEnd'), scheduleInterval: $('scheduleInterval'),
-    quick12: $('quick12'), quick24: $('quick24'), schedulePeriod: $('schedulePeriod'),
-    singleDrawAt: $('singleDrawAt'), addDrawTime: $('addDrawTime'), clearSchedule: $('clearSchedule'), drawSchedule: $('drawSchedule'),
-    numberStats: $('numberStats'), depositRequests: $('depositRequests'), withdrawRequests: $('withdrawRequests'),
-    playersList: $('playersList'), recentBets: $('recentBets')
+  const state = {
+    token: localStorage.getItem(TOKEN_KEY) || '',
+    data: null,
+    refreshTimer: null,
+    countdowns: { number: null, pair: null }
+  };
+
+  const shared = {
+    toast: $('toast'),
+    adminLogin: $('adminLogin'),
+    adminApp: $('adminApp'),
+    adminLogout: $('adminLogout'),
+    refreshAdmin: $('refreshAdmin'),
+    adminLoginForm: $('adminLoginForm'),
+    adminCode: $('adminCode'),
+    adminLoginMessage: $('adminLoginMessage'),
+    depositRequests: $('depositRequests'),
+    withdrawRequests: $('withdrawRequests'),
+    playersList: $('playersList')
+  };
+
+  const games = {
+    number: {
+      label: 'Número Lendário',
+      metricRound: $('numberMetricRound'),
+      metricStatus: $('numberMetricStatus'),
+      metricCountdown: $('numberMetricCountdown'),
+      metricResult: $('numberMetricResult'),
+      minBet: $('numberMinBet'),
+      maxBet: $('numberMaxBet'),
+      multiplier: $('numberMultiplier'),
+      lockSeconds: $('numberLockSeconds'),
+      drawMode: $('numberDrawMode'),
+      enabled: $('numberEnabled'),
+      saveSettings: $('numberSaveSettings'),
+      manualAt: $('numberManualAt'),
+      openRound: $('numberOpenRound'),
+      closeRound: $('numberCloseRound'),
+      scheduleStart: $('numberScheduleStart'),
+      scheduleEnd: $('numberScheduleEnd'),
+      scheduleInterval: $('numberScheduleInterval'),
+      schedulePeriod: $('numberSchedulePeriod'),
+      singleAt: $('numberSingleAt'),
+      addTime: $('numberAddTime'),
+      clearSchedule: $('numberClearSchedule'),
+      schedule: $('numberSchedule'),
+      stats: $('numberStats'),
+      recent: $('numberRecentBets')
+    },
+    pair: {
+      label: 'Dupla Lendária',
+      metricRound: $('pairMetricRound'),
+      metricStatus: $('pairMetricStatus'),
+      metricCountdown: $('pairMetricCountdown'),
+      metricResult: $('pairMetricResult'),
+      minBet: $('pairMinBet'),
+      maxBet: $('pairMaxBet'),
+      multiplier: $('pairMultiplier'),
+      lockSeconds: $('pairLockSeconds'),
+      drawMode: $('pairDrawMode'),
+      enabled: $('pairEnabled'),
+      saveSettings: $('pairSaveSettings'),
+      manualAt: $('pairManualAt'),
+      openRound: $('pairOpenRound'),
+      closeRound: $('pairCloseRound'),
+      scheduleStart: $('pairScheduleStart'),
+      scheduleEnd: $('pairScheduleEnd'),
+      scheduleInterval: $('pairScheduleInterval'),
+      schedulePeriod: $('pairSchedulePeriod'),
+      singleAt: $('pairSingleAt'),
+      addTime: $('pairAddTime'),
+      clearSchedule: $('pairClearSchedule'),
+      schedule: $('pairSchedule'),
+      stats: $('pairStats'),
+      recent: $('pairRecentBets')
+    }
   };
 
   function money(value) {
-    return Number(value || 0).toLocaleString('pt-MZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return Number(value || 0).toLocaleString('pt-MZ', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
   }
+
   function dateTime(value) {
-    return value ? new Date(value).toLocaleString('pt-MZ', { dateStyle: 'short', timeStyle: 'short' }) : '—';
+    return value
+      ? new Date(value).toLocaleString('pt-MZ', { dateStyle: 'short', timeStyle: 'short' })
+      : '—';
   }
+
   function escapeHtml(value) {
-    return String(value ?? '').replace(/[&<>'"]/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[c]));
+    return String(value ?? '').replace(/[&<>'"]/g, (c) => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+    }[c]));
   }
-  function toast(message, type = '') {
-    els.toast.textContent = message;
-    els.toast.className = `toast show ${type}`.trim();
-    clearTimeout(toast.timer);
-    toast.timer = setTimeout(() => { els.toast.className = 'toast'; }, 3400);
-  }
-  function loginMessage(message = '', type = '') {
-    els.adminLoginMessage.textContent = message;
-    els.adminLoginMessage.className = `form-message ${type}`.trim();
-  }
-  function toLocalInput(date) {
-    return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-  }
-  function fromInput(input) {
-    const value = new Date(input.value);
-    return Number.isNaN(value.getTime()) ? null : value;
-  }
+
   function clock(ms) {
     const total = Math.max(0, Math.floor(ms / 1000));
-    const days = Math.floor(total / 86400);
+    const d = Math.floor(total / 86400);
     const h = Math.floor((total % 86400) / 3600);
     const m = Math.floor((total % 3600) / 60);
     const s = total % 60;
-    const text = [h, m, s].map((v) => String(v).padStart(2, '0')).join(':');
-    return days ? `${days}d ${text}` : text;
+    const value = [h, m, s].map((v) => String(v).padStart(2, '0')).join(':');
+    return d ? `${d}d ${value}` : value;
+  }
+
+  function toast(message, type = '') {
+    shared.toast.textContent = message;
+    shared.toast.className = `toast show ${type}`.trim();
+    clearTimeout(toast.timer);
+    toast.timer = setTimeout(() => { shared.toast.className = 'toast'; }, 3800);
+  }
+
+  function loginMessage(message = '', type = '') {
+    shared.adminLoginMessage.textContent = message;
+    shared.adminLoginMessage.className = `form-message ${type}`.trim();
+  }
+
+  function toLocalInput(date) {
+    return new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+      .toISOString()
+      .slice(0, 16);
+  }
+
+  function fromInput(input) {
+    const value = new Date(input.value);
+    return Number.isNaN(value.getTime()) ? null : value;
   }
 
   async function rpc(name, args = {}) {
@@ -66,9 +147,11 @@
       body: JSON.stringify(args)
     });
     const raw = await response.text();
-    let payload;
+    let payload = null;
     try { payload = raw ? JSON.parse(raw) : null; } catch { payload = raw; }
-    if (!response.ok) throw new Error(payload?.message || payload?.error || payload?.hint || `Erro ${response.status}`);
+    if (!response.ok) {
+      throw new Error(payload?.message || payload?.error || payload?.hint || `Erro ${response.status}`);
+    }
     return payload;
   }
 
@@ -79,169 +162,220 @@
   }
 
   function showApp(show) {
-    els.adminLogin.classList.toggle('hidden', show);
-    els.adminApp.classList.toggle('hidden', !show);
-    els.adminLogout.classList.toggle('hidden', !show);
+    shared.adminLogin.classList.toggle('hidden', show);
+    shared.adminApp.classList.toggle('hidden', !show);
+    shared.adminLogout.classList.toggle('hidden', !show);
+    shared.refreshAdmin.classList.toggle('hidden', !show);
   }
 
-  function setDefaultTimes() {
+  function setDefaultTimes(type) {
+    const ui = games[type];
     const manual = new Date(Date.now() + 30 * 60 * 1000);
     manual.setSeconds(0, 0);
-    els.closeAt.value = toLocalInput(manual);
-    els.singleDrawAt.value = toLocalInput(manual);
+    ui.manualAt.value = toLocalInput(manual);
+    ui.singleAt.value = toLocalInput(manual);
 
     const start = new Date();
     start.setMinutes(0, 0, 0);
     start.setHours(start.getHours() + 1);
-    const end = new Date(start.getTime() + 12 * 60 * 60 * 1000);
-    els.scheduleStart.value = toLocalInput(start);
-    els.scheduleEnd.value = toLocalInput(end);
-    els.scheduleInterval.value = '60';
+    ui.scheduleStart.value = toLocalInput(start);
+    ui.scheduleEnd.value = toLocalInput(new Date(start.getTime() + 12 * 60 * 60 * 1000));
+    ui.scheduleInterval.value = '60';
   }
 
-  function setScheduleWindow(hours) {
-    let start = fromInput(els.scheduleStart);
-    if (!start || start.getTime() <= Date.now() + 10000) {
-      start = new Date();
-      start.setMinutes(0, 0, 0);
-      start.setHours(start.getHours() + 1);
-      els.scheduleStart.value = toLocalInput(start);
+  function gameData(type) {
+    return state.data?.games?.[type] || {};
+  }
+
+  function renderSettings(type) {
+    const ui = games[type];
+    const settings = gameData(type).settings || {};
+    ui.minBet.value = settings.min_bet ?? '';
+    ui.maxBet.value = settings.max_bet ?? '';
+    ui.multiplier.value = settings.multiplier ?? '';
+    ui.lockSeconds.value = settings.lock_seconds ?? '';
+    ui.drawMode.value = settings.draw_mode || 'house_min';
+    ui.enabled.value = String(settings.enabled !== false);
+
+    const active = Boolean(gameData(type).round);
+    ui.saveSettings.disabled = active;
+  }
+
+  function renderMetrics(type) {
+    const ui = games[type];
+    const data = gameData(type);
+    const round = data.round;
+    const last = data.last_result;
+    clearInterval(state.countdowns[type]);
+
+    if (type === 'number') {
+      ui.metricResult.textContent = last?.drawn_number ?? '—';
+    } else {
+      ui.metricResult.textContent =
+        last?.pair_drawn_a != null && last?.pair_drawn_b != null
+          ? `${last.pair_drawn_a} + ${last.pair_drawn_b}`
+          : '—';
     }
-    const end = new Date(start.getTime() + hours * 60 * 60 * 1000);
-    els.scheduleEnd.value = toLocalInput(end);
-    if (!els.scheduleInterval.value) els.scheduleInterval.value = '60';
-  }
-
-  function renderRound() {
-    const round = state.data?.round;
-    const last = state.data?.last_result;
-    const schedule = state.data?.draw_schedule || [];
-    clearInterval(state.countdownTimer);
-
-    els.metricDraw.textContent = last?.drawn_number ?? '—';
 
     if (!round) {
-      els.metricRound.textContent = last ? `#${last.round_no}` : '—';
-      els.metricStatus.textContent = schedule.length ? 'Aguardando programação' : (last ? 'Finalizada' : 'Sem rodada');
-      els.metricCountdown.textContent = schedule.length ? dateTime(schedule[0].draw_at) : '—';
-      els.openRound.disabled = schedule.length > 0;
-      els.closeRound.disabled = true;
+      ui.metricRound.textContent = '—';
+      ui.metricStatus.textContent = data.settings?.enabled === false ? 'Desativado' : 'Sem rodada';
+      ui.metricCountdown.textContent = data.schedule?.length ? dateTime(data.schedule[0].draw_at) : '—';
+      ui.openRound.disabled = data.settings?.enabled === false;
+      ui.closeRound.disabled = true;
       return;
     }
 
-    els.metricRound.textContent = `#${round.round_no}`;
-    els.openRound.disabled = true;
-    els.closeRound.disabled = false;
+    ui.metricRound.textContent = `#${round.round_no}`;
+    ui.openRound.disabled = true;
+    ui.closeRound.disabled = false;
 
     const closeAt = new Date(round.closes_at).getTime();
-    const drawAt = new Date(round.draw_at || round.closes_at).getTime();
+    const drawAt = new Date(round.draw_at).getTime();
+
     const tick = () => {
       const now = Date.now();
-      if (now < closeAt && round.status === 'open') {
-        els.metricStatus.textContent = 'Aberta';
-        els.metricCountdown.textContent = `Bloqueio ${clock(closeAt - now)}`;
+      if (round.status === 'open' && now < closeAt) {
+        ui.metricStatus.textContent = 'Aberta';
+        ui.metricCountdown.textContent = `Bloqueio em ${clock(closeAt - now)}`;
       } else if (now < drawAt) {
-        els.metricStatus.textContent = 'Apostas bloqueadas';
-        els.metricCountdown.textContent = `Sorteio ${clock(drawAt - now)}`;
+        ui.metricStatus.textContent = 'Bloqueada';
+        ui.metricCountdown.textContent = `Sorteio em ${clock(drawAt - now)}`;
       } else {
-        els.metricStatus.textContent = 'Processando sorteio';
-        els.metricCountdown.textContent = '00:00:00';
+        ui.metricStatus.textContent = 'Processando';
+        ui.metricCountdown.textContent = '00:00:00';
       }
     };
+
     tick();
-    state.countdownTimer = setInterval(tick, 1000);
+    state.countdowns[type] = setInterval(tick, 1000);
   }
 
-  function renderSchedule() {
-    const items = state.data?.draw_schedule || [];
-    els.clearSchedule.disabled = !items.some((item) => item.status === 'pending');
+  function renderSchedule(type) {
+    const ui = games[type];
+    const items = gameData(type).schedule || [];
+    ui.clearSchedule.disabled = !items.some((item) => item.status === 'pending');
+
     if (!items.length) {
-      els.drawSchedule.innerHTML = '<div class="empty">Nenhum horário futuro programado.</div>';
+      ui.schedule.innerHTML = '<div class="empty">Nenhum horário futuro programado.</div>';
       return;
     }
 
-    els.drawSchedule.innerHTML = items.map((item) => {
+    ui.schedule.innerHTML = items.map((item) => {
       const active = item.status === 'active';
-      const label = active ? 'RODADA ATIVA' : 'PROGRAMADO';
       const action = item.status === 'pending'
-        ? `<button class="button danger small" data-cancel-draw="${item.id}">Cancelar</button>`
+        ? `<button class="button danger small" data-cancel-game="${type}" data-cancel-id="${item.id}">Cancelar</button>`
         : '<span class="badge success">Em execução</span>';
+
       return `<div class="request-row">
-        <div><strong>${dateTime(item.draw_at)}</strong><br><small>${label}${active && item.round_id ? ' · rodada vinculada' : ''}</small></div>
+        <div>
+          <strong>${dateTime(item.draw_at)}</strong><br>
+          <small>${active ? 'RODADA ATIVA' : 'PROGRAMADO'}</small>
+        </div>
         <strong>${active ? 'Agora' : 'Futuro'}</strong>
         <div class="row-actions">${action}</div>
       </div>`;
     }).join('');
   }
 
-  function renderStats() {
-    if (!state.data?.round) {
-      els.numberStats.innerHTML = '<div class="empty">Abra ou programe uma rodada para acompanhar as apostas por número.</div>';
+  function renderStats(type) {
+    const ui = games[type];
+    const data = gameData(type);
+    const stats = data.stats || [];
+
+    if (!data.round) {
+      ui.stats.innerHTML = '<div class="empty">Sem rodada ativa.</div>';
       return;
     }
-    const stats = state.data?.number_stats || [];
-    els.numberStats.innerHTML = stats.map((item) => `
-      <div class="number-stat">
-        <strong>${item.number}</strong>
+
+    ui.stats.innerHTML = stats.map((item) => {
+      const label = type === 'number' ? item.number : `${item.number_a}+${item.number_b}`;
+      return `<div class="number-stat">
+        <strong>${label}</strong>
         <span>${item.bets} aposta${Number(item.bets) === 1 ? '' : 's'}</span>
         <small>MZN ${money(item.total)}</small>
-      </div>`).join('');
+      </div>`;
+    }).join('');
   }
 
-  function renderRequests() {
-    const deposits = state.data?.pending_deposits || [];
-    els.depositRequests.innerHTML = deposits.length ? deposits.map((r) => `
-      <div class="request-row">
-        <div><strong>${escapeHtml(r.name)}</strong><br><small>+${escapeHtml(r.phone)} · ${dateTime(r.created_at)}${r.note ? ` · ${escapeHtml(r.note)}` : ''}</small></div>
-        <strong>MZN ${money(r.amount)}</strong>
-        <div class="row-actions">
-          <button class="button success small" data-deposit="${r.id}" data-decision="approved">Aprovar</button>
-          <button class="button danger small" data-deposit="${r.id}" data-decision="rejected">Rejeitar</button>
+  function renderRecent(type) {
+    const ui = games[type];
+    const bets = gameData(type).recent_bets || [];
+
+    if (!bets.length) {
+      ui.recent.innerHTML = '<div class="empty">Ainda não há apostas.</div>';
+      return;
+    }
+
+    ui.recent.innerHTML = bets.map((bet) => {
+      const choice = type === 'number'
+        ? `número ${bet.selected_number}`
+        : `combinação ${bet.number_a}+${bet.number_b}`;
+
+      const stateLabel = bet.won === true
+        ? '<span class="win">Vencedora</span>'
+        : bet.won === false
+          ? '<span class="lose">Não premiada</span>'
+          : '<span class="pending">Pendente</span>';
+
+      return `<div class="request-row">
+        <div>
+          <strong>${escapeHtml(bet.name)}</strong><br>
+          <small>Rodada ${bet.round_no} · ${choice} · ${dateTime(bet.created_at)}</small>
         </div>
-      </div>`).join('') : '<div class="empty">Nenhum depósito pendente.</div>';
+        <strong>MZN ${money(bet.amount)}</strong>
+        <div>${stateLabel}</div>
+      </div>`;
+    }).join('');
+  }
+
+  function renderShared() {
+    const deposits = state.data?.pending_deposits || [];
+    shared.depositRequests.innerHTML = deposits.length
+      ? deposits.map((r) => `<div class="request-row">
+          <div><strong>${escapeHtml(r.name)}</strong><br><small>+${escapeHtml(r.phone)} · ${dateTime(r.created_at)}${r.note ? ` · ${escapeHtml(r.note)}` : ''}</small></div>
+          <strong>MZN ${money(r.amount)}</strong>
+          <div class="row-actions">
+            <button class="button success small" data-deposit="${r.id}" data-decision="approved">Aprovar</button>
+            <button class="button danger small" data-deposit="${r.id}" data-decision="rejected">Rejeitar</button>
+          </div>
+        </div>`).join('')
+      : '<div class="empty">Nenhum depósito pendente.</div>';
 
     const withdrawals = state.data?.pending_withdrawals || [];
-    els.withdrawRequests.innerHTML = withdrawals.length ? withdrawals.map((r) => `
-      <div class="request-row">
-        <div><strong>${escapeHtml(r.name)}</strong><br><small>+${escapeHtml(r.phone)} · ${dateTime(r.created_at)}</small></div>
-        <strong>MZN ${money(r.amount)}</strong>
-        <div class="row-actions">
-          <button class="button success small" data-withdraw="${r.id}" data-decision="approved">Autorizar</button>
-          <button class="button danger small" data-withdraw="${r.id}" data-decision="rejected">Rejeitar</button>
-        </div>
-      </div>`).join('') : '<div class="empty">Nenhum saque pendente.</div>';
-  }
+    shared.withdrawRequests.innerHTML = withdrawals.length
+      ? withdrawals.map((r) => `<div class="request-row">
+          <div><strong>${escapeHtml(r.name)}</strong><br><small>+${escapeHtml(r.phone)} · ${dateTime(r.created_at)}</small></div>
+          <strong>MZN ${money(r.amount)}</strong>
+          <div class="row-actions">
+            <button class="button success small" data-withdraw="${r.id}" data-decision="approved">Autorizar</button>
+            <button class="button danger small" data-withdraw="${r.id}" data-decision="rejected">Rejeitar</button>
+          </div>
+        </div>`).join('')
+      : '<div class="empty">Nenhum saque pendente.</div>';
 
-  function renderPlayers() {
     const players = state.data?.players || [];
-    els.playersList.innerHTML = players.length ? players.map((p) => `
-      <div class="player-row">
-        <div><strong>${escapeHtml(p.name)}</strong><br><small>+${escapeHtml(p.phone)} · criado ${dateTime(p.created_at)}${p.blocked ? ' · BLOQUEADO' : ''}</small></div>
-        <strong>MZN ${money(p.balance)}</strong>
-        <div class="row-actions">
-          <button class="button ghost small" data-adjust="${p.id}" data-name="${escapeHtml(p.name)}">Ajustar saldo</button>
-          <button class="button ${p.blocked ? 'success' : 'danger'} small" data-block="${p.id}" data-value="${p.blocked ? 'false' : 'true'}">${p.blocked ? 'Desbloquear' : 'Bloquear'}</button>
-        </div>
-      </div>`).join('') : '<div class="empty">Nenhum jogador cadastrado.</div>';
-  }
-
-  function renderRecentBets() {
-    const bets = state.data?.recent_bets || [];
-    els.recentBets.innerHTML = bets.length ? bets.map((b) => `
-      <div class="request-row">
-        <div><strong>${escapeHtml(b.name)}</strong><br><small>Rodada ${b.round_no} · número ${b.selected_number} · ${dateTime(b.created_at)}</small></div>
-        <strong>MZN ${money(b.amount)}</strong>
-        <div>${b.won === true ? '<span class="win">Vencedora</span>' : b.won === false ? '<span class="lose">Não premiada</span>' : '<span class="pending">Pendente</span>'}</div>
-      </div>`).join('') : '<div class="empty">Ainda não há apostas.</div>';
+    shared.playersList.innerHTML = players.length
+      ? players.map((p) => `<div class="player-row">
+          <div><strong>${escapeHtml(p.name)}</strong><br><small>+${escapeHtml(p.phone)} · ${dateTime(p.created_at)}${p.blocked ? ' · BLOQUEADO' : ''}</small></div>
+          <strong>MZN ${money(p.balance)}</strong>
+          <div class="row-actions">
+            <button class="button ghost small" data-adjust="${p.id}" data-name="${escapeHtml(p.name)}">Ajustar saldo</button>
+            <button class="button ${p.blocked ? 'success' : 'danger'} small" data-block="${p.id}" data-value="${p.blocked ? 'false' : 'true'}">${p.blocked ? 'Desbloquear' : 'Bloquear'}</button>
+          </div>
+        </div>`).join('')
+      : '<div class="empty">Nenhum jogador cadastrado.</div>';
   }
 
   function render() {
-    renderRound();
-    renderSchedule();
-    renderStats();
-    renderRequests();
-    renderPlayers();
-    renderRecentBets();
+    for (const type of ['number', 'pair']) {
+      renderSettings(type);
+      renderMetrics(type);
+      renderSchedule(type);
+      renderStats(type);
+      renderRecent(type);
+    }
+    renderShared();
   }
 
   async function refresh(silent = false) {
@@ -255,7 +389,9 @@
         saveToken('');
         showApp(false);
         if (!silent) loginMessage('Sessão expirada. Entre novamente.', 'error');
-      } else if (!silent) toast(error.message, 'error');
+      } else if (!silent) {
+        toast(error.message, 'error');
+      }
     }
   }
 
@@ -271,13 +407,87 @@
     }
   }
 
-  els.adminLoginForm.addEventListener('submit', async (event) => {
+  function wireGame(type) {
+    const ui = games[type];
+
+    ui.saveSettings.addEventListener('click', async () => {
+      await runAction('jl_admin_update_game_settings', {
+        p_game_type: type,
+        p_min_bet: Number(ui.minBet.value),
+        p_max_bet: Number(ui.maxBet.value),
+        p_multiplier: Number(ui.multiplier.value),
+        p_lock_seconds: Number(ui.lockSeconds.value),
+        p_draw_mode: ui.drawMode.value,
+        p_enabled: ui.enabled.value === 'true'
+      }, `${ui.label}: regras guardadas.`);
+    });
+
+    ui.openRound.addEventListener('click', async () => {
+      const drawAt = fromInput(ui.manualAt);
+      if (!drawAt) return toast(`Defina uma hora válida para ${ui.label}.`, 'error');
+      await runAction('jl_admin_open_game_round', {
+        p_game_type: type,
+        p_draw_at: drawAt.toISOString()
+      }, `${ui.label}: rodada aberta.`);
+    });
+
+    ui.closeRound.addEventListener('click', async () => {
+      if (!window.confirm(`Encerrar e sortear agora somente o ${ui.label}?`)) return;
+      await runAction('jl_admin_close_game_round', {
+        p_game_type: type
+      }, `${ui.label}: rodada encerrada.`);
+    });
+
+    ui.schedulePeriod.addEventListener('click', async () => {
+      const start = fromInput(ui.scheduleStart);
+      const end = fromInput(ui.scheduleEnd);
+      const interval = Number(ui.scheduleInterval.value);
+      if (!start || !end) return toast(`Informe início e fim para ${ui.label}.`, 'error');
+      if (!Number.isInteger(interval) || interval < 1 || interval > 1440) {
+        return toast('Intervalo inválido.', 'error');
+      }
+
+      await runAction('jl_admin_schedule_game_draws', {
+        p_game_type: type,
+        p_start_at: start.toISOString(),
+        p_end_at: end.toISOString(),
+        p_interval_minutes: interval
+      }, `${ui.label}: programação criada.`);
+    });
+
+    ui.addTime.addEventListener('click', async () => {
+      const drawAt = fromInput(ui.singleAt);
+      if (!drawAt) return toast('Informe um horário válido.', 'error');
+      await runAction('jl_admin_add_game_draw_time', {
+        p_game_type: type,
+        p_draw_at: drawAt.toISOString()
+      }, `${ui.label}: horário adicionado.`);
+    });
+
+    ui.clearSchedule.addEventListener('click', async () => {
+      if (!window.confirm(`Cancelar apenas os horários futuros do ${ui.label}?`)) return;
+      await runAction('jl_admin_clear_game_schedule', {
+        p_game_type: type
+      }, `${ui.label}: horários futuros cancelados.`);
+    });
+
+    ui.schedule.addEventListener('click', async (event) => {
+      const button = event.target.closest('[data-cancel-id]');
+      if (!button) return;
+      await runAction('jl_admin_cancel_game_draw_time', {
+        p_game_type: type,
+        p_schedule_id: button.dataset.cancelId
+      }, `${ui.label}: horário cancelado.`);
+    });
+  }
+
+  shared.adminLoginForm.addEventListener('submit', async (event) => {
     event.preventDefault();
     try {
       loginMessage('Validando…');
-      const result = await rpc('jl_admin_login', { p_code: els.adminCode.value });
+      const result = await rpc('jl_admin_login', { p_code: shared.adminCode.value });
       saveToken(result.token);
-      els.adminCode.value = '';
+      shared.adminCode.value = '';
       loginMessage('');
       await refresh(true);
       toast('Acesso administrativo autorizado.', 'success');
@@ -286,95 +496,67 @@
     }
   });
 
-  els.adminLogout.addEventListener('click', async () => {
+  shared.adminLogout.addEventListener('click', async () => {
     try { await rpc('jl_admin_logout', { p_token: state.token }); } catch {}
     saveToken('');
     state.data = null;
     showApp(false);
   });
 
-  els.refreshAdmin.addEventListener('click', () => refresh());
+  shared.refreshAdmin.addEventListener('click', () => refresh());
 
-  els.openRound.addEventListener('click', async () => {
-    const drawAt = fromInput(els.closeAt);
-    if (!drawAt) return toast('Defina uma data e hora válida para o sorteio.', 'error');
-    await runAction(
-      'jl_admin_open_round',
-      { p_closes_at: drawAt.toISOString() },
-      'Jogo aberto. As apostas serão bloqueadas 3 segundos antes do sorteio.'
-    );
-  });
-
-  els.closeRound.addEventListener('click', async () => {
-    if (!window.confirm('Encerrar as apostas e executar o sorteio agora?')) return;
-    await runAction('jl_admin_close_round', {}, 'Rodada encerrada e sorteada.');
-  });
-
-  els.quick12.addEventListener('click', () => setScheduleWindow(12));
-  els.quick24.addEventListener('click', () => setScheduleWindow(24));
-
-  els.schedulePeriod.addEventListener('click', async () => {
-    const start = fromInput(els.scheduleStart);
-    const end = fromInput(els.scheduleEnd);
-    const interval = Number(els.scheduleInterval.value);
-    if (!start || !end) return toast('Informe o primeiro e o último horário.', 'error');
-    if (!Number.isInteger(interval) || interval < 1 || interval > 1440) return toast('Intervalo inválido.', 'error');
-    await runAction('jl_admin_schedule_draws', {
-      p_start_at: start.toISOString(),
-      p_end_at: end.toISOString(),
-      p_interval_minutes: interval
-    }, 'Programação criada.');
-  });
-
-  els.addDrawTime.addEventListener('click', async () => {
-    const drawAt = fromInput(els.singleDrawAt);
-    if (!drawAt) return toast('Informe um horário válido.', 'error');
-    await runAction('jl_admin_add_draw_time', { p_draw_at: drawAt.toISOString() }, 'Horário adicionado.');
-  });
-
-  els.clearSchedule.addEventListener('click', async () => {
-    if (!window.confirm('Cancelar todos os horários futuros ainda não ativados? A rodada atualmente ativa não será cancelada.')) return;
-    await runAction('jl_admin_clear_draw_schedule', {}, 'Horários futuros cancelados.');
-  });
-
-  els.drawSchedule.addEventListener('click', async (event) => {
-    const button = event.target.closest('[data-cancel-draw]');
-    if (!button) return;
-    await runAction('jl_admin_cancel_draw_time', { p_schedule_id: button.dataset.cancelDraw }, 'Horário cancelado.');
-  });
-
-  els.depositRequests.addEventListener('click', async (event) => {
+  shared.depositRequests.addEventListener('click', async (event) => {
     const button = event.target.closest('[data-deposit]');
     if (!button) return;
-    await runAction('jl_admin_review_deposit', { p_request_id: button.dataset.deposit, p_decision: button.dataset.decision }, `Depósito ${button.dataset.decision === 'approved' ? 'aprovado' : 'rejeitado'}.`);
+    await runAction('jl_admin_review_deposit', {
+      p_request_id: button.dataset.deposit,
+      p_decision: button.dataset.decision
+    }, 'Pedido de depósito atualizado.');
   });
 
-  els.withdrawRequests.addEventListener('click', async (event) => {
+  shared.withdrawRequests.addEventListener('click', async (event) => {
     const button = event.target.closest('[data-withdraw]');
     if (!button) return;
-    await runAction('jl_admin_review_withdrawal', { p_request_id: button.dataset.withdraw, p_decision: button.dataset.decision }, `Saque ${button.dataset.decision === 'approved' ? 'autorizado' : 'rejeitado'}.`);
+    await runAction('jl_admin_review_withdrawal', {
+      p_request_id: button.dataset.withdraw,
+      p_decision: button.dataset.decision
+    }, 'Pedido de saque atualizado.');
   });
 
-  els.playersList.addEventListener('click', async (event) => {
+  shared.playersList.addEventListener('click', async (event) => {
     const adjust = event.target.closest('[data-adjust]');
     if (adjust) {
-      const raw = window.prompt(`Ajuste de saldo para ${adjust.dataset.name}.\nUse valor positivo para adicionar e negativo para retirar:`);
+      const raw = window.prompt(`Ajuste de saldo para ${adjust.dataset.name}.\nPositivo adiciona; negativo retira:`);
       if (raw === null) return;
       const delta = Number(String(raw).replace(',', '.'));
-      if (!Number.isFinite(delta) || delta === 0) return toast('Informe um ajuste válido.', 'error');
+      if (!Number.isFinite(delta) || delta === 0) return toast('Ajuste inválido.', 'error');
       const note = window.prompt('Motivo do ajuste (opcional):') || '';
-      await runAction('jl_admin_adjust_balance', { p_player_id: adjust.dataset.adjust, p_delta: delta, p_note: note }, 'Saldo ajustado.');
+      await runAction('jl_admin_adjust_balance', {
+        p_player_id: adjust.dataset.adjust,
+        p_delta: delta,
+        p_note: note
+      }, 'Saldo ajustado.');
       return;
     }
+
     const block = event.target.closest('[data-block]');
     if (block) {
       const blocked = block.dataset.value === 'true';
-      await runAction('jl_admin_set_blocked', { p_player_id: block.dataset.block, p_blocked: blocked }, blocked ? 'Jogador bloqueado.' : 'Jogador desbloqueado.');
+      await runAction('jl_admin_set_blocked', {
+        p_player_id: block.dataset.block,
+        p_blocked: blocked
+      }, blocked ? 'Jogador bloqueado.' : 'Jogador desbloqueado.');
     }
   });
 
-  setDefaultTimes();
+  wireGame('number');
+  wireGame('pair');
+  setDefaultTimes('number');
+  setDefaultTimes('pair');
+
   showApp(Boolean(state.token));
   if (state.token) refresh(true);
-  state.timer = setInterval(() => { if (state.token) refresh(true); }, 5000);
+  state.refreshTimer = setInterval(() => {
+    if (state.token) refresh(true);
+  }, 5000);
 })();
