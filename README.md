@@ -1,33 +1,11 @@
 # Jogos Lendários
 
-Projeto do jogo **Número Lendário**, com frontend no GitHub, dados e lógica sensível no Supabase e publicação em produção no Cloudflare Workers.
+Projeto com dois jogos na mesma plataforma:
 
-## Arquitetura atual
+1. **Número Lendário** — escolher 1 número de `0` a `10`; prémio de **10×** o valor apostado.
+2. **Dupla Lendária** — escolher 2 números diferentes de `1` a `10`; prémio de **50×** o valor apostado quando a combinação inteira é acertada.
 
-```text
-GitHub — branch main
-        │
-        │ fonte oficial do frontend e configuração versionada
-        ▼
-Cloudflare Workers + Static Assets
-        │
-        ▼
-https://jogoslendarios.adadpsf.shop
-
-Supabase
-        │
-        ├── jogadores e sessões
-        ├── saldos
-        ├── apostas
-        ├── depósitos e saques
-        ├── rodadas
-        ├── programação de sorteios
-        ├── transações
-        ├── auditoria
-        └── lógica real do jogo
-```
-
-A branch `main` do GitHub é a fonte oficial do frontend. O Supabase é a fonte oficial dos dados e da lógica do banco. Não manter cópias diferentes do site editadas manualmente no Cloudflare.
+O frontend fica no GitHub/Cloudflare e a lógica sensível fica no Supabase/PostgreSQL.
 
 ## Endereços
 
@@ -49,6 +27,34 @@ URL técnica:
 https://jogos-lendarios.pensadorsemfronteiras0.workers.dev
 ```
 
+## Arquitetura
+
+```text
+GitHub — Progaminy/jogos-lendarios — branch main
+        │
+        │ fonte oficial do frontend e migrations
+        ▼
+Cloudflare Workers + Static Assets
+        │
+        ▼
+jogoslendarios.adadpsf.shop
+
+Supabase
+        │
+        ├── jogadores e sessões
+        ├── saldos
+        ├── apostas do Número Lendário
+        ├── apostas da Dupla Lendária
+        ├── depósitos e saques
+        ├── rodadas
+        ├── programação de sorteios
+        ├── transações
+        ├── auditoria
+        └── lógica real dos jogos
+```
+
+A branch `main` é a fonte oficial do frontend. O Supabase é a fonte oficial dos dados e da lógica do banco. Não manter cópias diferentes do site editadas manualmente no Cloudflare.
+
 # Estrutura do projeto
 
 ```text
@@ -57,8 +63,10 @@ jogos-lendarios/
 ├── styles.css
 ├── config.js
 ├── app.js
+├── bet-guard.js
 ├── admin.html
 ├── admin.js
+├── admin-pair.js
 ├── wrangler.jsonc
 ├── .assetsignore
 ├── .gitignore
@@ -66,274 +74,132 @@ jogos-lendarios/
 ├── supabase/
 │   └── migrations/
 │       ├── 20260916_scheduled_rounds_with_three_second_lock.sql
-│       └── 20260916_add_locked_round_state.sql
+│       ├── 20260916_add_locked_round_state.sql
+│       ├── 20260916_bet_limits_10_500.sql
+│       └── 20260916_add_dupla_lendaria_game.sql
 └── README.md
 ```
 
 Não existe backend Node separado. O frontend é HTML/CSS/JavaScript estático. A lógica sensível fica no Supabase/PostgreSQL.
 
-# Fluxo do jogador
+# Regras comuns aos dois jogos
 
-1. escolhe um número de `0` a `10`;
-2. informa o valor da aposta;
-3. clica em **Apostar**;
-4. se ainda não estiver autenticado, abre **Criar conta / Já tenho conta**;
-5. depois do cadastro/login, a aposta pendente continua automaticamente;
-6. o Supabase valida rodada, horário e saldo;
-7. desconta o valor do saldo;
-8. grava a aposta em `public.bets`;
-9. **3 segundos antes do sorteio** novas apostas são bloqueadas;
-10. na hora marcada o Supabase executa o sorteio;
-11. identifica vencedores, calcula prémios e credita saldos;
-12. publica o resultado;
-13. se existir outro horário programado, abre automaticamente a rodada seguinte.
-
-Quem ganha recebe **10× o valor apostado**.
-
-# Bloqueio de 3 segundos antes do sorteio
-
-Cada rodada possui dois horários:
+Cada aposta deve ser:
 
 ```text
-closes_at = momento em que novas apostas são bloqueadas
-draw_at   = momento em que o sorteio é executado
+mínimo = 10 MZN
+máximo = 500 MZN
 ```
 
-A diferença é:
+A validação existe no navegador e também no Supabase. Portanto, chamar a API diretamente não permite contornar o limite.
 
-```text
-draw_at - closes_at = 3 segundos
-```
+Se o jogador clicar em **Apostar** com saldo insuficiente, o frontend leva automaticamente para a área de **Depósito**. Mesmo que o saldo mude entre a leitura da página e a gravação da aposta, uma rejeição `Saldo insuficiente` devolvida pelo Supabase também direciona para o depósito.
+
+Os dois jogos usam a **mesma rodada** e o mesmo horário de bloqueio/sorteio.
+
+# Jogo 1 — Número Lendário
+
+## Regra
+
+O jogador escolhe **um número de 0 a 10**.
 
 Exemplo:
 
 ```text
-Sorteio: 14:00:00
-Bloqueio: 13:59:57
+número escolhido: 7
+aposta: 20 MZN
 ```
 
-O estado da rodada passa por:
+Se o resultado do Número Lendário for `7`:
 
 ```text
-OPEN
-  ↓
-closes_at
-  ↓
-LOCKED
-  ↓
-3 segundos
-  ↓
-draw_at
-  ↓
-PUBLISHED
+20 × 10 = 200 MZN
 ```
 
-Durante `LOCKED`, o jogador já não consegue apostar. A proteção real está no banco: `jl_place_bet(...)` exige `status = 'open'` e `closes_at > now()`.
+O prémio creditado é **10× o valor apostado**.
 
-# Administração flexível
+## Onde as apostas ficam guardadas
 
-O administrador pode abrir uma rodada manual ou programar várias de uma vez.
-
-## Rodada manual
-
-Escolhe a hora exata do sorteio e clica em **Abrir jogo**.
-
-O banco cria:
+Tabela:
 
 ```text
-draw_at   = hora escolhida
-closes_at = draw_at - 3 segundos
-status    = open
-```
-
-## Programar um período
-
-O painel aceita:
-
-```text
-primeiro sorteio
-último sorteio
-intervalo em minutos
-```
-
-Exemplo:
-
-```text
-Início:    12:00
-Fim:       15:00
-Intervalo: 60 minutos
-```
-
-Cria:
-
-```text
-12:00
-13:00
-14:00
-15:00
-```
-
-O painel também oferece atalhos para períodos de **12 horas** e **24 horas**.
-
-O intervalo pode ser ajustado, por exemplo:
-
-```text
-15 min
-30 min
-60 min
-120 min
-```
-
-Cada lote pode criar até 250 horários e pode cobrir os próximos 7 dias.
-
-## Horário avulso
-
-Também é possível adicionar apenas um horário futuro sem recriar a programação inteira.
-
-## Cancelamento
-
-Horários com estado `pending` podem ser cancelados individualmente ou todos de uma vez.
-
-A rodada já ativa não é cancelada por esse botão. Para ela existe **Encerrar e sortear agora**.
-
-# Tabela de programação
-
-```text
-public.draw_schedule
+public.bets
 ```
 
 Campos principais:
 
 ```text
-id         identificador
-draw_at    hora do sorteio
-status     pending | active | completed | cancelled | missed
-round_id   rodada ligada ao horário
-created_at criação
-updated_at atualização
+id
+round_id
+player_id
+selected_number
+amount
+won
+payout
+created_at
 ```
 
-Estados:
+Cada aposta é uma linha individual.
+
+Exemplo:
 
 ```text
-pending   → aguardando
-active    → horário transformado em rodada atual
-completed → sorteio concluído
-cancelled → cancelado pelo admin
-missed    → horário passou sem ser ativado
+Jogador A → número 0 → 100 MZN
+Jogador B → número 0 →  50 MZN
+Jogador C → número 7 →  20 MZN
 ```
 
-# Motor automático
-
-A função central é:
+Total apostado no número `0`:
 
 ```text
-jl_process_game_engine()
+100 + 50 = 150 MZN
 ```
 
-O Supabase Cron executa o job:
+## Função que grava a aposta
 
 ```text
-jogos_lendarios_engine
+public.jl_place_bet(text, integer, numeric)
 ```
 
-com intervalo:
+Ela valida:
 
 ```text
-1 second
-```
-
-O motor é serializado com `pg_try_advisory_xact_lock(...)` para evitar que duas requisições simultâneas abram duas rodadas.
-
-Fluxo:
-
-```text
+número entre 0 e 10
+valor entre 10 e 500 MZN
 rodada OPEN
-      ↓
-closes_at chegou?
-      ↓ sim
-status = LOCKED
-      ↓
-draw_at chegou?
-      ↓ sim
-jl_finalize_due_rounds()
-      ↓
-sorteio
-      ↓
-pagamentos
-      ↓
-status = PUBLISHED
-      ↓
-schedule = completed
-      ↓
-jl_open_next_scheduled_round()
-      ↓
-próxima rodada OPEN
+closes_at ainda no futuro
+jogador autenticado
+jogador não bloqueado
+saldo suficiente
 ```
 
-`jl_public_state()` e `jl_admin_dashboard()` também chamam o motor, portanto as consultas ao site ajudam a processar transições pendentes além do Cron.
-
-# Funções principais
+Depois:
 
 ```text
-jl_admin_open_round(...)
-    abre uma rodada manual
-
-jl_admin_schedule_draws(...)
-    cria vários horários entre início e fim
-
-jl_admin_add_draw_time(...)
-    adiciona um horário avulso
-
-jl_admin_cancel_draw_time(...)
-    cancela um horário pending
-
-jl_admin_clear_draw_schedule(...)
-    cancela horários pending
-
-jl_open_next_scheduled_round()
-    abre a próxima rodada programada
-
-jl_process_game_engine()
-    controla OPEN → LOCKED → sorteio → próxima rodada
-
-jl_place_bet(...)
-    valida e grava apostas
-
-jl_finalize_due_rounds()
-    finaliza a rodada e paga vencedores
-
-jl_secure_number()
-    determina o número vencedor
-
-jl_public_state()
-    estado público
-
-jl_admin_dashboard(...)
-    estado administrativo
+desconta saldo
+→ grava em public.bets
+→ grava transação kind='bet'
 ```
 
-# Lógica atual do número vencedor
+Para ver a função real ativa:
 
-A lógica real fica em:
+```sql
+select pg_get_functiondef(
+  'public.jl_place_bet(text,integer,numeric)'::regprocedure
+);
+```
+
+# Lógica do sorteio do Número Lendário
+
+Função:
 
 ```text
 public.jl_secure_number()
 ```
 
-Para ver o código:
+A lógica atual **não sorteia diretamente entre todos os números de 0 a 10**.
 
-```sql
-select pg_get_functiondef(
-  'public.jl_secure_number()'::regprocedure
-);
-```
-
-## Regra atual
-
-A função **não sorteia diretamente entre todos os números de 0 a 10**.
-
-Primeiro ela calcula o total apostado em cada número da rodada ativa:
+Primeiro calcula o total apostado em cada número da rodada ativa:
 
 ```text
 0  → total apostado no 0
@@ -354,44 +220,125 @@ Exemplo:
 ...
 ```
 
-O menor total é `100 MZN`, então os candidatos seriam:
+O menor total é `100 MZN`, então os candidatos são:
 
 ```text
 1 e 2
 ```
 
-A função usa `extensions.gen_random_bytes(1)` para escolher aleatoriamente **entre os candidatos empatados com o menor total apostado**.
+Entre os candidatos empatados no menor total, `extensions.gen_random_bytes(1)` escolhe de forma aleatória. A função usa rejeição antes do módulo para não favorecer uma posição quando a quantidade de candidatos não divide `256` exatamente.
 
-Ela usa rejeição antes do módulo para evitar favorecer uma posição da lista quando a quantidade de candidatos não divide 256 exatamente.
-
-Fluxo atual:
+Fluxo:
 
 ```text
-pegar rodada OPEN ou LOCKED
+rodada OPEN ou LOCKED
       ↓
-calcular SUM(amount) para 0..10
+calcular SUM(amount) de 0..10
       ↓
 encontrar menor total
       ↓
-montar lista dos números com esse menor total
+criar lista dos números empatados no menor total
       ↓
 gerar byte criptográfico
       ↓
-escolher uniformemente entre os candidatos
+escolher uniformemente dentro dessa lista
       ↓
-retornar número vencedor
+retornar drawn_number
 ```
 
-**Portanto, na lógica atual, os valores apostados influenciam quais números entram na lista de candidatos do sorteio.**
+**Os valores apostados influenciam quais números entram na lista de candidatos do Número Lendário.**
 
-Isso deve ser mantido documentado para que a regra real do banco e o README nunca entrem em contradição.
+Para ver exatamente o código:
 
-# Como as apostas são guardadas
+```sql
+select pg_get_functiondef(
+  'public.jl_secure_number()'::regprocedure
+);
+```
 
-Cada aposta é uma linha individual em:
+# Jogo 2 — Dupla Lendária
+
+## Regra
+
+O jogador escolhe **dois números diferentes de 1 a 10**.
+
+A ordem não importa.
+
+Portanto:
 
 ```text
-public.bets
+1 + 9 = 9 + 1
+2 + 7 = 7 + 2
+```
+
+Internamente a combinação é sempre guardada em ordem crescente:
+
+```text
+9 + 1 → 1 + 9
+7 + 2 → 2 + 7
+```
+
+Não é permitido escolher o mesmo número duas vezes:
+
+```text
+5 + 5 → inválido
+```
+
+Existem exatamente:
+
+```text
+C(10,2) = 45 combinações
+```
+
+## Prémio
+
+O prémio é **50× o valor apostado**.
+
+Exemplo pedido para a regra do jogo:
+
+```text
+aposta = 10 MZN
+combinação = 1 + 9
+resultado = 1 + 9
+prémio = 10 × 50 = 500 MZN
+```
+
+Outro exemplo:
+
+```text
+aposta = 100 MZN
+prémio = 100 × 50 = 5 000 MZN
+```
+
+## Mesma combinação independentemente da ordem
+
+A RPC recebe dois números, mas normaliza:
+
+```text
+number_a = LEAST(p_number_a, p_number_b)
+number_b = GREATEST(p_number_a, p_number_b)
+```
+
+Assim, se o jogador enviar:
+
+```text
+9 e 1
+```
+
+o banco grava:
+
+```text
+1 e 9
+```
+
+Isso impede que `1+9` e `9+1` sejam tratadas como apostas diferentes.
+
+## Onde as apostas ficam guardadas
+
+Tabela:
+
+```text
+public.pair_bets
 ```
 
 Campos principais:
@@ -400,86 +347,369 @@ Campos principais:
 id
 round_id
 player_id
-selected_number
+number_a
+number_b
 amount
 won
 payout
 created_at
 ```
 
-Exemplo:
+Existe uma restrição de banco:
 
 ```text
-Jogador A → número 0 → 100 MZN
-Jogador B → número 0 →  50 MZN
-Jogador C → número 7 →  20 MZN
+number_a < number_b
 ```
 
-São três linhas diferentes.
+Portanto a própria tabela exige a forma canónica da combinação.
 
-O total do `0` é calculado:
+## Função que grava a aposta
 
 ```text
-100 + 50 = 150 MZN
-```
-
-# Função que grava a aposta
-
-```text
-jl_place_bet(text, integer, numeric)
-```
-
-Para ver:
-
-```sql
-select pg_get_functiondef(
-  'public.jl_place_bet(text,integer,numeric)'::regprocedure
-);
+public.jl_place_pair_bet(text, integer, integer, numeric)
 ```
 
 Ela valida:
 
 ```text
-número entre 0 e 10
-valor válido
-rodada open
+dois números informados
+ambos entre 1 e 10
+números diferentes
+valor entre 10 e 500 MZN
+rodada OPEN
 closes_at ainda no futuro
 jogador autenticado
 jogador não bloqueado
 saldo suficiente
 ```
 
-Depois desconta:
+Depois:
 
-```sql
-update public.players
-set
-  balance = balance - p_amount,
-  updated_at = now()
-where id = v_player_id;
+```text
+normaliza a combinação
+→ desconta saldo
+→ grava em public.pair_bets
+→ grava transação kind='bet'
 ```
 
-E grava:
+Para ver a função:
 
 ```sql
-insert into public.bets(
-  round_id,
-  player_id,
-  selected_number,
-  amount
-)
-values(
-  v_round.id,
-  v_player_id,
-  p_selected_number,
-  round(p_amount, 2)
-)
-returning id into v_bet_id;
+select pg_get_functiondef(
+  'public.jl_place_pair_bet(text,integer,integer,numeric)'::regprocedure
+);
 ```
 
-Também registra a saída em `public.transactions` com `kind = 'bet'`.
+# Lógica do sorteio da Dupla Lendária
 
-# Como ver o total apostado por número
+Função:
+
+```text
+public.jl_secure_pair(uuid)
+```
+
+Neste jogo o resultado é sorteado **uniformemente entre as 45 combinações possíveis**, sem usar o total apostado em cada combinação para escolher o resultado.
+
+Combinações possíveis começam assim:
+
+```text
+1+2
+1+3
+1+4
+...
+1+10
+2+3
+2+4
+...
+9+10
+```
+
+São `45` no total.
+
+A função usa um byte de `extensions.gen_random_bytes(1)`.
+
+Como `256` não é divisível por `45`, usar diretamente:
+
+```text
+byte % 45
+```
+
+criaria um pequeno viés.
+
+Para evitar isso, a função aceita somente bytes de `0` a `224`, porque:
+
+```text
+225 = 45 × 5
+```
+
+Valores `225..255` são descartados e outro byte é gerado.
+
+Depois:
+
+```text
+índice = (byte % 45) + 1
+```
+
+Esse índice escolhe uma das 45 combinações ordenadas.
+
+Fluxo:
+
+```text
+rodada válida
+      ↓
+criar universo das 45 combinações 1..10 com a < b
+      ↓
+gerar byte criptográfico
+      ↓
+byte < 225 ?
+   ↓ não      ↓ sim
+repetir       módulo 45
+                 ↓
+          selecionar combinação
+                 ↓
+          pair_drawn_a + pair_drawn_b
+```
+
+Para ver a função:
+
+```sql
+select pg_get_functiondef(
+  'public.jl_secure_pair(uuid)'::regprocedure
+);
+```
+
+# Resultado de cada rodada
+
+A tabela:
+
+```text
+public.game_rounds
+```
+
+guarda agora dois resultados independentes:
+
+```text
+drawn_number   → resultado do Número Lendário
+pair_drawn_a   → primeiro número da Dupla Lendária
+pair_drawn_b   → segundo número da Dupla Lendária
+```
+
+Exemplo:
+
+```text
+Rodada 20
+Número Lendário: 7
+Dupla Lendária: 1 + 9
+```
+
+Um jogador pode apostar em apenas um jogo ou nos dois durante a mesma rodada.
+
+# Bloqueio de 3 segundos
+
+Cada rodada tem:
+
+```text
+closes_at = instante em que novas apostas ficam bloqueadas
+draw_at   = instante do sorteio
+```
+
+Regra:
+
+```text
+draw_at - closes_at = 3 segundos
+```
+
+Exemplo:
+
+```text
+Sorteio: 14:00:00
+Bloqueio: 13:59:57
+```
+
+Estados:
+
+```text
+OPEN
+  ↓
+closes_at
+  ↓
+LOCKED
+  ↓
+3 segundos
+  ↓
+draw_at
+  ↓
+PUBLISHED
+```
+
+Durante `LOCKED`, **nenhum dos dois jogos aceita novas apostas**.
+
+A proteção real está no Supabase. `jl_place_bet(...)` e `jl_place_pair_bet(...)` exigem rodada `open` e `closes_at > now()`.
+
+# Finalização e pagamentos
+
+Função central:
+
+```text
+public.jl_finalize_due_rounds()
+```
+
+Quando:
+
+```sql
+draw_at <= now()
+```
+
+ela executa:
+
+```text
+jl_secure_number()
+      ↓
+resultado Número Lendário
+      ↓
+10× para quem acertou
+
+jl_secure_pair(round_id)
+      ↓
+resultado Dupla Lendária
+      ↓
+50× para quem acertou os dois números
+```
+
+Depois soma os prémios de cada jogador, credita o saldo, grava transações de `payout`, registra `audit_log`, marca a programação como concluída e publica a rodada.
+
+Para ver a função:
+
+```sql
+select pg_get_functiondef(
+  'public.jl_finalize_due_rounds()'::regprocedure
+);
+```
+
+# Motor automático
+
+Função:
+
+```text
+public.jl_process_game_engine()
+```
+
+O Cron do Supabase executa:
+
+```text
+jogos_lendarios_engine
+```
+
+com intervalo atual:
+
+```text
+1 second
+```
+
+Fluxo:
+
+```text
+rodada OPEN
+      ↓
+closes_at chegou?
+      ↓ sim
+status = LOCKED
+      ↓
+draw_at chegou?
+      ↓ sim
+jl_finalize_due_rounds()
+      ↓
+sorteia Número Lendário
+      ↓
+sorteia Dupla Lendária
+      ↓
+calcula e credita prémios
+      ↓
+status = PUBLISHED
+      ↓
+schedule = completed
+      ↓
+jl_open_next_scheduled_round()
+      ↓
+próxima rodada OPEN
+```
+
+O motor usa `pg_try_advisory_xact_lock(...)` para evitar duas execuções concorrentes abrirem duas rodadas.
+
+`jl_public_state()` e `jl_admin_dashboard()` também chamam o motor, então acessos ao site ajudam a processar transições pendentes além do Cron.
+
+# Programação de sorteios
+
+Tabela:
+
+```text
+public.draw_schedule
+```
+
+Campos principais:
+
+```text
+id
+draw_at
+status
+round_id
+created_at
+updated_at
+```
+
+Estados:
+
+```text
+pending   → aguardando
+active    → ligado à rodada atual
+completed → sorteio concluído
+cancelled → cancelado pelo admin
+missed    → horário passou sem ativação
+```
+
+O administrador pode:
+
+```text
+abrir uma rodada manual
+programar várias rodadas
+escolher início, fim e intervalo
+usar atalhos de 12h e 24h
+adicionar um horário avulso
+cancelar horários pending
+encerrar e sortear agora em emergência
+```
+
+A mesma rodada serve aos dois jogos.
+
+# Administração
+
+O painel mostra:
+
+```text
+rodada atual
+estado OPEN/LOCKED
+contagem regressiva
+último Número Lendário
+última Dupla Lendária
+totais apostados em cada número 0..10
+totais apostados nas 45 combinações da Dupla Lendária
+apostas recentes dos dois jogos
+depósitos pendentes
+saques pendentes
+jogadores e saldos
+```
+
+Na Dupla Lendária o painel mostra sempre a combinação normalizada:
+
+```text
+1+9
+```
+
+e nunca cria outra linha separada para `9+1`.
+
+# Consultas úteis
+
+## Total por número — Número Lendário
 
 ```sql
 select
@@ -491,33 +721,20 @@ group by selected_number
 order by selected_number;
 ```
 
-Para a rodada atual com todos os números de `0` a `10`, inclusive os que têm zero:
+## Total por combinação — Dupla Lendária
 
 ```sql
-with rodada_atual as (
-  select id
-  from public.game_rounds
-  where status = 'open'
-    and closes_at > now()
-  order by opened_at desc
-  limit 1
-)
 select
-  n as numero,
-  count(b.id) as quantidade_de_apostas,
-  coalesce(sum(b.amount), 0) as total_apostado
-from generate_series(0, 10) as n
-left join rodada_atual r on true
-left join public.bets b
-  on b.round_id = r.id
- and b.selected_number = n
-group by n
-order by n;
+  number_a,
+  number_b,
+  count(*) as quantidade_de_apostas,
+  sum(amount) as total_apostado
+from public.pair_bets
+group by number_a, number_b
+order by number_a, number_b;
 ```
 
-O painel administrativo usa a mesma ideia dentro de `jl_admin_dashboard(...)`.
-
-# Ver apostas individuais
+## Apostas individuais do Número Lendário
 
 ```sql
 select
@@ -527,74 +744,130 @@ select
   b.player_id,
   b.created_at
 from public.bets b
-join public.game_rounds r
-  on r.id = b.round_id
+join public.game_rounds r on r.id = b.round_id
 order by b.created_at desc;
 ```
 
-# Finalização e pagamento
-
-Para ver a função:
+## Apostas individuais da Dupla Lendária
 
 ```sql
-select pg_get_functiondef(
-  'public.jl_finalize_due_rounds()'::regprocedure
-);
+select
+  r.round_no,
+  pb.number_a,
+  pb.number_b,
+  pb.amount,
+  pb.player_id,
+  pb.created_at
+from public.pair_bets pb
+join public.game_rounds r on r.id = pb.round_id
+order by pb.created_at desc;
 ```
 
-Ela processa rodadas quando:
+## Ver rodadas e os dois resultados
 
 ```sql
-draw_at <= now()
+select
+  round_no,
+  status,
+  opened_at,
+  closes_at,
+  draw_at,
+  drawn_number,
+  pair_drawn_a,
+  pair_drawn_b,
+  drawn_at,
+  published_at
+from public.game_rounds
+order by round_no desc;
 ```
+
+## Ver Cron
+
+```sql
+select jobid, jobname, schedule, command, active
+from cron.job
+order by jobid;
+```
+
+## Ver programação
+
+```sql
+select id, draw_at, status, round_id, created_at
+from public.draw_schedule
+order by draw_at;
+```
+
+# Principais tabelas
+
+```text
+players
+player_sessions
+game_rounds
+draw_schedule
+bets
+pair_bets
+deposit_requests
+withdrawal_requests
+transactions
+admin_sessions
+admin_config
+audit_log
+```
+
+# Principais funções
+
+```text
+jl_place_bet(...)
+    aposta no Número Lendário
+
+jl_place_pair_bet(...)
+    aposta na Dupla Lendária
+
+jl_secure_number()
+    resultado do Número Lendário
+
+jl_secure_pair(round_id)
+    resultado uniforme entre as 45 combinações da Dupla Lendária
+
+jl_finalize_due_rounds()
+    calcula resultados, vencedores e pagamentos dos dois jogos
+
+jl_process_game_engine()
+    controla OPEN → LOCKED → sorteio → próxima rodada
+
+jl_public_state()
+    estado público e últimos resultados
+
+jl_player_state(...)
+    conta e histórico do jogador nos dois jogos
+
+jl_admin_dashboard(...)
+    dados administrativos dos dois jogos
+
+jl_admin_open_round(...)
+    abre rodada manual
+
+jl_admin_schedule_draws(...)
+    cria vários horários
+
+jl_admin_add_draw_time(...)
+    adiciona horário avulso
+
+jl_admin_cancel_draw_time(...)
+    cancela horário pending
+
+jl_admin_clear_draw_schedule(...)
+    cancela horários pending
+```
+
+# Depósitos
 
 Fluxo:
 
 ```text
-jl_secure_number()
+jogador transfere
       ↓
-grava drawn_number
-      ↓
-won = selected_number == drawn_number
-      ↓
-payout = amount × 10 para vencedores
-      ↓
-credita saldo
-      ↓
-registra transaction payout
-      ↓
-registra audit_log
-      ↓
-marca schedule completed
-      ↓
-publica rodada
-```
-
-# Administração
-
-O administrador pode:
-
-- abrir rodada manual;
-- programar vários sorteios;
-- definir início, fim e intervalo;
-- usar atalhos de 12h e 24h;
-- adicionar horário avulso;
-- cancelar horários futuros;
-- acompanhar OPEN / LOCKED / sorteio;
-- encerrar e sortear agora em emergência;
-- ver quantidade de apostas por número;
-- ver total apostado por número;
-- ver apostas recentes;
-- ver último resultado;
-- aprovar/rejeitar depósitos;
-- autorizar/rejeitar saques;
-- ajustar saldo;
-- bloquear/desbloquear jogador.
-
-# Depósitos
-
-```text
-jogador solicita
+solicita depósito e informa referência
       ↓
 pending
       ↓
@@ -626,23 +899,9 @@ aprovado = débito permanece
 rejeitado = valor retorna ao saldo
 ```
 
-# Principais tabelas
+# Como clonar e testar localmente
 
-```text
-players
-player_sessions
-game_rounds
-draw_schedule
-bets
-deposit_requests
-withdrawal_requests
-transactions
-admin_sessions
-admin_config
-audit_log
-```
-
-# Como clonar
+Primeira vez:
 
 ```bash
 git clone https://github.com/Progaminy/jogos-lendarios.git
@@ -664,21 +923,26 @@ cd jogos-lendarios
 git status
 git switch main
 git pull origin main
+python3 -m http.server 8080
 ```
 
 # Fluxo de cada retificação
 
+Sempre seguir:
+
 ```text
-1. atualizar main
+1. atualizar a branch main
 2. alterar somente o necessário
-3. testar localmente
-4. git status / git diff
-5. commit claro
-6. push origin main
-7. Cloudflare detecta
-8. deploy automático
-9. testar produção
-10. se envolver banco, testar também Supabase
+3. se houver mudança de banco, criar migration
+4. testar localmente
+5. verificar git status e git diff
+6. commit claro
+7. push origin main
+8. Cloudflare detecta o push
+9. deploy automático
+10. testar produção
+11. se houver migration, confirmar também o Supabase
+12. testar o fluxo completo afetado
 ```
 
 Comandos:
@@ -687,7 +951,7 @@ Comandos:
 git switch main
 git pull origin main
 
-# editar/testar
+# editar e testar
 
 git status
 git diff
@@ -698,7 +962,7 @@ git push origin main
 
 # Produção
 
-Configuração já existente:
+Configuração:
 
 ```text
 GitHub:     Progaminy/jogos-lendarios
@@ -708,7 +972,7 @@ Domínio:    jogoslendarios.adadpsf.shop
 Supabase:   bxndjyzghgrmkelshtdp
 ```
 
-Depois da configuração inicial, não fazer upload manual de cada alteração.
+Fluxo normal:
 
 ```text
 push main
@@ -720,6 +984,8 @@ build/deploy
 produção atualizada
 ```
 
+Não fazer upload manual de cada retificação no Cloudflare.
+
 Confirmar em:
 
 ```text
@@ -729,7 +995,7 @@ Cloudflare
 → Implantações
 ```
 
-Testar sempre:
+Testar:
 
 ```text
 https://jogoslendarios.adadpsf.shop
@@ -738,7 +1004,11 @@ https://jogoslendarios.adadpsf.shop/admin.html
 
 # Retificações no Supabase
 
-Mudanças de estrutura ou lógica devem virar migration.
+Mudanças de estrutura ou regra devem virar migration versionada em:
+
+```text
+supabase/migrations/
+```
 
 Exemplos:
 
@@ -746,91 +1016,48 @@ Exemplos:
 nova tabela
 nova coluna
 nova RPC
-mudança de regra
+mudança de pagamento
+mudança de regra do sorteio
 novo índice
 mudança de Cron
 ```
 
-As migrations relacionadas à programação atual estão versionadas em:
+A migration da Dupla Lendária é:
 
 ```text
-supabase/migrations/
-```
-
-# Consultas úteis
-
-Ver função do número vencedor:
-
-```sql
-select pg_get_functiondef(
-  'public.jl_secure_number()'::regprocedure
-);
-```
-
-Ver motor:
-
-```sql
-select pg_get_functiondef(
-  'public.jl_process_game_engine()'::regprocedure
-);
-```
-
-Ver próxima rodada:
-
-```sql
-select pg_get_functiondef(
-  'public.jl_open_next_scheduled_round()'::regprocedure
-);
-```
-
-Ver Cron:
-
-```sql
-select jobid, jobname, schedule, command, active
-from cron.job
-order by jobid;
-```
-
-Ver programação:
-
-```sql
-select id, draw_at, status, round_id, created_at
-from public.draw_schedule
-order by draw_at;
-```
-
-Ver rodadas:
-
-```sql
-select
-  round_no,
-  status,
-  opened_at,
-  closes_at,
-  draw_at,
-  drawn_number,
-  drawn_at,
-  published_at
-from public.game_rounds
-order by round_no desc;
+supabase/migrations/20260916_add_dupla_lendaria_game.sql
 ```
 
 # Segurança
 
-`config.js` deve conter somente dados públicos necessários ao navegador:
+`config.js` pode conter somente informações públicas necessárias ao navegador:
 
-- URL pública do Supabase;
-- publishable key.
+```text
+URL pública do Supabase
+publishable key
+```
 
 Nunca colocar no GitHub:
 
-- `service_role`;
-- senha do banco;
-- chaves privadas;
-- tokens administrativos;
-- segredos de infraestrutura.
+```text
+service_role
+senha do banco
+chaves privadas
+tokens administrativos
+segredos de infraestrutura
+```
 
-Funções internas como `jl_secure_number()`, `jl_finalize_due_rounds()`, `jl_process_game_engine()` e `jl_open_next_scheduled_round()` não precisam ser chamadas diretamente pelo navegador.
+Funções internas como:
+
+```text
+jl_secure_number()
+jl_secure_pair(uuid)
+jl_finalize_due_rounds()
+jl_process_game_engine()
+jl_open_next_scheduled_round()
+```
+
+não devem depender do navegador para proteger a lógica real.
 
 # Rollback
 
@@ -842,21 +1069,26 @@ git revert <SHA_DO_COMMIT>
 git push origin main
 ```
 
-Banco: corrigir com uma nova migration compatível. Não apagar dados de produção sem verificar dependências.
+Banco: criar uma nova migration corretiva compatível. Não apagar dados de produção sem verificar dependências.
 
 # Checklist de retificação
 
-- main atualizada;
-- alteração testada;
-- `git diff` conferido;
-- nenhum segredo incluído;
-- commit claro;
-- push concluído;
-- Cloudflare implantou;
-- produção testada;
-- admin testado quando aplicável;
-- Supabase testado quando aplicável;
-- fluxo afetado testado de ponta a ponta.
+```text
+[ ] main atualizada
+[ ] alteração testada localmente
+[ ] migration criada quando necessário
+[ ] git diff conferido
+[ ] nenhum segredo incluído
+[ ] commit claro
+[ ] push concluído
+[ ] Cloudflare implantou
+[ ] produção testada
+[ ] Número Lendário testado quando afetado
+[ ] Dupla Lendária testada quando afetada
+[ ] admin testado quando aplicável
+[ ] Supabase testado quando aplicável
+[ ] fluxo afetado testado de ponta a ponta
+```
 
 # Regra central atual
 
@@ -867,27 +1099,39 @@ SUPABASE programa
         ↓
 RODADA OPEN
         ↓
-JOGADORES apostam
+JOGADORES podem apostar em um ou nos dois jogos
         ↓
 3 segundos antes
         ↓
 RODADA LOCKED
         ↓
+nenhuma nova aposta é aceite
+        ↓
 HORA exata
         ↓
-SISTEMA calcula os totais apostados por número
+NÚMERO LENDÁRIO
+calcula totais 0..10
         ↓
-SISTEMA encontra o menor total
+encontra o menor total
         ↓
-SISTEMA sorteia entre os números empatados nesse menor total
+sorteia entre os empatados no menor total
         ↓
-SISTEMA calcula vencedores
+paga 10× aos vencedores
+
+E, NA MESMA RODADA:
+
+DUPLA LENDÁRIA
+gera uma das 45 combinações uniformemente
         ↓
-SISTEMA paga 10×
+ordem canónica a < b
         ↓
-SISTEMA publica resultado
+paga 50× aos vencedores
         ↓
-SISTEMA abre próxima rodada programada
+SISTEMA publica os dois resultados
+        ↓
+SISTEMA abre a próxima rodada programada
 ```
 
-**O administrador pode programar várias horas de uma vez; as apostas bloqueiam 3 segundos antes de cada sorteio; e o README deve sempre refletir exatamente a lógica que está realmente ativa no Supabase.**
+**Regra fundamental da Dupla Lendária:** `1+9` e `9+1` são a mesma combinação. O banco normaliza a ordem e guarda sempre o menor número primeiro.
+
+**Regra fundamental da documentação:** o README deve refletir exatamente a lógica que está ativa no Supabase e no frontend.
