@@ -36,7 +36,8 @@ begin
 
   update public.draw_schedule
   set status = 'missed', updated_at = now()
-  where status = 'pending' and draw_at <= now() + interval '3 seconds';
+  where status = 'pending'
+    and draw_at <= now() + interval '3 seconds';
 
   select * into v_item
   from public.draw_schedule
@@ -162,8 +163,14 @@ declare
   v_drawn integer := 0;
   v_opened jsonb;
 begin
+  -- Serializa o motor para impedir duas requisições simultâneas de abrirem duas rodadas.
+  if not pg_try_advisory_xact_lock(740112337) then
+    return jsonb_build_object('busy', true, 'processed_at', now());
+  end if;
+
   update public.game_rounds
-  set status = 'closed', closed_at = coalesce(closed_at, closes_at)
+  set status = 'closed',
+      closed_at = coalesce(closed_at, closes_at)
   where status = 'open'
     and closes_at <= now()
     and drawn_number is null;
@@ -172,7 +179,47 @@ begin
   v_drawn := public.jl_finalize_due_rounds();
   v_opened := public.jl_open_next_scheduled_round();
 
-  return jsonb_build_object('closed', v_closed, 'drawn', v_drawn, 'next', v_opened, 'processed_at', now());
+  return jsonb_build_object(
+    'closed', v_closed,
+    'drawn', v_drawn,
+    'next', v_opened,
+    'processed_at', now()
+  );
+end;
+$$;
+
+create or replace function public.jl_admin_open_round(p_token text, p_closes_at timestamptz)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_round public.game_rounds%rowtype;
+  v_draw_at timestamptz := p_closes_at;
+begin
+  perform public.jl_require_admin(p_token);
+  perform public.jl_process_game_engine();
+
+  if v_draw_at is null or v_draw_at <= now() + interval '10 seconds' or v_draw_at > now() + interval '7 days' then
+    raise exception 'Defina o sorteio entre 10 segundos e 7 dias a partir de agora.';
+  end if;
+
+  if exists(select 1 from public.game_rounds where status in ('open','closed','drawn')) then
+    raise exception 'Finalize a rodada atual antes de abrir outra manualmente.';
+  end if;
+
+  insert into public.game_rounds(status, closes_at, draw_at)
+  values('open', v_draw_at - interval '3 seconds', v_draw_at)
+  returning * into v_round;
+
+  return jsonb_build_object(
+    'ok', true,
+    'round_no', v_round.round_no,
+    'closes_at', v_round.closes_at,
+    'draw_at', v_round.draw_at,
+    'message', 'Jogo aberto. As apostas serão bloqueadas 3 segundos antes do sorteio.'
+  );
 end;
 $$;
 
@@ -202,6 +249,7 @@ begin
 
   select count(*) into v_requested
   from generate_series(p_start_at, p_end_at, make_interval(mins => p_interval_minutes));
+
   if v_requested > 250 then raise exception 'A programação ultrapassa o limite de 250 sorteios por lote.'; end if;
 
   insert into public.draw_schedule(draw_at)
@@ -221,7 +269,13 @@ begin
     limit 250
   ) x;
 
-  return jsonb_build_object('ok', true, 'requested', v_requested, 'inserted', v_inserted, 'schedule', v_schedule, 'message', v_inserted || ' horário(s) programado(s).');
+  return jsonb_build_object(
+    'ok', true,
+    'requested', v_requested,
+    'inserted', v_inserted,
+    'schedule', v_schedule,
+    'message', v_inserted || ' horário(s) programado(s).'
+  );
 end;
 $$;
 
@@ -237,9 +291,14 @@ begin
   if p_draw_at is null or p_draw_at <= now() + interval '10 seconds' or p_draw_at > now() + interval '7 days' then
     raise exception 'Defina um sorteio entre 10 segundos e 7 dias a partir de agora.';
   end if;
-  insert into public.draw_schedule(draw_at) values (p_draw_at)
-  on conflict (draw_at) do nothing returning id into v_id;
+
+  insert into public.draw_schedule(draw_at)
+  values (p_draw_at)
+  on conflict (draw_at) do nothing
+  returning id into v_id;
+
   if v_id is null then raise exception 'Esse horário já está programado.'; end if;
+
   perform public.jl_process_game_engine();
   return jsonb_build_object('ok', true, 'id', v_id, 'draw_at', p_draw_at, 'message', 'Horário adicionado à programação.');
 end;
@@ -257,7 +316,11 @@ begin
   select * into v_item from public.draw_schedule where id = p_schedule_id for update;
   if v_item.id is null then raise exception 'Horário programado não encontrado.'; end if;
   if v_item.status <> 'pending' then raise exception 'Somente horários futuros ainda não ativados podem ser cancelados.'; end if;
-  update public.draw_schedule set status='cancelled', updated_at=now() where id=v_item.id;
+
+  update public.draw_schedule
+  set status='cancelled', updated_at=now()
+  where id=v_item.id;
+
   return jsonb_build_object('ok', true, 'message', 'Horário cancelado.');
 end;
 $$;
@@ -271,16 +334,175 @@ as $$
 declare v_count integer := 0;
 begin
   perform public.jl_require_admin(p_token);
-  update public.draw_schedule set status='cancelled', updated_at=now() where status='pending';
+  update public.draw_schedule
+  set status='cancelled', updated_at=now()
+  where status='pending';
   get diagnostics v_count = row_count;
   return jsonb_build_object('ok', true, 'cancelled', v_count, 'message', v_count || ' horário(s) futuro(s) cancelado(s).');
 end;
 $$;
 
--- O projeto em produção também atualiza jl_admin_open_round,
--- jl_admin_close_round, jl_public_state e jl_admin_dashboard para usar draw_at,
--- closes_at = draw_at - 3 seconds e a fila draw_schedule.
--- Consulte o README para as queries de inspeção.
+create or replace function public.jl_admin_close_round(p_token text)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare v_round public.game_rounds%rowtype;
+begin
+  perform public.jl_require_admin(p_token);
+
+  select * into v_round
+  from public.game_rounds
+  where status in ('open','closed')
+  order by opened_at desc
+  limit 1
+  for update;
+
+  if v_round.id is null then raise exception 'Não há rodada ativa.'; end if;
+
+  update public.game_rounds
+  set status='closed',
+      closed_at=now(),
+      closes_at=least(closes_at, now()),
+      draw_at=now()
+  where id=v_round.id;
+
+  perform public.jl_finalize_due_rounds();
+  perform public.jl_process_game_engine();
+
+  return jsonb_build_object('ok',true,'round_no',v_round.round_no,'message','Rodada encerrada e sorteada agora. A próxima programação foi ativada, se existir.');
+end;
+$$;
+
+create or replace function public.jl_public_state()
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_round public.game_rounds%rowtype;
+  v_last public.game_rounds%rowtype;
+begin
+  perform public.jl_process_game_engine();
+
+  select * into v_round
+  from public.game_rounds
+  where status in ('open','closed')
+  order by opened_at desc limit 1;
+
+  select * into v_last
+  from public.game_rounds
+  where status = 'published'
+  order by published_at desc nulls last, opened_at desc limit 1;
+
+  return jsonb_build_object(
+    'server_time', now(),
+    'current_round', case when v_round.id is null then null else jsonb_build_object(
+      'id', v_round.id,
+      'round_no', v_round.round_no,
+      'status', v_round.status,
+      'opened_at', v_round.opened_at,
+      'closes_at', v_round.closes_at,
+      'draw_at', v_round.draw_at
+    ) end,
+    'last_result', case when v_last.id is null then null else jsonb_build_object(
+      'round_no', v_last.round_no,
+      'drawn_number', v_last.drawn_number,
+      'drawn_at', v_last.drawn_at,
+      'published_at', v_last.published_at
+    ) end
+  );
+end;
+$$;
+
+create or replace function public.jl_admin_dashboard(p_token text)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_round public.game_rounds%rowtype;
+  v_last public.game_rounds%rowtype;
+  v_stats jsonb;
+  v_deposits jsonb;
+  v_withdrawals jsonb;
+  v_players jsonb;
+  v_recent_bets jsonb;
+  v_schedule jsonb;
+begin
+  perform public.jl_require_admin(p_token);
+  perform public.jl_process_game_engine();
+
+  select * into v_round
+  from public.game_rounds
+  where status in ('open','closed')
+  order by opened_at desc limit 1;
+
+  select * into v_last
+  from public.game_rounds
+  where status='published'
+  order by published_at desc nulls last, opened_at desc limit 1;
+
+  select coalesce(jsonb_agg(jsonb_build_object('number',n,'bets',coalesce(s.bet_count,0),'total',coalesce(s.total,0)) order by n),'[]'::jsonb)
+  into v_stats
+  from generate_series(0,10) n
+  left join (
+    select selected_number,count(*)::int bet_count,sum(amount)::numeric total
+    from public.bets where round_id=v_round.id group by selected_number
+  ) s on s.selected_number=n;
+
+  select coalesce(jsonb_agg(x order by x.created_at desc),'[]'::jsonb) into v_deposits
+  from (select d.id,d.amount,d.note,d.status,d.created_at,p.name,p.phone from public.deposit_requests d join public.players p on p.id=d.player_id where d.status='pending' order by d.created_at desc limit 100) x;
+
+  select coalesce(jsonb_agg(x order by x.created_at desc),'[]'::jsonb) into v_withdrawals
+  from (select w.id,w.amount,w.status,w.reason,w.created_at,p.name,p.phone from public.withdrawal_requests w join public.players p on p.id=w.player_id where w.status='pending' order by w.created_at desc limit 100) x;
+
+  select coalesce(jsonb_agg(x order by x.created_at desc),'[]'::jsonb) into v_players
+  from (select id,name,phone,balance,blocked,created_at from public.players order by created_at desc limit 200) x;
+
+  select coalesce(jsonb_agg(x order by x.created_at desc),'[]'::jsonb) into v_recent_bets
+  from (select b.id,b.selected_number,b.amount,b.won,b.payout,b.created_at,p.name,p.phone,r.round_no from public.bets b join public.players p on p.id=b.player_id join public.game_rounds r on r.id=b.round_id order by b.created_at desc limit 100) x;
+
+  select coalesce(jsonb_agg(x order by x.draw_at),'[]'::jsonb) into v_schedule
+  from (
+    select id, draw_at, status, round_id, created_at
+    from public.draw_schedule
+    where status in ('pending','active')
+    order by draw_at
+    limit 250
+  ) x;
+
+  return jsonb_build_object(
+    'server_time',now(),
+    'lock_seconds',3,
+    'round',case when v_round.id is null then null else jsonb_build_object(
+      'id',v_round.id,
+      'round_no',v_round.round_no,
+      'status',v_round.status,
+      'opened_at',v_round.opened_at,
+      'closes_at',v_round.closes_at,
+      'draw_at',v_round.draw_at,
+      'schedule_id',v_round.schedule_id
+    ) end,
+    'last_result',case when v_last.id is null then null else jsonb_build_object('round_no',v_last.round_no,'drawn_number',v_last.drawn_number,'drawn_at',v_last.drawn_at,'published_at',v_last.published_at) end,
+    'number_stats',v_stats,
+    'draw_schedule',v_schedule,
+    'pending_deposits',v_deposits,
+    'pending_withdrawals',v_withdrawals,
+    'players',v_players,
+    'recent_bets',v_recent_bets
+  );
+end;
+$$;
+
+-- Funções internas: o navegador usa jl_public_state / jl_admin_dashboard / RPCs administrativas.
+revoke execute on function public.jl_open_next_scheduled_round() from public;
+revoke execute on function public.jl_process_game_engine() from public;
+revoke execute on function public.jl_finalize_due_rounds() from public;
+revoke execute on function public.jl_secure_number() from public;
 
 select cron.unschedule(jobid) from cron.job where jobname = 'jogos_lendarios_auto_draw';
 select cron.unschedule(jobid) from cron.job where jobname = 'jogos_lendarios_engine';
