@@ -1,27 +1,27 @@
-/* Sala de Ludo: o tabuleiro permanece visível antes do início da partida. */
-#gamePanel.hidden{display:grid!important;grid-template-columns:minmax(0,1fr)!important}
-#gamePanel.hidden .side-column{display:none!important}
-#gamePanel.hidden .board-panel{display:block!important;grid-column:1/-1;position:relative}
-#gamePanel.hidden #rollDice,#gamePanel.hidden #reenterButton{display:none!important}
-#gamePanel.hidden #dice{display:none!important}
-#gamePanel.hidden #turnTitle{font-size:0}
-#gamePanel.hidden #turnTitle::after{content:"Tabuleiro preparado · aguardando início";font-size:1.2rem;font-weight:900;color:#f4f7fb}
-#gamePanel.hidden #moveHint{display:block;text-align:center;padding:10px 12px;border-radius:12px;background:rgba(40,120,200,.10);border:1px solid rgba(76,139,245,.24);color:#a9bfdc}
-#gamePanel.hidden #moveHint::before{content:"A sala está pronta. Complete os jogadores, aceite as regras e confirme a aposta para começar. ";color:#dce9f7;font-weight:800}
-#gamePanel.hidden .game-controls{justify-content:center}
+/* O mesmo tabuleiro real permanece visível enquanto a sala é preparada. */
+#gamePanel.ludo-preparing.hidden{display:grid!important}
+#gamePanel.ludo-preparing #rollDice,#gamePanel.ludo-preparing #reenterButton,#gamePanel.ludo-preparing #dice{display:none!important}
+#gamePanel.ludo-preparing .board-panel{position:relative}
+#gamePanel.ludo-preparing #moveHint{display:block;text-align:center;padding:10px 12px;border-radius:12px;background:rgba(244,181,31,.07);border:1px solid rgba(244,181,31,.22);color:#d8e0eb}
+#gamePanel.ludo-preparing .side-column{display:grid!important}
 
-/* Pré-visualização do tabuleiro quando ainda não existem peças persistidas. */
-#gamePanel.hidden .ludo-board:empty{position:relative;display:block!important;aspect-ratio:1;max-width:760px;margin:16px auto;border:3px solid #0a1019;border-radius:10px;overflow:hidden;background:
-linear-gradient(#ffffff,#ffffff) center/20% 100% no-repeat,
-linear-gradient(#ffffff,#ffffff) center/100% 20% no-repeat,
-linear-gradient(#dc4c55,#dc4c55) left top/40% 40% no-repeat,
-linear-gradient(#37b979,#37b979) right top/40% 40% no-repeat,
-linear-gradient(#3f7ce0,#3f7ce0) left bottom/40% 40% no-repeat,
-linear-gradient(#e6bf38,#e6bf38) right bottom/40% 40% no-repeat,
-#eef2f6;box-shadow:inset 0 0 0 1px rgba(15,25,40,.18)}
-#gamePanel.hidden .ludo-board:empty::before{content:"";position:absolute;inset:0;background:
-repeating-linear-gradient(90deg,transparent 0 calc(6.666% - 1px),rgba(15,25,40,.12) calc(6.666% - 1px) 6.666%),
-repeating-linear-gradient(0deg,transparent 0 calc(6.666% - 1px),rgba(15,25,40,.12) calc(6.666% - 1px) 6.666%);pointer-events:none}
-#gamePanel.hidden .ludo-board:empty::after{content:"PRONTO";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:18%;aspect-ratio:1;display:grid;place-items:center;border-radius:50%;background:conic-gradient(#37b979 0 25%,#e6bf38 0 50%,#3f7ce0 0 75%,#dc4c55 0);color:#fff;font-size:clamp(.55rem,1.5vw,.9rem);font-weight:1000;letter-spacing:.06em;text-shadow:0 1px 2px rgba(0,0,0,.5);box-shadow:0 0 0 4px #fff}
-
-@media(max-width:700px){#gamePanel.hidden .board-panel{padding:10px!important}#gamePanel.hidden #turnTitle::after{font-size:1rem}#gamePanel.hidden #moveHint{font-size:.78rem}}
+/* Aparência do tabuleiro completo. */
+.ludo-board{position:relative!important;isolation:isolate;background:#f4f5f7!important;border:4px solid #151b25!important;border-radius:12px!important;box-shadow:0 18px 45px rgba(0,0,0,.32),0 0 0 1px rgba(255,255,255,.08)!important}
+.ludo-board>.cell{z-index:0;background:#f9fafb;border-color:rgba(25,34,48,.16)!important}
+.ludo-board>.cell.base.red{background:#df424e}.ludo-board>.cell.base.green{background:#24a869}.ludo-board>.cell.base.yellow{background:#f0c728}.ludo-board>.cell.base.blue{background:#2798e8}
+.ludo-board>.cell.base.base-inner{background:#fff!important;border-color:transparent!important}
+.ludo-board>.cell.base.base-slot::before{content:"";position:absolute;inset:15%;border-radius:50%;background:var(--slot-color);box-shadow:inset 0 0 0 2px rgba(0,0,0,.08),0 0 0 2px #fff}
+.ludo-board>.cell.start-red{background:#ef5862!important}.ludo-board>.cell.start-green{background:#35bc7d!important}.ludo-board>.cell.start-yellow{background:#f0cf42!important}.ludo-board>.cell.start-blue{background:#4aa8ed!important}
+.ludo-board>.cell.start-red::before,.ludo-board>.cell.start-green::before,.ludo-board>.cell.start-yellow::before,.ludo-board>.cell.start-blue::before{position:absolute;z-index:1;color:#fff;font-weight:1000;font-size:clamp(10px,1.6vw,18px);text-shadow:0 1px 2px rgba(0,0,0,.35)}
+.ludo-board>.cell.start-red::before{content:"→"}.ludo-board>.cell.start-green::before{content:"↓"}.ludo-board>.cell.start-yellow::before{content:"←";color:#4c3b00;text-shadow:none}.ludo-board>.cell.start-blue::before{content:"↑"}
+.ludo-board>.cell.home-red{background:#ef626b!important}.ludo-board>.cell.home-green{background:#43c987!important}.ludo-board>.cell.home-yellow{background:#f5d652!important}.ludo-board>.cell.home-blue{background:#55b0ef!important}
+.ludo-board>.cell.center{background:#fff!important}
+.ludo-board>.cell.safe::after{content:"★"!important;position:absolute;z-index:1;color:#737f8e!important;opacity:.75!important;font-size:clamp(8px,1.3vw,15px)!important}
+.ludo-board>.center-diamond{position:absolute;z-index:2;left:40%;top:40%;width:20%;height:20%;pointer-events:none;background:conic-gradient(from 45deg,#24a869 0 25%,#f0c728 0 50%,#2798e8 0 75%,#df424e 0);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);box-shadow:0 0 0 2px rgba(20,27,37,.2)}
+.ludo-board>.board-corner-label{position:absolute;z-index:6;max-width:28%;padding:4px 8px;border-radius:999px;background:rgba(9,13,20,.82);border:1px solid rgba(255,255,255,.7);color:#fff;font-size:clamp(8px,1.2vw,12px);font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:0 2px 8px rgba(0,0,0,.28);pointer-events:none}
+.ludo-board>.board-corner-label.red{left:1.4%;top:1.4%}.ludo-board>.board-corner-label.green{right:1.4%;top:1.4%}.ludo-board>.board-corner-label.blue{left:1.4%;bottom:1.4%}.ludo-board>.board-corner-label.yellow{right:1.4%;bottom:1.4%}
+.ludo-board .piece{z-index:5!important;width:66%!important;border:2px solid #fff!important;box-shadow:0 2px 6px rgba(0,0,0,.5)!important}.ludo-board .piece.preview{cursor:default!important;pointer-events:none!important;font-size:0!important}.ludo-board .piece.preview::after{content:"";width:36%;height:36%;border-radius:50%;background:rgba(255,255,255,.45);box-shadow:inset 0 1px 2px rgba(0,0,0,.18)}
+.ludo-board .piece.legal{outline:3px solid #f7df37!important;outline-offset:2px;animation:ludoLegalPulse .85s ease-in-out infinite alternate!important}
+@keyframes ludoLegalPulse{from{transform:scale(1)}to{transform:scale(1.12)}}
+.board-panel{overflow:hidden}.board-panel .ludo-board{width:min(100%,680px)!important;max-width:680px!important}
+@media(max-width:700px){.board-panel{padding:10px!important}.board-panel .ludo-board{width:100%!important}.ludo-board>.board-corner-label{padding:3px 5px;max-width:31%}}
