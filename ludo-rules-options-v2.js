@@ -7,35 +7,51 @@
 
   function ensureRuleFields() {
     const form = $('#rulesForm');
-    if (!form || form.querySelector('[name="dice_count"]')) return;
+    if (!form) return;
 
-    const location = document.createElement('label');
-    location.innerHTML = '<span>Tipo de partida</span><select name="play_location"><option value="online">Online</option><option value="presential">Presencial</option></select>';
+    let location = form.querySelector('[name="play_location"]')?.closest('label');
+    if (!location) {
+      location = document.createElement('label');
+      location.innerHTML = '<span>Tipo de partida</span><select name="play_location"><option value="online">Online</option><option value="presential">Presencial</option></select>';
+    }
 
-    const dice = document.createElement('label');
-    dice.innerHTML = '<span>Quantidade de dados</span><select name="dice_count"><option value="1">1 dado · clássico</option><option value="3">3 dados</option><option value="4">4 dados</option></select>';
+    let diceSelect = form.querySelector('[name="dice_count"]');
+    let dice = diceSelect?.closest('label');
+    if (!diceSelect) {
+      dice = document.createElement('label');
+      dice.innerHTML = '<span>Quantidade de dados</span><select name="dice_count"></select>';
+      diceSelect = dice.querySelector('select');
+    }
 
-    const first = form.firstElementChild;
-    if (first) {
-      form.insertBefore(dice, first);
-      form.insertBefore(location, dice);
-    } else {
-      form.append(location, dice);
+    const current = String(diceSelect.value || '1');
+    const wanted = [['1','1 dado · clássico'],['2','2 dados'],['3','3 dados'],['4','4 dados']];
+    const signature = Array.from(diceSelect.options).map(o => o.value).join(',');
+    if (signature !== '1,2,3,4') {
+      diceSelect.innerHTML = wanted.map(([v,t]) => `<option value="${v}">${t}</option>`).join('');
+      diceSelect.value = wanted.some(([v]) => v === current) ? current : '1';
+    }
+
+    if (!location.isConnected || !dice.isConnected) {
+      const first = form.firstElementChild;
+      if (first) {
+        if (!dice.isConnected) form.insertBefore(dice, first);
+        if (!location.isConnected) form.insertBefore(location, dice);
+      } else {
+        if (!location.isConnected) form.append(location);
+        if (!dice.isConnected) form.append(dice);
+      }
     }
   }
 
   function syncValues() {
     ensureRuleFields();
     const summary = $('#rulesSummary');
-    const roomMeta = $('#roomMeta');
     const form = $('#rulesForm');
     if (!form) return;
 
-    // ludo.js preenche os campos existentes sempre que renderiza a sala.
-    // Estes campos extras passam a fazer parte do mesmo formulário e são enviados pelo mesmo fluxo.
     const dice = form.elements.dice_count;
     const location = form.elements.play_location;
-    if (dice && !['1','3','4'].includes(String(dice.value))) dice.value = '1';
+    if (dice && !['1','2','3','4'].includes(String(dice.value))) dice.value = '1';
     if (location && !['online','presential'].includes(String(location.value))) location.value = 'online';
 
     if (summary && !summary.querySelector('[data-extra-rule="dice"]')) {
@@ -55,8 +71,6 @@
       if (d) d.textContent = `Dados: ${dice?.value || 1}`;
       if (l) l.textContent = `Partida: ${location?.value === 'presential' ? 'Presencial' : 'Online'}`;
     }
-
-    if (roomMeta && !roomMeta.dataset.diceHintBound) roomMeta.dataset.diceHintBound = '1';
   }
 
   function fixInviteTexts() {
@@ -67,13 +81,13 @@
     }
 
     document.querySelectorAll('.rf-broadcast').forEach(el => {
-      if (/ativo por|não está ativo|60s|60 s/i.test(el.textContent || '')) {
+      if (/convite para todos/i.test(el.textContent || '')) {
         el.innerHTML = '<span>📣 Convite para todos: <strong>ativo enquanto houver vaga</strong></span><span>Sem cronómetro.</span>';
       }
     });
 
     document.querySelectorAll('.rf-invite-item small').forEach(el => {
-      if (/responde em até/i.test(el.textContent || '')) el.textContent = 'Convite sem expiração';
+      if (/responde em até|convite registrado/i.test(el.textContent || '')) el.textContent = 'Convite sem expiração';
     });
   }
 
