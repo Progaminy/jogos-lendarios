@@ -5,8 +5,16 @@ window.JL_CONFIG = Object.freeze({
 
 (() => {
   if (!document.querySelector('a[href*="ludo"]') && !location.pathname.includes('ludo')) return;
-  const script = document.createElement('script');
-  script.src = './ludo-experience.js';
-  script.defer = true;
-  document.head.appendChild(script);
+
+  const experience = document.createElement('script');
+  experience.src = './ludo-experience.js';
+  experience.defer = true;
+  document.head.appendChild(experience);
+
+  if (location.pathname.includes('ludo')) {
+    const challenges = document.createElement('script');
+    challenges.src = './ludo-public-challenges.js';
+    challenges.defer = true;
+    document.head.appendChild(challenges);
+  }
 })();
