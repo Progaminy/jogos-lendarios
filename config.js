@@ -27,5 +27,6 @@ window.JL_CONFIG = Object.freeze({
     add('./ludo-rules-options-v2.js?v=2');
     add('./ludo-invites-dice-fix.js?v=1');
     add('./ludo-pro.js?v=1');
+    add('./ludo-board-first.js?v=1');
   }
 })();
