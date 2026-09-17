@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#08111f">
+  <meta name="description" content="Ludo Lendário — partidas online de 2, 3 ou 4 jogadores, regras negociadas e apostas entre participantes.">
+  <title>Ludo Lendário · Jogos Lendários</title>
+  <link rel="stylesheet" href="./ludo.css">
+</head>
+<body>
+  <div id="toast" class="toast" aria-live="polite"></div>
+  <header class="topbar">
+    <div>
+      <a class="brand" href="./index.html">Jogos <strong>Lendários</strong></a>
+      <span class="product-tag">LUDO</span>
+    </div>
+    <div class="top-actions">
+      <span id="identityBadge" class="badge">Não autenticado</span>
+      <button id="accountButton" class="button ghost small" type="button">Entrar</button>
+      <a class="button ghost small" href="./index.html">Outros jogos</a>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section class="hero panel">
+      <div>
+        <p class="eyebrow">LUDO LENDÁRIO</p>
+        <h1>Joguem, negociem as regras e só depois apostem.</h1>
+        <p class="lead">2, 3 ou 4 jogadores online. A partida só começa quando a sala está completa, todos aceitam exatamente a mesma versão das regras e todas as apostas estão confirmadas.</p>
+      </div>
+      <div class="hero-rules">
+        <div><strong>60 s</strong><span>convites e decisões</span></div>
+        <div><strong>30 s</strong><span>escolha rápida</span></div>
+        <div><strong>1%</strong><span>comissão do ganho · mínimo 1 MZN</span></div>
+      </div>
+    </section>
+
+    <section id="loggedOut" class="panel auth-callout hidden">
+      <h2>Entre para jogar</h2>
+      <p>O Ludo usa a mesma conta e o mesmo saldo dos outros Jogos Lendários.</p>
+      <button class="button primary" type="button" data-open-auth="login">Entrar</button>
+      <button class="button secondary" type="button" data-open-auth="register">Criar conta</button>
+    </section>
+
+    <section id="lobby" class="lobby-grid hidden">
+      <div class="panel">
+        <div class="section-head"><div><p class="eyebrow">CRIAR SALA</p><h2>Nova partida</h2></div><span id="balanceBadge" class="balance-pill">0,00 MZN</span></div>
+        <form id="createRoomForm" class="form-grid">
+          <label><span>Jogadores</span><select id="createPlayers"><option value="2">2 jogadores</option><option value="3">3 jogadores</option><option value="4" selected>4 jogadores</option></select></label>
+          <label><span>Modo</span><select id="createMode"><option value="solo">Cada um por si</option><option value="partners">Parceiros 2 × 2</option></select></label>
+          <label><span>Aposta por jogador</span><div class="money"><span>MZN</span><input id="createBet" type="number" min="1" step="1" value="100" required></div></label>
+          <label class="check-row"><input id="createPublic" type="checkbox"><span>Sala pública · pode entrar pelo código</span></label>
+          <button class="button primary wide" type="submit">Criar sala de Ludo</button>
+        </form>
+        <p class="hint">No modo parceiros são sempre 4 jogadores. O prémio vencedor é dividido pelos dois parceiros e 1% é retirado individualmente de cada parte.</p>
+      </div>
+
+      <div class="panel">
+        <p class="eyebrow">ENTRAR / ESPERAR</p><h2>Encontrar partida</h2>
+        <form id="joinCodeForm" class="inline-form"><input id="joinCode" placeholder="LUDO-ABC123" maxlength="11"><button class="button secondary" type="submit">Entrar pelo código</button></form>
+        <div class="divider"></div>
+        <h3>Ficar à espera</h3>
+        <form id="queueForm" class="form-grid compact">
+          <label><span>Jogadores</span><select id="queuePlayers"><option value="2">2</option><option value="3">3</option><option value="4" selected>4</option></select></label>
+          <label><span>Modo</span><select id="queueMode"><option value="solo">Cada um por si</option><option value="partners">Parceiros</option></select></label>
+          <label><span>Aposta</span><div class="money"><span>MZN</span><input id="queueBet" type="number" min="1" value="100"></div></label>
+          <button id="queueButton" class="button secondary" type="submit">Quero jogar</button>
+        </form>
+        <div id="queueStatus" class="status-box hidden"></div>
+      </div>
+
+      <div class="panel full-span">
+        <div class="section-head"><div><p class="eyebrow">CONVITES</p><h2>Convites recebidos</h2></div><button id="refreshLobby" class="button ghost small" type="button">Atualizar</button></div>
+        <div id="inviteList" class="invite-list"><div class="empty">Sem convites.</div></div>
+      </div>
+    </section>
+
+    <section id="room" class="room hidden">
+      <div class="room-header panel">
+        <div><p class="eyebrow">SALA</p><h2 id="roomCode">—</h2><p id="roomMeta" class="muted">—</p></div>
+        <div class="room-money"><span>Pote</span><strong id="roomPot">0,00 MZN</strong><small id="roomPrize">—</small></div>
+        <div class="room-actions"><button id="copyRoomCode" class="button ghost small" type="button">Copiar código</button><button id="leaveRoom" class="button danger small" type="button">Sair</button></div>
+      </div>
+
+      <div id="deadlineBar" class="deadline panel"><span id="deadlineLabel">Aguardando…</span><strong id="deadlineClock">--:--</strong></div>
+      <div id="playersPanel" class="players-grid"></div>
+
+      <div class="room-grid">
+        <section class="panel rules-panel">
+          <div class="section-head"><div><p class="eyebrow">REGRAS DA PARTIDA</p><h2>Negociação</h2></div><span id="rulesVersion" class="badge">v1</span></div>
+          <div id="rulesSummary" class="rules-summary"></div>
+          <form id="rulesForm" class="rules-form hidden">
+            <label><span>Tempo para jogar</span><select name="turn_seconds"><option value="30">30 s</option><option value="60">60 s</option><option value="90">90 s</option><option value="120" selected>120 s</option></select></label>
+            <label><span>Escolher peça após o dado</span><select name="move_seconds"><option value="15">15 s</option><option value="30" selected>30 s</option><option value="45">45 s</option><option value="60">60 s</option></select></label>
+            <label><span>Ausências antes de eliminar</span><select name="idle_strikes_limit"><option value="1">1</option><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option><option value="5">5</option></select></label>
+            <label><span>Saída da base</span><select name="base_exit_rule"><option value="six">Somente com 6</option><option value="one_or_six">Com 1 ou 6</option></select></label>
+            <label class="toggle"><input name="capture_required" type="checkbox"><span>Captura obrigatória quando existir</span></label>
+            <label><span>Se ignorar captura obrigatória</span><select name="capture_penalty"><option value="eliminate_reentry">Elimina; pode pagar para continuar</option><option value="eliminate">Elimina sem reentrada</option><option value="lose_turn">Perde apenas a vez</option></select></label>
+            <label class="toggle"><input name="reentry_allowed" type="checkbox" checked><span>Permitir reentrada após penalização</span></label>
+            <label><span>Valor para reentrar</span><div class="money"><span>MZN</span><input name="reentry_amount" type="number" min="1" value="10"></div></label>
+            <label class="toggle partner-rule"><input name="partner_capture" type="checkbox"><span>Parceiros podem matar um ao outro</span></label>
+            <label class="toggle"><input name="capture_extra_turn" type="checkbox" checked><span>Captura dá nova jogada</span></label>
+            <label class="toggle"><input name="six_extra_turn" type="checkbox" checked><span>6 dá nova jogada</span></label>
+            <label class="toggle"><input name="three_sixes_penalty" type="checkbox" checked><span>Três 6 seguidos perdem a jogada</span></label>
+            <label class="toggle"><input name="safe_cells" type="checkbox" checked><span>Casas seguras clássicas</span></label>
+            <label class="toggle"><input name="blockades" type="checkbox" checked><span>Bloqueios/barreiras com duas peças</span></label>
+            <label class="toggle"><input name="exact_finish" type="checkbox" checked><span>Chegada exige valor exato</span></label>
+            <label class="toggle"><input name="voice_enabled" type="checkbox" checked><span>Microfone durante negociação e jogo</span></label>
+            <label class="toggle"><input name="chat_enabled" type="checkbox" checked><span>Chat escrito</span></label>
+            <button class="button primary wide" type="submit">Propor estas regras</button>
+          </form>
+          <div id="rulesDecision" class="decision-row hidden"><button id="acceptRules" class="button success" type="button">Aceitar regras</button><button id="declineRules" class="button danger" type="button">Não concordo</button></div>
+        </section>
+
+        <aside class="panel invite-panel">
+          <p class="eyebrow">CONVIDAR</p><h2>Completar a sala</h2>
+          <form id="searchPlayerForm" class="inline-form"><input id="searchPlayer" placeholder="Nome ou João001"><button class="button ghost" type="submit">Buscar</button></form>
+          <div id="playerSearchResults" class="mini-list"></div>
+          <div class="divider"></div>
+          <div class="section-head"><h3>Jogadores à espera</h3><button id="refreshWaiting" class="button ghost tiny" type="button">Atualizar</button></div>
+          <div id="waitingPlayers" class="mini-list"><div class="empty">Nenhum compatível agora.</div></div>
+        </aside>
+      </div>
+
+      <section id="fundingPanel" class="panel funding hidden">
+        <div><p class="eyebrow">APOSTA DA PARTIDA</p><h2>Regras aceites por todos</h2><p id="fundingText">Confirme a sua aposta.</p></div>
+        <button id="fundButton" class="button primary large" type="button">Confirmar aposta</button>
+      </section>
+
+      <section id="gamePanel" class="game-grid hidden">
+        <div class="panel board-panel">
+          <div class="section-head"><div><p class="eyebrow">TABULEIRO</p><h2 id="turnTitle">—</h2></div><div id="dice" class="dice" aria-label="Dado">?</div></div>
+          <div id="ludoBoard" class="ludo-board" aria-label="Tabuleiro do Ludo"></div>
+          <div class="game-controls"><button id="rollDice" class="button primary large" type="button">🎲 Lançar dado</button><span id="moveHint" class="muted">Aguarde a sua vez.</span></div>
+          <button id="reenterButton" class="button warning wide hidden" type="button">Pagar e continuar</button>
+        </div>
+
+        <aside class="side-column">
+          <div class="panel voice-panel"><div class="section-head"><div><p class="eyebrow">VOZ</p><h2>Microfone</h2></div><span id="voiceState" class="badge">Desligado</span></div><button id="micButton" class="button secondary wide" type="button">🎙️ Abrir microfone</button><div id="remoteAudio"></div></div>
+          <div class="panel chat-panel"><p class="eyebrow">CONVERSA</p><div id="chatMessages" class="chat-messages"></div><form id="chatForm" class="inline-form"><input id="chatInput" maxlength="500" placeholder="Mensagem…"><button class="button secondary" type="submit">Enviar</button></form></div>
+        </aside>
+      </section>
+
+      <section id="resultPanel" class="panel result-panel hidden"><p class="eyebrow">RESULTADO</p><h2 id="resultTitle">Partida terminada</h2><div id="resultPayouts"></div></section>
+    </section>
+  </main>
+
+  <div id="authModal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <button id="closeAuth" class="modal-close" type="button">×</button>
+      <p class="eyebrow">CONTA DO JOGADOR</p><h2>Entre ou crie a sua conta</h2>
+      <div class="tabs"><button id="loginTab" class="tab active" type="button">Entrar</button><button id="registerTab" class="tab" type="button">Criar conta</button></div>
+      <form id="loginForm" class="stack-form"><label><span>Celular</span><input id="loginPhone" inputmode="tel" required></label><label><span>PIN</span><input id="loginPin" type="password" inputmode="numeric" minlength="4" maxlength="8" required></label><button class="button primary" type="submit">Entrar</button></form>
+      <form id="registerForm" class="stack-form hidden"><label><span>Nome</span><input id="registerName" maxlength="60" required></label><label><span>Celular</span><input id="registerPhone" inputmode="tel" required></label><label><span>Definir PIN</span><input id="registerPin" type="password" inputmode="numeric" minlength="4" maxlength="8" required></label><label><span>Confirmar PIN</span><input id="registerPinConfirm" type="password" inputmode="numeric" minlength="4" maxlength="8" required></label><button class="button primary" type="submit">Criar conta</button></form>
+      <p id="authMessage" class="form-message"></p>
+    </div>
+  </div>
+
+  <script src="./config.js"></script>
+  <script src="./ludo.js" defer></script>
+</body>
+</html>
