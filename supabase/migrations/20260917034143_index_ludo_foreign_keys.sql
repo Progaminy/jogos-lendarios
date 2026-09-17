@@ -1,0 +1,10 @@
+create index if not exists ludo_chat_player_idx on public.ludo_chat(player_id);
+create index if not exists ludo_events_player_idx on public.ludo_events(player_id);
+create index if not exists ludo_invites_invited_by_idx on public.ludo_invitations(invited_by);
+create index if not exists ludo_invites_room_idx on public.ludo_invitations(room_id);
+create index if not exists ludo_payouts_player_idx on public.ludo_payouts(player_id);
+create index if not exists ludo_rooms_current_player_idx on public.ludo_rooms(current_player_id);
+create index if not exists ludo_rooms_host_idx on public.ludo_rooms(host_id);
+create index if not exists ludo_rooms_winner_idx on public.ludo_rooms(winner_player_id);
+create index if not exists ludo_signals_from_player_idx on public.ludo_signals(from_player_id);
+create index if not exists ludo_signals_room_idx on public.ludo_signals(room_id);
