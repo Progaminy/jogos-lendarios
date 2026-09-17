@@ -17,5 +17,5 @@ window.JL_CONFIG = Object.freeze({
 
   add('./ludo-experience.js?v=4');
   add('./ludo-challenge-badge.js?v=3');
-  if (location.pathname.includes('ludo')) add('./ludo-public-challenges-v2.js?v=2');
+  if (location.pathname.includes('ludo')) add('./ludo-public-challenges-v3.js?v=1');
 })();
