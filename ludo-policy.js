@@ -1,7 +1,10 @@
 (() => {
   'use strict';
 
-  const parseMoney = (value) => Number(String(value || '').replace(/\./g, '').replace(',', '.'));
+  const parseMoney = (value) => Number(String(value || '')
+    .replace(/[\s\u00A0]/g, '')
+    .replace(/\./g, '')
+    .replace(',', '.'));
   const formatMoney = (value) => Number(value || 0).toLocaleString('pt-MZ', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
@@ -26,7 +29,7 @@
     const text = el.textContent || '';
     if (!text.includes('comissão')) return;
 
-    const grossMatch = text.match(/(?:Vencedor:|Dupla vencedora:)\s*([\d.,]+)\s*MZN/);
+    const grossMatch = text.match(/(?:Vencedor:|Dupla vencedora:)\s*([\d\s\u00A0.,]+)\s*MZN/);
     if (!grossMatch) return;
 
     const gross = parseMoney(grossMatch[1]);
