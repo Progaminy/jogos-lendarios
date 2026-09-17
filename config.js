@@ -19,5 +19,8 @@ window.JL_CONFIG = Object.freeze({
   if (!document.querySelector('a[href*="ludo"]') && !location.pathname.includes('ludo')) return;
   add('./ludo-experience.js?v=4');
   add('./ludo-challenge-badge.js?v=3');
-  if (location.pathname.includes('ludo')) add('./ludo-public-challenges-v3.js?v=1');
+  if (location.pathname.includes('ludo')) {
+    add('./ludo-public-challenges-v3.js?v=1');
+    add('./ludo-room-flow-v2.js?v=1');
+  }
 })();
