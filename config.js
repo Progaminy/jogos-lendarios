@@ -11,6 +11,11 @@ window.JL_CONFIG = Object.freeze({
   experience.defer = true;
   document.head.appendChild(experience);
 
+  const badge = document.createElement('script');
+  badge.src = './ludo-challenge-badge.js';
+  badge.defer = true;
+  document.head.appendChild(badge);
+
   if (location.pathname.includes('ludo')) {
     const challenges = document.createElement('script');
     challenges.src = './ludo-public-challenges.js';
