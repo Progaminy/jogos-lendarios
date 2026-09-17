@@ -1,0 +1,27 @@
+/* Sala de Ludo: o tabuleiro permanece visível antes do início da partida. */
+#gamePanel.hidden{display:grid!important;grid-template-columns:minmax(0,1fr)!important}
+#gamePanel.hidden .side-column{display:none!important}
+#gamePanel.hidden .board-panel{display:block!important;grid-column:1/-1;position:relative}
+#gamePanel.hidden #rollDice,#gamePanel.hidden #reenterButton{display:none!important}
+#gamePanel.hidden #dice{display:none!important}
+#gamePanel.hidden #turnTitle{font-size:0}
+#gamePanel.hidden #turnTitle::after{content:"Tabuleiro preparado · aguardando início";font-size:1.2rem;font-weight:900;color:#f4f7fb}
+#gamePanel.hidden #moveHint{display:block;text-align:center;padding:10px 12px;border-radius:12px;background:rgba(40,120,200,.10);border:1px solid rgba(76,139,245,.24);color:#a9bfdc}
+#gamePanel.hidden #moveHint::before{content:"A sala está pronta. Complete os jogadores, aceite as regras e confirme a aposta para começar. ";color:#dce9f7;font-weight:800}
+#gamePanel.hidden .game-controls{justify-content:center}
+
+/* Pré-visualização do tabuleiro quando ainda não existem peças persistidas. */
+#gamePanel.hidden .ludo-board:empty{position:relative;display:block!important;aspect-ratio:1;max-width:760px;margin:16px auto;border:3px solid #0a1019;border-radius:10px;overflow:hidden;background:
+linear-gradient(#ffffff,#ffffff) center/20% 100% no-repeat,
+linear-gradient(#ffffff,#ffffff) center/100% 20% no-repeat,
+linear-gradient(#dc4c55,#dc4c55) left top/40% 40% no-repeat,
+linear-gradient(#37b979,#37b979) right top/40% 40% no-repeat,
+linear-gradient(#3f7ce0,#3f7ce0) left bottom/40% 40% no-repeat,
+linear-gradient(#e6bf38,#e6bf38) right bottom/40% 40% no-repeat,
+#eef2f6;box-shadow:inset 0 0 0 1px rgba(15,25,40,.18)}
+#gamePanel.hidden .ludo-board:empty::before{content:"";position:absolute;inset:0;background:
+repeating-linear-gradient(90deg,transparent 0 calc(6.666% - 1px),rgba(15,25,40,.12) calc(6.666% - 1px) 6.666%),
+repeating-linear-gradient(0deg,transparent 0 calc(6.666% - 1px),rgba(15,25,40,.12) calc(6.666% - 1px) 6.666%);pointer-events:none}
+#gamePanel.hidden .ludo-board:empty::after{content:"PRONTO";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:18%;aspect-ratio:1;display:grid;place-items:center;border-radius:50%;background:conic-gradient(#37b979 0 25%,#e6bf38 0 50%,#3f7ce0 0 75%,#dc4c55 0);color:#fff;font-size:clamp(.55rem,1.5vw,.9rem);font-weight:1000;letter-spacing:.06em;text-shadow:0 1px 2px rgba(0,0,0,.5);box-shadow:0 0 0 4px #fff}
+
+@media(max-width:700px){#gamePanel.hidden .board-panel{padding:10px!important}#gamePanel.hidden #turnTitle::after{font-size:1rem}#gamePanel.hidden #moveHint{font-size:.78rem}}
