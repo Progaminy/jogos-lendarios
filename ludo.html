@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#08111f">
-  <meta name="description" content="Ludo Lendário — partidas online de 2, 3 ou 4 jogadores, regras negociadas e apostas entre participantes.">
+  <meta name="description" content="Ludo Lendário — partidas online ou presenciais de 2, 3 ou 4 jogadores, regras negociadas e apostas entre participantes.">
   <title>Ludo Lendário · Jogos Lendários</title>
   <link rel="stylesheet" href="./ludo.css">
   <link rel="stylesheet" href="./site-nav.css">
@@ -33,12 +33,12 @@
       <div>
         <p class="eyebrow">TABULEIRO · LUDO LENDÁRIO</p>
         <h1>Joguem, negociem as regras e só depois apostem.</h1>
-        <p class="lead">2, 3 ou 4 jogadores online. A partida só começa quando a sala está completa, todos aceitam exatamente a mesma versão das regras e todas as apostas estão confirmadas.</p>
+        <p class="lead">2, 3 ou 4 jogadores online ou presencialmente. A partida só começa quando a sala está completa, todos aceitam exatamente a mesma versão das regras e todas as apostas estão confirmadas.</p>
         <div class="policy-note"><strong>Aposta mínima: 10 MZN.</strong> A comissão é 1% do ganho de cada vencedor. Se o cálculo produzir centavos, o valor da comissão é sempre arredondado para cima ao metical inteiro: 1,6 → 2 MZN; 2,1 → 3 MZN.</div>
       </div>
       <div class="hero-rules">
-        <div><strong>60 s</strong><span>convites e decisões</span></div>
-        <div><strong>30 s</strong><span>escolha rápida</span></div>
+        <div><strong>SEM PRAZO</strong><span>convites enquanto houver vaga</span></div>
+        <div><strong>30–120 s</strong><span>ações da partida conforme a regra</span></div>
         <div><strong>1%</strong><span>comissão · arredondada para cima</span></div>
       </div>
     </section>
@@ -56,7 +56,7 @@
         <form id="createRoomForm" class="form-grid">
           <label><span>Jogadores</span><select id="createPlayers"><option value="2">2 jogadores</option><option value="3">3 jogadores</option><option value="4" selected>4 jogadores</option></select></label>
           <label><span>Modo</span><select id="createMode"><option value="solo">Cada um por si</option><option value="partners">Parceiros 2 × 2</option></select></label>
-          <label><span>Aposta por jogador</span><div class="money"><span>MZN</span><input id="createBet" type="number" min="10" step="1" value="100" required></div></label>
+          <label><span>Aposta por jogador</span><div class="money"><span>MZN</span><input id="createBet" type="number" min="10" step="1" value="10" required></div></label>
           <label class="check-row"><input id="createPublic" type="checkbox"><span>Sala pública · pode entrar pelo código</span></label>
           <button class="button primary wide" type="submit">Criar sala de Ludo</button>
         </form>
@@ -71,7 +71,7 @@
         <form id="queueForm" class="form-grid compact">
           <label><span>Jogadores</span><select id="queuePlayers"><option value="2">2</option><option value="3">3</option><option value="4" selected>4</option></select></label>
           <label><span>Modo</span><select id="queueMode"><option value="solo">Cada um por si</option><option value="partners">Parceiros</option></select></label>
-          <label><span>Aposta</span><div class="money"><span>MZN</span><input id="queueBet" type="number" min="10" step="1" value="100"></div></label>
+          <label><span>Aposta</span><div class="money"><span>MZN</span><input id="queueBet" type="number" min="10" step="1" value="10"></div></label>
           <button id="queueButton" class="button secondary" type="submit">Quero jogar</button>
         </form>
         <div id="queueStatus" class="status-box hidden"></div>
