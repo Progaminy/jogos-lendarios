@@ -6,20 +6,16 @@ window.JL_CONFIG = Object.freeze({
 (() => {
   if (!document.querySelector('a[href*="ludo"]') && !location.pathname.includes('ludo')) return;
 
-  const experience = document.createElement('script');
-  experience.src = './ludo-experience.js';
-  experience.defer = true;
-  document.head.appendChild(experience);
+  const add = (src) => {
+    if (document.querySelector(`script[data-jl-src="${src}"]`)) return;
+    const s = document.createElement('script');
+    s.src = src;
+    s.async = false;
+    s.dataset.jlSrc = src;
+    document.head.appendChild(s);
+  };
 
-  const badge = document.createElement('script');
-  badge.src = './ludo-challenge-badge.js';
-  badge.defer = true;
-  document.head.appendChild(badge);
-
-  if (location.pathname.includes('ludo')) {
-    const challenges = document.createElement('script');
-    challenges.src = './ludo-public-challenges.js';
-    challenges.defer = true;
-    document.head.appendChild(challenges);
-  }
+  add('./ludo-experience.js?v=4');
+  add('./ludo-challenge-badge.js?v=3');
+  if (location.pathname.includes('ludo')) add('./ludo-public-challenges-v2.js?v=2');
 })();
