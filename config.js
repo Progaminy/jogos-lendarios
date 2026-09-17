@@ -14,6 +14,7 @@ window.JL_CONFIG = Object.freeze({
   };
 
   add('./bet-insights.js?v=1');
+  add('./bet-button-guide.js?v=1');
 
   if (!document.querySelector('a[href*="ludo"]') && !location.pathname.includes('ludo')) return;
   add('./ludo-experience.js?v=4');
