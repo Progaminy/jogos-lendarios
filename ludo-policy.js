@@ -244,6 +244,11 @@
     normalizeCommissionPreview();
     refreshVariantState();
 
+    const lead = document.querySelector('.hero .lead');
+    if (lead && lead.textContent.includes('jogadores online')) {
+      lead.textContent = lead.textContent.replace('jogadores online', 'jogadores online ou presencialmente');
+    }
+
     const prize = document.getElementById('roomPrize');
     if (prize) {
       new MutationObserver(normalizeCommissionPreview).observe(prize, {
