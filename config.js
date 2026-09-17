@@ -4,8 +4,6 @@ window.JL_CONFIG = Object.freeze({
 });
 
 (() => {
-  if (!document.querySelector('a[href*="ludo"]') && !location.pathname.includes('ludo')) return;
-
   const add = (src) => {
     if (document.querySelector(`script[data-jl-src="${src}"]`)) return;
     const s = document.createElement('script');
@@ -15,6 +13,9 @@ window.JL_CONFIG = Object.freeze({
     document.head.appendChild(s);
   };
 
+  add('./bet-insights.js?v=1');
+
+  if (!document.querySelector('a[href*="ludo"]') && !location.pathname.includes('ludo')) return;
   add('./ludo-experience.js?v=4');
   add('./ludo-challenge-badge.js?v=3');
   if (location.pathname.includes('ludo')) add('./ludo-public-challenges-v3.js?v=1');
