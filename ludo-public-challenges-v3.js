@@ -38,7 +38,7 @@
     let p=$('#globalChallengePanel'); if(p) return p;
     const main=$('main.shell'); if(!main) return null;
     p=document.createElement('section'); p.id='globalChallengePanel'; p.className='panel hidden';
-    p.innerHTML='<div class="gc-head"><div><p class="eyebrow">CHAMADAS DE LUDO</p><h2>Alguém quer jogar agora</h2><p>Convites públicos atualizados automaticamente.</p></div><span class="gc-live">AO VIVO</span></div><div id="globalChallengeList"><div class="gc-empty">Procurando desafios…</div></div><div class="gc-note">Quem clica “Quero jogar” entra na própria sala e anuncia para todos por 60 segundos.</div>';
+    p.innerHTML='<div class="gc-head"><div><p class="eyebrow">CHAMADAS DE LUDO</p><h2>Alguém quer jogar agora</h2><p>Convites públicos atualizados automaticamente.</p></div><span class="gc-live">AO VIVO</span></div><div id="globalChallengeList"><div class="gc-empty">Procurando desafios…</div></div><div class="gc-note">Quem clica “Quero jogar” entra na própria sala e fica visível para todos enquanto houver vaga.</div>';
     const hero=$('.hero',main); if(hero)hero.after(p); else main.prepend(p); return p;
   }
 
@@ -72,7 +72,7 @@
       if((st.players||[]).filter(p=>p.status!=='left').length>=Number(r.player_count||0))return;
       const host=$('#ludoQuickBar .ludo-quick-actions')||$('.room-actions'); if(!host||$('#broadcastEveryone',host))return;
       const b=document.createElement('button');b.id='broadcastEveryone';b.type='button';b.className='room-broadcast';b.textContent='📣 Convidar todos';
-      b.onclick=async()=>{if(busy)return;busy=true;b.disabled=true;try{await rpc('jl_ludo_rebroadcast_challenge',{p_token:token,p_room:r.id});toast('Convite enviado para todos por 60 segundos.','success');await refresh()}catch(e){toast(e.message,'error')}finally{busy=false;b.disabled=false}};
+      b.onclick=async()=>{if(busy)return;busy=true;b.disabled=true;try{await rpc('jl_ludo_rebroadcast_challenge',{p_token:token,p_room:r.id});toast('Convite para todos ativo enquanto a sala tiver vaga.','success');await refresh()}catch(e){toast(e.message,'error')}finally{busy=false;b.disabled=false}};
       host.prepend(b);
     }catch(_){}
   }
@@ -80,7 +80,7 @@
   function bindQueroJogar(){
     const form=$('#queueForm'),btn=$('#queueButton'); if(!form||!btn||form.dataset.jlV3Bound)return;
     form.dataset.jlV3Bound='1';btn.textContent='📣 Quero jogar · convidar todos';
-    const info=$('#queueStatus');if(info){info.classList.remove('hidden');info.innerHTML='Valor inicial <strong>10 MZN</strong>. Pode aumentar antes de lançar. O convite fica visível para todos por 60 segundos.'}
+    const info=$('#queueStatus');if(info){info.classList.remove('hidden');info.innerHTML='Valor inicial <strong>10 MZN</strong>. Pode aumentar antes de lançar. O convite fica visível para todos enquanto a sala tiver vaga.'}
     form.addEventListener('submit',async e=>{e.preventDefault();e.stopImmediatePropagation();if(busy)return;const token=localStorage.getItem(TOKEN_KEY);if(!token)return;busy=true;btn.disabled=true;const old=btn.textContent;btn.textContent='Abrindo sala…';try{try{await rpc('jl_ludo_leave_queue',{p_token:token})}catch(_){}const st=await rpc('jl_ludo_create_room',{p_token:token,p_player_count:Number($('#queuePlayers')?.value||4),p_bet_amount:Number($('#queueBet')?.value||10),p_mode:$('#queueMode')?.value||'solo',p_is_public:true,p_rules:{}});const roomId=st?.room?.id;if(!roomId)throw new Error('Sala criada sem identificação.');await rpc('jl_ludo_rebroadcast_challenge',{p_token:token,p_room:roomId});sessionStorage.setItem('jl_public_v3_created','1');location.reload()}catch(err){toast(err.message,'error');btn.textContent=old;btn.disabled=false;busy=false}},true);
   }
 
@@ -88,7 +88,7 @@
     document.addEventListener('click',async e=>{const b=e.target.closest('[data-accept-public-challenge]');if(!b||b.disabled||busy)return;const token=localStorage.getItem(TOKEN_KEY);if(!token)return;busy=true;b.disabled=true;const old=b.textContent;b.textContent='Entrando…';try{await rpc('jl_ludo_join_public_room',{p_token:token,p_code:b.dataset.acceptPublicChallenge});sessionStorage.setItem('jl_public_v3_joined','1');location.reload()}catch(err){toast(err.message,'error');b.disabled=false;b.textContent=old;busy=false}});
   }
 
-  function messages(){if(sessionStorage.getItem('jl_public_v3_created')){sessionStorage.removeItem('jl_public_v3_created');setTimeout(()=>toast('Sala aberta. O convite está visível para todos por 60 segundos.','success'),400)}if(sessionStorage.getItem('jl_public_v3_joined')){sessionStorage.removeItem('jl_public_v3_joined');setTimeout(()=>toast('Entrou na sala. O tabuleiro está pronto.','success'),400)}}
+  function messages(){if(sessionStorage.getItem('jl_public_v3_created')){sessionStorage.removeItem('jl_public_v3_created');setTimeout(()=>toast('Sala aberta. O convite está visível para todos enquanto houver vaga.','success'),400)}if(sessionStorage.getItem('jl_public_v3_joined')){sessionStorage.removeItem('jl_public_v3_joined');setTimeout(()=>toast('Entrou na sala. O tabuleiro está pronto.','success'),400)}}
 
   function init(){ensureStyles();setInitialValues();ensurePanel();bindQueroJogar();bindAccept();messages();refresh();clearInterval(timer);timer=setInterval(refresh,2000)}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
