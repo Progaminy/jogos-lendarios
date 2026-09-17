@@ -18,15 +18,13 @@ window.JL_CONFIG = Object.freeze({
   add('./bet-success-ui.js?v=1');
 
   if (!document.querySelector('a[href*="ludo"]') && !location.pathname.includes('ludo')) return;
-  add('./ludo-experience.js?v=5');
   add('./ludo-challenge-badge.js?v=3');
+
   if (location.pathname.includes('ludo')) {
-    add('./ludo-public-challenges-v3.js?v=3');
-    add('./ludo-room-flow-v2.js?v=2');
-    add('./ludo-authoritative-sync.js?v=1');
-    add('./ludo-rules-options-v2.js?v=2');
-    add('./ludo-invites-dice-fix.js?v=1');
-    add('./ludo-pro.js?v=1');
-    add('./ludo-board-first.js?v=1');
+    // A sala e o tabuleiro têm uma única fonte de estado: ludo.js.
+    // O módulo público cuida apenas da descoberta/entrada em desafios.
+    // ludo-stable-ui é somente apresentação e não consulta o servidor.
+    add('./ludo-public-challenges-v3.js?v=4');
+    add('./ludo-stable-ui.js?v=1');
   }
 })();
