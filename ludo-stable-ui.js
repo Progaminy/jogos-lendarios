@@ -73,9 +73,10 @@
     if (!roomActive() || !panel || !board || !panel.classList.contains('hidden')) return;
 
     const colors = $$('#playersPanel .player-card').map(card => ['red','green','yellow','blue'].find(c => card.classList.contains(c))).filter(Boolean);
-    const signature = colors.join('|') + '|' + pregameMessage();
+    const message = pregameMessage();
+    const signature = colors.join('|') + '|' + message;
     if (board.dataset.jlStablePregame === signature && board.querySelectorAll(':scope > .cell').length === 225) {
-      const label = $('.jl-pregame-label', board); if(label) label.textContent = pregameMessage();
+      const label = $('.jl-pregame-label', board); if(label && label.textContent !== message) label.textContent = message;
       return;
     }
     board.dataset.jlStablePregame = signature;
@@ -93,7 +94,11 @@
 
     colors.forEach(color=>BASE[color].forEach(([r,c])=>{const p=document.createElement('span');p.className=`jl-pregame-piece ${color}`;at(r,c).appendChild(p);}));
     board.replaceChildren(...cells);
-    const label=document.createElement('div');label.className='jl-pregame-label';label.textContent=pregameMessage();board.appendChild(label);
+    const label=document.createElement('div');label.className='jl-pregame-label';label.textContent=message;board.appendChild(label);
+  }
+
+  function setText(el, value){
+    if (el && el.textContent !== value) el.textContent = value;
   }
 
   function sync(){
@@ -102,22 +107,42 @@
     if (!active) return;
     const panel = $('#gamePanel');
     if (panel?.classList.contains('hidden')) {
-      const title = $('#turnTitle');
-      if (title) title.textContent = pregameMessage();
-      const hint = $('#moveHint');
-      if (hint) hint.textContent = 'Complete a preparação acima do tabuleiro. O jogo começa automaticamente quando todos estiverem prontos.';
+      const message = pregameMessage();
+      setText($('#turnTitle'), message);
+      setText($('#moveHint'), 'Complete a preparação da sala. O jogo começa automaticamente quando todos estiverem prontos.');
       buildPregameBoard();
     } else {
       $('#ludoBoard')?.removeAttribute('data-jl-stable-pregame');
     }
   }
 
+  function normalizeLegacyInviteToast(){
+    const toast = $('#toast');
+    if (!toast) return;
+    if (/Convite enviado por 60 segundos/i.test(toast.textContent || '')) {
+      toast.textContent = 'Convite enviado. Ele continua válido enquanto a sala puder receber o jogador.';
+    }
+  }
+
   function start(){
     injectStyles();
     sync();
-    const targets = ['#room','#gamePanel','#playersPanel','#deadlineLabel','#fundingPanel'].map($).filter(Boolean);
+
     const observer = new MutationObserver(sync);
-    targets.forEach(el=>observer.observe(el,{attributes:true,childList:true,characterData:true,subtree:true}));
+    const room = $('#room');
+    const panel = $('#gamePanel');
+    const players = $('#playersPanel');
+    const deadline = $('#deadlineLabel');
+    const funding = $('#fundingPanel');
+    if (room) observer.observe(room,{attributes:true,attributeFilter:['class']});
+    if (panel) observer.observe(panel,{attributes:true,attributeFilter:['class']});
+    if (players) observer.observe(players,{childList:true,subtree:true});
+    if (deadline) observer.observe(deadline,{childList:true,characterData:true,subtree:true});
+    if (funding) observer.observe(funding,{attributes:true,attributeFilter:['class']});
+
+    const toast = $('#toast');
+    if (toast) new MutationObserver(normalizeLegacyInviteToast).observe(toast,{childList:true,characterData:true,subtree:true});
+
     window.addEventListener('focus',sync);
   }
 
