@@ -417,3 +417,38 @@ h2 { margin: 0; font-size: clamp(1.25rem, 2.5vw, 1.75rem); letter-spacing: -.025
   .request-row, .player-row { grid-template-columns: 1fr; }
   .row-actions { justify-content: flex-start; }
 }
+
+
+/* Admin recolhível */
+.admin-collapsible { position: relative; }
+.admin-collapse-toggle {
+  width: 100%;
+  min-height: 42px;
+  margin: -4px 0 14px;
+  padding: 8px 10px;
+  display: grid;
+  grid-template-columns: 22px minmax(0,1fr) auto;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(244,181,31,.16);
+  border-radius: 12px;
+  background: rgba(244,181,31,.045);
+  color: var(--text);
+  text-align: left;
+  font-weight: 900;
+}
+.admin-collapse-toggle:hover { border-color: rgba(244,181,31,.36); background: rgba(244,181,31,.075); }
+.admin-collapse-icon { color: var(--accent-2); font-size: 1rem; text-align: center; }
+.admin-collapse-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .8rem; letter-spacing: .03em; }
+.admin-collapse-hint { color: var(--muted); font-size: .7rem; font-weight: 800; text-transform: uppercase; }
+.admin-collapsible.admin-collapsed { padding-top: 14px; padding-bottom: 14px; }
+.admin-collapsible.admin-collapsed > :not(.admin-collapse-toggle) { display: none !important; }
+.admin-collapsible.admin-collapsed > .admin-collapse-toggle { margin: 0; }
+.admin-collapsible:not(.admin-collapsed) > .admin-collapse-toggle + .eyebrow,
+.admin-collapsible:not(.admin-collapsed) > .admin-collapse-toggle + .section-head { margin-top: 2px; }
+
+@media (max-width: 640px) {
+  .admin-collapse-toggle { grid-template-columns: 20px minmax(0,1fr); }
+  .admin-collapse-hint { display: none; }
+  .admin-collapse-label { font-size: .76rem; }
+}
