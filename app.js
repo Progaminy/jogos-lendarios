@@ -111,6 +111,14 @@
     delete els.winModal.dataset.winKey;
   }
 
+  function winRoundTime(bet) {
+    const candidates = [bet.published_at, bet.drawn_at, bet.draw_at, bet.round_draw_at, bet.resolved_at, bet.updated_at, bet.created_at];
+    const raw = candidates.find(Boolean);
+    if (!raw) return 'hora não disponível';
+    const d = new Date(raw);
+    return Number.isNaN(d.getTime()) ? 'hora não disponível' : d.toLocaleTimeString('pt-MZ',{hour:'2-digit',minute:'2-digit'});
+  }
+
   function checkWinNotifications() {
     if (!state.token || !state.data?.player || !els.winModal?.classList.contains('hidden')) return;
     const seen = winSeen();
@@ -123,7 +131,7 @@
     if (!winner) return;
     const pair = winner.game_type === 'pair';
     const gameName = pair ? 'Dupla Lendária' : 'Número Lendário';
-    showWinModal('Parabéns!', `Você ganhou ${formatMoney(winner.payout)} MZN no ${gameName}! O valor foi creditado no seu saldo.`, winKey(winner, winner.game_type));
+    showWinModal('Parabéns!', `Você ganhou ${formatMoney(winner.payout)} MZN no ${gameName}! Rodada ${winner.round_no ?? '—'} · hora ${winRoundTime(winner)}. O valor foi creditado no seu saldo.`, winKey(winner, winner.game_type));
   }
 
   async function rpc(name, args = {}) {
