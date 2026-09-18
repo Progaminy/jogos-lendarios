@@ -50,10 +50,7 @@
 
     const key = keyFor(card, index);
     const title = labelFor(card, index);
-    const topLevel = isMainGameCard(card) ||
-      card.querySelector('#depositRequests') ||
-      card.querySelector('#withdrawRequests') ||
-      card.querySelector('#playersList');
+    const mainGame = isMainGameCard(card);
 
     const toggle = document.createElement('button');
     toggle.type = 'button';
@@ -62,7 +59,7 @@
     toggle.innerHTML = `<span class="admin-collapse-icon">▾</span><span class="admin-collapse-label">${title}</span><span class="admin-collapse-hint">recolher</span>`;
     card.prepend(toggle);
 
-    const defaultCollapsed = topLevel ? false : true;
+    const defaultCollapsed = !mainGame;
     const collapsed = Object.prototype.hasOwnProperty.call(saved, key) ? Boolean(saved[key]) : defaultCollapsed;
 
     function apply(value, persist = true) {
