@@ -34,7 +34,8 @@
     authModal: $('authModal'), closeAuth: $('closeAuth'), registerTab: $('registerTab'), loginTab: $('loginTab'),
     registerForm: $('registerForm'), loginForm: $('loginForm'), authMessage: $('authMessage'),
     registerName: $('registerName'), registerPhone: $('registerPhone'), registerPin: $('registerPin'), registerPinConfirm: $('registerPinConfirm'),
-    loginPhone: $('loginPhone'), loginPin: $('loginPin')
+    loginPhone: $('loginPhone'), loginPin: $('loginPin'),
+    winModal: $('winModal'), winModalTitle: $('winModalTitle'), winModalMessage: $('winModalMessage'), winModalOk: $('winModalOk')
   };
 
   function formatMoney(value) {
@@ -71,6 +72,58 @@
     if (!el) return;
     el.textContent = message;
     el.className = `form-message ${type}`.trim();
+  }
+
+  const WIN_SEEN_KEY = 'jl_seen_wins_v1';
+
+  function winSeen() {
+    try { return new Set(JSON.parse(localStorage.getItem(WIN_SEEN_KEY) || '[]')); }
+    catch { return new Set(); }
+  }
+
+  function saveWinSeen(seen) {
+    try { localStorage.setItem(WIN_SEEN_KEY, JSON.stringify([...seen].slice(-300))); } catch {}
+  }
+
+  function winKey(bet, type) {
+    return [type, bet.id ?? '', bet.round_id ?? '', bet.round_no ?? '', bet.created_at ?? '', bet.amount ?? '', type === 'pair' ? `${bet.number_a}+${bet.number_b}` : bet.selected_number].join(':');
+  }
+
+  function showWinModal(title, message, key) {
+    if (!els.winModal) return;
+    els.winModalTitle.textContent = title;
+    els.winModalMessage.textContent = message;
+    els.winModal.dataset.winKey = key || '';
+    els.winModal.classList.remove('hidden');
+    document.body.classList.add('modal-open');
+  }
+
+  function closeWinModal() {
+    if (!els.winModal) return;
+    const key = els.winModal.dataset.winKey;
+    if (key) {
+      const seen = winSeen();
+      seen.add(key);
+      saveWinSeen(seen);
+    }
+    els.winModal.classList.add('hidden');
+    document.body.classList.remove('modal-open');
+    delete els.winModal.dataset.winKey;
+  }
+
+  function checkWinNotifications() {
+    if (!state.token || !state.data?.player || !els.winModal?.classList.contains('hidden')) return;
+    const seen = winSeen();
+    const wins = [
+      ...(state.data?.bets || []).filter(b => b.won === true).map(b => ({...b, game_type:'number'})),
+      ...(state.data?.pair_bets || []).filter(b => b.won === true).map(b => ({...b, game_type:'pair'}))
+    ].sort((a,b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+
+    const winner = wins.find(b => !seen.has(winKey(b, b.game_type)));
+    if (!winner) return;
+    const pair = winner.game_type === 'pair';
+    const gameName = pair ? 'Dupla Lendária' : 'Número Lendário';
+    showWinModal('Parabéns!', `Você ganhou ${formatMoney(winner.payout)} MZN no ${gameName}! O valor foi creditado no seu saldo.`, winKey(winner, winner.game_type));
   }
 
   async function rpc(name, args = {}) {
@@ -318,6 +371,7 @@
     els.balance.textContent = formatMoney(player.balance);
     els.accountButton.textContent = player.name.split(/\s+/)[0] || 'Minha conta';
     renderHistory();
+    checkWinNotifications();
   }
 
   function render() {
@@ -396,6 +450,8 @@
     if (pending.type === 'pair') await placePairBet(pending.numbers, pending.amount);
     else await placeNumberBet(pending.number, pending.amount);
   }
+
+  els.winModalOk?.addEventListener('click', closeWinModal);
 
   els.betForm.addEventListener('submit', async (event) => {
     event.preventDefault();
