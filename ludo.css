@@ -12,3 +12,80 @@
 .win-modal-card h2{font-size:clamp(2rem,8vw,3.2rem);margin:0;color:#fff}
 .win-modal-message{margin:12px auto 22px;max-width:340px;color:#dce4f1;font-size:1.05rem;line-height:1.55}
 .win-modal-card .button{min-width:150px}
+
+
+/* LUDO CLASSICO 2026-09-20 */
+.ludo-board{
+  position:relative;
+  width:min(100%,680px);
+  max-width:680px;
+  grid-template-columns:repeat(15,minmax(0,1fr));
+  grid-template-rows:repeat(15,minmax(0,1fr));
+  aspect-ratio:1/1;
+  border:3px solid #111a24;
+  border-radius:4px;
+  overflow:hidden;
+  background:#fff;
+  contain:layout paint;
+  isolation:isolate;
+  box-shadow:0 14px 34px rgba(0,0,0,.28);
+}
+.cell{min-width:0;min-height:0;aspect-ratio:1/1;border:1px solid rgba(20,31,43,.28);overflow:visible;background:#fff}
+.cell.base.red{background:#ef2737}.cell.base.green{background:#079a54}.cell.base.yellow{background:#ffd428}.cell.base.blue{background:#28a9e8}
+.cell.yard{background:#fff!important}
+.cell.yard-red{border-color:rgba(239,39,55,.24)}.cell.yard-green{border-color:rgba(7,154,84,.24)}.cell.yard-yellow{border-color:rgba(210,166,0,.24)}.cell.yard-blue{border-color:rgba(40,169,232,.24)}
+.cell.home-red{background:#ef2737}.cell.home-green{background:#079a54}.cell.home-yellow{background:#ffd428}.cell.home-blue{background:#28a9e8}
+.cell.center{background:#fff;border-color:transparent}
+.ludo-center{position:absolute;z-index:2;left:40%;top:40%;width:20%;height:20%;pointer-events:none;background:conic-gradient(from -45deg,#079a54 0 25%,#ffd428 0 50%,#28a9e8 0 75%,#ef2737 0);box-shadow:inset 0 0 0 1px rgba(20,31,43,.25)}
+.cell.safe:after{content:"☆";position:absolute;z-index:1;font-size:clamp(9px,1.6vw,18px);line-height:1;color:#718091;opacity:.78}
+.cell.entry-arrow:before{position:absolute;z-index:1;font-size:clamp(11px,1.7vw,20px);font-weight:900;line-height:1}
+.cell.entry-red:before{content:"→";color:#ef2737}.cell.entry-green:before{content:"↓";color:#079a54}.cell.entry-yellow:before{content:"←";color:#d4aa00}.cell.entry-blue:before{content:"↑";color:#158ccb}
+.piece{
+  position:absolute;
+  z-index:5;
+  left:50%;
+  top:50%;
+  width:68%;
+  height:68%;
+  aspect-ratio:auto;
+  margin:0;
+  padding:0;
+  transform:translate(calc(-50% + var(--dx,0%)),calc(-50% + var(--dy,0%)));
+  border:2px solid rgba(255,255,255,.96);
+  border-radius:50%;
+  box-shadow:0 0 0 1px rgba(9,17,28,.7),0 3px 6px rgba(0,0,0,.42),inset 0 0 0 3px rgba(255,255,255,.16);
+  font-size:clamp(7px,1vw,11px);
+  line-height:1;
+  font-weight:900;
+}
+.piece:after{content:"";position:absolute;left:26%;top:18%;width:22%;height:22%;border-radius:50%;background:rgba(255,255,255,.52);pointer-events:none}
+.cell.multi .piece{position:absolute;width:48%;height:48%;transform:translate(calc(-50% + var(--dx,0%)),calc(-50% + var(--dy,0%)))}
+.piece.legal{outline:3px solid #fff200;outline-offset:1px}
+.preview-piece{pointer-events:none}
+.dice{
+  position:relative;
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  grid-template-rows:repeat(3,1fr);
+  align-items:center;
+  justify-items:center;
+  width:62px;
+  height:62px;
+  padding:8px;
+  border-radius:13px;
+  background:#fff;
+  border:2px solid #d9dfe6;
+  box-shadow:0 6px 16px rgba(0,0,0,.3),inset 0 0 0 1px rgba(0,0,0,.05);
+  color:#172333;
+}
+.dice .pip{width:9px;height:9px;border-radius:50%;background:transparent}
+.dice .pip.on{background:#172333;box-shadow:inset 0 1px 1px rgba(255,255,255,.25)}
+.dice .dice-placeholder{position:absolute;inset:0;display:grid;place-items:center;font-size:2rem;font-weight:900;color:#6f7c8c}
+.dice.rolling{animation:diceRoll .42s ease-in-out}
+@keyframes diceRoll{0%{transform:rotate(0) scale(1)}35%{transform:rotate(10deg) scale(.9)}70%{transform:rotate(-8deg) scale(1.08)}100%{transform:rotate(0) scale(1)}}
+@media(max-width:600px){
+  .ludo-board{width:100%;max-width:none;margin:10px auto;border-width:2px}
+  .piece{border-width:1.5px;font-size:clamp(6px,2vw,9px)}
+  .dice{width:56px;height:56px;padding:7px}
+  .dice .pip{width:8px;height:8px}
+}
