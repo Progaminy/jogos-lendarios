@@ -89,3 +89,63 @@
   .dice{width:56px;height:56px;padding:7px}
   .dice .pip{width:8px;height:8px}
 }
+
+
+/* PEOES, MOVIMENTO E SOM 2026-09-20 */
+.dice-tools{display:flex;align-items:center;gap:10px}
+.sound-toggle{border:1px solid var(--line);border-radius:999px;padding:7px 10px;background:#0a1727;color:#e7eef8;font-size:.78rem;font-weight:800;cursor:pointer;white-space:nowrap}
+.sound-toggle:hover{border-color:#5c7ba1;background:#10243b}
+.ludo-board.piece-moving{cursor:wait}
+.ludo-board.piece-moving .piece{pointer-events:none}
+.piece{
+  --pawn-color:#66758b;
+  width:84%;
+  height:96%;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  overflow:visible;
+  isolation:isolate;
+  color:#fff;
+  text-shadow:0 1px 2px rgba(0,0,0,.8);
+  padding-top:34%;
+  font-size:clamp(6px,.95vw,10px);
+}
+.piece.red{--pawn-color:var(--red)}.piece.green{--pawn-color:var(--green)}.piece.yellow{--pawn-color:#d7aa00;color:#2a2200;text-shadow:0 1px 1px rgba(255,255,255,.35)}.piece.blue{--pawn-color:var(--blue)}
+.piece:before{
+  content:"";
+  position:absolute;
+  z-index:-1;
+  left:29%;
+  top:4%;
+  width:42%;
+  aspect-ratio:1;
+  border-radius:50%;
+  background:var(--pawn-color);
+  border:1.5px solid rgba(255,255,255,.92);
+  box-shadow:0 1px 2px rgba(0,0,0,.55),inset 0 0 0 2px rgba(255,255,255,.12);
+}
+.piece:after{
+  content:"";
+  position:absolute;
+  z-index:-2;
+  left:12%;
+  top:35%;
+  width:76%;
+  height:59%;
+  border-radius:42% 42% 18% 18%/28% 28% 16% 16%;
+  background:var(--pawn-color);
+  border:1.5px solid rgba(255,255,255,.92);
+  box-shadow:0 3px 5px rgba(0,0,0,.42),inset 0 0 0 2px rgba(255,255,255,.1);
+  clip-path:polygon(31% 0,69% 0,76% 23%,68% 43%,86% 69%,100% 78%,96% 100%,4% 100%,0 78%,14% 69%,32% 43%,24% 23%);
+}
+.cell.multi .piece{width:62%;height:72%}
+.piece.legal{filter:drop-shadow(0 0 4px #fff200);outline:none}
+.piece.step-hop{animation:pawnStep .2s ease-out}
+@keyframes pawnStep{0%{scale:1}45%{scale:1.18;translate:0 -5%}100%{scale:1;translate:0 0}}
+@media(max-width:600px){
+  .dice-tools{gap:6px}
+  .sound-toggle{padding:6px 8px;font-size:.7rem}
+  .piece{font-size:clamp(5px,1.7vw,8px)}
+}
