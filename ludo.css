@@ -170,3 +170,32 @@
 .challenge-expiry{color:#ffcf74}
 @media(max-width:800px){.notification-grid{grid-template-columns:1fr}}
 @media(max-width:600px){.notification-panel{padding:15px}.invite-card{align-items:flex-start;flex-direction:column}.notice-actions{width:100%;justify-content:stretch}.notice-actions .button{flex:1}}
+
+
+/* MENU DA CONTA E AVISO DE TRANSPARENCIA */
+.account-popover-wrap{position:relative}
+.account-menu{
+  position:absolute;
+  z-index:90;
+  right:0;
+  top:calc(100% + 9px);
+  width:min(310px,calc(100vw - 24px));
+  padding:14px;
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:#0d1b2c;
+  box-shadow:0 18px 45px rgba(0,0,0,.46);
+}
+.account-menu-head{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-bottom:11px;border-bottom:1px solid var(--line)}
+.account-menu-head small{display:block;color:var(--muted);font-size:.7rem;margin-bottom:2px}
+.account-menu-head strong{display:block;overflow-wrap:anywhere}
+.account-balance{text-align:right}
+.account-balance strong{color:#8df1bb}
+.account-menu-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:11px}
+.platform-warning{margin-top:12px;padding:12px 14px;border:1px solid rgba(255,196,77,.38);border-left:4px solid #f4bd42;border-radius:12px;background:rgba(244,189,66,.08);color:#e7edf6;font-size:.84rem;line-height:1.45}
+.platform-warning strong{color:#ffd36b}
+@media(max-width:600px){
+  .account-menu{right:-2px;width:min(292px,calc(100vw - 18px))}
+  .account-menu-head{grid-template-columns:1fr}
+  .account-balance{text-align:left}
+}
