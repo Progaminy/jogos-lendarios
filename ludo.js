@@ -11,7 +11,7 @@
     animating: false, soundEnabled: localStorage.getItem(SOUND_KEY) !== '0', audioCtx: null
   };
   const els = Object.fromEntries([
-    'toast','identityBadge','accountButton','loggedOut','lobby','boardLobby','ludoLobbyBoard','balanceBadge','createRoomForm','createPlayers','createMode','createBet','createPublic',
+    'toast','identityBadge','accountButton','accountMenu','accountMenuCode','accountMenuBalance','accountMenuDeposit','accountMenuWithdraw','loggedOut','lobby','boardLobby','ludoLobbyBoard','balanceBadge','createRoomForm','createPlayers','createMode','createBet','createPublic',
     'joinCodeForm','joinCode','queueForm','queuePlayers','queueMode','queueBet','queueButton','queueStatus','inviteList','directInviteCount','publicChallengeList','publicChallengeCount','refreshLobby',
     'room','roomCode','roomMeta','roomPot','roomPrize','copyRoomCode','leaveRoom','deadlineBar','deadlineLabel','deadlineClock','playersPanel',
     'rulesVersion','rulesSummary','rulesForm','rulesDecision','acceptRules','declineRules','searchPlayerForm','searchPlayer','playerSearchResults','refreshWaiting','waitingPlayers',
@@ -204,7 +204,7 @@
     }
   }
   async function processTimeouts(){if(!state.token||!state.room?.room?.id||state.busy||state.animating)return;try{state.room=await rpc('jl_ludo_process_timeouts',{p_token:state.token,p_room:state.room.room.id});renderRoom();}catch{}}
-  function renderAll(){const authed=Boolean(state.token&&state.status?.identity);els.loggedOut.classList.toggle('hidden',authed);els.lobby.classList.toggle('hidden',!authed||Boolean(state.room));els.room.classList.toggle('hidden',!state.room);els.boardLobby.classList.toggle('hidden',Boolean(state.room));if(!state.room)renderLobbyBoard();if(authed){const i=state.status.identity;els.identityBadge.textContent=`${i.code} · ${money(i.balance)} MZN`;els.accountButton.textContent=i.code;els.balanceBadge.textContent=`${money(i.balance)} MZN`;renderLobby();}else{els.identityBadge.textContent='Não autenticado';els.accountButton.textContent='Entrar';}if(state.room)renderRoom();}
+  function renderAll(){const authed=Boolean(state.token&&state.status?.identity);els.loggedOut.classList.toggle('hidden',authed);els.lobby.classList.toggle('hidden',!authed||Boolean(state.room));els.room.classList.toggle('hidden',!state.room);els.boardLobby.classList.toggle('hidden',Boolean(state.room));if(!state.room)renderLobbyBoard();if(authed){const i=state.status.identity;els.identityBadge.textContent=`${i.code} · ${money(i.balance)} MZN`;els.accountButton.textContent=i.code;els.accountMenuCode.textContent=i.code;els.accountMenuBalance.textContent=`${money(i.balance)} MZN`;els.balanceBadge.textContent=`${money(i.balance)} MZN`;renderLobby();}else{els.identityBadge.textContent='Não autenticado';els.accountButton.textContent='Entrar';els.accountMenu?.classList.add('hidden');}if(state.room)renderRoom();}
   function renderLobby(){
     const s=state.status;if(!s)return;
     if(s.queue){
@@ -273,7 +273,19 @@
   els.winModalOk?.addEventListener('click',closeLudoWinNotice);
   els.soundToggle?.addEventListener('click',toggleSound);
   updateSoundButton();
-    els.accountButton.addEventListener('click',()=>state.token?showToast('A mesma conta é usada em todos os Jogos Lendários.'):openAuth('login'));document.querySelectorAll('[data-open-auth]').forEach(b=>b.addEventListener('click',()=>openAuth(b.dataset.openAuth)));els.closeAuth.addEventListener('click',closeAuth);els.loginTab.addEventListener('click',()=>switchAuth('login'));els.registerTab.addEventListener('click',()=>switchAuth('register'));els.authModal.addEventListener('click',e=>{if(e.target===els.authModal)closeAuth();});
+    els.accountButton.addEventListener('click',()=>{
+    if(!state.token)return openAuth('login');
+    els.accountMenu.classList.toggle('hidden');
+    els.accountButton.setAttribute('aria-expanded',els.accountMenu.classList.contains('hidden')?'false':'true');
+  });
+  els.accountMenuDeposit?.addEventListener('click',()=>{window.location.href='./index.html#depositPanel';});
+  els.accountMenuWithdraw?.addEventListener('click',()=>{window.location.href='./index.html#withdrawPanel';});
+  document.addEventListener('click',e=>{
+    if(!els.accountMenu||els.accountMenu.classList.contains('hidden'))return;
+    if(e.target.closest('#accountButton')||e.target.closest('#accountMenu'))return;
+    els.accountMenu.classList.add('hidden');
+    els.accountButton.setAttribute('aria-expanded','false');
+  });document.querySelectorAll('[data-open-auth]').forEach(b=>b.addEventListener('click',()=>openAuth(b.dataset.openAuth)));els.closeAuth.addEventListener('click',closeAuth);els.loginTab.addEventListener('click',()=>switchAuth('login'));els.registerTab.addEventListener('click',()=>switchAuth('register'));els.authModal.addEventListener('click',e=>{if(e.target===els.authModal)closeAuth();});
   els.loginForm.addEventListener('submit',async e=>{e.preventDefault();try{setAuthMessage('Entrando…');const res=await rpc('jl_login_player',{p_phone:els.loginPhone.value.trim(),p_pin:els.loginPin.value.trim()});saveToken(res.token);closeAuth();await loadStatus();showToast('Sessão iniciada.','success');}catch(err){setAuthMessage(err.message,'error');}});
   els.registerForm.addEventListener('submit',async e=>{e.preventDefault();if(els.registerPin.value!==els.registerPinConfirm.value)return setAuthMessage('Os PINs não coincidem.','error');try{setAuthMessage('Criando conta…');const res=await rpc('jl_register_player',{p_name:els.registerName.value.trim(),p_phone:els.registerPhone.value.trim(),p_pin:els.registerPin.value.trim()});saveToken(res.token);closeAuth();await loadStatus();showToast('Conta criada. O seu código Ludo foi atribuído pela casa.','success');}catch(err){setAuthMessage(err.message,'error');}});
   els.createPlayers.addEventListener('change',()=>{if(els.createMode.value==='partners'&&els.createPlayers.value!=='4')els.createMode.value='solo';});els.createMode.addEventListener('change',()=>{if(els.createMode.value==='partners')els.createPlayers.value='4';});els.queuePlayers.addEventListener('change',()=>{if(els.queueMode.value==='partners'&&els.queuePlayers.value!=='4')els.queueMode.value='solo';});els.queueMode.addEventListener('change',()=>{if(els.queueMode.value==='partners')els.queuePlayers.value='4';});
