@@ -116,7 +116,7 @@
       void piece.offsetWidth;
       piece.classList.add('step-hop');
       playStepSound(++visualIndex);
-      await wait(210);
+      await wait(155);
     }
     piece.classList.remove('step-hop');
     els.ludoBoard.classList.remove('piece-moving');
@@ -293,7 +293,7 @@
     playRollSound();
     try{
       const nextRoom=await rpc('jl_ludo_roll',{p_token:state.token,p_room:roomData().id});
-      await wait(420);
+      await wait(320);
       state.room=nextRoom;
       renderRoom();
     }catch(err){renderDiceFace(null);showToast(err.message,'error');}
