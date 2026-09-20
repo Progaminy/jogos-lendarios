@@ -86,9 +86,23 @@
         <div id="queueStatus" class="status-box hidden"></div>
       </div>
 
-      <div class="panel full-span">
-        <div class="section-head"><div><p class="eyebrow">CONVITES</p><h2>Convites recebidos</h2></div><button id="refreshLobby" class="button ghost small" type="button">Atualizar</button></div>
-        <div id="inviteList" class="invite-list"><div class="empty">Sem convites.</div></div>
+      <div class="full-span notification-zone">
+        <div class="section-head notification-head">
+          <div><p class="eyebrow">NOTIFICAÇÕES DE LUDO</p><h2>Convites separados por origem</h2></div>
+          <button id="refreshLobby" class="button ghost small" type="button">Atualizar</button>
+        </div>
+        <div class="notification-grid">
+          <section class="panel notification-panel direct-panel">
+            <div class="section-head"><div><p class="eyebrow">CONVITE DIRETO</p><h3>Enviado para você</h3></div><span id="directInviteCount" class="notification-count direct-count">0</span></div>
+            <p class="muted notification-help">Somente convites que outro jogador enviou diretamente ao seu nome ou código.</p>
+            <div id="inviteList" class="invite-list"><div class="empty">Nenhum convite direto.</div></div>
+          </section>
+          <section class="panel notification-panel public-panel">
+            <div class="section-head"><div><p class="eyebrow">DESAFIOS PÚBLICOS</p><h3>Salas abertas a todos</h3></div><span id="publicChallengeCount" class="notification-count public-count">0</span></div>
+            <p class="muted notification-help">Anúncios públicos não são convites pessoais. Você entra apenas se escolher participar.</p>
+            <div id="publicChallengeList" class="invite-list"><div class="empty">Nenhum desafio público.</div></div>
+          </section>
+        </div>
       </div>
     </section>
 
