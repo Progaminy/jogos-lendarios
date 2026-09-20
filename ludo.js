@@ -12,7 +12,7 @@
   };
   const els = Object.fromEntries([
     'toast','identityBadge','accountButton','loggedOut','lobby','boardLobby','ludoLobbyBoard','balanceBadge','createRoomForm','createPlayers','createMode','createBet','createPublic',
-    'joinCodeForm','joinCode','queueForm','queuePlayers','queueMode','queueBet','queueButton','queueStatus','inviteList','refreshLobby',
+    'joinCodeForm','joinCode','queueForm','queuePlayers','queueMode','queueBet','queueButton','queueStatus','inviteList','directInviteCount','publicChallengeList','publicChallengeCount','refreshLobby',
     'room','roomCode','roomMeta','roomPot','roomPrize','copyRoomCode','leaveRoom','deadlineBar','deadlineLabel','deadlineClock','playersPanel',
     'rulesVersion','rulesSummary','rulesForm','rulesDecision','acceptRules','declineRules','searchPlayerForm','searchPlayer','playerSearchResults','refreshWaiting','waitingPlayers',
     'fundingPanel','fundingText','fundButton','gamePanel','turnTitle','dice','ludoBoard','rollDice','soundToggle','moveHint','reenterButton','voiceState','micButton','remoteAudio',
@@ -182,7 +182,13 @@
     try{
       const nextStatus=await rpc('jl_ludo_my_status',{p_token:state.token});
       let nextRoom=null;
-      if(nextStatus?.active_room_id)nextRoom=await rpc('jl_ludo_room_state',{p_token:state.token,p_room:nextStatus.active_room_id});
+      if(nextStatus?.active_room_id){
+        nextRoom=await rpc('jl_ludo_room_state',{p_token:state.token,p_room:nextStatus.active_room_id});
+        nextStatus.public_challenges=[];
+      }else{
+        try{nextStatus.public_challenges=await rpc('jl_ludo_public_challenges',{p_token:state.token});}
+        catch{nextStatus.public_challenges=[];}
+      }
       if(state.animating)return;
       const movement=state.room&&nextRoom&&state.room.room?.id===nextRoom.room?.id?detectForwardMove(state.room,nextRoom):null;
       state.status=nextStatus;
@@ -199,7 +205,27 @@
   }
   async function processTimeouts(){if(!state.token||!state.room?.room?.id||state.busy||state.animating)return;try{state.room=await rpc('jl_ludo_process_timeouts',{p_token:state.token,p_room:state.room.room.id});renderRoom();}catch{}}
   function renderAll(){const authed=Boolean(state.token&&state.status?.identity);els.loggedOut.classList.toggle('hidden',authed);els.lobby.classList.toggle('hidden',!authed||Boolean(state.room));els.room.classList.toggle('hidden',!state.room);els.boardLobby.classList.toggle('hidden',Boolean(state.room));if(!state.room)renderLobbyBoard();if(authed){const i=state.status.identity;els.identityBadge.textContent=`${i.code} · ${money(i.balance)} MZN`;els.accountButton.textContent=i.code;els.balanceBadge.textContent=`${money(i.balance)} MZN`;renderLobby();}else{els.identityBadge.textContent='Não autenticado';els.accountButton.textContent='Entrar';}if(state.room)renderRoom();}
-  function renderLobby(){const s=state.status;if(!s)return;if(s.queue){els.queueStatus.classList.remove('hidden');els.queueStatus.innerHTML=`Em espera: <strong>${s.queue.player_count} jogadores</strong> · ${escapeHtml(s.queue.mode)} · <strong>${money(s.queue.bet_amount)} MZN</strong><br><small>Expira ${new Date(s.queue.expires_at).toLocaleTimeString('pt-MZ')}</small>`;els.queueButton.textContent='Sair da espera';els.queueButton.dataset.queued='1';}else{els.queueStatus.classList.add('hidden');els.queueButton.textContent='Quero jogar';delete els.queueButton.dataset.queued;}const invites=s.invites||[];els.inviteList.innerHTML=invites.length?invites.map(i=>`<div class="invite-card"><div><strong>${escapeHtml(i.host)} · ${escapeHtml(i.host_code)}</strong><br><small>${escapeHtml(i.room_code)} · ${i.player_count} jogadores · ${escapeHtml(i.mode)} · ${money(i.bet_amount)} MZN</small></div><div><button class="button success small" data-invite-accept="${i.id}">Aceitar</button> <button class="button danger small" data-invite-decline="${i.id}">Recusar</button></div></div>`).join(''):'<div class="empty">Sem convites.</div>';}
+  function renderLobby(){
+    const s=state.status;if(!s)return;
+    if(s.queue){
+      els.queueStatus.classList.remove('hidden');
+      els.queueStatus.innerHTML=`Em espera: <strong>${s.queue.player_count} jogadores</strong> · ${escapeHtml(s.queue.mode)} · <strong>${money(s.queue.bet_amount)} MZN</strong><br><small>Expira ${new Date(s.queue.expires_at).toLocaleTimeString('pt-MZ')}</small>`;
+      els.queueButton.textContent='Sair da espera';els.queueButton.dataset.queued='1';
+    }else{
+      els.queueStatus.classList.add('hidden');els.queueButton.textContent='Quero jogar';delete els.queueButton.dataset.queued;
+    }
+
+    const invites=s.invites||[];
+    if(els.directInviteCount)els.directInviteCount.textContent=String(invites.length);
+    els.inviteList.innerHTML=invites.length?invites.map(i=>`<div class="invite-card direct-invite"><div><span class="notice-kind direct">DIRETO</span><strong>${escapeHtml(i.host)} · ${escapeHtml(i.host_code)}</strong><br><small>${escapeHtml(i.room_code)} · ${i.player_count} jogadores · ${escapeHtml(i.mode)} · ${money(i.bet_amount)} MZN</small></div><div class="notice-actions"><button class="button success small" data-invite-accept="${i.id}">Aceitar</button><button class="button danger small" data-invite-decline="${i.id}">Recusar</button></div></div>`).join(''):'<div class="empty">Nenhum convite enviado diretamente para você.</div>';
+
+    const challenges=s.public_challenges||[];
+    if(els.publicChallengeCount)els.publicChallengeCount.textContent=String(challenges.length);
+    els.publicChallengeList.innerHTML=challenges.length?challenges.map(c=>{
+      const left=Math.max(0,Math.ceil((new Date(c.expires_at)-Date.now())/1000));
+      return `<div class="invite-card public-challenge"><div><span class="notice-kind public">PÚBLICO</span><strong>${escapeHtml(c.host_name)} · ${escapeHtml(c.host_code)}</strong><br><small>${escapeHtml(c.code)} · ${c.joined_count}/${c.player_count} jogadores · ${escapeHtml(c.mode)} · ${money(c.bet_amount)} MZN${c.play_location?` · ${escapeHtml(c.play_location)}`:''}</small><br><small class="challenge-expiry">Disponível por ${left}s</small></div><div class="notice-actions"><button class="button secondary small" data-public-accept="${escapeHtml(c.code)}">Entrar</button></div></div>`;
+    }).join(''):'<div class="empty">Nenhum desafio público disponível agora.</div>';
+  }
   function commissionText(){const r=roomData();if(!r)return '—';const pot=Number(r.pot||0)||Number(r.bet_amount||0)*Number(r.player_count||0);if(r.mode==='partners'){const gross=pot/2,comm=Math.min(gross,Math.max(1,gross*.01));return `Dupla vencedora: ${money(gross)} MZN brutos por parceiro · comissão ${money(comm)} MZN por parceiro · ${money(gross-comm)} MZN líquidos cada.`;}const comm=Math.min(pot,Math.max(1,pot*.01));return `Vencedor: ${money(pot)} MZN brutos · comissão ${money(comm)} MZN · ${money(pot-comm)} MZN líquidos.`;}
   function renderRoom(){const r=roomData();if(!r)return;els.roomCode.textContent=r.code;els.roomMeta.textContent=`${r.player_count} jogadores · ${r.mode==='partners'?'Parceiros 2 × 2':'Cada um por si'} · ${money(r.bet_amount)} MZN por jogador · ${r.is_public?'Pública':'Privada'}`;els.roomPot.textContent=`${money(r.pot)} MZN`;els.roomPrize.textContent=commissionText();els.rulesVersion.textContent=`v${r.rules_version}`;renderPlayers();renderRules();renderDeadline();renderFunding();renderGame();renderResult();renderInviter();}
   function renderPlayers(){const r=roomData(),list=roomPlayers();els.playersPanel.innerHTML=Array.from({length:r.player_count},(_,idx)=>{const seat=idx+1,p=list.find(x=>x.seat===seat);if(!p)return `<div class="player-card"><small>Vaga ${seat}</small><h3>Aguardando jogador…</h3></div>`;const accepted=p.accepted_rules_version===r.rules_version,current=r.current_player_id===p.player_id;return `<div class="player-card ${p.color} ${current?'current':''}"><span class="color-dot"></span><small> ${p.team?`Equipa ${p.team} · `:''}posição ${p.seat}</small><h3>${escapeHtml(p.name)}</h3><small>${escapeHtml(p.code)}</small><div class="player-flags"><span class="flag ${accepted?'ok':'wait'}">${accepted?'✓ regras':'regras…'}</span><span class="flag ${p.stake_paid?'ok':'wait'}">${p.stake_paid?'✓ aposta':'aposta…'}</span><span class="flag">${escapeHtml(p.status)}</span>${p.timeout_strikes?`<span class="flag wait">${p.timeout_strikes} atraso(s)</span>`:''}</div></div>`;}).join('');}
@@ -255,6 +281,8 @@
   els.joinCodeForm.addEventListener('submit',e=>{e.preventDefault();withBusy(async()=>{try{state.room=await rpc('jl_ludo_join_public_room',{p_token:state.token,p_code:els.joinCode.value.trim()});await loadStatus(true);showToast('Entrou na sala.','success');}catch(err){showToast(err.message,'error');}});});
   els.queueForm.addEventListener('submit',e=>{e.preventDefault();withBusy(async()=>{try{if(els.queueButton.dataset.queued)await rpc('jl_ludo_leave_queue',{p_token:state.token});else await rpc('jl_ludo_enter_queue',{p_token:state.token,p_bet_amount:Number(els.queueBet.value),p_player_count:Number(els.queuePlayers.value),p_mode:els.queueMode.value});await loadStatus(true);}catch(err){showToast(err.message,'error');}});});els.refreshLobby.addEventListener('click',()=>loadStatus());
   els.inviteList.addEventListener('click',e=>{const a=e.target.closest('[data-invite-accept]'),d=e.target.closest('[data-invite-decline]');if(!a&&!d)return;withBusy(async()=>{try{await rpc('jl_ludo_accept_invite',{p_token:state.token,p_invitation:(a||d).dataset[a?'inviteAccept':'inviteDecline'],p_accept:Boolean(a)});await loadStatus(true);}catch(err){showToast(err.message,'error');}});});
+  els.publicChallengeList.addEventListener('click',e=>{const b=e.target.closest('[data-public-accept]');if(!b)return;withBusy(async()=>{try{state.room=await rpc('jl_ludo_accept_public_challenge',{p_token:state.token,p_code:b.dataset.publicAccept});await loadStatus(true);showToast('Entrou no desafio público.','success');}catch(err){showToast(err.message,'error');}});});
+
   els.copyRoomCode.addEventListener('click',()=>navigator.clipboard.writeText(roomData().code).then(()=>showToast('Código copiado.','success')).catch(()=>showToast(roomData().code)));els.leaveRoom.addEventListener('click',()=>withBusy(async()=>{try{await rpc('jl_ludo_cancel_or_leave',{p_token:state.token,p_room:roomData().id});closeVoice();await loadStatus(true);showToast('Saiu da sala.');}catch(err){showToast(err.message,'error');}}));
   els.rulesForm.addEventListener('submit',e=>{e.preventDefault();withBusy(async()=>{try{state.room=await rpc('jl_ludo_update_rules',{p_token:state.token,p_room:roomData().id,p_rules:readRulesForm()});renderRoom();showToast('Nova versão das regras proposta. Todos precisam aceitar novamente.','success');}catch(err){showToast(err.message,'error');}});});els.acceptRules.addEventListener('click',()=>withBusy(async()=>{try{state.room=await rpc('jl_ludo_accept_rules',{p_token:state.token,p_room:roomData().id,p_accept:true});renderRoom();}catch(err){showToast(err.message,'error');}}));els.declineRules.addEventListener('click',()=>withBusy(async()=>{try{state.room=await rpc('jl_ludo_accept_rules',{p_token:state.token,p_room:roomData().id,p_accept:false});renderRoom();showToast('Você não aceitou esta versão. Negociem outra regra.');}catch(err){showToast(err.message,'error');}}));
   els.searchPlayerForm.addEventListener('submit',e=>{e.preventDefault();withBusy(async()=>{try{const rows=await rpc('jl_ludo_find_players',{p_token:state.token,p_query:els.searchPlayer.value.trim()});els.playerSearchResults.innerHTML=rows.length?rows.map(p=>`<div class="mini-item"><div><strong>${escapeHtml(p.name)}</strong><br><small>${escapeHtml(p.code)}${p.waiting?' · à espera':''}</small></div><button class="button ghost small" data-invite-player="${p.player_id}">Convidar</button></div>`).join(''):'<div class="empty">Nenhum jogador encontrado.</div>';}catch(err){showToast(err.message,'error');}});});document.addEventListener('click',e=>{const b=e.target.closest('[data-invite-player]');if(!b)return;withBusy(async()=>{try{await rpc('jl_ludo_invite',{p_token:state.token,p_room:roomData().id,p_target_player:b.dataset.invitePlayer});showToast('Convite enviado por 60 segundos.','success');}catch(err){showToast(err.message,'error');}});});els.refreshWaiting.addEventListener('click',()=>loadWaiting());
