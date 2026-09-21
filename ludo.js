@@ -11,7 +11,7 @@
     animating: false, soundEnabled: localStorage.getItem(SOUND_KEY) !== '0', audioCtx: null
   };
   const els = Object.fromEntries([
-    'toast','identityBadge','accountButton','accountMenu','accountMenuCode','accountMenuBalance','accountMenuDeposit','accountMenuWithdraw','loggedOut','lobby','boardLobby','ludoLobbyBoard','balanceBadge','createRoomForm','createPlayers','createMode','createBet','createPublic',
+    'toast','identityBadge','accountButton','accountMenu','accountMenuCode','accountMenuBalance','accountMenuDeposit','accountMenuWithdraw','accountMenuLogout','loggedOut','lobby','boardLobby','ludoLobbyBoard','balanceBadge','createRoomForm','createPlayers','createMode','createBet','createPublic',
     'joinCodeForm','joinCode','queueForm','queuePlayers','queueMode','queueBet','queueButton','queueStatus','inviteList','directInviteCount','publicChallengeList','publicChallengeCount','refreshLobby',
     'room','roomCode','roomMeta','roomPot','roomPrize','copyRoomCode','leaveRoom','deadlineBar','deadlineLabel','deadlineClock','playersPanel',
     'rulesVersion','rulesSummary','rulesForm','rulesDecision','acceptRules','declineRules','searchPlayerForm','searchPlayer','playerSearchResults','refreshWaiting','waitingPlayers',
@@ -204,7 +204,7 @@
     }
   }
   async function processTimeouts(){if(!state.token||!state.room?.room?.id||state.busy||state.animating)return;try{state.room=await rpc('jl_ludo_process_timeouts',{p_token:state.token,p_room:state.room.room.id});renderRoom();}catch{}}
-  function renderAll(){const authed=Boolean(state.token&&state.status?.identity);els.loggedOut.classList.toggle('hidden',authed);els.lobby.classList.toggle('hidden',!authed||Boolean(state.room));els.room.classList.toggle('hidden',!state.room);els.boardLobby.classList.toggle('hidden',Boolean(state.room));if(!state.room)renderLobbyBoard();if(authed){const i=state.status.identity;els.identityBadge.textContent=`${i.code} · ${money(i.balance)} MZN`;els.accountButton.textContent=i.name||i.code;els.accountMenuCode.textContent=`${i.name||'Jogador'} · ${i.code}`;els.accountMenuBalance.textContent=`${money(i.balance)} MZN`;els.balanceBadge.textContent=`${money(i.balance)} MZN`;renderLobby();}else{els.identityBadge.textContent='Não autenticado';els.accountButton.textContent='Entrar';els.accountMenu?.classList.add('hidden');}if(state.room)renderRoom();}
+  function renderAll(){const authed=Boolean(state.token&&state.status?.identity);els.loggedOut.classList.toggle('hidden',authed);els.lobby.classList.toggle('hidden',!authed||Boolean(state.room));els.room.classList.toggle('hidden',!state.room);els.boardLobby.classList.toggle('hidden',Boolean(state.room));if(!state.room)renderLobbyBoard();if(authed){const i=state.status.identity;els.identityBadge.textContent=`${i.code} · ${money(i.balance)} MZN`;els.accountButton.textContent=i.name||i.code;els.accountMenuCode.textContent=`${i.name||'Jogador'} · ${i.code}`;els.accountMenuBalance.textContent=`${money(i.balance)} MZN`;els.balanceBadge.textContent=`${money(i.balance)} MZN`;renderLobby();}else{els.identityBadge.textContent='Não autenticado';els.accountButton.textContent='Entrar';els.accountMenu?.classList.add('hidden');els.accountButton.setAttribute('aria-expanded','false');}if(state.room)renderRoom();}
   function renderLobby(){
     const s=state.status;if(!s)return;
     if(s.queue){
@@ -280,6 +280,17 @@
   });
   els.accountMenuDeposit?.addEventListener('click',()=>{window.location.href='./index.html#depositPanel';});
   els.accountMenuWithdraw?.addEventListener('click',()=>{window.location.href='./index.html#withdrawPanel';});
+  els.accountMenuLogout?.addEventListener('click',async()=>{
+    try{if(state.token)await rpc('jl_logout_player',{p_token:state.token});}catch{}
+    saveToken('');
+    closeVoice();
+    state.status=null;
+    state.room=null;
+    els.accountMenu?.classList.add('hidden');
+    els.accountButton.setAttribute('aria-expanded','false');
+    renderAll();
+    showToast('Sessão encerrada.');
+  });
   document.addEventListener('click',e=>{
     if(!els.accountMenu||els.accountMenu.classList.contains('hidden'))return;
     if(e.target.closest('#accountButton')||e.target.closest('#accountMenu'))return;
