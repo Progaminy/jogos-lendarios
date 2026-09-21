@@ -23,7 +23,20 @@
     <div class="top-actions" style="flex-wrap:wrap;justify-content:flex-end">
       <span id="numberRoundBadge" class="badge muted">Número: carregando…</span>
       <span id="pairRoundBadge" class="badge muted">Dupla: carregando…</span>
-      <button id="accountButton" class="button ghost small" type="button">Entrar</button>
+      <div class="account-popover-wrap">
+        <button id="accountButton" class="button ghost small" type="button" aria-expanded="false" aria-controls="accountMenu">Entrar</button>
+        <div id="accountMenu" class="account-menu hidden" role="dialog" aria-label="Resumo da conta">
+          <div class="account-menu-head">
+            <div><small>Jogador</small><strong id="accountMenuPlayer">—</strong></div>
+            <div class="account-balance"><small>Saldo</small><strong id="accountMenuBalance">0,00 MZN</strong></div>
+          </div>
+          <div class="account-menu-actions">
+            <button id="accountMenuDeposit" class="button success small" type="button">Depósito</button>
+            <button id="accountMenuWithdraw" class="button secondary small" type="button">Saque</button>
+            <button id="accountMenuLogout" class="button danger small" type="button">Sair</button>
+          </div>
+        </div>
+      </div>
     </div>
   </header>
 
