@@ -20,6 +20,8 @@
 
   const els = {
     toast: $('toast'), accountButton: $('accountButton'),
+    accountMenu: $('accountMenu'), accountMenuPlayer: $('accountMenuPlayer'), accountMenuBalance: $('accountMenuBalance'),
+    accountMenuDeposit: $('accountMenuDeposit'), accountMenuWithdraw: $('accountMenuWithdraw'), accountMenuLogout: $('accountMenuLogout'),
     numberRoundBadge: $('numberRoundBadge'), pairRoundBadge: $('pairRoundBadge'),
     numberResultBanner: $('numberResultBanner'), numberResultTitle: $('numberResultTitle'), numberResultNumber: $('numberResultNumber'),
     pairResultBanner: $('pairResultBanner'), pairResultTitle: $('pairResultTitle'), pairResultA: $('pairResultA'), pairResultB: $('pairResultB'),
@@ -366,11 +368,18 @@
     }).join('');
   }
 
+  function closeAccountMenu() {
+    if (!els.accountMenu) return;
+    els.accountMenu.classList.add('hidden');
+    els.accountButton.setAttribute('aria-expanded', 'false');
+  }
+
   function renderPlayer() {
     const player = state.data?.player;
     if (!state.token || !player) {
       els.playerArea.classList.add('hidden');
       els.accountButton.textContent = 'Entrar';
+      closeAccountMenu();
       return;
     }
     els.playerArea.classList.remove('hidden');
@@ -378,6 +387,8 @@
     els.playerPhone.textContent = `+${player.phone}`;
     els.balance.textContent = formatMoney(player.balance);
     els.accountButton.textContent = player.name.split(/\s+/)[0] || 'Minha conta';
+    els.accountMenuPlayer.textContent = player.name;
+    els.accountMenuBalance.textContent = `${formatMoney(player.balance)} MZN`;
     renderHistory();
     checkWinNotifications();
   }
@@ -539,18 +550,37 @@
     } catch (error) { setMessage(els.withdrawMessage, error.message, 'error'); }
   });
 
-  els.accountButton.addEventListener('click', () => {
-    if (state.token && state.data?.player) els.playerArea.scrollIntoView({ behavior: 'smooth' });
-    else openAuth('login');
-  });
-
-  els.logoutButton.addEventListener('click', async () => {
+  async function logoutPlayer() {
     try { if (state.token) await rpc('jl_logout_player', { p_token: state.token }); } catch {}
     saveToken('');
     state.data = null;
     state.pendingBet = null;
+    closeAccountMenu();
     await refresh(true);
     showToast('Sessão encerrada.');
+  }
+
+  function openAccountPanel(id) {
+    closeAccountMenu();
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  els.accountButton.addEventListener('click', () => {
+    if (!state.token || !state.data?.player) return openAuth('login');
+    const willOpen = els.accountMenu.classList.contains('hidden');
+    els.accountMenu.classList.toggle('hidden', !willOpen);
+    els.accountButton.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+  });
+
+  els.accountMenuDeposit?.addEventListener('click', () => openAccountPanel('depositPanel'));
+  els.accountMenuWithdraw?.addEventListener('click', () => openAccountPanel('withdrawPanel'));
+  els.accountMenuLogout?.addEventListener('click', logoutPlayer);
+  els.logoutButton.addEventListener('click', logoutPlayer);
+
+  document.addEventListener('click', (event) => {
+    if (!els.accountMenu || els.accountMenu.classList.contains('hidden')) return;
+    if (event.target.closest('#accountButton') || event.target.closest('#accountMenu')) return;
+    closeAccountMenu();
   });
 
   els.refreshButton.addEventListener('click', () => refresh());
