@@ -261,7 +261,7 @@ h2 { margin: 0; font-size: clamp(1.25rem, 2.5vw, 1.75rem); letter-spacing: -.025
 .wallet-card {
   padding: 26px 28px;
   display: grid;
-  grid-template-columns: minmax(0,1fr) auto auto;
+  grid-template-columns: minmax(0,1fr) auto auto auto;
   gap: 24px;
   align-items: center;
 }
