@@ -6,6 +6,7 @@
   <meta name="theme-color" content="#0a0d14">
   <title>Administração — Jogos Lendários</title>
   <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./admin-bonus.css?v=20260922-14">
   <link rel="stylesheet" href="./admin-recovery.css?v=20260922-13">
 </head>
 <body>
@@ -165,6 +166,50 @@
 
       <section class="card admin-card">
         <div class="section-head">
+          <div><p class="eyebrow">BÓNUS</p><h2>Distribuir bónus aos jogadores</h2></div>
+          <button id="bonusRefresh" class="button ghost small" type="button">Atualizar</button>
+        </div>
+        <p class="muted-text">O bónus fica separado do saldo sacável. É usado primeiro nas apostas do jogo escolhido e só depois entra saldo normal, se necessário.</p>
+        <div class="bonus-admin-grid">
+          <form id="bonusGrantForm" class="stack-form">
+            <div class="bonus-form-grid">
+              <label class="field"><span>Jogo</span>
+                <select id="bonusGameScope">
+                  <option value="number">Número Lendário · 0–10</option>
+                  <option value="pair">Dupla Lendária</option>
+                  <option value="both">Número + Dupla</option>
+                </select>
+              </label>
+              <label class="field"><span>Tipo de bónus</span>
+                <select id="bonusType">
+                  <option value="promotional">Promocional</option>
+                  <option value="welcome">Boas-vindas</option>
+                  <option value="loyalty">Fidelidade</option>
+                  <option value="compensation">Compensação</option>
+                  <option value="manual">Manual</option>
+                </select>
+              </label>
+              <label class="field"><span>Valor por jogador</span><div class="money-input"><span>MZN</span><input id="bonusAmount" type="number" min="1" step="1" required></div></label>
+              <label class="field"><span>Observação</span><input id="bonusNote" maxlength="160" placeholder="Opcional"></label>
+            </div>
+            <div class="bonus-player-tools">
+              <input id="bonusPlayerSearch" placeholder="Pesquisar nome ou telefone">
+              <button id="bonusSelectAll" class="button ghost small" type="button">Selecionar visíveis</button>
+              <button id="bonusClearAll" class="button ghost small" type="button">Limpar</button>
+            </div>
+            <div class="bonus-note"><strong id="bonusSelectedCount">0</strong> jogador(es) selecionado(s)</div>
+            <div id="bonusPlayerList" class="bonus-player-list"><div class="empty">Carregando jogadores…</div></div>
+            <button id="bonusGrantButton" class="button primary large" type="submit">Distribuir bónus</button>
+          </form>
+          <div>
+            <p class="eyebrow">ÚLTIMAS DISTRIBUIÇÕES</p>
+            <div id="bonusRecentList" class="request-list bonus-recent"><div class="empty">Ainda não há bónus distribuídos.</div></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card admin-card">
+        <div class="section-head">
           <div><p class="eyebrow">RECUPERAÇÃO DE PIN</p><h2>Pedidos aguardando confirmação</h2></div>
           <div class="row-actions">
             <span class="badge warning"><strong id="recoveryAdminCount">0</strong> pendente(s)</span>
@@ -200,6 +245,7 @@
 
   <script src="./config.js"></script>
   <script src="./admin.js" defer></script>
+  <script src="./admin-bonus.js?v=20260922-14" defer></script>
   <script src="./admin-recovery.js?v=20260922-13" defer></script>
   <script src="./admin-power.js" defer></script>
   <script src="./admin-collapse.js" defer></script>
