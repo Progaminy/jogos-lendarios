@@ -198,13 +198,32 @@
     if (el.textContent !== next) el.textContent = next;
   }
 
+  function lastRolledValues() {
+    const events = latestRoomState?.events || [];
+    for (let i = events.length - 1; i >= 0; i -= 1) {
+      const event = events[i];
+      if (event?.event_type !== 'dice_rolled') continue;
+      const payload = event.payload || {};
+      const multi = Array.isArray(payload.dice_values)
+        ? payload.dice_values.map(Number).filter(v => Number.isInteger(v) && v >= 1 && v <= 6)
+        : [];
+      if (multi.length) return multi;
+      const single = Number(payload.dice);
+      if (Number.isInteger(single) && single >= 1 && single <= 6) return [single];
+    }
+    return [];
+  }
+
   function renderDice() {
     const el = document.getElementById('dice');
     const room = latestRoomState?.room;
     if (!el || !room) return;
     const count = Number(room.rules?.dice_count || 1);
-    const values = Array.isArray(room.dice_values) ? room.dice_values.map(Number) : [];
-    const position = Number(room.dice_position ?? -1);
+    const activeValues = Array.isArray(room.dice_values)
+      ? room.dice_values.map(Number).filter(v => Number.isInteger(v) && v >= 1 && v <= 6)
+      : [];
+    const values = activeValues.length ? activeValues : lastRolledValues();
+    const position = activeValues.length ? Number(room.dice_position ?? -1) : -1;
     const roll = document.getElementById('rollDice');
 
     if (roll) roll.textContent = count === 1 ? '🎲 Lançar dado' : `🎲 Lançar ${count} dados`;
