@@ -512,3 +512,5 @@ h2 { margin: 0; font-size: clamp(1.25rem, 2.5vw, 1.75rem); letter-spacing: -.025
 @media(max-width:800px){.support-admin-layout{grid-template-columns:1fr}.support-admin-messages{height:280px}}
 
 .bonus-balance-box{border-color:rgba(244,189,66,.38)!important;background:linear-gradient(180deg,rgba(244,189,66,.08),rgba(244,189,66,.025))!important}.bonus-balance-box strong{color:#ffd36d!important}.bonus-balance-box small{max-width:190px;color:#cdbf97!important}.account-balance #accountMenuBonus{display:block;margin-top:3px;color:#ffd36d;font-weight:800}
+
+.withdraw-status{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}.withdraw-status>div{padding:11px 12px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.025)}.withdraw-status small,.withdraw-status strong{display:block}.withdraw-status small{color:var(--muted);font-size:.72rem}.withdraw-status strong{margin-top:3px}.withdraw-status>div:last-child strong{color:#ffd36d}@media(max-width:520px){.withdraw-status{grid-template-columns:1fr}}
