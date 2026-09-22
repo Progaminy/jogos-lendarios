@@ -207,6 +207,16 @@ Número e Dupla não misturam dinheiro, horário, resultado ou configuração.
 
 # Ludo Lendário
 
+## Movimento automático, sons e repetir jogo
+
+- O botão **Ligar/Desligar microfone** fica também junto ao tabuleiro, visível durante a partida. Desligar fecha de facto o microfone do aparelho; ligar volta a abri-lo.
+- Se existir **apenas uma jogada legal**, o peão é movido automaticamente.
+- Cada quadradinho percorrido emite um som curto.
+- Capturar um peão emite um efeito próprio.
+- Colocar um peão na casa final emite outro efeito e concede **nova jogada**. Com vários dados, a jogada extra fica guardada até terminar a sequência atual.
+- Ao terminar a partida, toca um efeito de **foguetes/fogos de artifício**.
+- Depois do resultado aparece **Repetir jogo**, mantendo os mesmos jogadores e o mesmo modo. O jogador pode ajustar a nova aposta para qualquer valor inteiro de pelo menos 10 MZN; os restantes participantes recebem convite particular.
+
 ## Regras sem prazo de aceitação
 
 Não existe prazo para aceitar as regras de uma partida. Enquanto a sala estiver em negociação, cada jogador pode aceitar a versão atual quando quiser.
