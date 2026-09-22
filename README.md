@@ -207,6 +207,15 @@ Número e Dupla não misturam dinheiro, horário, resultado ou configuração.
 
 # Ludo Lendário
 
+## Escolha de jogadores e captura
+
+A quantidade de jogadores é escolhida por botões fixos **2 · 3 · 4**, evitando menus expansíveis instáveis em telemóveis. No modo parceiros, a escolha é automaticamente fixada em 4 jogadores.
+
+Durante a partida, cada jogador pode ligar ou desligar o próprio microfone a qualquer momento, desde que voz esteja permitida nas regras da sala.
+
+A penalização por ignorar uma captura obrigatória que permite **eliminar** ou exigir **reentrada** só é válida em partidas de 3 ou 4 jogadores. Em partidas de 2 jogadores, a penalização é sempre **perder a vez**.
+
+
 Arquivos principais:
 
 ```text
