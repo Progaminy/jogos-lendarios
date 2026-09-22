@@ -207,6 +207,14 @@ Número e Dupla não misturam dinheiro, horário, resultado ou configuração.
 
 # Ludo Lendário
 
+## Regras sem prazo de aceitação
+
+Não existe prazo para aceitar as regras de uma partida. Enquanto a sala estiver em negociação, cada jogador pode aceitar a versão atual quando quiser.
+
+Se o anfitrião não enviar nenhuma alteração, permanecem válidas as regras padrão criadas automaticamente com a sala.
+
+O formulário de regras não é mais sobrescrito pelo polling enquanto o anfitrião estiver a editar. Assim, escolhas como **“Se ignorar captura obrigatória”** permanecem fixas até serem enviadas ou alteradas pelo próprio utilizador.
+
 ## Notificações particulares e populares
 
 O Ludo possui duas listas independentes de notificações:
