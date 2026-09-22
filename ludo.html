@@ -100,23 +100,24 @@
         <div id="queueStatus" class="status-box hidden"></div>
       </div>
 
-      <div class="full-span notification-zone">
-        <div class="section-head notification-head">
-          <div><p class="eyebrow">NOTIFICAÇÕES DE LUDO</p><h2>Convites separados por origem</h2></div>
-          <button id="refreshLobby" class="button ghost small" type="button">Atualizar</button>
-        </div>
-        <div class="notification-grid">
-          <section class="panel notification-panel direct-panel">
-            <div class="section-head"><div><p class="eyebrow">CONVITE DIRETO</p><h3>Enviado para você</h3></div><span id="directInviteCount" class="notification-count direct-count">0</span></div>
-            <p class="muted notification-help">Somente convites que outro jogador enviou diretamente ao seu nome ou código.</p>
-            <div id="inviteList" class="invite-list"><div class="empty">Nenhum convite direto.</div></div>
-          </section>
-          <section class="panel notification-panel public-panel">
-            <div class="section-head"><div><p class="eyebrow">DESAFIOS PÚBLICOS</p><h3>Salas abertas a todos</h3></div><span id="publicChallengeCount" class="notification-count public-count">0</span></div>
-            <p class="muted notification-help">Anúncios públicos não são convites pessoais. Você entra apenas se escolher participar.</p>
-            <div id="publicChallengeList" class="invite-list"><div class="empty">Nenhum desafio público.</div></div>
-          </section>
-        </div>
+    </section>
+
+    <section id="notificationCenter" class="notification-zone notification-center hidden">
+      <div class="section-head notification-head">
+        <div><p class="eyebrow">NOTIFICAÇÕES DE LUDO</p><h2>Particulares e populares</h2></div>
+        <button id="refreshLobby" class="button ghost small" type="button">Atualizar listas</button>
+      </div>
+      <div class="notification-grid">
+        <section class="panel notification-panel direct-panel">
+          <div class="section-head"><div><p class="eyebrow">PARTICULARES</p><h3>Convites para você</h3></div><span id="directInviteCount" class="notification-count direct-count">0</span></div>
+          <p class="muted notification-help">Convites enviados diretamente ao seu nome ou código. Só você recebe estes convites.</p>
+          <div id="inviteList" class="invite-list notification-list"><div class="empty">Nenhum convite particular.</div></div>
+        </section>
+        <section class="panel notification-panel public-panel">
+          <div class="section-head"><div><p class="eyebrow">POPULARES</p><h3>Convites públicos</h3></div><span id="publicChallengeCount" class="notification-count public-count">0</span></div>
+          <p class="muted notification-help">Convites e desafios públicos disponíveis para os jogadores. Você decide se quer entrar.</p>
+          <div id="publicChallengeList" class="invite-list notification-list"><div class="empty">Nenhum convite popular disponível.</div></div>
+        </section>
       </div>
     </section>
 
