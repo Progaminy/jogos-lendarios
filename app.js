@@ -477,7 +477,7 @@
     const settings = gameSettings('number');
     const amount = Number(els.betAmount.value);
     if (state.selectedNumber === null) return showToast('Escolha um número primeiro.', 'error');
-    if (!Number.isFinite(amount) || amount < Number(settings.min_bet) || amount > Number(settings.max_bet)) return showToast(`A aposta deve ser entre ${settings.min_bet} e ${settings.max_bet} MZN.`, 'error');
+    if (!Number.isFinite(amount) || !Number.isInteger(amount) || amount < Number(settings.min_bet) || amount > Number(settings.max_bet)) return showToast(`A aposta deve ser um valor inteiro entre ${settings.min_bet} e ${settings.max_bet} MZN.`, 'error');
     if (!gameIsOpen('number')) return showToast('Número Lendário está sem apostas abertas.', 'error');
     if (!state.token) {
       state.pendingBet = { type: 'number', number: state.selectedNumber, amount };
@@ -492,7 +492,7 @@
     const settings = gameSettings('pair');
     const amount = Number(els.pairBetAmount.value);
     if (state.selectedPair.length !== 2) return showToast('Escolha dois números para a Dupla Lendária.', 'error');
-    if (!Number.isFinite(amount) || amount < Number(settings.min_bet) || amount > Number(settings.max_bet)) return showToast(`A aposta deve ser entre ${settings.min_bet} e ${settings.max_bet} MZN.`, 'error');
+    if (!Number.isFinite(amount) || !Number.isInteger(amount) || amount < Number(settings.min_bet) || amount > Number(settings.max_bet)) return showToast(`A aposta deve ser um valor inteiro entre ${settings.min_bet} e ${settings.max_bet} MZN.`, 'error');
     if (!gameIsOpen('pair')) return showToast('Dupla Lendária está sem apostas abertas.', 'error');
     if (!state.token) {
       state.pendingBet = { type: 'pair', numbers: [...state.selectedPair], amount };
