@@ -593,3 +593,14 @@ O admin pode distribuir bónus para **Número Lendário**, **Dupla Lendária** o
 O bónus fica fora do saldo normal e não pode ser sacado diretamente. Ao apostar num jogo elegível, o sistema consome primeiro o bónus e usa saldo normal apenas se a aposta ultrapassar o bónus disponível. Cada aposta guarda separadamente `cash_amount` e `bonus_amount`. Quando uma aposta financiada por bónus é premiada, o prémio entra no saldo normal, pois o bónus já foi efetivamente jogado.
 
 O jogador vê **Saldo disponível** e **Bónus para jogar** separados, com detalhamento para Número e Dupla. O histórico mostra quando uma aposta usou bónus. O admin vê saldos de bónus e as distribuições recentes.
+
+
+## Depósito deve ser jogado antes do saque
+
+Todo depósito aprovado cria um requisito de jogo igual ao valor depositado. Enquanto esse requisito não for reduzido a zero, essa parte do saldo não é sacável.
+
+Apostas em **Número Lendário**, **Dupla Lendária** e **Ludo** reduzem o requisito apenas pelo valor efetivamente pago com saldo normal; bónus não conta como depósito jogado. No Ludo, se a aposta for devolvida porque a partida não chegou a começar, o requisito correspondente é restaurado.
+
+O jogador vê separadamente o **saldo disponível para saque** e o **depósito ainda por jogar**. O admin também vê estes valores. O pedido de saque e a aprovação administrativa revalidam o bloqueio.
+
+A migração reconstrói os depósitos históricos cronologicamente, descontando apenas apostas feitas depois da aprovação de cada depósito. Na aplicação inicial foram encontrados 1.091 MZN em depósitos aprovados: 650 MZN já tinham sido jogados e 441 MZN permaneceram bloqueados até serem apostados.
