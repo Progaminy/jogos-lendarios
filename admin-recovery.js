@@ -4,6 +4,7 @@
   const TOKEN_KEY='jl_admin_token';
   const $=id=>document.getElementById(id);
   let timer=null;
+  let emailConfigured=false;
 
   function token(){return localStorage.getItem(TOKEN_KEY)||'';}
   function esc(v){return String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
@@ -18,6 +19,24 @@
     const raw=await r.text();let data=null;try{data=raw?JSON.parse(raw):null}catch{data=raw}
     if(!r.ok)throw new Error((data&&data.message)||(data&&data.hint)||(data&&data.error)||('Erro '+r.status));
     return data;
+  }
+
+  async function checkEmailHealth(){
+    const box=$('recoveryEmailStatus');
+    try{
+      const r=await fetch(cfg.supabaseUrl+'/functions/v1/jogos-recovery/health',{headers:{Accept:'application/json'},cache:'no-store'});
+      const data=await r.json();
+      emailConfigured=Boolean(r.ok&&data?.emailConfigured);
+      if(box){
+        box.textContent=emailConfigured
+          ? 'Email de recuperação ativo: '+(data.from||'escolalendaria07@gmail.com')
+          : 'ATENÇÃO: o email de recuperação ainda não está configurado neste projeto. O envio está bloqueado.';
+        box.className='status-box '+(emailConfigured?'success':'error');
+      }
+    }catch{
+      emailConfigured=false;
+      if(box){box.textContent='Não foi possível verificar o serviço de email. O envio está bloqueado.';box.className='status-box error';}
+    }
   }
 
   async function approveSend(id){
@@ -45,7 +64,7 @@
 
   function rowHtml(r){
     const actions=r.status==='pending_admin'
-      ? '<button class="button success small" data-recovery-send="'+esc(r.id)+'">Confirmar identidade e enviar código</button>'+
+      ? '<button class="button success small" data-recovery-send="'+esc(r.id)+'" '+(emailConfigured?'':'disabled title="Email de recuperação não configurado"')+'>Confirmar identidade e enviar código</button>'+
         '<button class="button danger small" data-recovery-reject="'+esc(r.id)+'">Rejeitar</button>'
       : '';
     const sent=r.sent_at?' · enviado: '+esc(dt(r.sent_at)):'';
@@ -101,7 +120,8 @@
     });
     $('refreshRecoveryAdmin')?.addEventListener('click',load);
     clearInterval(timer);timer=setInterval(()=>{if(token())load();},5000);
-    load();
+    checkEmailHealth().then(load);
+    setInterval(checkEmailHealth,30000);
   }
 
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',wire,{once:true});else wire();
