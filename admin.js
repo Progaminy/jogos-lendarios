@@ -411,10 +411,15 @@
     const ui = games[type];
 
     ui.saveSettings.addEventListener('click', async () => {
+      const minBet = Number(ui.minBet.value);
+      const maxBet = Number(ui.maxBet.value);
+      if (!Number.isInteger(minBet) || !Number.isInteger(maxBet) || minBet < 10 || maxBet < minBet) {
+        return toast('As apostas devem usar valores inteiros, com mínimo de 10 MZN e máximo igual ou superior ao mínimo.', 'error');
+      }
       await runAction('jl_admin_update_game_settings', {
         p_game_type: type,
-        p_min_bet: Number(ui.minBet.value),
-        p_max_bet: Number(ui.maxBet.value),
+        p_min_bet: minBet,
+        p_max_bet: maxBet,
         p_multiplier: Number(ui.multiplier.value),
         p_lock_seconds: Number(ui.lockSeconds.value),
         p_draw_mode: ui.drawMode.value,
