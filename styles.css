@@ -510,3 +510,5 @@ h2 { margin: 0; font-size: clamp(1.25rem, 2.5vw, 1.75rem); letter-spacing: -.025
 .support-admin-msg{max-width:86%;padding:9px 11px;border-radius:13px}.support-admin-msg.player{align-self:flex-start;background:#263a55}.support-admin-msg.admin{align-self:flex-end;background:#1c61c9}.support-admin-msg small{display:block;margin-top:5px;opacity:.7;font-size:.68rem}
 #supportReplyInput{resize:vertical;min-height:78px}
 @media(max-width:800px){.support-admin-layout{grid-template-columns:1fr}.support-admin-messages{height:280px}}
+
+.bonus-balance-box{border-color:rgba(244,189,66,.38)!important;background:linear-gradient(180deg,rgba(244,189,66,.08),rgba(244,189,66,.025))!important}.bonus-balance-box strong{color:#ffd36d!important}.bonus-balance-box small{max-width:190px;color:#cdbf97!important}.account-balance #accountMenuBonus{display:block;margin-top:3px;color:#ffd36d;font-weight:800}
