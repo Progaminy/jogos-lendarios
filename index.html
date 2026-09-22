@@ -236,7 +236,11 @@
         <div id="withdrawPanel" class="card action-card">
           <p class="eyebrow">SAQUE</p>
           <h2>Solicitar saque</h2>
-          <p class="muted-text">Se o saldo for insuficiente, o pedido é rejeitado.</p>
+          <p class="muted-text">Depósitos aprovados precisam ser jogados pelo menos uma vez antes de poderem ser sacados.</p>
+          <div class="withdraw-status">
+            <div><small>Disponível para saque</small><strong id="withdrawableBalance">0,00 MZN</strong></div>
+            <div><small>Depósito ainda por jogar</small><strong id="depositLockedBalance">0,00 MZN</strong></div>
+          </div>
           <form id="withdrawForm" class="stack-form">
             <label class="field"><span>Valor</span><div class="money-input"><span>MZN</span><input id="withdrawAmount" type="number" min="1" step="1" required></div></label>
             <button class="button secondary" type="submit">Pedir saque</button>
