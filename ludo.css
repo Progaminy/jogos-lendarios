@@ -191,7 +191,7 @@
 .account-menu-head strong{display:block;overflow-wrap:anywhere}
 .account-balance{text-align:right}
 .account-balance strong{color:#8df1bb}
-.account-menu-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:11px}
+.account-menu-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:11px}
 .account-menu-actions .button{padding-left:8px;padding-right:8px}
 .platform-warning{margin-top:12px;padding:12px 14px;border:1px solid rgba(255,196,77,.38);border-left:4px solid #f4bd42;border-radius:12px;background:rgba(244,189,66,.08);color:#e7edf6;font-size:.84rem;line-height:1.45}
 .platform-warning strong{color:#ffd36b}
