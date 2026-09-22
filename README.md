@@ -207,6 +207,15 @@ Número e Dupla não misturam dinheiro, horário, resultado ou configuração.
 
 # Ludo Lendário
 
+## Notificações particulares e populares
+
+O Ludo possui duas listas independentes de notificações:
+
+- **Particulares:** convites enviados diretamente ao nome ou código do jogador.
+- **Populares:** convites/desafios públicos disponíveis para os jogadores.
+
+As duas listas têm contadores próprios e permanecem consultáveis mesmo quando o utilizador já está dentro de uma sala. Durante uma partida ativa, os convites continuam visíveis, mas a entrada noutra partida fica bloqueada até terminar ou desistir da atual.
+
 ## Escolha de jogadores e captura
 
 A quantidade de jogadores é escolhida por botões fixos **2 · 3 · 4**, evitando menus expansíveis instáveis em telemóveis. No modo parceiros, a escolha é automaticamente fixada em 4 jogadores.
