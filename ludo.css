@@ -202,3 +202,5 @@
 }
 
 .player-count-select{display:none!important}.player-count-field{display:grid;gap:6px;align-content:start;color:#cbd7e7;font-weight:700}.player-count-field>span{font-size:.8rem}.player-count-picker{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.player-count-picker button{min-height:46px;border:1px solid var(--line);border-radius:11px;background:#091522;color:var(--text);font-weight:900;font-size:1.05rem;cursor:pointer}.player-count-picker button:hover{border-color:#568fe8}.player-count-picker button.active{background:#1c61c9;border-color:#6ba2f1;box-shadow:0 0 0 3px rgba(86,143,232,.16)}.player-count-picker button:focus-visible{outline:3px solid rgba(244,189,66,.65);outline-offset:2px}#capturePenaltyHelp{font-weight:500;line-height:1.35}
+
+.notification-center{margin-top:18px}.notification-list{max-height:330px;overflow:auto;padding-right:4px}.notification-list .invite-card+ .invite-card{margin-top:8px}.notification-panel.direct-panel{border-color:rgba(76,139,245,.32)}.notification-panel.public-panel{border-color:rgba(244,189,66,.32)}
