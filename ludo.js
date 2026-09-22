@@ -392,11 +392,14 @@
     try{
       const nextRoom=await rpc('jl_ludo_roll',{p_token:state.token,p_room:roomData().id});
       await wait(320);
+      processGameEffects(nextRoom);
       state.room=nextRoom;
       renderRoom();
     }catch(err){renderDiceFace(null);showToast(err.message,'error');}
     finally{els.dice.classList.remove('rolling');}
-  }));els.reenterButton.addEventListener('click',()=>withBusy(async()=>{try{state.room=await rpc('jl_ludo_reenter',{p_token:state.token,p_room:roomData().id});renderRoom();showToast('Reentrada confirmada.','success');}catch(err){showToast(err.message,'error');}}));
+  }));
+  els.rematchButton?.addEventListener('click',()=>withBusy(async()=>{try{const amount=wholeStake(els.rematchBet?.value,'A nova aposta');if(amount===null)return;const oldRoom=roomData()?.id;const nextRoom=await rpc('jl_ludo_rematch',{p_token:state.token,p_room:oldRoom,p_bet_amount:amount});state.lastFxEventId=0;state.autoMoveKey=null;state.room=nextRoom;await loadStatus(true);showToast('Nova partida criada. Os mesmos jogadores receberam convite particular.','success');}catch(err){showToast(err.message,'error');}}));
+  els.reenterButton.addEventListener('click',()=>withBusy(async()=>{try{state.room=await rpc('jl_ludo_reenter',{p_token:state.token,p_room:roomData().id});renderRoom();showToast('Reentrada confirmada.','success');}catch(err){showToast(err.message,'error');}}));
   els.chatForm.addEventListener('submit',e=>{e.preventDefault();const m=els.chatInput.value.trim();if(!m)return;withBusy(async()=>{try{await rpc('jl_ludo_send_chat',{p_token:state.token,p_room:roomData().id,p_message:m});els.chatInput.value='';state.room=await rpc('jl_ludo_room_state',{p_token:state.token,p_room:roomData().id});renderChat();}catch(err){showToast(err.message,'error');}});});els.micButton.addEventListener('click',toggleMic);
   state.pollTimer=setInterval(()=>loadStatus(true),2500);state.timeoutTimer=setInterval(processTimeouts,2000);state.clockTimer=setInterval(updateClock,250);window.addEventListener('beforeunload',closeVoice);loadStatus();
 })();
