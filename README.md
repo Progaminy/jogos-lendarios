@@ -572,3 +572,8 @@ Ao enviar um pedido de depósito ou saque, o jogador recebe uma janela central e
 O Ludo mostra no topo três contadores: **jogadores online agora**, **convites individuais** e **convites populares**. A presença online usa atividade recente da sessão no Ludo, em vez de considerar toda sessão de 30 dias como conectada.
 
 Convites individuais ficam destacados e continuam visíveis mesmo quando o jogador está dentro de uma sala. Se o jogador estiver na **sua própria sala** ainda em espera ou negociação, pode aceitar outro convite: se a sala própria estiver vazia ela é cancelada; se houver outros participantes, um deles assume como anfitrião e a sala continua aguardando completar jogadores.
+
+
+## Linha de Cliente
+
+Ao clicar no nome da conta, o jogador vê **Depósito**, **Saque**, **Mensagem** e **Sair**; o botão **Sair** é vermelho e destacado. **Mensagem** abre a Linha de Cliente, onde o jogador pode escrever dúvidas, preocupações ou problemas e acompanhar as respostas do administrador. O painel administrativo possui uma área própria com conversas por jogador, contador de mensagens não lidas e resposta direta. O histórico é armazenado no Supabase e acessado por RPC autenticada com as sessões já existentes do jogador e do admin.
