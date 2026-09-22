@@ -154,7 +154,7 @@
             <label class="toggle"><input name="chat_enabled" type="checkbox" checked><span>Chat escrito</span></label>
             <button class="button primary wide" type="submit">Propor estas regras</button>
           </form>
-          <div id="rulesDecision" class="decision-row hidden"><button id="acceptRules" class="button success" type="button">Aceitar regras</button><button id="declineRules" class="button danger" type="button">Não concordo</button></div>
+          <div id="rulesDecision" class="decision-row hidden"><span class="muted">A aceitação é feita na janela de confirmação.</span></div>
         </section>
 
         <aside class="panel invite-panel">
@@ -168,8 +168,8 @@
       </div>
 
       <section id="fundingPanel" class="panel funding hidden">
-        <div><p class="eyebrow">APOSTA DA PARTIDA</p><h2>Regras aceites por todos</h2><p id="fundingText">Confirme a sua aposta.</p></div>
-        <button id="fundButton" class="button primary large" type="button">Confirmar aposta</button>
+        <div><p class="eyebrow">APOSTA DA PARTIDA</p><h2>Regras aceites por todos</h2><p id="fundingText">A confirmação do valor aparece numa janela.</p></div>
+        <button id="fundButton" class="button primary large hidden" type="button">Confirmar aposta</button>
       </section>
 
       <section id="gamePanel" class="game-grid hidden">
@@ -189,6 +189,31 @@
       <section id="resultPanel" class="panel result-panel hidden"><p class="eyebrow">RESULTADO</p><h2 id="resultTitle">Partida terminada</h2><div id="resultPayouts"></div><div class="rematch-box"><h3>🔁 Repetir jogo</h3><p class="muted" id="rematchHelp">Mesmos jogadores e modo. Pode ajustar o valor.</p><div class="rematch-controls"><label><span>Nova aposta por jogador</span><div class="money"><span>MZN</span><input id="rematchBet" type="number" min="10" step="1" value="10"></div></label><button id="rematchButton" class="button primary" type="button">Repetir jogo</button></div></div></section>
     </section>
   </main>
+
+  <div id="rulesAcceptModal" class="flow-modal hidden" role="dialog" aria-modal="true" aria-labelledby="rulesAcceptTitle">
+    <div class="flow-modal-card">
+      <span class="flow-step">1 / 2</span>
+      <p class="eyebrow">ANTES DE JOGAR</p>
+      <h2 id="rulesAcceptTitle">Aceitar regras</h2>
+      <p class="muted">Leia as regras atuais desta sala. Não existe prazo para aceitar.</p>
+      <div id="rulesAcceptSummary" class="flow-summary"></div>
+      <div class="flow-actions">
+        <button id="rulesModalDecline" class="button danger" type="button">Não concordo</button>
+        <button id="rulesModalAccept" class="button success" type="button">Aceitar regras</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="stakeAcceptModal" class="flow-modal hidden" role="dialog" aria-modal="true" aria-labelledby="stakeAcceptTitle">
+    <div class="flow-modal-card">
+      <span class="flow-step">2 / 2</span>
+      <p class="eyebrow">CONFIRMAR APOSTA</p>
+      <h2 id="stakeAcceptTitle">Aceitar valor</h2>
+      <p id="stakeAcceptText" class="flow-value">—</p>
+      <p id="stakeBalanceText" class="muted">—</p>
+      <button id="stakeModalAccept" class="button primary wide large" type="button">Confirmar valor e entrar</button>
+    </div>
+  </div>
 
   <div id="winModal" class="win-modal hidden" role="dialog" aria-modal="true" aria-labelledby="winModalTitle">
     <div class="win-modal-card">
