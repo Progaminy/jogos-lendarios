@@ -584,3 +584,12 @@ Ao clicar no nome da conta, o jogador vê **Depósito**, **Saque**, **Mensagem**
 O login possui **Esqueci o PIN**. O jogador informa o número da conta e um email de recuperação. O pedido não envia código imediatamente: ele aparece primeiro no painel administrativo com nome, telefone e email para o administrador ligar e confirmar a identidade. Depois da confirmação, o admin usa **Confirmar identidade e enviar código**. O serviço `jogos-recovery` gera um código de 6 dígitos, guarda somente o hash, envia por email, expira em 10 minutos e permite no máximo 5 tentativas. Ao concluir, todas as sessões antigas do jogador são revogadas e ele entra novamente com o novo PIN.
 
 O remetente definido é `escolalendaria07@gmail.com`, o mesmo usado pela Escola Lendária. Para o envio funcionar no projeto Supabase dos Jogos, a credencial de aplicação desse Gmail deve existir no segredo `PSF_RECOVERY_EMAIL_APP_PASSWORD`. A palavra-passe nunca deve ser gravada no repositório ou no frontend.
+
+
+## Bónus para Número e Dupla
+
+O admin pode distribuir bónus para **Número Lendário**, **Dupla Lendária** ou **ambos**, escolher o tipo (Promocional, Boas-vindas, Fidelidade, Compensação ou Manual), definir um valor inteiro e selecionar um ou vários jogadores.
+
+O bónus fica fora do saldo normal e não pode ser sacado diretamente. Ao apostar num jogo elegível, o sistema consome primeiro o bónus e usa saldo normal apenas se a aposta ultrapassar o bónus disponível. Cada aposta guarda separadamente `cash_amount` e `bonus_amount`. Quando uma aposta financiada por bónus é premiada, o prémio entra no saldo normal, pois o bónus já foi efetivamente jogado.
+
+O jogador vê **Saldo disponível** e **Bónus para jogar** separados, com detalhamento para Número e Dupla. O histórico mostra quando uma aposta usou bónus. O admin vê saldos de bónus e as distribuições recentes.
