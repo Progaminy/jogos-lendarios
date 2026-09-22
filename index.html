@@ -30,7 +30,7 @@
         <div id="accountMenu" class="account-menu hidden" role="dialog" aria-label="Resumo da conta">
           <div class="account-menu-head">
             <div><small>Jogador</small><strong id="accountMenuPlayer">—</strong></div>
-            <div class="account-balance"><small>Saldo</small><strong id="accountMenuBalance">0,00 MZN</strong></div>
+            <div class="account-balance"><small>Saldo</small><strong id="accountMenuBalance">0,00 MZN</strong><small id="accountMenuBonus">Bónus 0,00 MZN</small></div>
           </div>
           <div class="account-menu-actions">
             <button id="accountMenuDeposit" class="button success small" type="button">Depósito</button>
@@ -210,7 +210,12 @@
         <div class="balance-box">
           <span>Saldo disponível</span>
           <strong id="balance">0,00</strong>
-          <small>MZN</small>
+          <small>MZN · sacável conforme regras</small>
+        </div>
+        <div class="balance-box bonus-balance-box">
+          <span>Bónus para jogar</span>
+          <strong id="bonusBalance">0,00</strong>
+          <small id="bonusBreakdown">Número 0,00 · Dupla 0,00</small>
         </div>
         <button id="logoutButton" class="button ghost" type="button">Sair</button>
       </div>
