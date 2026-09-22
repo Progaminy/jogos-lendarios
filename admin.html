@@ -6,6 +6,7 @@
   <meta name="theme-color" content="#0a0d14">
   <title>Administração — Jogos Lendários</title>
   <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./admin-recovery.css?v=20260922-13">
 </head>
 <body>
   <div id="toast" class="toast" aria-live="polite"></div>
@@ -162,6 +163,18 @@
         <section class="card admin-card"><p class="eyebrow">SAQUES</p><h2>Pedidos pendentes</h2><div id="withdrawRequests" class="request-list"></div></section>
       </div>
 
+      <section class="card admin-card">
+        <div class="section-head">
+          <div><p class="eyebrow">RECUPERAÇÃO DE PIN</p><h2>Pedidos aguardando confirmação</h2></div>
+          <div class="row-actions">
+            <span class="badge warning"><strong id="recoveryAdminCount">0</strong> pendente(s)</span>
+            <button id="refreshRecoveryAdmin" class="button ghost small" type="button">Atualizar</button>
+          </div>
+        </div>
+        <p class="muted-text">Ligue para o número da conta e confirme a identidade do jogador. Só depois use “Confirmar identidade e enviar código”. O código será enviado para o email informado no pedido.</p>
+        <div id="recoveryAdminList" class="recovery-admin-list"><div class="empty">Nenhum pedido de recuperação.</div></div>
+      </section>
+
       <section class="card admin-card customer-support-admin">
         <div class="section-head">
           <div><p class="eyebrow">LINHA DE CLIENTE</p><h2>Mensagens dos jogadores</h2></div>
@@ -186,6 +199,7 @@
 
   <script src="./config.js"></script>
   <script src="./admin.js" defer></script>
+  <script src="./admin-recovery.js?v=20260922-13" defer></script>
   <script src="./admin-power.js" defer></script>
   <script src="./admin-collapse.js" defer></script>
 </body>
