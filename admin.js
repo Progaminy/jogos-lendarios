@@ -9,6 +9,8 @@
     token: localStorage.getItem(TOKEN_KEY) || '',
     data: null,
     refreshTimer: null,
+    supportPlayerId: null,
+    supportThread: null,
     countdowns: { number: null, pair: null }
   };
 
@@ -23,7 +25,15 @@
     adminLoginMessage: $('adminLoginMessage'),
     depositRequests: $('depositRequests'),
     withdrawRequests: $('withdrawRequests'),
-    playersList: $('playersList')
+    playersList: $('playersList'),
+    supportThreads: $('supportThreads'),
+    supportUnreadBadge: $('supportUnreadBadge'),
+    supportConversation: $('supportConversation'),
+    supportConversationTitle: $('supportConversationTitle'),
+    supportConversationClose: $('supportConversationClose'),
+    supportAdminMessages: $('supportAdminMessages'),
+    supportReplyForm: $('supportReplyForm'),
+    supportReplyInput: $('supportReplyInput')
   };
 
   const games = {
@@ -329,6 +339,56 @@
     }).join('');
   }
 
+  function renderSupportThreads() {
+    const rows = state.data?.support_threads || [];
+    const unread = rows.reduce((sum,r)=>sum+Number(r.unread_count||0),0);
+    if (shared.supportUnreadBadge) {
+      shared.supportUnreadBadge.textContent = `${unread} não lida${unread===1?'':'s'}`;
+      shared.supportUnreadBadge.className = `badge ${unread?'danger':'muted'}`;
+    }
+    if (!shared.supportThreads) return;
+    shared.supportThreads.innerHTML = rows.length ? rows.map(r=>`
+      <button class="support-thread ${state.supportPlayerId===r.player_id?'active':''}" type="button" data-support-player="${r.player_id}">
+        <div>
+          <strong>${escapeHtml(r.name)}</strong>
+          <small>+${escapeHtml(r.phone)} · ${dateTime(r.last_message_at)}</small>
+          <div class="support-thread-preview">${r.last_sender==='admin'?'Admin: ':'Jogador: '}${escapeHtml(r.last_message||'')}</div>
+        </div>
+        ${Number(r.unread_count)>0?`<span class="support-unread">${Number(r.unread_count)}</span>`:''}
+      </button>`).join('') : '<div class="empty">Nenhuma mensagem de cliente.</div>';
+  }
+
+  function renderSupportConversation() {
+    const thread = state.supportThread;
+    if (!thread || !state.supportPlayerId) {
+      shared.supportConversation?.classList.add('hidden');
+      return;
+    }
+    shared.supportConversation?.classList.remove('hidden');
+    shared.supportConversationTitle.textContent = `${thread.player?.name||'Jogador'} · +${thread.player?.phone||''}`;
+    const messages = thread.messages || [];
+    shared.supportAdminMessages.innerHTML = messages.length ? messages.map(m=>`
+      <div class="support-admin-msg ${m.sender==='admin'?'admin':'player'}">
+        <strong>${m.sender==='admin'?'Admin':'Jogador'}</strong>
+        <div>${escapeHtml(m.message)}</div>
+        <small>${dateTime(m.created_at)}</small>
+      </div>`).join('') : '<div class="empty">Sem mensagens.</div>';
+    shared.supportAdminMessages.scrollTop = shared.supportAdminMessages.scrollHeight;
+  }
+
+  async function loadSupportThread(playerId, silent=false) {
+    try {
+      state.supportPlayerId = playerId;
+      state.supportThread = await rpc('jl_admin_support_thread',{p_token:state.token,p_player_id:playerId});
+      renderSupportThreads();
+      renderSupportConversation();
+      state.data.support_threads = await rpc('jl_admin_support_threads',{p_token:state.token});
+      renderSupportThreads();
+    } catch(error) {
+      if(!silent) toast(error.message,'error');
+    }
+  }
+
   function renderShared() {
     const deposits = state.data?.pending_deposits || [];
     shared.depositRequests.innerHTML = deposits.length
@@ -365,6 +425,9 @@
           </div>
         </div>`).join('')
       : '<div class="empty">Nenhum jogador cadastrado.</div>';
+
+    renderSupportThreads();
+    renderSupportConversation();
   }
 
   function render() {
@@ -382,6 +445,12 @@
     if (!state.token) return showApp(false);
     try {
       state.data = await rpc('jl_admin_dashboard', { p_token: state.token });
+      try { state.data.support_threads = await rpc('jl_admin_support_threads',{p_token:state.token}); }
+      catch { state.data.support_threads = []; }
+      if (state.supportPlayerId) {
+        try { state.supportThread = await rpc('jl_admin_support_thread',{p_token:state.token,p_player_id:state.supportPlayerId}); }
+        catch { state.supportThread = null; state.supportPlayerId = null; }
+      }
       showApp(true);
       render();
     } catch (error) {
@@ -552,6 +621,32 @@
         p_blocked: blocked
       }, blocked ? 'Jogador bloqueado.' : 'Jogador desbloqueado.');
     }
+  });
+
+  shared.supportThreads?.addEventListener('click', async (event) => {
+    const button = event.target.closest('[data-support-player]');
+    if (!button) return;
+    await loadSupportThread(button.dataset.supportPlayer);
+  });
+
+  shared.supportConversationClose?.addEventListener('click',()=>{
+    state.supportPlayerId=null;
+    state.supportThread=null;
+    renderSupportThreads();
+    renderSupportConversation();
+  });
+
+  shared.supportReplyForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!state.supportPlayerId) return;
+    const message = shared.supportReplyInput.value.trim();
+    if (!message) return;
+    try {
+      await rpc('jl_admin_support_reply',{p_token:state.token,p_player_id:state.supportPlayerId,p_message:message});
+      shared.supportReplyInput.value='';
+      await loadSupportThread(state.supportPlayerId,true);
+      toast('Resposta enviada ao jogador.','success');
+    } catch(error) { toast(error.message,'error'); }
   });
 
   wireGame('number');
