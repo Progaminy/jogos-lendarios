@@ -239,6 +239,12 @@ jogador cria sala
 
 Se o anfitrião alterar qualquer regra, as aceitações anteriores deixam de valer e todos precisam aceitar a nova versão.
 
+## Resultado do dado
+
+Todo lançamento deve permanecer visível para os jogadores, mesmo quando o valor obtido não gera movimento válido e a vez passa automaticamente. O evento `dice_rolled` é a referência visual do último lançamento quando `dice_result` já foi limpo pelo avanço de turno.
+
+Exemplo: se a peça precisa de 6 para sair da base e o jogador tira 3, o 3 continua visível para que todos saibam qual foi o resultado.
+
 ## Tempos
 
 As ações que dependem de um jogador nunca podem bloquear a partida indefinidamente.
