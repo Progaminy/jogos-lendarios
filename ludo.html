@@ -151,7 +151,6 @@
             <label class="toggle"><input name="safe_cells" type="checkbox" checked><span>Casas seguras clássicas</span></label>
             <label class="toggle"><input name="blockades" type="checkbox" checked><span>Bloqueios/barreiras com duas peças</span></label>
             <label class="toggle"><input name="exact_finish" type="checkbox" checked><span>Chegada exige valor exato</span></label>
-            <label class="toggle"><input name="voice_enabled" type="checkbox" checked><span>Microfone durante negociação e jogo</span></label>
             <label class="toggle"><input name="chat_enabled" type="checkbox" checked><span>Chat escrito</span></label>
             <button class="button primary wide" type="submit">Propor estas regras</button>
           </form>
@@ -175,7 +174,7 @@
 
       <section id="gamePanel" class="game-grid hidden">
         <div class="panel board-panel">
-          <div class="section-head"><div><p class="eyebrow">TABULEIRO</p><h2 id="turnTitle">—</h2></div><div class="dice-tools"><button id="soundToggle" class="sound-toggle" type="button" aria-pressed="true">🔊 Som</button><div id="dice" class="dice" aria-label="Dado">?</div></div></div>
+          <div class="section-head"><div><p class="eyebrow">TABULEIRO</p><h2 id="turnTitle">—</h2></div><div class="dice-tools"><button id="micQuickButton" class="sound-toggle quick-mic" type="button">🎙️ Ligar micro</button><button id="soundToggle" class="sound-toggle" type="button" aria-pressed="true">🔊 Som</button><div id="dice" class="dice" aria-label="Dado">?</div></div></div>
           <div id="ludoBoard" class="ludo-board" aria-label="Tabuleiro do Ludo"></div>
           <div class="game-controls"><button id="rollDice" class="button primary large" type="button">🎲 Lançar dado</button><span id="moveHint" class="muted">Aguarde a sua vez.</span></div>
           <button id="reenterButton" class="button warning wide hidden" type="button">Pagar e continuar</button>
@@ -187,7 +186,7 @@
         </aside>
       </section>
 
-      <section id="resultPanel" class="panel result-panel hidden"><p class="eyebrow">RESULTADO</p><h2 id="resultTitle">Partida terminada</h2><div id="resultPayouts"></div></section>
+      <section id="resultPanel" class="panel result-panel hidden"><p class="eyebrow">RESULTADO</p><h2 id="resultTitle">Partida terminada</h2><div id="resultPayouts"></div><div class="rematch-box"><h3>🔁 Repetir jogo</h3><p class="muted" id="rematchHelp">Mesmos jogadores e modo. Pode ajustar o valor.</p><div class="rematch-controls"><label><span>Nova aposta por jogador</span><div class="money"><span>MZN</span><input id="rematchBet" type="number" min="10" step="1" value="10"></div></label><button id="rematchButton" class="button primary" type="button">Repetir jogo</button></div></div></section>
     </section>
   </main>
 
