@@ -79,6 +79,45 @@
     el.className = `form-message ${type}`.trim();
   }
 
+  async function checkFunds(gameType, amount) {
+    return rpc('jl_check_funds', {
+      p_token: state.token,
+      p_game_type: gameType,
+      p_amount: Number(amount)
+    });
+  }
+
+  function directToDeposit(check, context = 'esta operação') {
+    const missing = Math.max(1, Math.ceil(Number(check?.shortfall || 0)));
+    if (els.depositAmount) els.depositAmount.value = String(missing);
+    openAccountPanel('depositPanel');
+    const message = `Saldo insuficiente para ${context}. Faltam ${formatMoney(missing)} MZN. Faça um depósito para continuar.`;
+    setMessage(els.depositMessage, message, 'error');
+    showToast(message, 'error');
+    try { history.replaceState(null, '', '#depositPanel'); } catch {}
+  }
+
+  async function ensureFunds(gameType, amount, context) {
+    if (!state.token) return false;
+    const check = await checkFunds(gameType, amount);
+    if (check?.ok) return true;
+
+    if (check?.reason === 'deposit_not_played') {
+      const message = `Este valor ainda não pode ser sacado: ${formatMoney(check.deposit_locked || 0)} MZN de depósito ainda precisa ser jogado.`;
+      setMessage(els.withdrawMessage, message, 'error');
+      showToast(message, 'error');
+      return false;
+    }
+
+    if (check?.redirect_to_deposit) {
+      directToDeposit(check, context);
+      return false;
+    }
+
+    showToast('Saldo insuficiente para continuar.', 'error');
+    return false;
+  }
+
   function showTransactionModal({ kind, amount, message, reference = '', ok = true }) {
     if (!els.transactionModal) return;
     const isDeposit = kind === 'deposit';
@@ -478,6 +517,7 @@
 
   async function placeNumberBet(number, amount) {
     try {
+      if (!(await ensureFunds('number', amount, 'apostar no Número Lendário'))) return;
       els.betButton.disabled = true;
       const result = await rpc('jl_place_bet', { p_token: state.token, p_selected_number: Number(number), p_amount: Number(amount) });
       state.pendingBet = null;
@@ -491,6 +531,7 @@
 
   async function placePairBet(numbers, amount) {
     try {
+      if (!(await ensureFunds('pair', amount, 'apostar na Dupla Lendária'))) return;
       els.pairBetButton.disabled = true;
       const [a, b] = [...numbers].sort((x, y) => x - y);
       const result = await rpc('jl_place_pair_bet', { p_token: state.token, p_number_a: a, p_number_b: b, p_amount: Number(amount) });
@@ -592,6 +633,7 @@
     event.preventDefault();
     const amount = Number(els.withdrawAmount.value);
     try {
+      if (!(await ensureFunds('withdrawal', amount, 'fazer este saque'))) return;
       const result = await rpc('jl_request_withdrawal', { p_token: state.token, p_amount: amount });
       const ok = result.ok !== false;
       const reference = result.request_id ? result.request_id.slice(0, 8).toUpperCase() : '';
@@ -626,6 +668,15 @@
     els.accountMenu.classList.toggle('hidden', !willOpen);
     els.accountButton.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
   });
+
+  const depositNeeded = Number(new URLSearchParams(window.location.search).get('deposit_needed') || 0);
+  if (depositNeeded > 0 && els.depositAmount) {
+    els.depositAmount.value = String(Math.max(1, Math.ceil(depositNeeded)));
+    setTimeout(() => {
+      openAccountPanel('depositPanel');
+      setMessage(els.depositMessage, `Faltam ${formatMoney(depositNeeded)} MZN para continuar a operação anterior.`, 'error');
+    }, 350);
+  }
 
   els.accountMenuDeposit?.addEventListener('click', () => openAccountPanel('depositPanel'));
   els.accountMenuWithdraw?.addEventListener('click', () => openAccountPanel('withdrawPanel'));
