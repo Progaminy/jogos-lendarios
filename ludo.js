@@ -89,6 +89,7 @@
     soundTone(300+(stepIndex%2)*55,.045,.022,0,'sine');
   }
   const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+  const TOKEN_STEP_MS=95;
   function tokenCoord(color,step,tokenNo){
     if(step===-1)return BASE[color]?.[Number(tokenNo)-1]||null;
     if(step<=TRACK_LAST_STEP)return PATH[(START[color]+step)%52];
@@ -100,23 +101,25 @@
     const selector=`[data-player-id="${CSS.escape(String(playerId))}"][data-token-no="${Number(tokenNo)}"]`;
     const piece=els.ludoBoard.querySelector(selector);
     if(!piece)return;
+    const totalSteps=toSteps-fromSteps;
     els.ludoBoard.classList.add('piece-moving');
     els.rollDice.disabled=true;
-    els.moveHint.textContent='Peão em movimento…';
     let visualIndex=0;
     for(let step=fromSteps+1;step<=toSteps;step++){
       const coord=tokenCoord(color,step,tokenNo);
       if(!coord)continue;
       const cell=els.ludoBoard.querySelector(`[data-row="${coord[0]}"][data-col="${coord[1]}"]`);
       if(!cell)continue;
+      visualIndex+=1;
+      els.moveHint.textContent=`Peão em movimento · ${visualIndex}/${totalSteps}`;
       piece.style.setProperty('--dx','0%');
       piece.style.setProperty('--dy','0%');
       cell.appendChild(piece);
       piece.classList.remove('step-hop');
       void piece.offsetWidth;
       piece.classList.add('step-hop');
-      playStepSound(++visualIndex);
-      await wait(155);
+      playStepSound(visualIndex);
+      await wait(TOKEN_STEP_MS);
     }
     piece.classList.remove('step-hop');
     els.ludoBoard.classList.remove('piece-moving');
