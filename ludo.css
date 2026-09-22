@@ -142,7 +142,7 @@
 }
 .cell.multi .piece{width:62%;height:72%}
 .piece.legal{filter:drop-shadow(0 0 4px #fff200);outline:none}
-.piece.step-hop{animation:pawnStep .15s ease-out}
+.piece.step-hop{animation:pawnStep .09s ease-out}
 @keyframes pawnStep{0%{scale:1}45%{scale:1.18;translate:0 -5%}100%{scale:1;translate:0 0}}
 @media(max-width:600px){
   .dice-tools{gap:6px}
