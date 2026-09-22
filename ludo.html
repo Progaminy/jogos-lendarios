@@ -77,7 +77,7 @@
       <div class="panel">
         <div class="section-head"><div><p class="eyebrow">CRIAR SALA</p><h2>Nova partida</h2></div><span id="balanceBadge" class="balance-pill">0,00 MZN</span></div>
         <form id="createRoomForm" class="form-grid">
-          <label><span>Jogadores</span><select id="createPlayers"><option value="2">2 jogadores</option><option value="3">3 jogadores</option><option value="4" selected>4 jogadores</option></select></label>
+          <label class="player-count-field"><span>Jogadores</span><div class="player-count-picker" data-select-id="createPlayers" role="group" aria-label="Quantidade de jogadores"><button type="button" data-player-count="2">2</button><button type="button" data-player-count="3">3</button><button type="button" data-player-count="4" class="active">4</button></div><select id="createPlayers" class="player-count-select" aria-hidden="true" tabindex="-1"><option value="2">2 jogadores</option><option value="3">3 jogadores</option><option value="4" selected>4 jogadores</option></select></label>
           <label><span>Modo</span><select id="createMode"><option value="solo">Cada um por si</option><option value="partners">Parceiros 2 × 2</option></select></label>
           <label><span>Aposta por jogador</span><div class="money"><span>MZN</span><input id="createBet" type="number" min="10" step="1" value="10" required></div></label>
           <label class="check-row"><input id="createPublic" type="checkbox"><span>Sala pública · pode entrar pelo código</span></label>
@@ -92,7 +92,7 @@
         <div class="divider"></div>
         <h3>Ficar à espera</h3>
         <form id="queueForm" class="form-grid compact">
-          <label><span>Jogadores</span><select id="queuePlayers"><option value="2">2</option><option value="3">3</option><option value="4" selected>4</option></select></label>
+          <label class="player-count-field"><span>Jogadores</span><div class="player-count-picker" data-select-id="queuePlayers" role="group" aria-label="Quantidade de jogadores"><button type="button" data-player-count="2">2</button><button type="button" data-player-count="3">3</button><button type="button" data-player-count="4" class="active">4</button></div><select id="queuePlayers" class="player-count-select" aria-hidden="true" tabindex="-1"><option value="2">2</option><option value="3">3</option><option value="4" selected>4</option></select></label>
           <label><span>Modo</span><select id="queueMode"><option value="solo">Cada um por si</option><option value="partners">Parceiros</option></select></label>
           <label><span>Aposta</span><div class="money"><span>MZN</span><input id="queueBet" type="number" min="10" step="1" value="10"></div></label>
           <button id="queueButton" class="button secondary" type="submit">Quero jogar</button>
@@ -139,7 +139,7 @@
             <label><span>Escolher peça após o dado</span><select name="move_seconds"><option value="15">15 s</option><option value="30" selected>30 s</option><option value="45">45 s</option><option value="60">60 s</option></select></label>
             <label><span>Saída da base</span><select name="base_exit_rule"><option value="six">Somente com 6</option><option value="one_or_six">Com 1 ou 6</option></select></label>
             <label class="toggle"><input name="capture_required" type="checkbox"><span>Captura obrigatória quando existir</span></label>
-            <label><span>Se ignorar captura obrigatória</span><select name="capture_penalty"><option value="eliminate_reentry">Elimina; pode pagar para continuar</option><option value="eliminate">Elimina sem reentrada</option><option value="lose_turn">Perde apenas a vez</option></select></label>
+            <label id="capturePenaltyField"><span>Se ignorar captura obrigatória</span><select name="capture_penalty"><option value="eliminate_reentry">Elimina; pode pagar para continuar</option><option value="eliminate">Elimina sem reentrada</option><option value="lose_turn">Perde apenas a vez</option></select><small id="capturePenaltyHelp" class="muted">Em partidas de 2 jogadores, ignorar captura apenas faz perder a vez.</small></label>
             <label class="toggle"><input name="reentry_allowed" type="checkbox" checked><span>Permitir reentrada após penalização</span></label>
             <label><span>Valor para reentrar</span><div class="money"><span>MZN</span><input name="reentry_amount" type="number" min="10" step="1" value="10"></div></label>
             <label class="toggle partner-rule"><input name="partner_capture" type="checkbox"><span>Parceiros podem matar um ao outro</span></label>
@@ -180,7 +180,7 @@
         </div>
 
         <aside class="side-column">
-          <div class="panel voice-panel"><div class="section-head"><div><p class="eyebrow">VOZ</p><h2>Microfone</h2></div><span id="voiceState" class="badge">Desligado</span></div><button id="micButton" class="button secondary wide" type="button">🎙️ Abrir microfone</button><div id="remoteAudio"></div></div>
+          <div class="panel voice-panel"><div class="section-head"><div><p class="eyebrow">VOZ</p><h2>Microfone</h2></div><span id="voiceState" class="badge">Desligado</span></div><p class="muted">Durante a partida, cada jogador pode ligar ou desligar o próprio microfone quando quiser.</p><button id="micButton" class="button secondary wide" type="button">🎙️ Ligar microfone</button><div id="remoteAudio"></div></div>
           <div class="panel chat-panel"><p class="eyebrow">CONVERSA</p><div id="chatMessages" class="chat-messages"></div><form id="chatForm" class="inline-form"><input id="chatInput" maxlength="500" placeholder="Mensagem…"><button class="button secondary" type="submit">Enviar</button></form></div>
         </aside>
       </section>
