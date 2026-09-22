@@ -207,6 +207,15 @@ Número e Dupla não misturam dinheiro, horário, resultado ou configuração.
 
 # Ludo Lendário
 
+## Entrada na sala em duas confirmações
+
+Depois de entrar numa sala, o jogador segue um fluxo em duas janelas:
+
+1. **Aceitar regras** — mostra a versão atual das regras e permite aceitar ou indicar que não concorda. Não há prazo para aceitar.
+2. **Aceitar valor** — abre somente depois de todos terem aceite as regras e mostra o valor exato da aposta por jogador, o saldo atual e o saldo previsto após a confirmação.
+
+As duas janelas nunca aparecem ao mesmo tempo. A segunda só aparece depois da primeira etapa estar concluída.
+
 ## Movimento automático, sons e repetir jogo
 
 - O botão **Ligar/Desligar microfone** fica também junto ao tabuleiro, visível durante a partida. Desligar fecha de facto o microfone do aparelho; ligar volta a abri-lo.
