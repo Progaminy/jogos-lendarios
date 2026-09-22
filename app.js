@@ -32,7 +32,7 @@
     playerArea: $('playerArea'), playerName: $('playerName'), playerPhone: $('playerPhone'), balance: $('balance'), bonusBalance: $('bonusBalance'), bonusBreakdown: $('bonusBreakdown'),
     logoutButton: $('logoutButton'), refreshButton: $('refreshButton'), betHistory: $('betHistory'),
     depositForm: $('depositForm'), depositAmount: $('depositAmount'), depositNote: $('depositNote'), depositMessage: $('depositMessage'),
-    withdrawForm: $('withdrawForm'), withdrawAmount: $('withdrawAmount'), withdrawMessage: $('withdrawMessage'),
+    withdrawForm: $('withdrawForm'), withdrawAmount: $('withdrawAmount'), withdrawMessage: $('withdrawMessage'), withdrawableBalance: $('withdrawableBalance'), depositLockedBalance: $('depositLockedBalance'),
     authModal: $('authModal'), closeAuth: $('closeAuth'), registerTab: $('registerTab'), loginTab: $('loginTab'),
     registerForm: $('registerForm'), loginForm: $('loginForm'), authMessage: $('authMessage'),
     registerName: $('registerName'), registerPhone: $('registerPhone'), registerPin: $('registerPin'), registerPinConfirm: $('registerPinConfirm'),
@@ -427,6 +427,8 @@
     els.accountMenuPlayer.textContent = player.name;
     els.accountMenuBalance.textContent = `${formatMoney(player.balance)} MZN`;
     if(els.accountMenuBonus)els.accountMenuBonus.textContent=`Bónus ${formatMoney(bonus.total||0)} MZN`;
+    if(els.withdrawableBalance)els.withdrawableBalance.textContent=`${formatMoney(player.withdrawable_balance??player.balance)} MZN`;
+    if(els.depositLockedBalance)els.depositLockedBalance.textContent=`${formatMoney(player.deposit_locked||0)} MZN`;
     renderHistory();
     checkWinNotifications();
   }
