@@ -239,6 +239,10 @@ jogador cria sala
 
 Se o anfitrião alterar qualquer regra, as aceitações anteriores deixam de valer e todos precisam aceitar a nova versão.
 
+## Movimento casa a casa
+
+Quando um peão avança, o movimento visual percorre todas as casas intermediárias em sequência rápida. Exemplo: um resultado 5 deve animar 1 → 2 → 3 → 4 → 5, sem saltar diretamente para a quinta casa.
+
 ## Resultado do dado
 
 Todo lançamento deve permanecer visível para os jogadores, mesmo quando o valor obtido não gera movimento válido e a vez passa automaticamente. O evento `dice_rolled` é a referência visual do último lançamento quando `dice_result` já foi limpo pelo avanço de turno.
