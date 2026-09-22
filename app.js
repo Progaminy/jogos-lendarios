@@ -11,6 +11,7 @@
     selectedNumber: null,
     selectedPair: [],
     pendingBet: null,
+    depositRedirectHandled: false,
     refreshTimer: null,
     timers: {
       number: { countdown: null, refresh: null },
@@ -468,6 +469,7 @@
     if(els.accountMenuBonus)els.accountMenuBonus.textContent=`Bónus ${formatMoney(bonus.total||0)} MZN`;
     if(els.withdrawableBalance)els.withdrawableBalance.textContent=`${formatMoney(player.withdrawable_balance??player.balance)} MZN`;
     if(els.depositLockedBalance)els.depositLockedBalance.textContent=`${formatMoney(player.deposit_locked||0)} MZN`;
+    handleDepositRedirectFromUrl();
     renderHistory();
     checkWinNotifications();
   }
@@ -662,21 +664,23 @@
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
+  function handleDepositRedirectFromUrl() {
+    if (state.depositRedirectHandled || !state.token || !state.data?.player) return;
+    const needed = Number(new URLSearchParams(window.location.search).get('deposit_needed') || 0);
+    if (!(needed > 0)) return;
+    state.depositRedirectHandled = true;
+    if (els.depositAmount) els.depositAmount.value = String(Math.max(1, Math.ceil(needed)));
+    openAccountPanel('depositPanel');
+    setMessage(els.depositMessage, `Faltam ${formatMoney(needed)} MZN para continuar a operação anterior.`, 'error');
+    showToast(`Faltam ${formatMoney(needed)} MZN. Faça o depósito para continuar.`, 'error');
+  }
+
   els.accountButton.addEventListener('click', () => {
     if (!state.token || !state.data?.player) return openAuth('login');
     const willOpen = els.accountMenu.classList.contains('hidden');
     els.accountMenu.classList.toggle('hidden', !willOpen);
     els.accountButton.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
   });
-
-  const depositNeeded = Number(new URLSearchParams(window.location.search).get('deposit_needed') || 0);
-  if (depositNeeded > 0 && els.depositAmount) {
-    els.depositAmount.value = String(Math.max(1, Math.ceil(depositNeeded)));
-    setTimeout(() => {
-      openAccountPanel('depositPanel');
-      setMessage(els.depositMessage, `Faltam ${formatMoney(depositNeeded)} MZN para continuar a operação anterior.`, 'error');
-    }, 350);
-  }
 
   els.accountMenuDeposit?.addEventListener('click', () => openAccountPanel('depositPanel'));
   els.accountMenuWithdraw?.addEventListener('click', () => openAccountPanel('withdrawPanel'));
