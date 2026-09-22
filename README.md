@@ -565,3 +565,10 @@ A conta e o saldo são comuns. **As regras e o motor de cada jogo permanecem ind
 ## Confirmação visual de depósito e saque
 
 Ao enviar um pedido de depósito ou saque, o jogador recebe uma janela central e bem visível com o tipo da operação, valor, mensagem de estado e referência do pedido quando disponível. Rejeições e erros também aparecem na mesma janela em estado de alerta, para que a resposta não dependa apenas do texto pequeno do formulário.
+
+
+## Presença online e troca por convite
+
+O Ludo mostra no topo três contadores: **jogadores online agora**, **convites individuais** e **convites populares**. A presença online usa atividade recente da sessão no Ludo, em vez de considerar toda sessão de 30 dias como conectada.
+
+Convites individuais ficam destacados e continuam visíveis mesmo quando o jogador está dentro de uma sala. Se o jogador estiver na **sua própria sala** ainda em espera ou negociação, pode aceitar outro convite: se a sala própria estiver vazia ela é cancelada; se houver outros participantes, um deles assume como anfitrião e a sala continua aguardando completar jogadores.
