@@ -42,6 +42,12 @@
   </header>
 
   <main class="shell">
+    <section id="ludoStatusStrip" class="ludo-status-strip hidden" aria-label="Estado do Ludo">
+      <div class="status-metric online-metric"><span class="status-icon">●</span><div><small>ONLINE AGORA</small><strong id="onlinePlayerCount">0</strong></div></div>
+      <button id="directNotificationMetric" class="status-metric notification-metric" type="button"><span class="status-icon">🔔</span><div><small>INDIVIDUAIS</small><strong id="topDirectInviteCount">0</strong></div></button>
+      <button id="publicNotificationMetric" class="status-metric notification-metric" type="button"><span class="status-icon">📣</span><div><small>POPULARES</small><strong id="topPublicInviteCount">0</strong></div></button>
+    </section>
+
     <section class="hero panel">
       <div>
         <p class="eyebrow">TABULEIRO · LUDO LENDÁRIO</p>
