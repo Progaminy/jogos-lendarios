@@ -489,3 +489,15 @@ h2 { margin: 0; font-size: clamp(1.25rem, 2.5vw, 1.75rem); letter-spacing: -.025
   .account-menu-head{grid-template-columns:1fr}
   .account-balance{text-align:left}
 }
+
+.transaction-modal{position:fixed;z-index:1200;inset:0;display:grid;place-items:center;padding:18px;background:rgba(0,0,0,.82);backdrop-filter:blur(9px)}
+.transaction-modal-card{width:min(470px,100%);padding:30px 24px;text-align:center;border:1px solid rgba(78,213,138,.4);border-radius:24px;background:linear-gradient(160deg,#18263b,#0c1523);box-shadow:0 32px 110px rgba(0,0,0,.72),0 0 0 7px rgba(78,213,138,.06)}
+.transaction-modal-card.error{border-color:rgba(255,116,116,.48);box-shadow:0 32px 110px rgba(0,0,0,.72),0 0 0 7px rgba(255,116,116,.06)}
+.transaction-modal-icon{width:82px;height:82px;margin:0 auto 15px;display:grid;place-items:center;border-radius:50%;background:linear-gradient(145deg,#61e79b,#299e63);color:#07130c;font-size:2.6rem;font-weight:950;box-shadow:0 15px 34px rgba(78,213,138,.24)}
+.transaction-modal-card.error .transaction-modal-icon{background:linear-gradient(145deg,#ff8d8d,#c34444);color:#250606;box-shadow:0 15px 34px rgba(255,116,116,.22)}
+.transaction-modal-card h2{margin:2px 0 8px;font-size:clamp(1.8rem,7vw,2.8rem)}
+.transaction-modal-amount{margin:15px 0 8px;padding:14px;border:1px solid rgba(255,255,255,.08);border-radius:14px;background:rgba(255,255,255,.04);font-size:1.45rem;font-weight:950;color:var(--accent-2)}
+.transaction-modal-message{margin:12px auto 18px;max-width:360px;color:#dce4f1;font-size:1rem;line-height:1.55}
+.transaction-modal-reference{margin:0 auto 18px;padding:10px 12px;border-radius:11px;background:rgba(255,255,255,.05);color:var(--muted);font-size:.86rem;word-break:break-word}
+.transaction-modal-card .button{min-width:160px}
+@media(max-width:520px){.transaction-modal{padding:10px}.transaction-modal-card{padding:25px 18px;border-radius:20px}}
