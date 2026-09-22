@@ -39,11 +39,12 @@
       const max = Number(amountInput?.max);
 
       if (!Number.isFinite(amount) ||
+          !Number.isInteger(amount) ||
           (Number.isFinite(min) && amount < min) ||
           (Number.isFinite(max) && amount > max)) {
         event.preventDefault();
         event.stopImmediatePropagation();
-        showToast(`A aposta deve ficar entre ${min} e ${max} MZN.`, 'error');
+        showToast(`A aposta deve ser um valor inteiro entre ${min} e ${max} MZN.`, 'error');
         amountInput?.focus();
         return;
       }
