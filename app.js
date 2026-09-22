@@ -392,9 +392,11 @@
         resultLabel = 'Não premiada';
         resultValue = pair ? `Saiu ${bet.pair_drawn_a}+${bet.pair_drawn_b}` : `Saiu ${bet.drawn_number}`;
       }
+      const bonusUsed=Number(bet.bonus_amount||0),cashUsed=Number(bet.cash_amount||0);
+      const source=bonusUsed>0?` · Bónus ${formatMoney(bonusUsed)} MZN${cashUsed>0?` + saldo ${formatMoney(cashUsed)} MZN`:''}`:'';
       return `<div class="history-item">
         <div class="history-number">${escapeHtml(choice)}</div>
-        <div class="history-main"><strong>${gameName} · Rodada ${bet.round_no} · MZN ${formatMoney(bet.amount)}</strong><span>${formatDate(bet.created_at)}</span></div>
+        <div class="history-main"><strong>${gameName} · Rodada ${bet.round_no} · MZN ${formatMoney(bet.amount)}</strong><span>${formatDate(bet.created_at)}${source}</span></div>
         <div class="history-result ${resultClass}"><strong>${escapeHtml(resultLabel)}</strong><span>${escapeHtml(resultValue)}</span></div>
       </div>`;
     }).join('');
