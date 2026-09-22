@@ -405,7 +405,7 @@
     const withdrawals = state.data?.pending_withdrawals || [];
     shared.withdrawRequests.innerHTML = withdrawals.length
       ? withdrawals.map((r) => `<div class="request-row">
-          <div><strong>${escapeHtml(r.name)}</strong><br><small>+${escapeHtml(r.phone)} · ${dateTime(r.created_at)}</small></div>
+          <div><strong>${escapeHtml(r.name)}</strong><br><small>+${escapeHtml(r.phone)} · ${dateTime(r.created_at)}</small><br><small>Sacável após bloqueios: MZN ${money(r.withdrawable_balance??0)} · Por jogar: MZN ${money(r.deposit_locked||0)}</small></div>
           <strong>MZN ${money(r.amount)}</strong>
           <div class="row-actions">
             <button class="button success small" data-withdraw="${r.id}" data-decision="approved">Autorizar</button>
@@ -417,7 +417,7 @@
     const players = state.data?.players || [];
     shared.playersList.innerHTML = players.length
       ? players.map((p) => `<div class="player-row">
-          <div><strong>${escapeHtml(p.name)}</strong><br><small>+${escapeHtml(p.phone)} · ${dateTime(p.created_at)}${p.blocked ? ' · BLOQUEADO' : ''}</small></div>
+          <div><strong>${escapeHtml(p.name)}</strong><br><small>+${escapeHtml(p.phone)} · ${dateTime(p.created_at)}${p.blocked ? ' · BLOQUEADO' : ''}</small><br><small>Sacável: MZN ${money(p.withdrawable_balance??p.balance)} · Por jogar: MZN ${money(p.deposit_locked||0)}</small></div>
           <strong>MZN ${money(p.balance)}</strong>
           <div class="row-actions">
             <button class="button ghost small" data-adjust="${p.id}" data-name="${escapeHtml(p.name)}">Ajustar saldo</button>
