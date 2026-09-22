@@ -162,6 +162,24 @@
         <section class="card admin-card"><p class="eyebrow">SAQUES</p><h2>Pedidos pendentes</h2><div id="withdrawRequests" class="request-list"></div></section>
       </div>
 
+      <section class="card admin-card customer-support-admin">
+        <div class="section-head">
+          <div><p class="eyebrow">LINHA DE CLIENTE</p><h2>Mensagens dos jogadores</h2></div>
+          <span id="supportUnreadBadge" class="badge muted">0 não lidas</span>
+        </div>
+        <div class="support-admin-layout">
+          <div id="supportThreads" class="support-thread-list"><div class="empty">Nenhuma conversa.</div></div>
+          <div id="supportConversation" class="support-conversation hidden">
+            <div class="section-head"><div><small>Conversa com</small><h3 id="supportConversationTitle">—</h3></div><button id="supportConversationClose" class="button ghost small" type="button">Fechar</button></div>
+            <div id="supportAdminMessages" class="support-admin-messages"></div>
+            <form id="supportReplyForm" class="stack-form">
+              <label class="field"><span>Responder ao jogador</span><textarea id="supportReplyInput" maxlength="1000" rows="3" required placeholder="Escreva a resposta…"></textarea></label>
+              <button class="button primary" type="submit">Enviar resposta</button>
+            </form>
+          </div>
+        </div>
+      </section>
+
       <section class="card admin-card"><p class="eyebrow">JOGADORES</p><h2>Contas e saldo comum</h2><div id="playersList" class="player-list"></div></section>
     </section>
   </main>
