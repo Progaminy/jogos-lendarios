@@ -218,3 +218,17 @@
 .flow-value{margin:18px 0 6px;padding:16px;border:1px solid rgba(244,189,66,.4);border-radius:14px;background:rgba(244,189,66,.08);text-align:center;font-size:1.45rem;font-weight:900;color:var(--gold)}
 body.flow-modal-open{overflow:hidden}
 @media(max-width:520px){.flow-modal{padding:10px}.flow-modal-card{padding:20px 16px;border-radius:18px}.flow-actions{grid-template-columns:1fr}.flow-actions .button{width:100%}}
+
+.ludo-status-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.status-metric{min-width:0;display:flex;align-items:center;justify-content:center;gap:11px;padding:13px 16px;border:1px solid rgba(255,255,255,.11);border-radius:16px;background:linear-gradient(180deg,rgba(24,43,68,.98),rgba(13,28,47,.98));color:var(--text);box-shadow:0 9px 26px rgba(0,0,0,.18)}
+button.status-metric{cursor:pointer;text-align:left}
+button.status-metric:hover{border-color:rgba(244,189,66,.5);transform:translateY(-1px)}
+.status-metric small{display:block;color:var(--muted);font-size:.66rem;font-weight:900;letter-spacing:.09em}
+.status-metric strong{display:block;margin-top:1px;font-size:1.55rem;line-height:1;color:#fff}
+.status-icon{font-size:1.12rem}.online-metric .status-icon{color:#42dd8d;text-shadow:0 0 12px rgba(66,221,141,.8)}
+.notification-metric.has-items{border-color:rgba(244,189,66,.55);background:linear-gradient(180deg,rgba(73,54,20,.95),rgba(35,29,22,.98));animation:notificationGlow 1.65s ease-in-out infinite}
+.notification-center.has-direct{outline:2px solid rgba(244,189,66,.5);outline-offset:5px;border-radius:18px}
+.direct-invite{position:relative;border-color:rgba(244,189,66,.34)!important;background:rgba(244,189,66,.07)!important}
+.direct-invite .notice-kind.direct:before{content:"🔔 ";}.invite-switch-note{display:block;margin-top:5px;color:#ffd36d;font-weight:750;font-size:.72rem}
+@keyframes notificationGlow{50%{box-shadow:0 0 0 4px rgba(244,189,66,.10),0 10px 28px rgba(0,0,0,.22)}}
+@media(max-width:600px){.ludo-status-strip{grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}.status-metric{padding:10px 7px;gap:6px;border-radius:12px}.status-metric small{font-size:.55rem}.status-metric strong{font-size:1.25rem}.status-icon{font-size:.95rem}}
