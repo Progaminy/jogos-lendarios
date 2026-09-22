@@ -604,3 +604,16 @@ Apostas em **Número Lendário**, **Dupla Lendária** e **Ludo** reduzem o requi
 O jogador vê separadamente o **saldo disponível para saque** e o **depósito ainda por jogar**. O admin também vê estes valores. O pedido de saque e a aprovação administrativa revalidam o bloqueio.
 
 A migração reconstrói os depósitos históricos cronologicamente, descontando apenas apostas feitas depois da aprovação de cada depósito. Na aplicação inicial foram encontrados 1.091 MZN em depósitos aprovados: 650 MZN já tinham sido jogados e 441 MZN permaneceram bloqueados até serem apostados.
+
+
+## Verificação de saldo antes de movimentos com valor
+
+Antes de qualquer ação financeira do jogador, a plataforma verifica se há fundos suficientes. Isso cobre **Número Lendário**, **Dupla Lendária**, **Ludo**, criação de sala, entrada na fila, convites, desafios públicos, confirmação da aposta, reentrada, repetir jogo e saque.
+
+- **Número e Dupla:** saldo normal + bónus elegível para o jogo contam como fundos disponíveis.
+- **Ludo:** usa apenas saldo normal.
+- **Saque:** usa apenas o saldo realmente sacável, respeitando depósitos ainda não jogados.
+- Quando falta saldo normal, o jogador é levado diretamente para **Depósito**, e o campo de depósito é preenchido com o valor que falta.
+- Se o problema do saque for um depósito ainda não jogado, a plataforma não manda depositar mais; informa que esse valor precisa primeiro ser jogado.
+
+O backend também repete a validação para impedir que o controlo seja contornado pelo navegador. Ao entrar por convite ou desafio público, a verificação acontece antes de abandonar ou transferir a sala atual.
