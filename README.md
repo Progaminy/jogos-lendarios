@@ -560,3 +560,8 @@ Ludo Lendário   → Tabuleiro / Multiplayer
 ```
 
 A conta e o saldo são comuns. **As regras e o motor de cada jogo permanecem independentes.**
+
+
+## Confirmação visual de depósito e saque
+
+Ao enviar um pedido de depósito ou saque, o jogador recebe uma janela central e bem visível com o tipo da operação, valor, mensagem de estado e referência do pedido quando disponível. Rejeições e erros também aparecem na mesma janela em estado de alerta, para que a resposta não dependa apenas do texto pequeno do formulário.
