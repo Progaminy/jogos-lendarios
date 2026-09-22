@@ -501,3 +501,12 @@ h2 { margin: 0; font-size: clamp(1.25rem, 2.5vw, 1.75rem); letter-spacing: -.025
 .transaction-modal-reference{margin:0 auto 18px;padding:10px 12px;border-radius:11px;background:rgba(255,255,255,.05);color:var(--muted);font-size:.86rem;word-break:break-word}
 .transaction-modal-card .button{min-width:160px}
 @media(max-width:520px){.transaction-modal{padding:10px}.transaction-modal-card{padding:25px 18px;border-radius:20px}}
+
+.customer-support-admin{overflow:hidden}.support-admin-layout{display:grid;grid-template-columns:minmax(260px,.8fr) minmax(340px,1.2fr);gap:16px;margin-top:16px}
+.support-thread-list{display:grid;gap:8px;align-content:start;max-height:560px;overflow:auto}.support-thread{display:grid;grid-template-columns:1fr auto;gap:8px;padding:12px;border:1px solid var(--line);border-radius:13px;background:rgba(255,255,255,.025);cursor:pointer;text-align:left;color:var(--text)}
+.support-thread:hover,.support-thread.active{border-color:#568fe8;background:rgba(86,143,232,.08)}.support-thread strong,.support-thread small{display:block}.support-thread small{color:var(--muted);margin-top:3px}.support-thread-preview{margin-top:6px;color:#cbd7e7;font-size:.78rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.support-unread{min-width:24px;height:24px;display:grid;place-items:center;border-radius:999px;background:#d43f52;color:#fff;font-size:.72rem;font-weight:900}
+.support-conversation{border:1px solid var(--line);border-radius:15px;padding:14px;background:rgba(255,255,255,.018)}.support-admin-messages{height:330px;overflow:auto;display:flex;flex-direction:column;gap:8px;margin:12px 0;padding:4px}
+.support-admin-msg{max-width:86%;padding:9px 11px;border-radius:13px}.support-admin-msg.player{align-self:flex-start;background:#263a55}.support-admin-msg.admin{align-self:flex-end;background:#1c61c9}.support-admin-msg small{display:block;margin-top:5px;opacity:.7;font-size:.68rem}
+#supportReplyInput{resize:vertical;min-height:78px}
+@media(max-width:800px){.support-admin-layout{grid-template-columns:1fr}.support-admin-messages{height:280px}}
