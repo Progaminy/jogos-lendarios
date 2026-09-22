@@ -548,3 +548,6 @@ end;
 $function$;
 
 revoke all on function public.jl_require_cash_balance(uuid,numeric) from public,anon,authenticated;
+
+revoke all on function public.jl_check_funds(text,text,numeric) from public;
+grant execute on function public.jl_check_funds(text,text,numeric) to anon,authenticated;
