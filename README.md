@@ -249,6 +249,14 @@ Todo lançamento deve permanecer visível para os jogadores, mesmo quando o valo
 
 Exemplo: se a peça precisa de 6 para sair da base e o jogador tira 3, o 3 continua visível para que todos saibam qual foi o resultado.
 
+## Timeout, reconexão e desistência
+
+Durante uma partida em andamento, o fim do tempo de uma jogada **não elimina o jogador e não entrega vitória ao adversário**. O servidor apenas regista o atraso e passa a vez para o próximo jogador.
+
+Uma queda de internet também não é tratada como desistência. Ao voltar e entrar novamente na mesma conta, o jogador recupera a sala ativa e encontra a partida no estado atual.
+
+A saída voluntária durante a partida é separada: existe o botão **Desistir**. Somente essa ação explícita abandona a partida. O botão **Sair** é usado apenas antes de a partida começar.
+
 ## Tempos
 
 As ações que dependem de um jogador nunca podem bloquear a partida indefinidamente.
