@@ -553,6 +553,10 @@
     else await placeNumberBet(pending.number, pending.amount);
   }
 
+  els.betAmount?.addEventListener('change',()=>{const amount=Number(els.betAmount.value);if(state.token&&Number.isInteger(amount)&&amount>0)ensureFunds('number',amount,'apostar no Número Lendário').catch(err=>showToast(err.message,'error'));});
+  els.pairBetAmount?.addEventListener('change',()=>{const amount=Number(els.pairBetAmount.value);if(state.token&&Number.isInteger(amount)&&amount>0)ensureFunds('pair',amount,'apostar na Dupla Lendária').catch(err=>showToast(err.message,'error'));});
+  els.withdrawAmount?.addEventListener('change',()=>{const amount=Number(els.withdrawAmount.value);if(state.token&&Number.isFinite(amount)&&amount>0)ensureFunds('withdrawal',amount,'fazer este saque').catch(err=>showToast(err.message,'error'));});
+
   els.winModalOk?.addEventListener('click', closeWinModal);
   els.transactionModalOk?.addEventListener('click', closeTransactionModal);
   els.transactionModal?.addEventListener('click', (event) => { if (event.target === els.transactionModal) closeTransactionModal(); });
