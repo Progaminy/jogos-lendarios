@@ -37,7 +37,10 @@
     registerForm: $('registerForm'), loginForm: $('loginForm'), authMessage: $('authMessage'),
     registerName: $('registerName'), registerPhone: $('registerPhone'), registerPin: $('registerPin'), registerPinConfirm: $('registerPinConfirm'),
     loginPhone: $('loginPhone'), loginPin: $('loginPin'),
-    winModal: $('winModal'), winModalTitle: $('winModalTitle'), winModalMessage: $('winModalMessage'), winModalOk: $('winModalOk')
+    winModal: $('winModal'), winModalTitle: $('winModalTitle'), winModalMessage: $('winModalMessage'), winModalOk: $('winModalOk'),
+    transactionModal: $('transactionModal'), transactionModalIcon: $('transactionModalIcon'), transactionModalEyebrow: $('transactionModalEyebrow'),
+    transactionModalTitle: $('transactionModalTitle'), transactionModalAmount: $('transactionModalAmount'), transactionModalMessage: $('transactionModalMessage'),
+    transactionModalReference: $('transactionModalReference'), transactionModalOk: $('transactionModalOk')
   };
 
   function formatMoney(value) {
@@ -74,6 +77,35 @@
     if (!el) return;
     el.textContent = message;
     el.className = `form-message ${type}`.trim();
+  }
+
+  function showTransactionModal({ kind, amount, message, reference = '', ok = true }) {
+    if (!els.transactionModal) return;
+    const isDeposit = kind === 'deposit';
+    const card = els.transactionModal.querySelector('.transaction-modal-card');
+    card?.classList.toggle('error', !ok);
+    els.transactionModalIcon.textContent = ok ? (isDeposit ? '↓' : '↑') : '!';
+    els.transactionModalEyebrow.textContent = isDeposit ? 'DEPÓSITO' : 'SAQUE';
+    els.transactionModalTitle.textContent = ok
+      ? (isDeposit ? 'Pedido de depósito enviado' : 'Pedido de saque enviado')
+      : (isDeposit ? 'Depósito não enviado' : 'Saque não enviado');
+    els.transactionModalAmount.textContent = Number.isFinite(Number(amount)) ? `${formatMoney(amount)} MZN` : '—';
+    els.transactionModalMessage.textContent = message || (ok ? 'Pedido recebido.' : 'Não foi possível concluir o pedido.');
+    if (reference) {
+      els.transactionModalReference.textContent = `Confirmação: ${reference}`;
+      els.transactionModalReference.classList.remove('hidden');
+    } else {
+      els.transactionModalReference.textContent = '';
+      els.transactionModalReference.classList.add('hidden');
+    }
+    els.transactionModal.classList.remove('hidden');
+    document.body.classList.add('modal-open');
+  }
+
+  function closeTransactionModal() {
+    if (!els.transactionModal) return;
+    els.transactionModal.classList.add('hidden');
+    document.body.classList.remove('modal-open');
   }
 
   const WIN_SEEN_KEY = 'jl_seen_wins_v1';
@@ -471,6 +503,8 @@
   }
 
   els.winModalOk?.addEventListener('click', closeWinModal);
+  els.transactionModalOk?.addEventListener('click', closeTransactionModal);
+  els.transactionModal?.addEventListener('click', (event) => { if (event.target === els.transactionModal) closeTransactionModal(); });
 
   els.betForm.addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -532,22 +566,35 @@
 
   els.depositForm.addEventListener('submit', async (event) => {
     event.preventDefault();
+    const amount = Number(els.depositAmount.value);
     try {
-      const result = await rpc('jl_request_deposit', { p_token: state.token, p_amount: Number(els.depositAmount.value), p_note: els.depositNote.value.trim() });
-      setMessage(els.depositMessage, `${result.message} Confirmação: ${result.request_id.slice(0, 8).toUpperCase()}`, 'success');
+      const result = await rpc('jl_request_deposit', { p_token: state.token, p_amount: amount, p_note: els.depositNote.value.trim() });
+      const reference = result.request_id ? result.request_id.slice(0, 8).toUpperCase() : '';
+      setMessage(els.depositMessage, `${result.message}${reference ? ` Confirmação: ${reference}` : ''}`, 'success');
+      showTransactionModal({ kind: 'deposit', amount, message: result.message || 'O pedido foi recebido e aguarda confirmação.', reference, ok: true });
       els.depositForm.reset();
       await refresh(true);
-    } catch (error) { setMessage(els.depositMessage, error.message, 'error'); }
+    } catch (error) {
+      setMessage(els.depositMessage, error.message, 'error');
+      showTransactionModal({ kind: 'deposit', amount, message: error.message, ok: false });
+    }
   });
 
   els.withdrawForm.addEventListener('submit', async (event) => {
     event.preventDefault();
+    const amount = Number(els.withdrawAmount.value);
     try {
-      const result = await rpc('jl_request_withdrawal', { p_token: state.token, p_amount: Number(els.withdrawAmount.value) });
-      setMessage(els.withdrawMessage, result.message, result.ok ? 'success' : 'error');
-      els.withdrawForm.reset();
+      const result = await rpc('jl_request_withdrawal', { p_token: state.token, p_amount: amount });
+      const ok = result.ok !== false;
+      const reference = result.request_id ? result.request_id.slice(0, 8).toUpperCase() : '';
+      setMessage(els.withdrawMessage, result.message, ok ? 'success' : 'error');
+      showTransactionModal({ kind: 'withdraw', amount, message: result.message, reference, ok });
+      if (ok) els.withdrawForm.reset();
       await refresh(true);
-    } catch (error) { setMessage(els.withdrawMessage, error.message, 'error'); }
+    } catch (error) {
+      setMessage(els.withdrawMessage, error.message, 'error');
+      showTransactionModal({ kind: 'withdraw', amount, message: error.message, ok: false });
+    }
   });
 
   async function logoutPlayer() {
@@ -588,7 +635,11 @@
   els.registerTab.addEventListener('click', () => switchAuth('register'));
   els.loginTab.addEventListener('click', () => switchAuth('login'));
   els.authModal.addEventListener('click', (event) => { if (event.target === els.authModal) closeAuth(); });
-  document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && !els.authModal.classList.contains('hidden')) closeAuth(); });
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape') return;
+    if (els.transactionModal && !els.transactionModal.classList.contains('hidden')) return closeTransactionModal();
+    if (!els.authModal.classList.contains('hidden')) closeAuth();
+  });
 
   buildNumbers();
   buildPairNumbers();
