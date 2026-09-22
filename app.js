@@ -20,7 +20,7 @@
 
   const els = {
     toast: $('toast'), accountButton: $('accountButton'),
-    accountMenu: $('accountMenu'), accountMenuPlayer: $('accountMenuPlayer'), accountMenuBalance: $('accountMenuBalance'),
+    accountMenu: $('accountMenu'), accountMenuPlayer: $('accountMenuPlayer'), accountMenuBalance: $('accountMenuBalance'), accountMenuBonus: $('accountMenuBonus'),
     accountMenuDeposit: $('accountMenuDeposit'), accountMenuWithdraw: $('accountMenuWithdraw'), accountMenuLogout: $('accountMenuLogout'),
     numberRoundBadge: $('numberRoundBadge'), pairRoundBadge: $('pairRoundBadge'),
     numberResultBanner: $('numberResultBanner'), numberResultTitle: $('numberResultTitle'), numberResultNumber: $('numberResultNumber'),
@@ -29,7 +29,7 @@
     numberGrid: $('numberGrid'), betForm: $('betForm'), betAmount: $('betAmount'), betButton: $('betButton'), selectionText: $('selectionText'),
     pairRoundStatus: $('pairRoundStatus'), pairCountdown: $('pairCountdown'), pairRuleText: $('pairRuleText'), pairPrizeText: $('pairPrizeText'),
     pairNumberGrid: $('pairNumberGrid'), pairBetForm: $('pairBetForm'), pairBetAmount: $('pairBetAmount'), pairBetButton: $('pairBetButton'), pairSelectionText: $('pairSelectionText'),
-    playerArea: $('playerArea'), playerName: $('playerName'), playerPhone: $('playerPhone'), balance: $('balance'),
+    playerArea: $('playerArea'), playerName: $('playerName'), playerPhone: $('playerPhone'), balance: $('balance'), bonusBalance: $('bonusBalance'), bonusBreakdown: $('bonusBreakdown'),
     logoutButton: $('logoutButton'), refreshButton: $('refreshButton'), betHistory: $('betHistory'),
     depositForm: $('depositForm'), depositAmount: $('depositAmount'), depositNote: $('depositNote'), depositMessage: $('depositMessage'),
     withdrawForm: $('withdrawForm'), withdrawAmount: $('withdrawAmount'), withdrawMessage: $('withdrawMessage'),
@@ -417,10 +417,14 @@
     els.playerArea.classList.remove('hidden');
     els.playerName.textContent = player.name;
     els.playerPhone.textContent = `+${player.phone}`;
+    const bonus=state.data?.bonus||{};
     els.balance.textContent = formatMoney(player.balance);
+    if(els.bonusBalance)els.bonusBalance.textContent=formatMoney(bonus.total||0);
+    if(els.bonusBreakdown)els.bonusBreakdown.textContent=`Número ${formatMoney(bonus.number||0)} · Dupla ${formatMoney(bonus.pair||0)} MZN`;
     els.accountButton.textContent = player.name.split(/\s+/)[0] || 'Minha conta';
     els.accountMenuPlayer.textContent = player.name;
     els.accountMenuBalance.textContent = `${formatMoney(player.balance)} MZN`;
+    if(els.accountMenuBonus)els.accountMenuBonus.textContent=`Bónus ${formatMoney(bonus.total||0)} MZN`;
     renderHistory();
     checkWinNotifications();
   }
