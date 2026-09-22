@@ -12,7 +12,7 @@
   };
   const els = Object.fromEntries([
     'toast','identityBadge','accountButton','accountMenu','accountMenuCode','accountMenuBalance','accountMenuDeposit','accountMenuWithdraw','accountMenuLogout','loggedOut','lobby','boardLobby','ludoLobbyBoard','balanceBadge','createRoomForm','createPlayers','createMode','createBet','createPublic',
-    'joinCodeForm','joinCode','queueForm','queuePlayers','queueMode','queueBet','queueButton','queueStatus','inviteList','directInviteCount','publicChallengeList','publicChallengeCount','refreshLobby',
+    'joinCodeForm','joinCode','queueForm','queuePlayers','queueMode','queueBet','queueButton','queueStatus','notificationCenter','inviteList','directInviteCount','publicChallengeList','publicChallengeCount','refreshLobby',
     'room','roomCode','roomMeta','roomPot','roomPrize','copyRoomCode','leaveRoom','forfeitRoom','deadlineBar','deadlineLabel','deadlineClock','playersPanel',
     'rulesVersion','rulesSummary','rulesForm','rulesDecision','acceptRules','declineRules','searchPlayerForm','searchPlayer','playerSearchResults','refreshWaiting','waitingPlayers',
     'fundingPanel','fundingText','fundButton','gamePanel','turnTitle','dice','ludoBoard','rollDice','soundToggle','moveHint','reenterButton','voiceState','micButton','remoteAudio',
@@ -194,11 +194,9 @@
       let nextRoom=null;
       if(nextStatus?.active_room_id){
         nextRoom=await rpc('jl_ludo_room_state',{p_token:state.token,p_room:nextStatus.active_room_id});
-        nextStatus.public_challenges=[];
-      }else{
-        try{nextStatus.public_challenges=await rpc('jl_ludo_public_challenges',{p_token:state.token});}
-        catch{nextStatus.public_challenges=[];}
       }
+      try{nextStatus.public_challenges=await rpc('jl_ludo_public_challenges',{p_token:state.token});}
+      catch{nextStatus.public_challenges=[];}
       if(state.animating)return;
       const movement=state.room&&nextRoom&&state.room.room?.id===nextRoom.room?.id?detectForwardMove(state.room,nextRoom):null;
       state.status=nextStatus;
@@ -214,7 +212,7 @@
     }
   }
   async function processTimeouts(){if(!state.token||!state.room?.room?.id||state.busy||state.animating)return;try{state.room=await rpc('jl_ludo_process_timeouts',{p_token:state.token,p_room:state.room.room.id});renderRoom();}catch{}}
-  function renderAll(){const authed=Boolean(state.token&&state.status?.identity);els.loggedOut.classList.toggle('hidden',authed);els.lobby.classList.toggle('hidden',!authed||Boolean(state.room));els.room.classList.toggle('hidden',!state.room);els.boardLobby.classList.toggle('hidden',Boolean(state.room));if(!state.room)renderLobbyBoard();if(authed){const i=state.status.identity;els.identityBadge.textContent=`${i.code} · ${money(i.balance)} MZN`;els.accountButton.textContent=i.name||i.code;els.accountMenuCode.textContent=`${i.name||'Jogador'} · ${i.code}`;els.accountMenuBalance.textContent=`${money(i.balance)} MZN`;els.balanceBadge.textContent=`${money(i.balance)} MZN`;renderLobby();}else{els.identityBadge.textContent='Não autenticado';els.accountButton.textContent='Entrar';els.accountMenu?.classList.add('hidden');els.accountButton.setAttribute('aria-expanded','false');}if(state.room)renderRoom();}
+  function renderAll(){const authed=Boolean(state.token&&state.status?.identity);els.loggedOut.classList.toggle('hidden',authed);els.lobby.classList.toggle('hidden',!authed||Boolean(state.room));els.notificationCenter?.classList.toggle('hidden',!authed);els.room.classList.toggle('hidden',!state.room);els.boardLobby.classList.toggle('hidden',Boolean(state.room));if(!state.room)renderLobbyBoard();if(authed){const i=state.status.identity;els.identityBadge.textContent=`${i.code} · ${money(i.balance)} MZN`;els.accountButton.textContent=i.name||i.code;els.accountMenuCode.textContent=`${i.name||'Jogador'} · ${i.code}`;els.accountMenuBalance.textContent=`${money(i.balance)} MZN`;els.balanceBadge.textContent=`${money(i.balance)} MZN`;renderLobby();}else{els.identityBadge.textContent='Não autenticado';els.accountButton.textContent='Entrar';els.accountMenu?.classList.add('hidden');els.accountButton.setAttribute('aria-expanded','false');}if(state.room)renderRoom();}
   function renderLobby(){
     const s=state.status;if(!s)return;
     if(s.queue){
@@ -226,15 +224,16 @@
     }
 
     const invites=s.invites||[];
+    const roomBusy=Boolean(state.room);
     if(els.directInviteCount)els.directInviteCount.textContent=String(invites.length);
-    els.inviteList.innerHTML=invites.length?invites.map(i=>`<div class="invite-card direct-invite"><div><span class="notice-kind direct">DIRETO</span><strong>${escapeHtml(i.host)} · ${escapeHtml(i.host_code)}</strong><br><small>${escapeHtml(i.room_code)} · ${i.player_count} jogadores · ${escapeHtml(i.mode)} · ${money(i.bet_amount)} MZN</small></div><div class="notice-actions"><button class="button success small" data-invite-accept="${i.id}">Aceitar</button><button class="button danger small" data-invite-decline="${i.id}">Recusar</button></div></div>`).join(''):'<div class="empty">Nenhum convite enviado diretamente para você.</div>';
+    els.inviteList.innerHTML=invites.length?invites.map(i=>`<div class="invite-card direct-invite"><div><span class="notice-kind direct">PARTICULAR</span><strong>${escapeHtml(i.host)} · ${escapeHtml(i.host_code)}</strong><br><small>${escapeHtml(i.room_code)} · ${i.player_count} jogadores · ${escapeHtml(i.mode)} · ${money(i.bet_amount)} MZN</small></div><div class="notice-actions"><button class="button success small" data-invite-accept="${i.id}" ${roomBusy?'disabled title="Termine ou desista da partida atual para aceitar outro convite."':''}>Aceitar</button><button class="button danger small" data-invite-decline="${i.id}">Recusar</button></div></div>`).join(''):'<div class="empty">Nenhum convite particular recebido.</div>';
 
     const challenges=s.public_challenges||[];
     if(els.publicChallengeCount)els.publicChallengeCount.textContent=String(challenges.length);
     els.publicChallengeList.innerHTML=challenges.length?challenges.map(c=>{
       const left=Math.max(0,Math.ceil((new Date(c.expires_at)-Date.now())/1000));
-      return `<div class="invite-card public-challenge"><div><span class="notice-kind public">PÚBLICO</span><strong>${escapeHtml(c.host_name)} · ${escapeHtml(c.host_code)}</strong><br><small>${escapeHtml(c.code)} · ${c.joined_count}/${c.player_count} jogadores · ${escapeHtml(c.mode)} · ${money(c.bet_amount)} MZN${c.play_location?` · ${escapeHtml(c.play_location)}`:''}</small><br><small class="challenge-expiry">Disponível por ${left}s</small></div><div class="notice-actions"><button class="button secondary small" data-public-accept="${escapeHtml(c.code)}">Entrar</button></div></div>`;
-    }).join(''):'<div class="empty">Nenhum desafio público disponível agora.</div>';
+      return `<div class="invite-card public-challenge"><div><span class="notice-kind public">POPULAR</span><strong>${escapeHtml(c.host_name)} · ${escapeHtml(c.host_code)}</strong><br><small>${escapeHtml(c.code)} · ${c.joined_count}/${c.player_count} jogadores · ${escapeHtml(c.mode)} · ${money(c.bet_amount)} MZN${c.play_location?` · ${escapeHtml(c.play_location)}`:''}</small><br><small class="challenge-expiry">Disponível por ${left}s</small></div><div class="notice-actions"><button class="button secondary small" data-public-accept="${escapeHtml(c.code)}" ${roomBusy?'disabled title="Termine ou desista da partida atual para entrar noutro convite."':''}>Entrar</button></div></div>`;
+    }).join(''):'<div class="empty">Nenhum convite popular disponível agora.</div>';
   }
   function commissionText(){const r=roomData();if(!r)return '—';const pot=Number(r.pot||0)||Number(r.bet_amount||0)*Number(r.player_count||0);if(r.mode==='partners'){const gross=pot/2,comm=Math.min(gross,Math.max(1,gross*.01));return `Dupla vencedora: ${money(gross)} MZN brutos por parceiro · comissão ${money(comm)} MZN por parceiro · ${money(gross-comm)} MZN líquidos cada.`;}const comm=Math.min(pot,Math.max(1,pot*.01));return `Vencedor: ${money(pot)} MZN brutos · comissão ${money(comm)} MZN · ${money(pot-comm)} MZN líquidos.`;}
   function renderRoom(){const r=roomData();if(!r)return;els.roomCode.textContent=r.code;els.roomMeta.textContent=`${r.player_count} jogadores · ${r.mode==='partners'?'Parceiros 2 × 2':'Cada um por si'} · ${money(r.bet_amount)} MZN por jogador · ${r.is_public?'Pública':'Privada'}`;els.roomPot.textContent=`${money(r.pot)} MZN`;els.roomPrize.textContent=commissionText();els.rulesVersion.textContent=`v${r.rules_version}`;const playing=r.status==='playing';els.leaveRoom?.classList.toggle('hidden',playing);els.forfeitRoom?.classList.toggle('hidden',!playing);renderPlayers();renderRules();renderDeadline();renderFunding();renderGame();renderResult();renderInviter();}
