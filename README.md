@@ -577,3 +577,10 @@ Convites individuais ficam destacados e continuam visíveis mesmo quando o jogad
 ## Linha de Cliente
 
 Ao clicar no nome da conta, o jogador vê **Depósito**, **Saque**, **Mensagem** e **Sair**; o botão **Sair** é vermelho e destacado. **Mensagem** abre a Linha de Cliente, onde o jogador pode escrever dúvidas, preocupações ou problemas e acompanhar as respostas do administrador. O painel administrativo possui uma área própria com conversas por jogador, contador de mensagens não lidas e resposta direta. O histórico é armazenado no Supabase e acessado por RPC autenticada com as sessões já existentes do jogador e do admin.
+
+
+## Recuperação de PIN com confirmação administrativa
+
+O login possui **Esqueci o PIN**. O jogador informa o número da conta e um email de recuperação. O pedido não envia código imediatamente: ele aparece primeiro no painel administrativo com nome, telefone e email para o administrador ligar e confirmar a identidade. Depois da confirmação, o admin usa **Confirmar identidade e enviar código**. O serviço `jogos-recovery` gera um código de 6 dígitos, guarda somente o hash, envia por email, expira em 10 minutos e permite no máximo 5 tentativas. Ao concluir, todas as sessões antigas do jogador são revogadas e ele entra novamente com o novo PIN.
+
+O remetente definido é `escolalendaria07@gmail.com`, o mesmo usado pela Escola Lendária. Para o envio funcionar no projeto Supabase dos Jogos, a credencial de aplicação desse Gmail deve existir no segredo `PSF_RECOVERY_EMAIL_APP_PASSWORD`. A palavra-passe nunca deve ser gravada no repositório ou no frontend.
