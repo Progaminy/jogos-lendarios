@@ -7,6 +7,7 @@
   <meta name="description" content="Ludo Lendário — partidas online ou presenciais de 2, 3 ou 4 jogadores, regras negociadas e apostas entre participantes.">
   <title>Ludo Lendário · Jogos Lendários</title>
   <link rel="stylesheet" href="./ludo.css">
+  <link rel="stylesheet" href="./support-ui.css">
   <link rel="stylesheet" href="./site-nav.css">
 </head>
 <body>
@@ -34,7 +35,8 @@
           <div class="account-menu-actions">
             <button id="accountMenuDeposit" class="button success small" type="button">Depósito</button>
             <button id="accountMenuWithdraw" class="button secondary small" type="button">Saque</button>
-            <button id="accountMenuLogout" class="button danger small" type="button">Sair</button>
+            <button id="accountMenuSupport" class="button support-button small" data-open-support type="button">Mensagem</button>
+            <button id="accountMenuLogout" class="button danger logout-red small" type="button">Sair</button>
           </div>
         </div>
       </div>
@@ -243,6 +245,7 @@
   </div>
 
   <script src="./config.js"></script>
+  <script src="./support-ui.js" defer></script>
   <script src="./ludo.js" defer></script>
   <script src="./ludo-policy.js" defer></script>
 </body>
