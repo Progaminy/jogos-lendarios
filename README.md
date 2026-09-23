@@ -324,7 +324,7 @@ O prazo é guardado no servidor. Atualizar a página não reinicia o relógio.
 A sala pode configurar, entre outras:
 
 ```text
-saída da base: somente 6 ou 1/6
+saída da base: somente 6
 captura obrigatória
 penalização por ignorar captura
 reentrada após penalização
