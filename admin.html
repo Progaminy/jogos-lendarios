@@ -159,6 +159,29 @@
         <div class="card admin-card" style="box-shadow:none"><p class="eyebrow">MOVIMENTO</p><h2>Últimas apostas da Dupla Lendária</h2><div id="pairRecentBets" class="request-list"></div></div>
       </section>
 
+
+      <section class="card admin-card" id="ludoEmergencyAdmin">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">LUDO · EMERGÊNCIA</p>
+            <h2>Cancelar jogos ativos</h2>
+          </div>
+          <span id="ludoEmergencyBadge" class="badge muted">A verificar…</span>
+        </div>
+        <p class="muted-text">Use apenas quando houver bug ou situação de emergência. Todas as salas ativas são encerradas, apostas já debitadas são devolvidas e a fila do Ludo é limpa.</p>
+        <div class="admin-grid">
+          <div class="card metric"><span>Salas ativas</span><strong id="ludoEmergencyRooms">—</strong></div>
+          <div class="card metric"><span>Jogadores envolvidos</span><strong id="ludoEmergencyPlayers">—</strong></div>
+          <div class="card metric"><span>Valor a devolver</span><strong id="ludoEmergencyStaked">—</strong><small>MZN</small></div>
+          <div class="card metric"><span>Fila de espera</span><strong id="ludoEmergencyQueue">—</strong></div>
+        </div>
+        <div class="admin-actions">
+          <label class="field" style="min-width:min(100%,420px)"><span>Motivo</span><input id="ludoEmergencyReason" maxlength="220" value="Cancelamento administrativo de emergência"></label>
+          <button id="ludoEmergencyCancelAll" class="button danger" type="button" disabled>Cancelar todos os jogos do Ludo</button>
+        </div>
+        <p id="ludoEmergencyMessage" class="form-message"></p>
+      </section>
+
       <div class="admin-two">
         <section class="card admin-card"><p class="eyebrow">DEPÓSITOS</p><h2>Pedidos pendentes</h2><div id="depositRequests" class="request-list"></div></section>
         <section class="card admin-card"><p class="eyebrow">SAQUES</p><h2>Pedidos pendentes</h2><div id="withdrawRequests" class="request-list"></div></section>
@@ -245,6 +268,7 @@
 
   <script src="./config.js"></script>
   <script src="./admin.js" defer></script>
+  <script src="./admin-ludo-emergency.js?v=20260923-1" defer></script>
   <script src="./admin-bonus.js?v=20260922-14" defer></script>
   <script src="./admin-recovery.js?v=20260922-13" defer></script>
   <script src="./admin-power.js" defer></script>
