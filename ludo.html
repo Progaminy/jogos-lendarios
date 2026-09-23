@@ -148,7 +148,7 @@
           <form id="rulesForm" class="rules-form hidden">
             <label><span>Tempo para jogar</span><select name="turn_seconds"><option value="30">30 s</option><option value="60">60 s</option><option value="90">90 s</option><option value="120" selected>120 s</option></select></label>
             <label><span>Escolher peça após o dado</span><select name="move_seconds"><option value="15">15 s</option><option value="30" selected>30 s</option><option value="45">45 s</option><option value="60">60 s</option></select></label>
-            <label><span>Saída da base</span><select name="base_exit_rule"><option value="six">Somente com 6</option><option value="one_or_six">Com 1 ou 6</option></select></label>
+            <p class="muted-text">Saída da base: somente com 6.</p>
             <label class="toggle"><input name="capture_required" type="checkbox"><span>Captura obrigatória quando existir</span></label>
             <label id="capturePenaltyField"><span>Se ignorar captura obrigatória</span><select name="capture_penalty"><option value="eliminate_reentry">Elimina; pode pagar para continuar</option><option value="eliminate">Elimina sem reentrada</option><option value="lose_turn">Perde apenas a vez</option></select><small id="capturePenaltyHelp" class="muted">Em partidas de 2 jogadores, ignorar captura apenas faz perder a vez.</small></label>
             <label class="toggle"><input name="reentry_allowed" type="checkbox" checked><span>Permitir reentrada após penalização</span></label>
