@@ -427,13 +427,107 @@
   }
   function stopVoiceIfRoomEnded(){if(!state.room||['finished','cancelled'].includes(roomData()?.status))closeVoice();}
   function renderVoice(){const available=Boolean(state.room&&roomData()?.status!=='finished'&&roomData()?.status!=='cancelled');if(!available){closeVoice();els.voiceState.textContent='Indisponível';for(const b of [els.micButton,els.micQuickButton])if(b){b.disabled=true;b.textContent='🎙️ Microfone indisponível';}return;}const on=Boolean(state.localStream);els.voiceState.textContent=!available?'Indisponível':on?'Ligado':'Desligado';const label=!available?'🎙️ Microfone indisponível':on?'🔇 Desligar microfone':'🎙️ Ligar microfone';for(const b of [els.micButton,els.micQuickButton])if(b){b.disabled=!available;b.textContent=label;}if(available)startSignalPolling();else stopSignalPolling();}
-  async function toggleMic(){if(!state.room)return;try{if(!state.localStream){state.localStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true},video:false});state.micMuted=false;for(const p of roomPlayers())if(p.player_id!==me())ensurePeer(p.player_id,true);}else{state.localStream.getTracks().forEach(t=>t.stop());state.localStream=null;state.micMuted=true;}renderVoice();}catch(e){showToast(`Microfone: ${e.message}`,'error');}}
+  async function toggleMic(){if(!state.room)return;try{if(!navigator.mediaDevices?.getUserMedia)throw new Error('Este navegador não disponibiliza acesso ao microfone.');if(!state.localStream){state.localStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true},video:false});state.micMuted=false;for(const p of roomPlayers())if(p.player_id!==me())ensurePeer(p.player_id,true);}else{state.localStream.getTracks().forEach(t=>t.stop());state.localStream=null;state.micMuted=true;}renderVoice();}catch(e){showToast(`Microfone: ${e.message}`,'error');}}
   function startSignalPolling(){if(state.signalTimer||!state.room)return;state.signalTimer=setInterval(pullSignals,1000);pullSignals();} function stopSignalPolling(){clearInterval(state.signalTimer);state.signalTimer=null;}
   async function sendSignal(to,type,payload){try{await rpc('jl_ludo_signal_send',{p_token:state.token,p_room:roomData().id,p_to_player:to,p_signal_type:type,p_payload:payload});}catch(e){console.warn('signal',e.message);}}
-  function ensurePeer(peerId,addTracks=false){let wrap=state.peers.get(peerId);if(wrap){if(addTracks&&state.localStream)attachTracks(wrap.pc);return wrap;}const pc=new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'}]});wrap={pc,makingOffer:false,ignoreOffer:false,polite:String(me())>String(peerId)};state.peers.set(peerId,wrap);pc.onicecandidate=e=>{if(e.candidate)sendSignal(peerId,'ice',e.candidate.toJSON());};pc.ontrack=e=>{let audio=document.getElementById(`audio-${peerId}`);if(!audio){audio=document.createElement('audio');audio.id=`audio-${peerId}`;audio.autoplay=true;audio.playsInline=true;els.remoteAudio.appendChild(audio);}audio.srcObject=e.streams[0];audio.play().catch(()=>{});};pc.onnegotiationneeded=async()=>{try{wrap.makingOffer=true;await pc.setLocalDescription(await pc.createOffer());await sendSignal(peerId,'offer',pc.localDescription);}catch(e){console.warn(e)}finally{wrap.makingOffer=false;}};if(addTracks&&state.localStream)attachTracks(pc);return wrap;}
-  function attachTracks(pc){if(!state.localStream)return;for(const track of state.localStream.getTracks()){const sender=pc.getSenders().find(s=>s.track?.kind===track.kind);if(sender){if(sender.track!==track)sender.replaceTrack(track).catch(()=>{});}else pc.addTrack(track,state.localStream);}}
-  async function pullSignals(){if(!state.room)return;try{const rows=await rpc('jl_ludo_signal_pull',{p_token:state.token,p_room:roomData().id,p_after_id:state.lastSignalId});for(const s of rows){state.lastSignalId=Math.max(state.lastSignalId,Number(s.id));await handleSignal(s);}}catch(e){console.warn('pull signal',e.message);}}
-  async function handleSignal(s){const wrap=ensurePeer(s.from_player_id,Boolean(state.localStream)),pc=wrap.pc;try{if(s.signal_type==='offer'){const desc=new RTCSessionDescription(s.payload),collision=wrap.makingOffer||pc.signalingState!=='stable';wrap.ignoreOffer=!wrap.polite&&collision;if(wrap.ignoreOffer)return;await pc.setRemoteDescription(desc);if(state.localStream)attachTracks(pc);await pc.setLocalDescription(await pc.createAnswer());await sendSignal(s.from_player_id,'answer',pc.localDescription);}else if(s.signal_type==='answer'){await pc.setRemoteDescription(new RTCSessionDescription(s.payload));}else if(s.signal_type==='ice'){try{await pc.addIceCandidate(new RTCIceCandidate(s.payload));}catch(e){if(!wrap.ignoreOffer)throw e;}}}catch(e){console.warn('handle signal',e);}}
+  function ensurePeer(peerId,addTracks=false){
+    let wrap=state.peers.get(peerId);
+    if(wrap){if(addTracks&&state.localStream)attachTracks(wrap.pc);return wrap;}
+    const pc=new RTCPeerConnection({iceServers:[
+      {urls:'stun:stun.l.google.com:19302'},
+      {urls:'stun:stun1.l.google.com:19302'},
+      {urls:'stun:stun2.l.google.com:19302'}
+    ]});
+    wrap={pc,makingOffer:false,ignoreOffer:false,polite:String(me())>String(peerId),pendingIce:[],restarted:false};
+    state.peers.set(peerId,wrap);
+    pc.onicecandidate=e=>{if(e.candidate)sendSignal(peerId,'ice',e.candidate.toJSON());};
+    pc.ontrack=e=>{
+      let audio=document.getElementById('audio-'+peerId);
+      if(!audio){
+        audio=document.createElement('audio');
+        audio.id='audio-'+peerId;
+        audio.autoplay=true;audio.playsInline=true;
+        els.remoteAudio.appendChild(audio);
+      }
+      audio.srcObject=e.streams[0];
+      audio.play().then(()=>{audio.controls=false;}).catch(()=>{
+        audio.controls=true;
+        showToast('Áudio recebido. Toque no controlo de áudio para ouvir.','success');
+      });
+    };
+    pc.onconnectionstatechange=async()=>{
+      if(pc.connectionState==='connected'){wrap.restarted=false;return;}
+      if(pc.connectionState==='failed'&&!wrap.restarted){
+        wrap.restarted=true;
+        try{
+          pc.restartIce?.();
+          wrap.makingOffer=true;
+          await pc.setLocalDescription(await pc.createOffer({iceRestart:true}));
+          await sendSignal(peerId,'offer',pc.localDescription);
+        }catch(e){console.warn('voice restart',e);}
+        finally{wrap.makingOffer=false;}
+      }
+    };
+    pc.onnegotiationneeded=async()=>{
+      try{
+        wrap.makingOffer=true;
+        await pc.setLocalDescription(await pc.createOffer());
+        await sendSignal(peerId,'offer',pc.localDescription);
+      }catch(e){console.warn('voice negotiate',e);}
+      finally{wrap.makingOffer=false;}
+    };
+    if(addTracks&&state.localStream)attachTracks(pc);
+    return wrap;
+  }
+  function attachTracks(pc){
+    if(!state.localStream)return;
+    for(const track of state.localStream.getTracks()){
+      const sender=pc.getSenders().find(s=>s.track?.kind===track.kind);
+      if(sender){if(sender.track!==track)sender.replaceTrack(track).catch(()=>{});}
+      else pc.addTrack(track,state.localStream);
+    }
+  }
+  async function flushPendingIce(wrap){
+    if(!wrap?.pc?.remoteDescription)return;
+    while(wrap.pendingIce.length){
+      const candidate=wrap.pendingIce.shift();
+      try{await wrap.pc.addIceCandidate(new RTCIceCandidate(candidate));}
+      catch(e){if(!wrap.ignoreOffer)console.warn('ice flush',e);}
+    }
+  }
+  async function pullSignals(){
+    if(!state.room)return;
+    try{
+      const rows=await rpc('jl_ludo_signal_pull',{p_token:state.token,p_room:roomData().id,p_after_id:state.lastSignalId});
+      for(const s of rows){state.lastSignalId=Math.max(state.lastSignalId,Number(s.id));await handleSignal(s);}
+    }catch(e){console.warn('pull signal',e.message);}
+  }
+  async function handleSignal(s){
+    const wrap=ensurePeer(s.from_player_id,Boolean(state.localStream)),pc=wrap.pc;
+    try{
+      if(s.signal_type==='offer'){
+        const desc=new RTCSessionDescription(s.payload),collision=wrap.makingOffer||pc.signalingState!=='stable';
+        wrap.ignoreOffer=!wrap.polite&&collision;
+        if(wrap.ignoreOffer)return;
+        if(collision&&wrap.polite&&pc.signalingState!=='stable'){
+          try{await pc.setLocalDescription({type:'rollback'});}catch{}
+        }
+        await pc.setRemoteDescription(desc);
+        await flushPendingIce(wrap);
+        if(state.localStream)attachTracks(pc);
+        await pc.setLocalDescription(await pc.createAnswer());
+        await sendSignal(s.from_player_id,'answer',pc.localDescription);
+      }else if(s.signal_type==='answer'){
+        if(pc.signalingState==='have-local-offer'){
+          await pc.setRemoteDescription(new RTCSessionDescription(s.payload));
+          await flushPendingIce(wrap);
+        }
+      }else if(s.signal_type==='ice'){
+        if(!pc.remoteDescription)wrap.pendingIce.push(s.payload);
+        else await pc.addIceCandidate(new RTCIceCandidate(s.payload));
+      }
+    }catch(e){if(!wrap.ignoreOffer)console.warn('handle signal',e);}
+  }
   function closeVoice(){stopSignalPolling();for(const w of state.peers.values())w.pc.close();state.peers.clear();if(state.localStream)state.localStream.getTracks().forEach(t=>t.stop());state.localStream=null;state.micMuted=true;state.lastSignalId=0;els.remoteAudio.innerHTML='';}
 
   els.winModalOk?.addEventListener('click',closeLudoWinNotice);
