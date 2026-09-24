@@ -30,7 +30,7 @@
     numberRoundBadge: $('numberRoundBadge'), pairRoundBadge: $('pairRoundBadge'),
     numberResultBanner: $('numberResultBanner'), numberResultTitle: $('numberResultTitle'), numberResultNumber: $('numberResultNumber'),
     pairResultBanner: $('pairResultBanner'), pairResultTitle: $('pairResultTitle'), pairResultA: $('pairResultA'), pairResultB: $('pairResultB'),
-    numberRoundStatus: $('numberRoundStatus'), numberCountdown: $('numberCountdown'), numberRuleText: $('numberRuleText'), numberPrizeText: $('numberPrizeText'),
+    numberRoundStatus: $('numberRoundStatus'), numberCountdown: $('numberCountdown'), numberPrizeText: $('numberPrizeText'),
     numberGrid: $('numberGrid'), betForm: $('betForm'), betAmount: $('betAmount'), betButton: $('betButton'), selectionText: $('selectionText'),
     pairRoundStatus: $('pairRoundStatus'), pairCountdown: $('pairCountdown'), pairRuleText: $('pairRuleText'), pairPrizeText: $('pairPrizeText'),
     pairNumberGrid: $('pairNumberGrid'), pairBetForm: $('pairBetForm'), pairBetAmount: $('pairBetAmount'), pairBetButton: $('pairBetButton'), pairSelectionText: $('pairSelectionText'),
@@ -405,7 +405,6 @@
         els.betAmount.value = numberSettings.min_bet;
       }
       els.numberPrizeText.textContent = `${Number(numberSettings.multiplier)}×`;
-      els.numberRuleText.textContent = `${modeDescription(numberSettings)} Aposta: ${numberSettings.min_bet}–${numberSettings.max_bet} MZN.`;
     }
 
     if (pairSettings.min_bet != null) {
