@@ -181,7 +181,7 @@
     const list = $('#betHistory');
     if (list) new MutationObserver(applyHistoryFilter).observe(list, {childList:true, subtree:true});
 
-    setHistoryCollapsed(history, localStorage.getItem(HISTORY_COLLAPSED_KEY) === '1');
+    setHistoryCollapsed(history, true);
     applyHistoryFilter();
   }
 
