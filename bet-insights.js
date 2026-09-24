@@ -193,17 +193,22 @@
     const sync = () => {
       const numberOpen = /apostas abertas/i.test($('#numberRoundStatus')?.textContent || '');
       const pairOpen = /apostas abertas/i.test($('#pairRoundStatus')?.textContent || '');
+      const numberSelected = $('#numberGrid .number-button.selected').length === 1;
+      const pairSelected = $('#pairNumberGrid .number-button.selected').length === 2;
       const nb = $('#betButton');
       const pb = $('#pairBetButton');
-      if (nb) nb.disabled = !numberOpen;
-      if (pb) pb.disabled = !pairOpen;
+      if (nb && (!numberOpen || !numberSelected)) nb.disabled = true;
+      if (pb && (!pairOpen || !pairSelected)) pb.disabled = true;
     };
     sync();
     for (const id of ['numberRoundStatus','pairRoundStatus']) {
       const el = document.getElementById(id);
       if (el) new MutationObserver(sync).observe(el, {childList:true,characterData:true,subtree:true});
     }
-    setInterval(sync, 1000);
+    for (const sel of ['#numberGrid','#pairNumberGrid']) {
+      const grid=$(sel);
+      if (grid) new MutationObserver(sync).observe(grid,{subtree:true,attributes:true,attributeFilter:['class']});
+    }
   }
 
   async function refreshSummaries() {
@@ -226,7 +231,7 @@
     applyHistoryFilter();
     refreshSummaries();
     clearInterval(poll);
-    poll = setInterval(refreshSummaries, 5000);
+    poll = setInterval(()=>{if(document.visibilityState==='visible')refreshSummaries();}, 15000);
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, {once:true});

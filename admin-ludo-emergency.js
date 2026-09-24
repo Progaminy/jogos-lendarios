@@ -115,17 +115,17 @@
       });
       ui.message.textContent = `${result?.cancelled_rooms || 0} jogo(s) cancelado(s). Reembolso total: MZN ${money(result?.refunded_total || 0)}.`;
       toast(result?.message || 'Jogos do Ludo cancelados.', 'success');
-      await refresh(true);
     } catch (error) {
       ui.message.textContent = error.message;
       toast(error.message, 'error');
     } finally {
       busy = false;
+      await refresh(true);
       render(last);
     }
   });
 
   $('refreshAdmin')?.addEventListener('click', () => refresh(false));
-  setInterval(() => refresh(true), 5000);
+  setInterval(() => { if (document.visibilityState === 'visible') refresh(true); }, 15000);
   setTimeout(() => refresh(true), 300);
 })();

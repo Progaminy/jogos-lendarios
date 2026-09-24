@@ -39,6 +39,22 @@
       if($('metricSince'))$('metricSince').textContent='Desde '+new Date(f.since).toLocaleString('pt-MZ');
     }catch{}
   }
+  function ensureAuditPanel(){
+    const app=$('adminApp');if(!app||$('adminAuditPanel'))return;
+    const s=document.createElement('section');s.id='adminAuditPanel';s.className='card admin-card';
+    s.innerHTML='<div class="section-head"><div><p class="eyebrow">AUDITORIA</p><h2>Histórico recente de ações</h2></div><button id="refreshAdminAudit" class="button ghost small" type="button">Atualizar histórico</button></div><div id="adminAuditList" class="request-list"><div class="empty">A carregar histórico…</div></div>';
+    app.appendChild(s);
+    $('refreshAdminAudit')?.addEventListener('click',refreshAudit);
+  }
+  const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+  async function refreshAudit(){
+    if(!token()||document.visibilityState!=='visible')return;
+    const box=$('adminAuditList');if(!box)return;
+    try{
+      const rows=await rpc('jl_admin_recent_audit',{p_token:token(),p_limit:80});
+      box.innerHTML=rows.length?rows.map(r=>'<div class="request-row"><div><strong>'+esc(r.action)+'</strong><br><small>'+new Date(r.created_at).toLocaleString('pt-MZ')+'</small></div><small style="max-width:58%;word-break:break-word">'+esc(JSON.stringify(r.details||{}))+'</small></div>').join(''):'<div class="empty">Nenhuma ação registada.</div>';
+    }catch(e){box.innerHTML='<div class="empty">'+esc(e.message)+'</div>';}
+  }
   async function refreshExposure(){
     if(!token()||document.visibilityState!=='visible')return;
     try{const data=await rpc('jl_admin_dashboard',{p_token:token()});for(const type of ['number','pair']){const f=data?.games?.[type]?.financial||{};const a=$(type+'TotalStaked'),b=$(type+'MinExposure'),c=$(type+'HouseFloor'),d=$(type+'SafeOutcomes');if(a)a.textContent=money(f.total_staked);if(b)b.textContent=money(f.min_exposure);if(c)c.textContent=money(f.house_floor_at_min);if(d)d.textContent=String(f.safe_outcomes??0)+'/'+String(f.outcome_count??0);}}catch{}
@@ -53,6 +69,6 @@
     if(force){if(!confirm('Encerrar todas as sessões de '+(force.dataset.name||'este jogador')+'?'))return;try{const r=await rpc('jl_admin_force_logout_player',{p_token:token(),p_player_id:force.dataset.forceLogout});toast(r?.message||'Sessões encerradas.','success');}catch(err){toast(err.message,'error');}return;}
     if(del){if(!confirm('Eliminar a conta de '+(del.dataset.name||'este jogador')+'? O histórico financeiro será preservado e anonimizado.'))return;const pin=prompt('Digite o PIN administrativo para confirmar a eliminação:');if(pin===null)return;try{const r=await rpc('jl_admin_delete_player',{p_token:token(),p_player_id:del.dataset.deletePlayer,p_admin_pin:pin});toast(r?.message||'Conta eliminada.','success');$('refreshAdmin')?.click();}catch(err){toast(err.message,'error');}}
   });
-  function init(){ensurePanel();refreshExposure();refreshFinancial();setInterval(()=>{refreshExposure();refreshFinancial();},15000);}
+  function init(){ensurePanel();ensureAuditPanel();refreshExposure();refreshFinancial();refreshAudit();setInterval(()=>{refreshExposure();refreshFinancial();},15000);setInterval(refreshAudit,30000);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();

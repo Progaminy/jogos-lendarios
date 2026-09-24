@@ -74,26 +74,7 @@
     }
   }
 
-  function normalizeCommissionPreview() {
-    const el = document.getElementById('roomPrize');
-    if (!el) return;
-    const text = el.textContent || '';
-    if (!text.includes('comissão')) return;
-
-    const grossMatch = text.match(/(?:Vencedor:|Dupla vencedora:)\s*([\d\s\u00A0.,]+)\s*MZN/);
-    if (!grossMatch) return;
-
-    const gross = parseMoney(grossMatch[1]);
-    if (!Number.isFinite(gross) || gross <= 0) return;
-
-    const commission = Math.min(gross, Math.max(1, Math.ceil(gross * 0.01)));
-    const net = gross - commission;
-    const next = text.startsWith('Dupla vencedora:')
-      ? `Dupla vencedora: ${formatMoney(gross)} MZN brutos por parceiro · comissão ${formatMoney(commission)} MZN por parceiro · ${formatMoney(net)} MZN líquidos cada.`
-      : `Vencedor: ${formatMoney(gross)} MZN brutos · comissão ${formatMoney(commission)} MZN · ${formatMoney(net)} MZN líquidos.`;
-
-    if (el.textContent !== next) el.textContent = next;
-  }
+  // A comissão é calculada apenas pelo motor principal do Ludo.
 
   function injectVariantStyles() {
     if (document.getElementById('ludoVariantStyles')) return;
@@ -260,22 +241,7 @@
     injectVariantStyles();
     injectVariantControls();
     enforceMinimums();
-    normalizeCommissionPreview();
     refreshVariantState();
-
-    const lead = document.querySelector('.hero .lead');
-    if (lead && lead.textContent.includes('jogadores online')) {
-      lead.textContent = lead.textContent.replace('jogadores online', 'jogadores online ou presencialmente');
-    }
-
-    const prize = document.getElementById('roomPrize');
-    if (prize) {
-      new MutationObserver(normalizeCommissionPreview).observe(prize, {
-        childList: true,
-        characterData: true,
-        subtree: true
-      });
-    }
 
     const summary = document.getElementById('rulesSummary');
     if (summary) new MutationObserver(renderRuleSummary).observe(summary, { childList: true });

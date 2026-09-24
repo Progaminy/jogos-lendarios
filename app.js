@@ -148,6 +148,92 @@
     document.body.classList.remove('modal-open');
   }
 
+  const quickTransaction = { kind: null, amount: 0 };
+
+  function ensureQuickTransactionModal() {
+    let modal = document.getElementById('quickTransactionModal');
+    if (modal) return modal;
+    modal = document.createElement('div');
+    modal.id = 'quickTransactionModal';
+    modal.className = 'transaction-modal hidden';
+    modal.setAttribute('role','dialog');
+    modal.setAttribute('aria-modal','true');
+    modal.innerHTML = `
+      <div class="transaction-modal-card">
+        <button id="quickTransactionClose" class="modal-close" type="button" aria-label="Fechar">×</button>
+        <p id="quickTransactionEyebrow" class="eyebrow">OPERAÇÃO</p>
+        <h2 id="quickTransactionTitle">Valor</h2>
+        <form id="quickTransactionAmountForm" class="stack-form">
+          <label class="field"><span>Valor</span><div class="money-input"><span>MZN</span><input id="quickTransactionAmount" type="number" min="1" step="1" required></div></label>
+          <button class="button primary" type="submit">Continuar</button>
+        </form>
+        <form id="quickTransactionNoteForm" class="stack-form hidden">
+          <div id="quickTransferInfo" class="transaction-modal-reference hidden"></div>
+          <label class="field"><span id="quickTransactionNoteLabel">Referência ou mensagem opcional</span><input id="quickTransactionNote" maxlength="160" placeholder="Opcional"></label>
+          <button id="quickTransactionSubmit" class="button primary" type="submit">Enviar pedido</button>
+        </form>
+        <p id="quickTransactionMessage" class="form-message"></p>
+      </div>`;
+    document.body.appendChild(modal);
+    const close=()=>{modal.classList.add('hidden');document.body.classList.remove('modal-open');};
+    document.getElementById('quickTransactionClose').addEventListener('click',close);
+    modal.addEventListener('click',e=>{if(e.target===modal)close();});
+    document.getElementById('quickTransactionAmountForm').addEventListener('submit',async e=>{
+      e.preventDefault();
+      const amount=Number(document.getElementById('quickTransactionAmount').value);
+      if(!Number.isInteger(amount)||amount<1){document.getElementById('quickTransactionMessage').textContent='Informe um valor inteiro válido.';return;}
+      if(quickTransaction.kind==='withdraw' && !(await ensureFunds('withdrawal',amount,'fazer este saque'))) return;
+      quickTransaction.amount=amount;
+      document.getElementById('quickTransactionAmountForm').classList.add('hidden');
+      document.getElementById('quickTransactionNoteForm').classList.remove('hidden');
+      document.getElementById('quickTransactionTitle').textContent=quickTransaction.kind==='deposit'?'Referência da transferência':'Mensagem opcional';
+      const info=document.getElementById('quickTransferInfo');
+      if(quickTransaction.kind==='deposit'){
+        info.innerHTML='Transfira para <strong>869954518</strong> · Bernardo Pedro <button id="quickCopyDepositPhone" class="button ghost tiny" type="button">Copiar</button>';
+        info.classList.remove('hidden');
+        document.getElementById('quickTransactionNoteLabel').textContent='Referência da transferência ou mensagem opcional';
+        document.getElementById('quickCopyDepositPhone')?.addEventListener('click',async()=>{try{await navigator.clipboard.writeText('869954518');showToast('Número copiado.','success');}catch{showToast('Número: 869954518');}});
+      }else{
+        info.classList.add('hidden');
+        document.getElementById('quickTransactionNoteLabel').textContent='Mensagem opcional para o administrador';
+      }
+      document.getElementById('quickTransactionNote').focus();
+    });
+    document.getElementById('quickTransactionNoteForm').addEventListener('submit',async e=>{
+      e.preventDefault();
+      const amount=quickTransaction.amount,note=document.getElementById('quickTransactionNote').value.trim();
+      const btn=document.getElementById('quickTransactionSubmit');btn.disabled=true;
+      try{
+        const result=quickTransaction.kind==='deposit'
+          ? await rpc('jl_request_deposit',{p_token:state.token,p_amount:amount,p_note:note})
+          : await rpc('jl_request_withdrawal',{p_token:state.token,p_amount:amount,p_note:note});
+        const ok=result?.ok!==false,reference=result?.request_id?result.request_id.slice(0,8).toUpperCase():'';
+        close();
+        showTransactionModal({kind:quickTransaction.kind,amount,message:result?.message,reference,ok});
+        await refresh(true);
+      }catch(error){
+        document.getElementById('quickTransactionMessage').textContent=error.message;
+      }finally{btn.disabled=false;}
+    });
+    return modal;
+  }
+
+  function openQuickTransaction(kind,presetAmount=0){
+    if(!state.token||!state.data?.player){openAuth('login');return;}
+    const modal=ensureQuickTransactionModal();
+    quickTransaction.kind=kind;quickTransaction.amount=0;
+    document.getElementById('quickTransactionEyebrow').textContent=kind==='deposit'?'DEPÓSITO':'SAQUE';
+    document.getElementById('quickTransactionTitle').textContent=kind==='deposit'?'Quanto deseja depositar?':'Quanto deseja sacar?';
+    document.getElementById('quickTransactionAmount').value=presetAmount>0?String(Math.ceil(presetAmount)):'';
+    document.getElementById('quickTransactionNote').value='';
+    document.getElementById('quickTransactionMessage').textContent='';
+    document.getElementById('quickTransactionAmountForm').classList.remove('hidden');
+    document.getElementById('quickTransactionNoteForm').classList.add('hidden');
+    modal.classList.remove('hidden');document.body.classList.add('modal-open');
+    setTimeout(()=>document.getElementById('quickTransactionAmount')?.focus(),30);
+  }
+
+
   const WIN_SEEN_KEY = 'jl_seen_wins_v1';
 
   function winSeen() {
@@ -654,6 +740,7 @@
   });
 
   async function logoutPlayer() {
+    if (!window.confirm('Tem certeza que deseja sair da sua conta?')) return;
     try { if (state.token) await rpc('jl_logout_player', { p_token: state.token }); } catch {}
     saveToken('');
     state.data = null;
@@ -682,7 +769,7 @@
     if (target === 'depositPanel' && needed > 0 && els.depositAmount) {
       els.depositAmount.value = String(Math.max(1, Math.ceil(needed)));
     }
-    setTimeout(() => openAccountPanel(target), 0);
+    setTimeout(() => openQuickTransaction(target === 'withdrawPanel' ? 'withdraw' : 'deposit', needed), 0);
     if (target === 'depositPanel' && needed > 0) {
       setMessage(els.depositMessage, `Faltam ${formatMoney(needed)} MZN para continuar a operação anterior.`, 'error');
       showToast(`Faltam ${formatMoney(needed)} MZN. Faça o depósito para continuar.`, 'error');
@@ -696,8 +783,8 @@
     els.accountButton.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
   });
 
-  els.accountMenuDeposit?.addEventListener('click', () => openAccountPanel('depositPanel'));
-  els.accountMenuWithdraw?.addEventListener('click', () => openAccountPanel('withdrawPanel'));
+  els.accountMenuDeposit?.addEventListener('click', () => openQuickTransaction('deposit'));
+  els.accountMenuWithdraw?.addEventListener('click', () => openQuickTransaction('withdraw'));
   els.accountMenuLogout?.addEventListener('click', logoutPlayer);
   els.logoutButton.addEventListener('click', logoutPlayer);
 
@@ -707,6 +794,10 @@
     closeAccountMenu();
   });
 
+  document.getElementById('copyDepositPhone')?.addEventListener('click',async()=>{
+    try{await navigator.clipboard.writeText('869954518');showToast('Número 869954518 copiado.','success');}
+    catch{showToast('Número de transferência: 869954518');}
+  });
   els.refreshButton.addEventListener('click', () => refresh());
   els.closeAuth.addEventListener('click', closeAuth);
   els.registerTab.addEventListener('click', () => switchAuth('register'));

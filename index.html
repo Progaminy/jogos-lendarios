@@ -6,6 +6,7 @@
   <meta name="theme-color" content="#0a0d14">
   <meta name="description" content="Jogos Lendários — plataforma de jogos com saldo comum, categorias profissionais e motores independentes.">
   <title>Jogos Lendários</title>
+  <link rel="icon" href="./favicon.ico" sizes="any">
   <link rel="stylesheet" href="./styles.css">
   <link rel="stylesheet" href="./support-ui.css?v=20260922-12fix">
   <link rel="stylesheet" href="./recovery-ui.css?v=20260922-13">
@@ -224,7 +225,7 @@
         <div id="depositPanel" class="card action-card">
           <p class="eyebrow">DEPÓSITO</p>
           <h2>Solicitar depósito</h2>
-          <p class="muted-text">Transfira para <strong>869954518</strong> Nome: <strong>Bernardo Pedro</strong>. O saldo é comum a todos os Jogos Lendários. <strong>Depois de aprovado, o valor depositado precisa ser jogado pelo menos uma vez antes de poder ser sacado.</strong></p>
+          <p class="muted-text">Transfira para <strong id="depositPhone">869954518</strong> <button id="copyDepositPhone" class="button ghost tiny" type="button" aria-label="Copiar número de transferência">Copiar</button> Nome: <strong>Bernardo Pedro</strong>. O saldo é comum a todos os Jogos Lendários. <strong>Depois de aprovado, o valor depositado precisa ser jogado pelo menos uma vez antes de poder ser sacado.</strong></p>
           <form id="depositForm" class="stack-form">
             <label class="field"><span>Valor</span><div class="money-input"><span>MZN</span><input id="depositAmount" type="number" min="1" step="1" required></div></label>
             <label class="field"><span>Referência da transferência ou mensagem de confirmação</span><input id="depositNote" maxlength="160" placeholder="Ex.: referência do pagamento"></label>
@@ -317,6 +318,6 @@
   <script src="./bet-guard.js"></script>
   <script src="./support-ui.js" defer></script>
   <script src="./recovery-ui.js?v=20260922-13" defer></script>
-  <script src="./app.js" defer></script>
+  <script src="./app.js?v=20260924-2" defer></script>
 </body>
 </html>

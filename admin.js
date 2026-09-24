@@ -405,7 +405,7 @@
     const withdrawals = state.data?.pending_withdrawals || [];
     shared.withdrawRequests.innerHTML = withdrawals.length
       ? withdrawals.map((r) => `<div class="request-row">
-          <div><strong>${escapeHtml(r.name)}</strong><br><small>+${escapeHtml(r.phone)} · ${dateTime(r.created_at)}</small><br><small>Sacável após bloqueios: MZN ${money(r.withdrawable_balance??0)} · Por jogar: MZN ${money(r.deposit_locked||0)}</small></div>
+          <div><strong>${escapeHtml(r.name)}</strong><br><small>+${escapeHtml(r.phone)} · ${dateTime(r.created_at)}${r.user_note?` · Mensagem: ${escapeHtml(r.user_note)}`:''}</small><br><small>Sacável após bloqueios: MZN ${money(r.withdrawable_balance??0)} · Por jogar: MZN ${money(r.deposit_locked||0)}</small></div>
           <strong>MZN ${money(r.amount)}</strong>
           <div class="row-actions">
             <button class="button success small" data-withdraw="${r.id}" data-decision="approved">Autorizar</button>
