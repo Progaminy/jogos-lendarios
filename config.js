@@ -13,8 +13,7 @@ window.JL_CONFIG = Object.freeze({
     document.head.appendChild(s);
   };
 
-  add('./bet-insights.js?v=1');
-  add('./bet-button-guide.js?v=1');
+  add('./bet-insights.js?v=2');
   add('./bet-success-ui.js?v=1');
 
   const isLudoPage = location.pathname.includes('ludo');

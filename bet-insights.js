@@ -190,25 +190,9 @@
     bind('#betForm','#numberGrid',1,'number');
     bind('#pairBetForm','#pairNumberGrid',2,'pair');
 
-    const sync = () => {
-      const numberOpen = /apostas abertas/i.test($('#numberRoundStatus')?.textContent || '');
-      const pairOpen = /apostas abertas/i.test($('#pairRoundStatus')?.textContent || '');
-      const numberSelected = $('#numberGrid .number-button.selected').length === 1;
-      const pairSelected = $('#pairNumberGrid .number-button.selected').length === 2;
-      const nb = $('#betButton');
-      const pb = $('#pairBetButton');
-      if (nb && (!numberOpen || !numberSelected)) nb.disabled = true;
-      if (pb && (!pairOpen || !pairSelected)) pb.disabled = true;
-    };
-    sync();
-    for (const id of ['numberRoundStatus','pairRoundStatus']) {
-      const el = document.getElementById(id);
-      if (el) new MutationObserver(sync).observe(el, {childList:true,characterData:true,subtree:true});
-    }
-    for (const sel of ['#numberGrid','#pairNumberGrid']) {
-      const grid=$(sel);
-      if (grid) new MutationObserver(sync).observe(grid,{subtree:true,attributes:true,attributeFilter:['class']});
-    }
+    // O estado enabled/disabled pertence exclusivamente ao app.js.
+    // Aqui mantemos apenas a orientação quando o utilizador tenta submeter sem seleção.
+
   }
 
   async function refreshSummaries() {

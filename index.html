@@ -7,7 +7,7 @@
   <meta name="description" content="Jogos Lendários — plataforma de jogos com saldo comum, categorias profissionais e motores independentes.">
   <title>Jogos Lendários</title>
   <link rel="icon" href="./favicon.ico" sizes="any">
-  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./styles.css?v=20260924-4">
   <link rel="stylesheet" href="./support-ui.css?v=20260922-12fix">
   <link rel="stylesheet" href="./recovery-ui.css?v=20260922-13">
   <link rel="stylesheet" href="./site-nav.css?v=20260922-12fix">
@@ -73,20 +73,6 @@
         </div>
       </div>
       <div class="game-catalog">
-        <a class="game-card" href="#numero-lendario">
-          <span class="game-icon">①</span>
-          <span class="game-category">Sorteios</span>
-          <h3>Número Lendário</h3>
-          <p>Escolha um número de 0 a 10 numa rodada própria.</p>
-          <div class="game-meta"><span>mín. 10 MZN</span><span>1 número</span><span>rodadas</span></div>
-        </a>
-        <a class="game-card" href="#dupla-lendaria">
-          <span class="game-icon">②</span>
-          <span class="game-category">Sorteios</span>
-          <h3>Dupla Lendária</h3>
-          <p>Escolha dois números diferentes com motor independente.</p>
-          <div class="game-meta"><span>mín. 10 MZN</span><span>2 números</span><span>55 combinações</span></div>
-        </a>
         <a class="game-card" href="./ludo.html">
           <span class="game-icon">🎲</span>
           <span class="game-category">Tabuleiro · Online</span>
@@ -225,7 +211,7 @@
         <div id="depositPanel" class="card action-card">
           <p class="eyebrow">DEPÓSITO</p>
           <h2>Solicitar depósito</h2>
-          <p class="muted-text">Transfira para <strong id="depositPhone">869954518</strong> <button id="copyDepositPhone" class="button ghost tiny" type="button" aria-label="Copiar número de transferência">Copiar</button> Nome: <strong>Bernardo Pedro</strong>. O saldo é comum a todos os Jogos Lendários. <strong>Depois de aprovado, o valor depositado precisa ser jogado pelo menos uma vez antes de poder ser sacado.</strong></p>
+          <p class="muted-text">Transfira para <strong id="depositPhone" class="transfer-phone">869954518</strong> <button id="copyDepositPhone" class="button ghost tiny" type="button" aria-label="Copiar número de transferência">Copiar</button> Nome de confirmação da conta: <strong class="transfer-account-name">Bernardo Pedro</strong>. O saldo é comum a todos os Jogos Lendários. <strong>Depois de aprovado, o valor depositado precisa ser jogado pelo menos uma vez antes de poder ser sacado.</strong></p>
           <form id="depositForm" class="stack-form">
             <label class="field"><span>Valor</span><div class="money-input"><span>MZN</span><input id="depositAmount" type="number" min="1" step="1" required></div></label>
             <label class="field"><span>Referência da transferência ou mensagem de confirmação</span><input id="depositNote" maxlength="160" placeholder="Ex.: referência do pagamento"></label>
@@ -314,10 +300,10 @@
     </div>
   </div>
 
-  <script src="./config.js"></script>
+  <script src="./config.js?v=20260924-4"></script>
   <script src="./bet-guard.js"></script>
   <script src="./support-ui.js" defer></script>
   <script src="./recovery-ui.js?v=20260922-13" defer></script>
-  <script src="./app.js?v=20260924-2" defer></script>
+  <script src="./app.js?v=20260924-4" defer></script>
 </body>
 </html>

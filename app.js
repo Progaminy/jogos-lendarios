@@ -189,7 +189,7 @@
       document.getElementById('quickTransactionTitle').textContent=quickTransaction.kind==='deposit'?'Referência da transferência':'Mensagem opcional';
       const info=document.getElementById('quickTransferInfo');
       if(quickTransaction.kind==='deposit'){
-        info.innerHTML='Transfira para <strong>869954518</strong> · Bernardo Pedro <button id="quickCopyDepositPhone" class="button ghost tiny" type="button">Copiar</button>';
+        info.innerHTML='Transfira para <strong class="transfer-phone">869954518</strong> · Nome de confirmação: <strong class="transfer-account-name">Bernardo Pedro</strong> <button id="quickCopyDepositPhone" class="button ghost tiny" type="button">Copiar</button>';
         info.classList.remove('hidden');
         document.getElementById('quickTransactionNoteLabel').textContent='Referência da transferência ou mensagem opcional';
         document.getElementById('quickCopyDepositPhone')?.addEventListener('click',async()=>{try{await navigator.clipboard.writeText('869954518');showToast('Número copiado.','success');}catch{showToast('Número: 869954518');}});
