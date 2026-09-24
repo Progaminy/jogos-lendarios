@@ -32,7 +32,7 @@
     pairResultBanner: $('pairResultBanner'), pairResultTitle: $('pairResultTitle'), pairResultA: $('pairResultA'), pairResultB: $('pairResultB'),
     numberRoundStatus: $('numberRoundStatus'), numberCountdown: $('numberCountdown'), numberPrizeText: $('numberPrizeText'),
     numberGrid: $('numberGrid'), betForm: $('betForm'), betAmount: $('betAmount'), betButton: $('betButton'), selectionText: $('selectionText'),
-    pairRoundStatus: $('pairRoundStatus'), pairCountdown: $('pairCountdown'), pairRuleText: $('pairRuleText'), pairPrizeText: $('pairPrizeText'),
+    pairRoundStatus: $('pairRoundStatus'), pairCountdown: $('pairCountdown'), pairPrizeText: $('pairPrizeText'),
     pairNumberGrid: $('pairNumberGrid'), pairBetForm: $('pairBetForm'), pairBetAmount: $('pairBetAmount'), pairBetButton: $('pairBetButton'), pairSelectionText: $('pairSelectionText'),
     playerArea: $('playerArea'), playerName: $('playerName'), playerPhone: $('playerPhone'), balance: $('balance'), bonusBalance: $('bonusBalance'), bonusBreakdown: $('bonusBreakdown'),
     logoutButton: $('logoutButton'), refreshButton: $('refreshButton'), betHistory: $('betHistory'),
@@ -414,7 +414,6 @@
         els.pairBetAmount.value = pairSettings.min_bet;
       }
       els.pairPrizeText.textContent = `${Number(pairSettings.multiplier)}×`;
-      els.pairRuleText.textContent = `${modeDescription(pairSettings)} Aposta: ${pairSettings.min_bet}–${pairSettings.max_bet} MZN.`;
     }
   }
 
