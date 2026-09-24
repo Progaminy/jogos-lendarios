@@ -414,14 +414,16 @@
         </div>`).join('')
       : '<div class="empty">Nenhum saque pendente.</div>';
 
-    const players = state.data?.players || [];
+    const players = (state.data?.players || []).filter((p)=>!String(p.phone||'').startsWith('deleted-'));
     shared.playersList.innerHTML = players.length
       ? players.map((p) => `<div class="player-row">
           <div><strong>${escapeHtml(p.name)}</strong><br><small>+${escapeHtml(p.phone)} · ${dateTime(p.created_at)}${p.blocked ? ' · BLOQUEADO' : ''}</small><br><small>Sacável: MZN ${money(p.withdrawable_balance??p.balance)} · Por jogar: MZN ${money(p.deposit_locked||0)}</small></div>
           <strong>MZN ${money(p.balance)}</strong>
           <div class="row-actions">
             <button class="button ghost small" data-adjust="${p.id}" data-name="${escapeHtml(p.name)}">Ajustar saldo</button>
+            <button class="button ghost small" data-force-logout="${p.id}" data-name="${escapeHtml(p.name)}">Encerrar sessões</button>
             <button class="button ${p.blocked ? 'success' : 'danger'} small" data-block="${p.id}" data-value="${p.blocked ? 'false' : 'true'}">${p.blocked ? 'Desbloquear' : 'Bloquear'}</button>
+            <button class="button danger small" data-delete-player="${p.id}" data-name="${escapeHtml(p.name)}">Eliminar conta</button>
           </div>
         </div>`).join('')
       : '<div class="empty">Nenhum jogador cadastrado.</div>';
@@ -657,6 +659,6 @@
   showApp(Boolean(state.token));
   if (state.token) refresh(true);
   state.refreshTimer = setInterval(() => {
-    if (state.token) refresh(true);
-  }, 5000);
+    if (state.token && document.visibilityState === 'visible') refresh(true);
+  }, 15000);
 })();

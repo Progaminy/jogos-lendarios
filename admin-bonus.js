@@ -37,7 +37,7 @@
   function renderPlayers(){
     const box=$('bonusPlayerList');if(!box)return;
     const q=($('bonusPlayerSearch')?.value||'').trim().toLowerCase();
-    const rows=(data.players||[]).filter(p=>!q||String(p.name||'').toLowerCase().includes(q)||String(p.phone||'').includes(q));
+    const rows=(data.players||[]).filter(p=>!String(p.phone||'').startsWith('deleted-')).filter(p=>!q||String(p.name||'').toLowerCase().includes(q)||String(p.phone||'').includes(q));
     box.innerHTML=rows.length?rows.map(p=>`
       <label class="bonus-player-row">
         <input type="checkbox" data-bonus-player="${esc(p.id)}">
@@ -110,7 +110,7 @@
     });
 
     load(true);
-    clearInterval(timer);timer=setInterval(()=>{if(token())load(true);},10000);
+    clearInterval(timer);timer=setInterval(()=>{if(token()&&document.visibilityState==='visible')load(true);},20000);
   }
 
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',wire,{once:true});else wire();
