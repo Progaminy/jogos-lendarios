@@ -1,10 +1,5 @@
--- Estado LOCKED para representar os 3 segundos entre o bloqueio das apostas e o sorteio.
--- Mantém a lógica atual de jl_secure_number(), que escolhe aleatoriamente entre os números
--- com menor total apostado na rodada ativa.
-
 alter table public.game_rounds drop constraint if exists game_rounds_status_check;
-alter table public.game_rounds add constraint game_rounds_status_check
-  check (status in ('open','locked','closed','drawn','published'));
+alter table public.game_rounds add constraint game_rounds_status_check check (status in ('open','locked','closed','drawn','published'));
 
 create or replace function public.jl_secure_number()
 returns integer

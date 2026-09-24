@@ -62,15 +62,19 @@ begin
   if r->>'base_exit_rule' not in ('six','one_or_six') then raise exception 'Regra de saída da base inválida.'; end if;
   n := (r->>'reentry_amount')::numeric;
   if n < 10 or n > p_bet then raise exception 'Valor de reentrada deve ficar entre 10 MZN e a aposta da sala.'; end if;
+
   loc := coalesce(r->>'play_location','online');
   if loc not in ('online','presential') then raise exception 'Local da partida deve ser online ou presencial.'; end if;
+
   dc := coalesce((r->>'dice_count')::integer,1);
   if dc not in (1,3,4) then raise exception 'Quantidade de dados deve ser 1, 3 ou 4.'; end if;
+
   if dc > 1 then
     r := jsonb_set(r,'{six_extra_turn}','false'::jsonb,true);
     r := jsonb_set(r,'{capture_extra_turn}','false'::jsonb,true);
     r := jsonb_set(r,'{three_sixes_penalty}','false'::jsonb,true);
   end if;
+
   return r;
 end;
 $$;
@@ -123,6 +127,7 @@ begin
   total := jsonb_array_length(coalesce(r.dice_values,'[]'::jsonb));
   idx := coalesce(r.dice_position,-1) + 1;
   move_secs := (r.rules->>'move_seconds')::int;
+
   while idx < total loop
     d := (r.dice_values->>idx)::integer;
     moves := public.jl_ludo_legal_moves_data(p_room,p_player,d);
@@ -136,6 +141,7 @@ begin
     perform public.jl_ludo_event(p_room,p_player,'multi_die_skipped',jsonb_build_object('position',idx,'dice',d,'reason','no_legal_move'));
     idx := idx + 1;
   end loop;
+
   perform public.jl_ludo_advance_turn(p_room,p_player,false);
   return false;
 end;
@@ -164,6 +170,7 @@ begin
  if r.action_deadline<=now() then raise exception 'Tempo da jogada expirou.'; end if;
  select * into rp from public.ludo_room_players where room_id=p_room and player_id=me for update;
  dc := coalesce((r.rules->>'dice_count')::int,1);
+
  if dc=1 then
    d:=public.jl_random_index(6);
    if d=6 then update public.ludo_room_players set consecutive_sixes=consecutive_sixes+1 where room_id=p_room and player_id=me returning * into rp;

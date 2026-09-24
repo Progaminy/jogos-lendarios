@@ -1,9 +1,3 @@
--- Jogos Lendários
--- Novo jogo: Dupla Lendária.
--- O jogador escolhe dois números diferentes de 1 a 10.
--- A ordem não importa: 1+9 e 9+1 são a mesma combinação.
--- Cada aposta válida fica entre 10 e 500 MZN e paga 50x em caso de acerto.
-
 alter table public.game_rounds
   add column if not exists pair_drawn_a integer,
   add column if not exists pair_drawn_b integer;
@@ -18,7 +12,10 @@ alter table public.game_rounds add constraint game_rounds_pair_drawn_b_check
 
 alter table public.game_rounds drop constraint if exists game_rounds_pair_distinct_check;
 alter table public.game_rounds add constraint game_rounds_pair_distinct_check
-  check (pair_drawn_a is null or pair_drawn_b is null or pair_drawn_a < pair_drawn_b);
+  check (
+    pair_drawn_a is null or pair_drawn_b is null or
+    (pair_drawn_a < pair_drawn_b)
+  );
 
 create table if not exists public.pair_bets (
   id uuid primary key default gen_random_uuid(),
@@ -59,7 +56,7 @@ begin
   end if;
 
   -- Existem C(10,2) = 45 combinações sem ordem.
-  -- 225 é o maior múltiplo de 45 abaixo de 256. Rejeitar 225..255
+  -- 225 é o maior múltiplo de 45 abaixo de 256; rejeitar 225..255
   -- evita viés ao aplicar módulo 45.
   loop
     v_byte := get_byte(extensions.gen_random_bytes(1), 0);
@@ -350,13 +347,26 @@ begin
   ) x;
 
   select coalesce(jsonb_agg(x order by x.created_at desc), '[]'::jsonb) into v_deposits
-  from (select id,amount,note,status,created_at,reviewed_at from public.deposit_requests where player_id=v_player_id order by created_at desc limit 20) x;
+  from (
+    select id,amount,note,status,created_at,reviewed_at
+    from public.deposit_requests
+    where player_id=v_player_id
+    order by created_at desc limit 20
+  ) x;
 
   select coalesce(jsonb_agg(x order by x.created_at desc), '[]'::jsonb) into v_withdrawals
-  from (select id,amount,status,reason,created_at,reviewed_at from public.withdrawal_requests where player_id=v_player_id order by created_at desc limit 20) x;
+  from (
+    select id,amount,status,reason,created_at,reviewed_at
+    from public.withdrawal_requests
+    where player_id=v_player_id
+    order by created_at desc limit 20
+  ) x;
 
   return v_public || jsonb_build_object(
-    'player', jsonb_build_object('id',v_player.id,'name',v_player.name,'phone',v_player.phone,'balance',v_player.balance,'blocked',v_player.blocked),
+    'player', jsonb_build_object(
+      'id',v_player.id,'name',v_player.name,'phone',v_player.phone,
+      'balance',v_player.balance,'blocked',v_player.blocked
+    ),
     'bets', v_bets,
     'pair_bets', v_pair_bets,
     'deposits', v_deposits,
@@ -386,10 +396,19 @@ begin
   perform public.jl_require_admin(p_token);
   perform public.jl_process_game_engine();
 
-  select * into v_round from public.game_rounds where status in ('open','locked','closed') order by opened_at desc limit 1;
-  select * into v_last from public.game_rounds where status='published' order by published_at desc nulls last, opened_at desc limit 1;
+  select * into v_round
+  from public.game_rounds
+  where status in ('open','locked','closed')
+  order by opened_at desc limit 1;
 
-  select coalesce(jsonb_agg(jsonb_build_object('number',n,'bets',coalesce(s.bet_count,0),'total',coalesce(s.total,0)) order by n),'[]'::jsonb)
+  select * into v_last
+  from public.game_rounds
+  where status='published'
+  order by published_at desc nulls last, opened_at desc limit 1;
+
+  select coalesce(jsonb_agg(jsonb_build_object(
+    'number',n,'bets',coalesce(s.bet_count,0),'total',coalesce(s.total,0)
+  ) order by n),'[]'::jsonb)
   into v_stats
   from generate_series(0,10) n
   left join (
@@ -398,35 +417,53 @@ begin
   ) s on s.selected_number=n;
 
   select coalesce(jsonb_agg(jsonb_build_object(
-    'number_a',c.a,'number_b',c.b,'bets',coalesce(s.bet_count,0),'total',coalesce(s.total,0)
+    'number_a',c.a,'number_b',c.b,
+    'bets',coalesce(s.bet_count,0),'total',coalesce(s.total,0)
   ) order by c.a,c.b),'[]'::jsonb)
   into v_pair_stats
   from (
-    select a,b from generate_series(1,10) a cross join generate_series(1,10) b where a < b
+    select a,b
+    from generate_series(1,10) a
+    cross join generate_series(1,10) b
+    where a < b
   ) c
   left join (
     select number_a,number_b,count(*)::int bet_count,sum(amount)::numeric total
-    from public.pair_bets where round_id=v_round.id group by number_a,number_b
+    from public.pair_bets where round_id=v_round.id
+    group by number_a,number_b
   ) s on s.number_a=c.a and s.number_b=c.b;
 
   select coalesce(jsonb_agg(x order by x.created_at desc),'[]'::jsonb) into v_deposits
   from (select d.id,d.amount,d.note,d.status,d.created_at,p.name,p.phone from public.deposit_requests d join public.players p on p.id=d.player_id where d.status='pending' order by d.created_at desc limit 100) x;
+
   select coalesce(jsonb_agg(x order by x.created_at desc),'[]'::jsonb) into v_withdrawals
   from (select w.id,w.amount,w.status,w.reason,w.created_at,p.name,p.phone from public.withdrawal_requests w join public.players p on p.id=w.player_id where w.status='pending' order by w.created_at desc limit 100) x;
+
   select coalesce(jsonb_agg(x order by x.created_at desc),'[]'::jsonb) into v_players
   from (select id,name,phone,balance,blocked,created_at from public.players order by created_at desc limit 200) x;
+
   select coalesce(jsonb_agg(x order by x.created_at desc),'[]'::jsonb) into v_recent_bets
   from (select b.id,b.selected_number,b.amount,b.won,b.payout,b.created_at,p.name,p.phone,r.round_no from public.bets b join public.players p on p.id=b.player_id join public.game_rounds r on r.id=b.round_id order by b.created_at desc limit 100) x;
+
   select coalesce(jsonb_agg(x order by x.created_at desc),'[]'::jsonb) into v_recent_pair_bets
   from (select pb.id,pb.number_a,pb.number_b,pb.amount,pb.won,pb.payout,pb.created_at,p.name,p.phone,r.round_no from public.pair_bets pb join public.players p on p.id=pb.player_id join public.game_rounds r on r.id=pb.round_id order by pb.created_at desc limit 100) x;
+
   select coalesce(jsonb_agg(x order by x.draw_at),'[]'::jsonb) into v_schedule
   from (select id,draw_at,status,round_id,created_at from public.draw_schedule where status in ('pending','active') order by draw_at limit 250) x;
 
   return jsonb_build_object(
     'server_time',now(),
     'lock_seconds',3,
-    'round',case when v_round.id is null then null else jsonb_build_object('id',v_round.id,'round_no',v_round.round_no,'status',v_round.status,'opened_at',v_round.opened_at,'closes_at',v_round.closes_at,'draw_at',v_round.draw_at,'schedule_id',v_round.schedule_id) end,
-    'last_result',case when v_last.id is null then null else jsonb_build_object('round_no',v_last.round_no,'drawn_number',v_last.drawn_number,'pair_drawn_a',v_last.pair_drawn_a,'pair_drawn_b',v_last.pair_drawn_b,'drawn_at',v_last.drawn_at,'published_at',v_last.published_at) end,
+    'round',case when v_round.id is null then null else jsonb_build_object(
+      'id',v_round.id,'round_no',v_round.round_no,'status',v_round.status,
+      'opened_at',v_round.opened_at,'closes_at',v_round.closes_at,
+      'draw_at',v_round.draw_at,'schedule_id',v_round.schedule_id
+    ) end,
+    'last_result',case when v_last.id is null then null else jsonb_build_object(
+      'round_no',v_last.round_no,'drawn_number',v_last.drawn_number,
+      'pair_drawn_a',v_last.pair_drawn_a,'pair_drawn_b',v_last.pair_drawn_b,
+      'drawn_at',v_last.drawn_at,'published_at',v_last.published_at
+    ) end,
     'number_stats',v_stats,
     'pair_stats',v_pair_stats,
     'draw_schedule',v_schedule,

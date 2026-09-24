@@ -43,9 +43,12 @@ begin
  if r.status not in ('waiting','negotiating') then raise exception 'As regras já estão bloqueadas para esta partida.'; end if;
  nr := public.jl_ludo_rules(p_rules,r.bet_amount);
  update public.ludo_rooms
- set rules=nr,rules_version=rules_version+1,status='negotiating',
+ set rules=nr,
+     rules_version=rules_version+1,
+     status='negotiating',
      action_deadline=now()+make_interval(secs=>(nr->>'rules_response_seconds')::int),
-     negotiation_grace_used=false,updated_at=now()
+     negotiation_grace_used=false,
+     updated_at=now()
  where id=p_room returning * into r;
  update public.ludo_room_players set accepted_rules_version=null where room_id=p_room and status<>'left';
  update public.ludo_room_players set accepted_rules_version=r.rules_version where room_id=p_room and player_id=me;
@@ -82,12 +85,17 @@ begin
 
  update public.ludo_room_players set accepted_rules_version=r.rules_version where room_id=p_room and player_id=me and status<>'left';
  perform public.jl_ludo_event(p_room,me,'rules_accepted',jsonb_build_object('version',r.rules_version));
- select count(*),count(*) filter(where accepted_rules_version=r.rules_version) into c,a
+
+ select count(*),count(*) filter(where accepted_rules_version=r.rules_version)
+ into c,a
  from public.ludo_room_players where room_id=p_room and status<>'left';
 
  if c=r.player_count and a=c then
    update public.ludo_rooms
-   set status='funding',action_deadline=now()+make_interval(secs=>(rules->>'stake_seconds')::int),negotiation_grace_used=false,updated_at=now()
+   set status='funding',
+       action_deadline=now()+make_interval(secs=>(rules->>'stake_seconds')::int),
+       negotiation_grace_used=false,
+       updated_at=now()
    where id=p_room;
    perform public.jl_ludo_event(p_room,me,'rules_unanimous',jsonb_build_object('version',r.rules_version));
  end if;
@@ -106,12 +114,14 @@ begin
  if not public.jl_ludo_is_member(p_room,me) then raise exception 'Você não pertence a esta sala.'; end if;
  select * into r from public.ludo_rooms where id=p_room for update;
  update public.ludo_invitations set status='expired' where room_id=p_room and status='pending' and expires_at<=now();
+
  if r.status='negotiating' and r.action_deadline is not null and r.action_deadline<=now() then
    if not r.negotiation_grace_used then
      update public.ludo_rooms set negotiation_grace_used=true,action_deadline=now()+interval '30 seconds',updated_at=now() where id=p_room;
      perform public.jl_ludo_event(p_room,null,'negotiation_grace_started',jsonb_build_object('seconds',30));
    else
-     delete from public.ludo_room_players where room_id=p_room and player_id<>r.host_id and coalesce(accepted_rules_version,0)<>r.rules_version;
+     delete from public.ludo_room_players
+       where room_id=p_room and player_id<>r.host_id and coalesce(accepted_rules_version,0)<>r.rules_version;
      update public.ludo_rooms set status='waiting',action_deadline=null,negotiation_grace_used=false,updated_at=now() where id=p_room;
      perform public.jl_ludo_event(p_room,null,'negotiation_timeout',jsonb_build_object('grace_seconds',30));
    end if;

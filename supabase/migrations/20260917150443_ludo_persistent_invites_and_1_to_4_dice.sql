@@ -53,18 +53,27 @@ begin
   if r->>'base_exit_rule' not in ('six','one_or_six') then raise exception 'Regra de saída da base inválida.'; end if;
   n := (r->>'reentry_amount')::numeric;
   if n < 10 or n > p_bet then raise exception 'Valor de reentrada deve ficar entre 10 MZN e a aposta da sala.'; end if;
+
   loc := coalesce(r->>'play_location','online');
   if loc not in ('online','presential') then raise exception 'Local da partida deve ser online ou presencial.'; end if;
+
   dc := coalesce((r->>'dice_count')::integer,1);
   if dc not in (1,2,3,4) then raise exception 'Quantidade de dados deve ser 1, 2, 3 ou 4.'; end if;
+
   if dc > 1 then
     r := jsonb_set(r,'{six_extra_turn}','false'::jsonb,true);
     r := jsonb_set(r,'{capture_extra_turn}','false'::jsonb,true);
     r := jsonb_set(r,'{three_sixes_penalty}','false'::jsonb,true);
   end if;
+
   return r;
 end;
 $$;
 
-update public.ludo_invitations set expires_at = null where status = 'pending';
-update public.ludo_rooms set public_challenge_expires_at = null where is_public and status in ('waiting','negotiating');
+update public.ludo_invitations i
+set expires_at = null
+where status = 'pending';
+
+update public.ludo_rooms
+set public_challenge_expires_at = null
+where is_public and status in ('waiting','negotiating');

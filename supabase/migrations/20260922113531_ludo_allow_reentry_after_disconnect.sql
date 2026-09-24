@@ -1,5 +1,3 @@
--- Permite retomar uma partida após desconexão mesmo se o prazo visual de reentrada passou.
-
 create or replace function public.jl_ludo_reenter(p_token text, p_room uuid)
 returns jsonb
 language plpgsql
@@ -26,12 +24,20 @@ begin
 
   update public.players set balance=balance-amt,updated_at=now() where id=me;
   update public.ludo_rooms set pot=pot+amt,updated_at=now() where id=p_room;
-  update public.ludo_room_players set status='active',reentry_deadline=null where room_id=p_room and player_id=me;
+  update public.ludo_room_players
+  set status='active',reentry_deadline=null
+  where room_id=p_room and player_id=me;
 
   insert into public.transactions(player_id,kind,amount,status,reference_id,note)
   values(me,'ludo_reentry',-amt,'completed',p_room,'Reentrada no Ludo '||r.code);
 
-  perform public.jl_ludo_event(p_room,me,'player_reentered',jsonb_build_object('amount',amt,'late_reconnect_allowed',true));
+  perform public.jl_ludo_event(
+    p_room,
+    me,
+    'player_reentered',
+    jsonb_build_object('amount',amt,'late_reconnect_allowed',true)
+  );
+
   return public.jl_ludo_room_state(p_token,p_room);
 end;
 $$;

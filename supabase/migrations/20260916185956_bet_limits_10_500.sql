@@ -1,6 +1,3 @@
--- Jogos Lendários
--- Cada aposta deve ficar entre 10 e 500 MZN.
-
 create or replace function public.jl_place_bet(
   p_token text,
   p_selected_number integer,

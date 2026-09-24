@@ -1,9 +1,3 @@
--- Jogos Lendários
--- Dupla Lendária passa a usar dois números diferentes de 0 a 10.
--- Isso cria C(11,2) = 55 combinações sem ordem.
--- O snapshot administrativo também passa a expor as mesmas métricas financeiras
--- para Número Lendário e Dupla Lendária.
-
 alter table public.pair_bets drop constraint if exists pair_bets_number_a_check;
 alter table public.pair_bets add constraint pair_bets_number_a_check check (number_a between 0 and 10);
 alter table public.pair_bets drop constraint if exists pair_bets_number_b_check;
