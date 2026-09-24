@@ -84,6 +84,28 @@
     el.className = `form-message ${type}`.trim();
   }
 
+  async function copyTextToClipboard(text) {
+    if (navigator.clipboard?.writeText) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch {}
+    }
+    const area = document.createElement('textarea');
+    area.value = text;
+    area.setAttribute('readonly','');
+    area.style.position = 'fixed';
+    area.style.opacity = '0';
+    area.style.pointerEvents = 'none';
+    document.body.appendChild(area);
+    area.select();
+    area.setSelectionRange(0, area.value.length);
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch {}
+    area.remove();
+    return ok;
+  }
+
   async function checkFunds(gameType, amount) {
     return rpc('jl_check_funds', {
       p_token: state.token,
@@ -196,7 +218,10 @@
         info.innerHTML='Transfira para <strong class="transfer-phone">869954518</strong> · Nome de confirmação: <strong class="transfer-account-name">Bernardo Pedro</strong> <button id="quickCopyDepositPhone" class="button ghost tiny" type="button">Copiar</button>';
         info.classList.remove('hidden');
         document.getElementById('quickTransactionNoteLabel').textContent='Referência da transferência ou mensagem opcional';
-        document.getElementById('quickCopyDepositPhone')?.addEventListener('click',async()=>{try{await navigator.clipboard.writeText('869954518');showToast('Número copiado.','success');}catch{showToast('Número: 869954518');}});
+        document.getElementById('quickCopyDepositPhone')?.addEventListener('click',async()=>{
+          const ok=await copyTextToClipboard('869954518');
+          showToast(ok?'Número copiado.':'Não foi possível copiar o número.',ok?'success':'error');
+        });
       }else{
         info.classList.add('hidden');
         document.getElementById('quickTransactionNoteLabel').textContent='Mensagem opcional para o administrador';
@@ -909,8 +934,8 @@
   });
 
   document.getElementById('copyDepositPhone')?.addEventListener('click',async()=>{
-    try{await navigator.clipboard.writeText('869954518');showToast('Número 869954518 copiado.','success');}
-    catch{showToast('Número de transferência: 869954518');}
+    const ok=await copyTextToClipboard('869954518');
+    showToast(ok?'Número copiado.':'Não foi possível copiar o número.',ok?'success':'error');
   });
   els.refreshButton.addEventListener('click', () => refresh());
   els.closeAuth.addEventListener('click', closeAuth);
