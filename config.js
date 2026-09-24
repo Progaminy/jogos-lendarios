@@ -25,7 +25,7 @@ window.JL_CONFIG = Object.freeze({
     // A sala e o tabuleiro têm uma única fonte de estado: ludo.js.
     // O módulo público cuida apenas da descoberta/entrada em desafios.
     // ludo-stable-ui é somente apresentação e não consulta o servidor.
-    add('./ludo-public-challenges-v3.js?v=5');
+    add('./ludo-public-challenges-v3.js?v=6');
     add('./ludo-stable-ui.js?v=1');
   }
 })();

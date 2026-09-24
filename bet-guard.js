@@ -49,15 +49,8 @@
         return;
       }
 
-      const playerArea = document.getElementById('playerArea');
-      if (!playerArea || playerArea.classList.contains('hidden')) return;
-
-      const balance = parseMoney(document.getElementById('balance')?.textContent);
-      if (Number.isFinite(balance) && balance < amount) {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        goToDeposit();
-      }
+      // Não comparar aqui apenas com saldo em dinheiro.
+      // O motor principal chama jl_check_funds, que considera saldo + bónus elegível por jogo.
     }, true);
   }
 

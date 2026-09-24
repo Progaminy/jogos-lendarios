@@ -365,7 +365,9 @@ modo
 valor da aposta
 ```
 
-e entrar em **Quero jogar**. Um anfitrião com configuração compatível pode convidá-lo.
+e entrar em **Quero jogar**. Esse botão usa a fila real (`jl_ludo_enter_queue`) e pode ser cancelado com `jl_ludo_leave_queue`. Um anfitrião com configuração compatível pode convidá-lo.
+
+Os **desafios públicos** são um fluxo separado: uma sala pública já criada pode ser anunciada a todos e aceite diretamente enquanto houver vaga. O módulo de desafios não intercepta nem substitui a fila de espera.
 
 ## Motor do Ludo no Supabase
 

@@ -71,8 +71,12 @@
   async function load(silent=false){
     if(!$('bonusPlayerList')||!token())return;
     try{
+      const selected=new Set(selectedIds());
       data=await rpc('jl_admin_bonus_overview',{p_token:token()});
-      renderPlayers();renderRecent();
+      renderPlayers();
+      document.querySelectorAll('#bonusPlayerList input[data-bonus-player]').forEach(x=>{if(selected.has(x.dataset.bonusPlayer))x.checked=true;});
+      updateSelectedCount();
+      renderRecent();
     }catch(err){if(!silent)toast(err.message,'error');}
   }
 

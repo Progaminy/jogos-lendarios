@@ -454,7 +454,9 @@
         catch { state.supportThread = null; state.supportPlayerId = null; }
       }
       showApp(true);
-      render();
+      const active=document.activeElement;
+      const editing=Boolean(active&&active.closest?.('#adminApp')&&/^(INPUT|SELECT|TEXTAREA)$/.test(active.tagName));
+      if(!editing) render();
     } catch (error) {
       if (/sessão|session|administrativa/i.test(error.message)) {
         saveToken('');
