@@ -7,7 +7,7 @@
   <meta name="description" content="Jogos Lendários — plataforma de jogos com saldo comum, categorias profissionais e motores independentes.">
   <title>Jogos Lendários</title>
   <link rel="icon" href="./favicon.ico" sizes="any">
-  <link rel="stylesheet" href="./styles.css?v=20260924-7">
+  <link rel="stylesheet" href="./styles.css?v=20260924-8">
   <link rel="stylesheet" href="./support-ui.css?v=20260922-12fix">
   <link rel="stylesheet" href="./recovery-ui.css?v=20260922-13">
   <link rel="stylesheet" href="./site-nav.css?v=20260922-12fix">
@@ -50,13 +50,36 @@
         <p class="eyebrow">JOGOS LENDÁRIOS</p>
         <h1>Uma plataforma, vários jogos.</h1>
       </div>
-      <div class="hero-stat">
-        <span>Catálogo atual</span>
-        <strong>3</strong>
-        <small>jogos independentes</small>
-        <span style="margin-top:14px">Aposta mínima</span>
-        <strong style="font-size:3rem">10</strong>
-        <small>MZN em todos os jogos</small>
+      <div class="hero-promo" id="heroPromo" aria-label="Destaques dos Jogos Lendários">
+        <a class="hero-promo-slide active promo-number" href="#numero-lendario">
+          <span class="promo-kicker">NÚMERO LENDÁRIO</span>
+          <strong>1 número</strong>
+          <small>Escolha de 0 a 10 · aposta mínima 10 MZN</small>
+          <span class="promo-cta">Jogar agora →</span>
+        </a>
+
+        <a class="hero-promo-slide promo-pair" href="#dupla-lendaria">
+          <span class="promo-kicker">DUPLA LENDÁRIA</span>
+          <strong>2 números</strong>
+          <small>Monte a sua combinação · aposta mínima 10 MZN</small>
+          <span class="promo-cta">Jogar agora →</span>
+        </a>
+
+        <a class="hero-promo-slide promo-ludo" href="./ludo.html">
+          <span class="promo-kicker">LUDO LENDÁRIO</span>
+          <strong>2–4</strong>
+          <small>Jogadores, voz, parceiros e regras negociadas</small>
+          <span class="promo-cta">Abrir tabuleiro →</span>
+        </a>
+
+        <div class="hero-promo-slide promo-coming" role="status">
+          <span class="promo-kicker">BREVEMENTE</span>
+          <strong>Dama Lendária</strong>
+          <small>Um novo jogo de tabuleiro está a caminho.</small>
+          <span class="promo-cta promo-soon">Em preparação</span>
+        </div>
+
+        <div class="hero-promo-dots" id="heroPromoDots" aria-label="Escolher publicidade"></div>
       </div>
     </section>
 
@@ -291,6 +314,7 @@
   <script src="./bet-guard.js"></script>
   <script src="./support-ui.js" defer></script>
   <script src="./recovery-ui.js?v=20260922-13" defer></script>
+  <script src="./promo-rotator.js?v=20260924-1" defer></script>
   <script src="./app.js?v=20260924-6" defer></script>
 </body>
 </html>
