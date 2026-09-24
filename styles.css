@@ -634,21 +634,18 @@ h2 { margin: 0; font-size: clamp(1.25rem, 2.5vw, 1.75rem); letter-spacing: -.025
   .hero-promo-slide{transition:none}
 }
 
-
-
-  .lottery-number-group[aria-hidden="true"]{display:none}
-}
-
-
 /* Uma única bola com número variável de 0 a 10 */
 .lottery-number-orb-wrap{
-  margin-top:14px;
+  width:100%;
+  margin:14px auto 0;
   min-height:92px;
   display:flex;
   align-items:center;
   justify-content:center;
+  text-align:center;
 }
 .lottery-number-orb{
+  margin-inline:auto;
   width:76px;
   height:76px;
   display:grid;
