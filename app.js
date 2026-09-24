@@ -670,13 +670,23 @@
 
   function handleDepositRedirectFromUrl() {
     if (state.depositRedirectHandled || !state.token || !state.data?.player) return;
-    const needed = Number(new URLSearchParams(window.location.search).get('deposit_needed') || 0);
-    if (!(needed > 0)) return;
+    const params = new URLSearchParams(window.location.search);
+    const needed = Number(params.get('deposit_needed') || 0);
+    const requested = params.get('open');
+    const hash = String(window.location.hash || '').replace('#','');
+    const target = requested === 'withdraw' || hash === 'withdrawPanel'
+      ? 'withdrawPanel'
+      : (requested === 'deposit' || hash === 'depositPanel' || needed > 0 ? 'depositPanel' : '');
+    if (!target) return;
     state.depositRedirectHandled = true;
-    if (els.depositAmount) els.depositAmount.value = String(Math.max(1, Math.ceil(needed)));
-    openAccountPanel('depositPanel');
-    setMessage(els.depositMessage, `Faltam ${formatMoney(needed)} MZN para continuar a operação anterior.`, 'error');
-    showToast(`Faltam ${formatMoney(needed)} MZN. Faça o depósito para continuar.`, 'error');
+    if (target === 'depositPanel' && needed > 0 && els.depositAmount) {
+      els.depositAmount.value = String(Math.max(1, Math.ceil(needed)));
+    }
+    setTimeout(() => openAccountPanel(target), 0);
+    if (target === 'depositPanel' && needed > 0) {
+      setMessage(els.depositMessage, `Faltam ${formatMoney(needed)} MZN para continuar a operação anterior.`, 'error');
+      showToast(`Faltam ${formatMoney(needed)} MZN. Faça o depósito para continuar.`, 'error');
+    }
   }
 
   els.accountButton.addEventListener('click', () => {
