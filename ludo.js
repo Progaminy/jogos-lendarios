@@ -542,7 +542,7 @@
   els.accountMenuDeposit?.addEventListener('click',()=>{window.location.href='./index.html?open=deposit#depositPanel';});
   els.accountMenuWithdraw?.addEventListener('click',()=>{window.location.href='./index.html?open=withdraw#withdrawPanel';});
   els.accountMenuLogout?.addEventListener('click',async()=>{
-    if(!window.confirm('Tem certeza que deseja sair da sua conta?'))return;
+    if(!(await window.JLConfirmLogout()))return;
     try{if(state.token)await rpc('jl_logout_player',{p_token:state.token});}catch{}
     saveToken('');
     closeVoice();

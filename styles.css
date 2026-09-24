@@ -706,3 +706,73 @@ h2 { margin: 0; font-size: clamp(1.25rem, 2.5vw, 1.75rem); letter-spacing: -.025
   .lottery-number-orb{transition:none}
 }
 }
+
+
+.jl-logout-modal{
+  position:fixed;
+  z-index:1600;
+  inset:0;
+  display:grid;
+  place-items:center;
+  padding:18px;
+  background:rgba(3,7,13,.84);
+  backdrop-filter:blur(10px);
+}
+.jl-logout-card{
+  width:min(470px,100%);
+  padding:30px 26px 26px;
+  text-align:center;
+  border:1px solid rgba(244,181,31,.48);
+  border-radius:26px;
+  background:
+    radial-gradient(circle at 85% 8%,rgba(244,181,31,.14),transparent 30%),
+    linear-gradient(160deg,#18263b,#0b1421);
+  box-shadow:0 34px 110px rgba(0,0,0,.72),0 0 0 7px rgba(244,181,31,.055);
+}
+.jl-logout-icon{
+  width:78px;
+  height:78px;
+  margin:0 auto 14px;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  background:linear-gradient(145deg,#ffd85c,#d99709);
+  color:#17120b;
+  font-size:2.35rem;
+  font-weight:950;
+  box-shadow:0 14px 32px rgba(244,181,31,.24);
+  transform:rotate(180deg);
+}
+.jl-logout-kicker{
+  margin:0 0 8px;
+  color:#ffda6a;
+  font-size:.72rem;
+  font-weight:950;
+  letter-spacing:.14em;
+}
+.jl-logout-card h2{
+  margin:0;
+  font-size:clamp(1.65rem,6vw,2.45rem);
+}
+.jl-logout-text{
+  margin:13px auto 22px;
+  max-width:360px;
+  color:#d4deec;
+  line-height:1.55;
+}
+.jl-logout-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+.jl-logout-actions .button{min-height:48px}
+.jl-logout-danger{
+  background:linear-gradient(145deg,#e45a5a,#b93434)!important;
+  border-color:#ff7f7f!important;
+  color:#fff!important;
+}
+@media(max-width:520px){
+  .jl-logout-modal{padding:10px}
+  .jl-logout-card{padding:26px 18px 20px;border-radius:22px}
+  .jl-logout-actions{grid-template-columns:1fr}
+}

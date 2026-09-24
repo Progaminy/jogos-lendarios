@@ -854,7 +854,7 @@
   });
 
   async function logoutPlayer() {
-    if (!window.confirm('Tem certeza que deseja sair da sua conta?')) return;
+    if (!(await window.JLConfirmLogout())) return;
     try { if (state.token) await rpc('jl_logout_player', { p_token: state.token }); } catch {}
     saveToken('');
     state.data = null;
