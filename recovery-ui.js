@@ -22,7 +22,7 @@
           <button id="pinRecoveryClose" class="recovery-close" type="button" aria-label="Fechar">×</button>
           <p class="eyebrow">RECUPERAÇÃO DE ACESSO</p>
           <h2 id="pinRecoveryTitle">Recuperar PIN</h2>
-          <p class="recovery-help">Informe o número da conta e um email para receber o código. O administrador verá estes contactos e deverá ligar para confirmar a sua identidade antes de autorizar o envio.</p>
+          <p class="recovery-help">Informe o número da conta e um email de contacto. O administrador confirma a identidade e fornece um código de recuperação. O pedido público não revela se a conta existe.</p>
 
           <div id="pinRecoveryRequestStage">
             <form id="pinRecoveryRequestForm" class="stack-form">
@@ -35,7 +35,7 @@
           <div id="pinRecoveryConfirmStage" class="hidden">
             <div class="recovery-waiting">
               <strong>Pedido enviado ao administrador.</strong>
-              <span>Depois da confirmação por telefone, o código será enviado por email.</span>
+              <span>Depois da confirmação da sua identidade, o administrador fornecerá o código. Ele expira e bloqueia após várias tentativas inválidas.</span>
             </div>
             <form id="pinRecoveryConfirmForm" class="stack-form">
               <label><span>Código de 6 dígitos</span><input id="pinRecoveryCode" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" required></label>
@@ -58,6 +58,7 @@
       setMessage('A enviar o pedido…');
       try{
         const data=await rpc('jl_request_pin_recovery',{p_phone:phone,p_email:email});
+        if(data?.ok===false){setMessage(data?.message||data?.error||'Não foi possível criar o pedido.','error');return;}
         $('pinRecoveryRequestStage').classList.add('hidden');
         $('pinRecoveryConfirmStage').classList.remove('hidden');
         setMessage(data?.message||'Pedido recebido. Aguarde a confirmação do administrador.','success');
@@ -76,6 +77,7 @@
           p_code:$('pinRecoveryCode').value.trim(),
           p_new_pin:pin
         });
+        if(data?.ok===false){setMessage(data?.error||data?.message||'Código inválido ou expirado.','error');return;}
         setMessage(data?.message||'PIN alterado com sucesso.','success');
         setTimeout(()=>{close();document.querySelector('#loginPhone')?.focus();},900);
       }catch(err){setMessage(err.message,'error');}

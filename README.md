@@ -309,8 +309,8 @@ As ações que dependem de um jogador nunca podem bloquear a partida indefinidam
 Padrões atuais:
 
 ```text
-convite: 60 s
-aceitar regras: 60 s
+convite: sem prazo enquanto houver vaga
+aceitar regras: sem prazo; o jogador pode reconsiderar a mesma versão
 confirmar aposta: 60 s
 reentrada: 60 s
 escolher peça: 30 s padrão
@@ -617,3 +617,16 @@ Antes de qualquer ação financeira do jogador, a plataforma verifica se há fun
 - Se o problema do saque for um depósito ainda não jogado, a plataforma não manda depositar mais; informa que esse valor precisa primeiro ser jogado.
 
 O backend também repete a validação para impedir que o controlo seja contornado pelo navegador. Ao entrar por convite ou desafio público, a verificação acontece antes de abandonar ou transferir a sala atual.
+
+
+## Consolidação de segurança — 24/09/2026
+
+- Recuperação de PIN não revela publicamente se o telefone existe.
+- Um pedido ativo não pode ser substituído por outro pedido público para trocar o email.
+- O administrador pode gerar manualmente um código de 6 dígitos após confirmar a identidade; o código expira no servidor e aceita no máximo 5 tentativas inválidas.
+- O envio automático por email é opcional; a recuperação manual funciona sem SMTP.
+- Convites e desafios públicos do Ludo permanecem disponíveis enquanto houver vaga e a sala continuar em espera/negociação.
+- Criação/entrada em sala e fila do Ludo têm verificação de saldo também no banco.
+- Reentrada no Ludo conta para a obrigação de jogar depósitos antes do saque.
+- A pasta `supabase/migrations` é o espelho canónico do histórico aplicado no Supabase, com versões UTC únicas de 14 dígitos.
+- `supabase/` e `scripts/` não são publicados como assets do site.

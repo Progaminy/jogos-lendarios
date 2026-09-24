@@ -7,7 +7,7 @@ const RECOVERY_EMAIL_APP_PASSWORD=String(Deno.env.get('PSF_RECOVERY_EMAIL_APP_PA
 
 const CORS={
   'Access-Control-Allow-Origin':'https://jogoslendarios.adadpsf.shop',
-  'Access-Control-Allow-Headers':'authorization, content-type',
+  'Access-Control-Allow-Headers':'authorization, apikey, content-type, x-client-info',
   'Access-Control-Allow-Methods':'GET, POST, OPTIONS',
   'Cache-Control':'no-store',
   'X-Content-Type-Options':'nosniff',

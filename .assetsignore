@@ -8,3 +8,6 @@ wrangler.jsonc
 node_modules/
 .env
 .env.*
+supabase/
+supabase/**
+scripts/
