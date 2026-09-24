@@ -67,8 +67,8 @@ input { min-width: 0; }
 }
 .hero {
   position: relative;
-  min-height: 275px;
-  padding: 38px;
+  min-height: 235px;
+  padding: 34px 38px;
   display: grid;
   grid-template-columns: minmax(0,1.5fr) minmax(220px,.55fr);
   gap: 28px;
