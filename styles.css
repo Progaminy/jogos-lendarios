@@ -519,3 +519,13 @@ h2 { margin: 0; font-size: clamp(1.25rem, 2.5vw, 1.75rem); letter-spacing: -.025
 .transfer-phone{color:#ff4d5f!important;font-weight:950;letter-spacing:.035em}
 .transfer-account-name{color:#46d98b!important;font-weight:950}
 #copyDepositPhone,#quickCopyDepositPhone{vertical-align:middle}
+
+
+.result-banner.is-spinning{position:relative;overflow:hidden;border-color:rgba(244,189,66,.65);box-shadow:0 0 0 1px rgba(244,189,66,.2),0 18px 48px rgba(0,0,0,.28)}
+.result-banner.is-spinning::after{content:"SORTEANDO";position:absolute;right:18px;bottom:10px;font-size:.66rem;font-weight:950;letter-spacing:.18em;color:#f4bd42;animation:resultBlink .5s steps(2,end) infinite}
+.result-banner.is-spinning .result-ball{animation:resultSpin .18s linear infinite;filter:brightness(1.15)}
+.result-ball.winner-pop{animation:winnerPop .85s cubic-bezier(.18,.9,.24,1.25)}
+@keyframes resultSpin{0%{transform:translateY(-3px) rotate(-5deg) scale(.96)}50%{transform:translateY(3px) rotate(5deg) scale(1.08)}100%{transform:translateY(-3px) rotate(-5deg) scale(.96)}}
+@keyframes resultBlink{50%{opacity:.35}}
+@keyframes winnerPop{0%{transform:scale(.72);box-shadow:0 0 0 0 rgba(244,189,66,.7)}55%{transform:scale(1.18);box-shadow:0 0 0 14px rgba(244,189,66,0)}100%{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){.result-banner.is-spinning .result-ball,.result-banner.is-spinning::after,.result-ball.winner-pop{animation:none}}

@@ -13,6 +13,10 @@
     pendingBet: null,
     depositRedirectHandled: false,
     refreshTimer: null,
+    resultReveal: {
+      number: { round: null, key: '', timer: null },
+      pair: { round: null, key: '', timer: null }
+    },
     timers: {
       number: { countdown: null, refresh: null },
       pair: { countdown: null, refresh: null }
@@ -280,6 +284,7 @@
   }
 
   function checkWinNotifications() {
+    if (state.resultReveal.number.round != null || state.resultReveal.pair.round != null) return;
     if (!state.token || !state.data?.player || !els.winModal?.classList.contains('hidden')) return;
     const seen = winSeen();
     const wins = [
@@ -476,21 +481,130 @@
     timer.countdown = setInterval(tick, 1000);
   }
 
-  function renderResults() {
-    const nr = game('number')?.last_result;
-    if (nr?.drawn_number != null) {
-      els.numberResultTitle.textContent = `Rodada ${nr.round_no} · ${formatDate(nr.published_at)}`;
-      els.numberResultNumber.textContent = nr.drawn_number;
-      els.numberResultBanner.classList.remove('hidden');
-    } else els.numberResultBanner.classList.add('hidden');
+  const RESULT_ANNOUNCED_KEY = 'jl_announced_results_v1';
 
-    const pr = game('pair')?.last_result;
-    if (pr?.pair_drawn_a != null && pr?.pair_drawn_b != null) {
-      els.pairResultTitle.textContent = `Rodada ${pr.round_no} · ${formatDate(pr.published_at)}`;
-      els.pairResultA.textContent = pr.pair_drawn_a;
-      els.pairResultB.textContent = pr.pair_drawn_b;
-      els.pairResultBanner.classList.remove('hidden');
-    } else els.pairResultBanner.classList.add('hidden');
+  function announcedResults() {
+    try { return JSON.parse(localStorage.getItem(RESULT_ANNOUNCED_KEY) || '{}') || {}; }
+    catch { return {}; }
+  }
+
+  function markResultAnnounced(type, key) {
+    const announced = announcedResults();
+    announced[type] = key;
+    try { localStorage.setItem(RESULT_ANNOUNCED_KEY, JSON.stringify(announced)); } catch {}
+  }
+
+  function resultKey(type, result) {
+    if (!result) return '';
+    return [type, result.round_no ?? '', result.published_at ?? result.drawn_at ?? ''].join(':');
+  }
+
+  function randomNumberExcept(except = null) {
+    let n = Math.floor(Math.random() * 11);
+    if (except != null && n === except) n = (n + 1 + Math.floor(Math.random() * 10)) % 11;
+    return n;
+  }
+
+  function finishResultReveal(type, result, key) {
+    const slot = state.resultReveal[type];
+    clearTimeout(slot.timer);
+    slot.timer = null;
+    slot.round = null;
+    slot.key = key;
+    markResultAnnounced(type, key);
+
+    if (type === 'number') {
+      els.numberResultTitle.textContent = `Rodada ${result.round_no} · ${formatDate(result.published_at)}`;
+      els.numberResultNumber.textContent = result.drawn_number;
+      els.numberResultBanner.classList.remove('is-spinning');
+      els.numberResultNumber.classList.add('winner-pop');
+      setTimeout(() => els.numberResultNumber.classList.remove('winner-pop'), 900);
+    } else {
+      els.pairResultTitle.textContent = `Rodada ${result.round_no} · ${formatDate(result.published_at)}`;
+      els.pairResultA.textContent = result.pair_drawn_a;
+      els.pairResultB.textContent = result.pair_drawn_b;
+      els.pairResultBanner.classList.remove('is-spinning');
+      els.pairResultA.classList.add('winner-pop');
+      els.pairResultB.classList.add('winner-pop');
+      setTimeout(() => {
+        els.pairResultA.classList.remove('winner-pop');
+        els.pairResultB.classList.remove('winner-pop');
+      }, 900);
+    }
+
+    renderHistory();
+    checkWinNotifications();
+  }
+
+  function animateResultReveal(type, result, key) {
+    const slot = state.resultReveal[type];
+    if (slot.key === key && slot.timer) return;
+    clearTimeout(slot.timer);
+    slot.key = key;
+    slot.round = Number(result.round_no);
+    const banner = type === 'number' ? els.numberResultBanner : els.pairResultBanner;
+    const title = type === 'number' ? els.numberResultTitle : els.pairResultTitle;
+    banner.classList.remove('hidden');
+    banner.classList.add('is-spinning');
+    title.textContent = `Rodada ${result.round_no} · sorteando números…`;
+
+    let step = 0;
+    const totalSteps = 22;
+    const spin = () => {
+      step += 1;
+      if (type === 'number') {
+        els.numberResultNumber.textContent = randomNumberExcept();
+      } else {
+        const a = randomNumberExcept();
+        const b = randomNumberExcept(a);
+        els.pairResultA.textContent = a;
+        els.pairResultB.textContent = b;
+      }
+      if (step >= totalSteps) return finishResultReveal(type, result, key);
+      const delay = step < 12 ? 70 : step < 18 ? 105 : 160;
+      slot.timer = setTimeout(spin, delay);
+    };
+    spin();
+  }
+
+  function renderResultType(type, result) {
+    const isNumber = type === 'number';
+    const banner = isNumber ? els.numberResultBanner : els.pairResultBanner;
+    if (!result || (isNumber ? result.drawn_number == null : result.pair_drawn_a == null || result.pair_drawn_b == null)) {
+      banner.classList.add('hidden');
+      return;
+    }
+
+    const key = resultKey(type, result);
+    const announced = announcedResults();
+    const slot = state.resultReveal[type];
+
+    if (!announced[type]) {
+      markResultAnnounced(type, key);
+      slot.key = key;
+    }
+
+    if (announcedResults()[type] !== key) {
+      animateResultReveal(type, result, key);
+      return;
+    }
+
+    if (slot.timer && slot.key === key) return;
+    slot.round = null;
+    if (isNumber) {
+      els.numberResultTitle.textContent = `Rodada ${result.round_no} · ${formatDate(result.published_at)}`;
+      els.numberResultNumber.textContent = result.drawn_number;
+    } else {
+      els.pairResultTitle.textContent = `Rodada ${result.round_no} · ${formatDate(result.published_at)}`;
+      els.pairResultA.textContent = result.pair_drawn_a;
+      els.pairResultB.textContent = result.pair_drawn_b;
+    }
+    banner.classList.remove('hidden','is-spinning');
+  }
+
+  function renderResults() {
+    renderResultType('number', game('number')?.last_result);
+    renderResultType('pair', game('pair')?.last_result);
   }
 
   function renderHistory() {
@@ -506,14 +620,16 @@
       const pair = bet.game_type === 'pair';
       const choice = pair ? `${bet.number_a}+${bet.number_b}` : String(bet.selected_number);
       const gameName = pair ? 'Dupla Lendária' : 'Número Lendário';
+      const revealRound = pair ? state.resultReveal.pair.round : state.resultReveal.number.round;
+      const revealPending = revealRound != null && Number(bet.round_no) === Number(revealRound);
       let resultClass = 'pending';
-      let resultLabel = 'Aguardando resultado';
-      let resultValue = `MZN ${formatMoney(bet.amount)}`;
-      if (bet.won === true) {
+      let resultLabel = revealPending ? 'Sorteando números…' : 'Aguardando resultado';
+      let resultValue = revealPending ? 'Resultado em instantes' : `MZN ${formatMoney(bet.amount)}`;
+      if (!revealPending && bet.won === true) {
         resultClass = 'win';
         resultLabel = `Ganhou MZN ${formatMoney(bet.payout)}`;
         resultValue = pair ? `Saiu ${bet.pair_drawn_a}+${bet.pair_drawn_b}` : `Saiu ${bet.drawn_number}`;
-      } else if (bet.won === false) {
+      } else if (!revealPending && bet.won === false) {
         resultClass = 'lose';
         resultLabel = 'Não premiada';
         resultValue = pair ? `Saiu ${bet.pair_drawn_a}+${bet.pair_drawn_b}` : `Saiu ${bet.drawn_number}`;
