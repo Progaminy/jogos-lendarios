@@ -7,7 +7,7 @@
   <meta name="description" content="Jogos Lendários — plataforma de jogos com saldo comum, categorias profissionais e motores independentes.">
   <title>Jogos Lendários</title>
   <link rel="icon" href="./favicon.ico" sizes="any">
-  <link rel="stylesheet" href="./styles.css?v=20260924-11">
+  <link rel="stylesheet" href="./styles.css?v=20260924-12">
   <link rel="stylesheet" href="./support-ui.css?v=20260922-12fix">
   <link rel="stylesheet" href="./recovery-ui.css?v=20260922-13">
   <link rel="stylesheet" href="./site-nav.css?v=20260922-12fix">
@@ -88,8 +88,20 @@
         <div><span class="category-marker">SORTEIOS</span><h2>Jogos de números</h2><p>Rodadas e resultados independentes.</p></div>
       </div>
 
-      <div class="lottery-number-orb-wrap" aria-label="Animação de números de zero a dez">
-        <div class="lottery-number-orb" id="lotteryNumberOrb" aria-live="off">0</div>
+      <div class="lottery-animations" aria-label="Animações dos jogos de números">
+        <div class="lottery-animation-block">
+          <span class="lottery-animation-label">NÚMERO LENDÁRIO</span>
+          <div class="lottery-number-orb" id="lotteryNumberOrb" aria-live="off">0</div>
+        </div>
+
+        <div class="lottery-animation-block">
+          <span class="lottery-animation-label">DUPLA LENDÁRIA</span>
+          <div class="lottery-pair-orbs" aria-live="off">
+            <div class="lottery-number-orb" id="lotteryPairOrbA">0</div>
+            <strong class="lottery-pair-plus">+</strong>
+            <div class="lottery-number-orb" id="lotteryPairOrbB">1</div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -307,7 +319,7 @@
   <script src="./bet-guard.js"></script>
   <script src="./support-ui.js" defer></script>
   <script src="./recovery-ui.js?v=20260922-13" defer></script>
-  <script src="./promo-rotator.js?v=20260924-1" defer></script>  <script src="./number-orb.js?v=20260924-1" defer></script>
+  <script src="./promo-rotator.js?v=20260924-1" defer></script>  <script src="./number-orb.js?v=20260924-2" defer></script>
   <script src="./app.js?v=20260924-6" defer></script>
 </body>
 </html>

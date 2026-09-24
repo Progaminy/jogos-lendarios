@@ -634,18 +634,43 @@ h2 { margin: 0; font-size: clamp(1.25rem, 2.5vw, 1.75rem); letter-spacing: -.025
   .hero-promo-slide{transition:none}
 }
 
-/* Uma única bola com número variável de 0 a 10 */
-.lottery-number-orb-wrap{
+/* Duas animações: Número Lendário e Dupla Lendária */
+.lottery-animations{
   width:100%;
-  margin:14px auto 0;
-  min-height:92px;
+  margin:16px auto 0;
+  min-height:118px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  align-items:center;
+  gap:24px;
+}
+.lottery-animation-block{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:9px;
+  text-align:center;
+}
+.lottery-animation-label{
+  color:var(--accent-2);
+  font-size:.68rem;
+  font-weight:950;
+  letter-spacing:.11em;
+}
+.lottery-pair-orbs{
   display:flex;
   align-items:center;
   justify-content:center;
-  text-align:center;
+  gap:10px;
+}
+.lottery-pair-plus{
+  color:var(--muted);
+  font-size:1.15rem;
+  font-weight:950;
 }
 .lottery-number-orb{
-  margin-inline:auto;
   width:76px;
   height:76px;
   display:grid;
@@ -668,9 +693,16 @@ h2 { margin: 0; font-size: clamp(1.25rem, 2.5vw, 1.75rem); letter-spacing: -.025
   filter:brightness(1.22);
 }
 @media(max-width:720px){
-  .lottery-number-orb-wrap{min-height:82px}
-  .lottery-number-orb{width:68px;height:68px;font-size:1.8rem}
+  .lottery-animations{gap:12px;min-height:104px}
+  .lottery-number-orb{width:64px;height:64px;font-size:1.65rem}
+  .lottery-pair-orbs{gap:7px}
+  .lottery-animation-label{font-size:.61rem}
+}
+@media(max-width:430px){
+  .lottery-number-orb{width:58px;height:58px;font-size:1.5rem}
+  .lottery-pair-orbs{gap:5px}
 }
 @media(prefers-reduced-motion:reduce){
   .lottery-number-orb{transition:none}
+}
 }
