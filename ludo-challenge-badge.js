@@ -64,7 +64,9 @@
     ensureStyle();
     refresh();
     clearInterval(timer);
-    timer = setInterval(refresh, 5000);
+    timer = setInterval(() => {
+      if (document.visibilityState === 'visible') refresh();
+    }, 15000);
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, {once:true});

@@ -812,5 +812,11 @@
   buildNumbers();
   buildPairNumbers();
   refresh();
-  state.refreshTimer = setInterval(() => refresh(true), 10000);
+  state.refreshTimer = setInterval(() => {
+    if (document.visibilityState !== 'visible') return;
+    if (document.body.classList.contains('modal-open')) return;
+    const active = document.activeElement;
+    if (active && /^(INPUT|SELECT|TEXTAREA|BUTTON)$/.test(active.tagName)) return;
+    refresh(true);
+  }, 20000);
 })();
