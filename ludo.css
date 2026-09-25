@@ -357,3 +357,53 @@ button.status-metric:hover{border-color:rgba(244,189,66,.5);transform:translateY
   100%{transform:translate3d(0,0,0) rotate(-10deg) scale(.96)}
 }
 @keyframes dicePipFlash{from{opacity:.58;transform:scale(.78)}to{opacity:1;transform:scale(1.14)}}
+
+
+/* PEOES VENCEDORES NOS TRIANGULOS 2026-09-25 */
+.ludo-center .finish-piece{
+  position:absolute!important;
+  z-index:12!important;
+  width:24%!important;
+  height:31%!important;
+  margin:0!important;
+  padding-top:10%!important;
+  pointer-events:none!important;
+  opacity:1!important;
+  transform:translate(-50%,-50%)!important;
+}
+
+/* Cada cor ocupa exclusivamente o seu triângulo central. */
+.ludo-center .finish-piece[data-finish-color="red"]{left:20%;top:50%}
+.ludo-center .finish-piece[data-finish-color="green"]{left:50%;top:20%}
+.ludo-center .finish-piece[data-finish-color="yellow"]{left:80%;top:50%}
+.ludo-center .finish-piece[data-finish-color="blue"]{left:50%;top:80%}
+
+/* Até quatro peões concluídos continuam visíveis dentro do mesmo triângulo. */
+.ludo-center .finish-piece[data-finish-index="0"]{--finish-shift-x:-5%;--finish-shift-y:-7%}
+.ludo-center .finish-piece[data-finish-index="1"]{--finish-shift-x:5%;--finish-shift-y:-7%}
+.ludo-center .finish-piece[data-finish-index="2"]{--finish-shift-x:-5%;--finish-shift-y:7%}
+.ludo-center .finish-piece[data-finish-index="3"]{--finish-shift-x:5%;--finish-shift-y:7%}
+
+.ludo-center .finish-piece[data-finish-color="red"][data-finish-index="0"]{left:16%;top:43%}
+.ludo-center .finish-piece[data-finish-color="red"][data-finish-index="1"]{left:25%;top:43%}
+.ludo-center .finish-piece[data-finish-color="red"][data-finish-index="2"]{left:16%;top:57%}
+.ludo-center .finish-piece[data-finish-color="red"][data-finish-index="3"]{left:25%;top:57%}
+
+.ludo-center .finish-piece[data-finish-color="green"][data-finish-index="0"]{left:43%;top:15%}
+.ludo-center .finish-piece[data-finish-color="green"][data-finish-index="1"]{left:57%;top:15%}
+.ludo-center .finish-piece[data-finish-color="green"][data-finish-index="2"]{left:43%;top:25%}
+.ludo-center .finish-piece[data-finish-color="green"][data-finish-index="3"]{left:57%;top:25%}
+
+.ludo-center .finish-piece[data-finish-color="yellow"][data-finish-index="0"]{left:75%;top:43%}
+.ludo-center .finish-piece[data-finish-color="yellow"][data-finish-index="1"]{left:84%;top:43%}
+.ludo-center .finish-piece[data-finish-color="yellow"][data-finish-index="2"]{left:75%;top:57%}
+.ludo-center .finish-piece[data-finish-color="yellow"][data-finish-index="3"]{left:84%;top:57%}
+
+.ludo-center .finish-piece[data-finish-color="blue"][data-finish-index="0"]{left:43%;top:75%}
+.ludo-center .finish-piece[data-finish-color="blue"][data-finish-index="1"]{left:57%;top:75%}
+.ludo-center .finish-piece[data-finish-color="blue"][data-finish-index="2"]{left:43%;top:85%}
+.ludo-center .finish-piece[data-finish-color="blue"][data-finish-index="3"]{left:57%;top:85%}
+
+@media(max-width:600px){
+  .ludo-center .finish-piece{width:25%!important;height:32%!important;font-size:5px!important}
+}
