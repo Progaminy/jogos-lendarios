@@ -195,7 +195,7 @@
         </form>
         <form id="quickTransactionNoteForm" class="stack-form hidden">
           <div id="quickTransferInfo" class="transaction-modal-reference hidden"></div>
-          <label class="field"><span id="quickTransactionNoteLabel">Referência ou mensagem opcional</span><input id="quickTransactionNote" maxlength="160" placeholder="Opcional"></label>
+          <label class="field"><span id="quickTransactionNoteLabel">Referência da transferência</span><input id="quickTransactionNote" maxlength="160" placeholder="Ex.: referência do pagamento"></label>
           <button id="quickTransactionSubmit" class="button primary" type="submit">Enviar pedido</button>
         </form>
         <p id="quickTransactionMessage" class="form-message"></p>
@@ -208,24 +208,35 @@
       e.preventDefault();
       const amount=Number(document.getElementById('quickTransactionAmount').value);
       if(!Number.isInteger(amount)||amount<1){document.getElementById('quickTransactionMessage').textContent='Informe um valor inteiro válido.';return;}
-      if(quickTransaction.kind==='withdraw' && !(await ensureFunds('withdrawal',amount,'fazer este saque'))) return;
+      if(quickTransaction.kind==='withdraw'){
+        if(!(await ensureFunds('withdrawal',amount,'fazer este saque')))return;
+        const btn=e.currentTarget.querySelector('button[type="submit"]');
+        if(btn)btn.disabled=true;
+        try{
+          const result=await rpc('jl_request_withdrawal',{p_token:state.token,p_amount:amount});
+          const ok=result?.ok!==false,reference=result?.request_id?result.request_id.slice(0,8).toUpperCase():'';
+          close();
+          showTransactionModal({kind:'withdraw',amount,message:result?.message,reference,ok});
+          await refresh(true);
+        }catch(error){
+          document.getElementById('quickTransactionMessage').textContent=error.message;
+        }finally{
+          if(btn)btn.disabled=false;
+        }
+        return;
+      }
       quickTransaction.amount=amount;
       document.getElementById('quickTransactionAmountForm').classList.add('hidden');
       document.getElementById('quickTransactionNoteForm').classList.remove('hidden');
-      document.getElementById('quickTransactionTitle').textContent=quickTransaction.kind==='deposit'?'Referência da transferência':'Mensagem opcional';
+      document.getElementById('quickTransactionTitle').textContent='Referência da transferência';
       const info=document.getElementById('quickTransferInfo');
-      if(quickTransaction.kind==='deposit'){
-        info.innerHTML='Transfira para <strong class="transfer-phone">869954518</strong> · Nome de confirmação: <strong class="transfer-account-name">Bernardo Pedro</strong> <button id="quickCopyDepositPhone" class="button ghost tiny" type="button">Copiar</button>';
-        info.classList.remove('hidden');
-        document.getElementById('quickTransactionNoteLabel').textContent='Referência da transferência ou mensagem opcional';
-        document.getElementById('quickCopyDepositPhone')?.addEventListener('click',async()=>{
-          const ok=await copyTextToClipboard('869954518');
-          showToast(ok?'Número copiado.':'Não foi possível copiar o número.',ok?'success':'error');
-        });
-      }else{
-        info.classList.add('hidden');
-        document.getElementById('quickTransactionNoteLabel').textContent='Mensagem opcional para o administrador';
-      }
+      info.innerHTML='Transfira para <strong class="transfer-phone">869954518</strong> · Nome de confirmação: <strong class="transfer-account-name">Bernardo Pedro</strong> <button id="quickCopyDepositPhone" class="button ghost tiny" type="button">Copiar</button>';
+      info.classList.remove('hidden');
+      document.getElementById('quickTransactionNoteLabel').textContent='Referência da transferência ou mensagem opcional';
+      document.getElementById('quickCopyDepositPhone')?.addEventListener('click',async()=>{
+        const ok=await copyTextToClipboard('869954518');
+        showToast(ok?'Número copiado.':'Não foi possível copiar o número.',ok?'success':'error');
+      });
       document.getElementById('quickTransactionNote').focus();
     });
     document.getElementById('quickTransactionNoteForm').addEventListener('submit',async e=>{
@@ -235,7 +246,7 @@
       try{
         const result=quickTransaction.kind==='deposit'
           ? await rpc('jl_request_deposit',{p_token:state.token,p_amount:amount,p_note:note})
-          : await rpc('jl_request_withdrawal',{p_token:state.token,p_amount:amount,p_note:note});
+          : await rpc('jl_request_withdrawal',{p_token:state.token,p_amount:amount});
         const ok=result?.ok!==false,reference=result?.request_id?result.request_id.slice(0,8).toUpperCase():'';
         close();
         showTransactionModal({kind:quickTransaction.kind,amount,message:result?.message,reference,ok});
