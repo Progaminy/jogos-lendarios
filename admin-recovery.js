@@ -25,13 +25,15 @@
   }
   const stateLabel=s=>({pending_admin:'Aguardando confirmação',sending:'A enviar',code_sent:'Código ativo',rejected:'Rejeitado',completed:'Concluído',expired:'Expirado',cancelled:'Cancelado'})[s]||s;
   function rowHtml(r){
+    const hasEmail=Boolean(String(r.recovery_email||'').trim());
     let actions='';
     if(['pending_admin','code_sent','expired'].includes(r.status)) actions+='<button class="button success small" data-recovery-manual="'+esc(r.id)+'">'+(r.status==='pending_admin'?'Confirmar e gerar código':'Gerar novo código')+'</button>';
-    if(r.status==='pending_admin'&&emailConfigured) actions+='<button class="button secondary small" data-recovery-email="'+esc(r.id)+'">Confirmar e enviar por email</button>';
+    if(r.status==='pending_admin'&&emailConfigured&&hasEmail) actions+='<button class="button secondary small" data-recovery-email="'+esc(r.id)+'">Confirmar e enviar por email</button>';
     if(r.status==='pending_admin') actions+='<button class="button danger small" data-recovery-reject="'+esc(r.id)+'">Rejeitar</button>';
     const sent=r.sent_at?' · criado/enviado: '+esc(dt(r.sent_at)):'', expires=r.otp_expires_at?' · expira: '+esc(dt(r.otp_expires_at)):'';
     const badge=r.status==='pending_admin'?'warning':(r.status==='code_sent'?'success':'muted');
-    return '<div class="recovery-admin-row"><div><div class="recovery-admin-head"><strong>'+esc(r.name)+'</strong><span class="badge '+badge+'">'+esc(stateLabel(r.status))+'</span></div><div class="recovery-admin-contact"><span>📞 '+esc(r.phone)+'</span><span>✉️ '+esc(r.recovery_email)+'</span></div><small>Pedido: '+esc(dt(r.requested_at))+sent+expires+'</small></div><div class="row-actions">'+actions+'</div></div>';
+    const emailText=hasEmail?'✉️ '+esc(r.recovery_email):'✉️ Email não informado';
+    return '<div class="recovery-admin-row"><div><div class="recovery-admin-head"><strong>'+esc(r.name)+'</strong><span class="badge '+badge+'">'+esc(stateLabel(r.status))+'</span></div><div class="recovery-admin-contact"><span>📞 '+esc(r.phone)+'</span><span>'+emailText+'</span></div><small>Pedido: '+esc(dt(r.requested_at))+sent+expires+'</small></div><div class="row-actions">'+actions+'</div></div>';
   }
   function toast(msg,type=''){const el=$('toast');if(!el)return;el.textContent=msg;el.className=('toast show '+type).trim();clearTimeout(toast.t);toast.t=setTimeout(()=>el.className='toast',4500);}
   function generateCode(){const a=new Uint32Array(1);let n;do{crypto.getRandomValues(a);n=a[0];}while(n>=4294000000);return String(n%1000000).padStart(6,'0');}
