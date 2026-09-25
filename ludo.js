@@ -54,9 +54,12 @@
     for(let i=1;i<=9;i++){const pip=document.createElement('span');pip.className=`pip p${i}${visible.has(i)?' on':''}`;els.dice.appendChild(pip);}
   }
 
-  function startDiceRollAnimation(){
+  function startDiceRollAnimation(maxMs=320){
     if(!els.dice)return()=>{};
     let last=0;
+    let stopped=false;
+    let timer=null;
+    let deadline=null;
     const tick=()=>{
       let next=Math.floor(Math.random()*6)+1;
       if(next===last)next=(next%6)+1;
@@ -64,9 +67,18 @@
       renderDiceFace(next,{keepRolling:true});
       els.dice.classList.add('rolling');
     };
+    const stop=(showWaiting=false)=>{
+      if(stopped)return;
+      stopped=true;
+      if(timer)clearInterval(timer);
+      if(deadline)clearTimeout(deadline);
+      els.dice.classList.remove('rolling');
+      if(showWaiting)renderDiceFace(null);
+    };
     tick();
-    const timer=setInterval(tick,45);
-    return()=>clearInterval(timer);
+    timer=setInterval(tick,45);
+    deadline=setTimeout(()=>stop(true),maxMs);
+    return()=>stop(false);
   }
 
   function updateSoundButton(){
