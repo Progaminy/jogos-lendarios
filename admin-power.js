@@ -19,19 +19,22 @@
   function ensurePanel(){
     const app=$('adminApp');if(!app||$('adminFinancialPower'))return;
     const s=document.createElement('section');s.id='adminFinancialPower';s.className='card admin-card';
-    s.innerHTML='<div class="section-head"><div><p class="eyebrow">CONTROLO GERAL</p><h2>Resumo financeiro da plataforma</h2></div><button id="resetFinancialCounters" class="button danger small" type="button">Zerar contadores dos jogos</button></div><p class="muted-text">Zerar cria um novo ponto de partida visual. Não apaga saldos, apostas nem histórico financeiro.</p><div class="admin-grid"><div class="card metric"><span>Saldo dos utilizadores</span><strong id="metricUserBalance">—</strong><small>MZN</small></div><div class="card metric"><span>Número</span><strong id="metricNumberTotal">—</strong><small>MZN desde o último zero</small></div><div class="card metric"><span>Dupla</span><strong id="metricPairTotal">—</strong><small>MZN desde o último zero</small></div><div class="card metric"><span>Ludo</span><strong id="metricLudoTotal">—</strong><small>MZN desde o último zero</small></div></div><div class="card metric" style="margin-top:12px"><span>Total movimentado nos jogos</span><strong id="metricGamesTotal">—</strong><small id="metricSince">—</small></div>';
+    s.innerHTML='<div class="section-head"><div><p class="eyebrow">VISÃO GERAL</p><h2>Dinheiro e jogadores</h2></div><button id="resetFinancialCounters" class="button danger small" type="button">Reiniciar contagem</button></div><p class="muted-text">Os valores acumulados contam desde o último reinício. Reiniciar não altera saldos, apostas, prémios nem histórico.</p><div class="admin-grid"><div class="card metric"><span>Jogadores ativos</span><strong id="metricPlayerCount">—</strong><small>contas</small></div><div class="card metric"><span>Valor total dos jogadores</span><strong id="metricPlayerBalance">—</strong><small>MZN em saldos</small></div><div class="card metric"><span>Comissão ganha no Ludo</span><strong id="metricLudoCommission">—</strong><small>MZN desde o reinício</small></div><div class="card metric"><span>Valor total da casa</span><strong id="metricHouseTotal">—</strong><small>MZN · resultado líquido</small></div></div><div class="admin-grid" style="margin-top:12px"><div class="card metric"><span>Apostado no Número</span><strong id="metricNumberTotal">—</strong><small>MZN</small></div><div class="card metric"><span>Apostado na Dupla</span><strong id="metricPairTotal">—</strong><small>MZN</small></div><div class="card metric"><span>Apostado no Ludo</span><strong id="metricLudoTotal">—</strong><small>MZN</small></div><div class="card metric"><span>Total movimentado</span><strong id="metricGamesTotal">—</strong><small id="metricSince">—</small></div></div>';
     app.prepend(s);
     $('resetFinancialCounters').addEventListener('click',async()=>{
-      if(!confirm('Zerar apenas os contadores administrativos dos jogos? Saldos e histórico serão preservados.'))return;
+      if(!confirm('Reiniciar a contagem acumulada? Os saldos, apostas, prémios e histórico serão preservados.'))return;
       const pin=prompt('Digite o PIN administrativo para confirmar:');if(pin===null)return;
-      try{const r=await rpc('jl_admin_reset_financial_counters',{p_token:token(),p_admin_pin:pin});toast(r?.message||'Contadores zerados.','success');await refreshFinancial();}catch(e){toast(e.message,'error');}
+      try{const r=await rpc('jl_admin_reset_financial_counters',{p_token:token(),p_admin_pin:pin});toast(r?.message||'Contagem reiniciada.','success');await refreshFinancial();}catch(e){toast(e.message,'error');}
     });
   }
   async function refreshFinancial(){
     if(!token()||document.visibilityState!=='visible')return;
     try{
       const f=await rpc('jl_admin_financial_summary',{p_token:token()});
-      if($('metricUserBalance'))$('metricUserBalance').textContent=money(f.user_balance_total);
+      if($('metricPlayerCount'))$('metricPlayerCount').textContent=String(f.player_count??0);
+      if($('metricPlayerBalance'))$('metricPlayerBalance').textContent=money(f.player_balance_total??f.user_balance_total);
+      if($('metricLudoCommission'))$('metricLudoCommission').textContent=money(f.ludo_commission);
+      if($('metricHouseTotal'))$('metricHouseTotal').textContent=money(f.house_total);
       if($('metricNumberTotal'))$('metricNumberTotal').textContent=money(f.number_total);
       if($('metricPairTotal'))$('metricPairTotal').textContent=money(f.pair_total);
       if($('metricLudoTotal'))$('metricLudoTotal').textContent=money(f.ludo_total);
