@@ -32,10 +32,10 @@
   const FINISH_STEP=56;
   const DICE_LAYOUTS={1:[5],2:[1,9],3:[1,5,9],4:[1,3,7,9],5:[1,3,5,7,9],6:[1,3,4,6,7,9]};
 
-  function renderDiceFace(value){
+  function renderDiceFace(value,{keepRolling=false}={}){
     if(!els.dice)return;
     const n=Number(value);
-    els.dice.classList.remove('rolling');
+    if(!keepRolling)els.dice.classList.remove('rolling');
     els.dice.replaceChildren();
     if(!Number.isInteger(n)||n<1||n>6){
       els.dice.classList.add('empty');
@@ -48,6 +48,21 @@
     els.dice.setAttribute('aria-label',`Dado: ${n}`);
     const visible=new Set(DICE_LAYOUTS[n]);
     for(let i=1;i<=9;i++){const pip=document.createElement('span');pip.className=`pip p${i}${visible.has(i)?' on':''}`;els.dice.appendChild(pip);}
+  }
+
+  function startDiceRollAnimation(){
+    if(!els.dice)return()=>{};
+    let last=0;
+    const tick=()=>{
+      let next=Math.floor(Math.random()*6)+1;
+      if(next===last)next=(next%6)+1;
+      last=next;
+      renderDiceFace(next,{keepRolling:true});
+      els.dice.classList.add('rolling');
+    };
+    tick();
+    const timer=setInterval(tick,70);
+    return()=>clearInterval(timer);
   }
 
   function updateSoundButton(){
@@ -133,7 +148,7 @@
     state.lastFxEventId=Math.max(state.lastFxEventId,maxId);
   }
   const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
-  const TOKEN_STEP_MS=95;
+  const TOKEN_STEP_MS=55;
   function tokenCoord(color,step,tokenNo){
     if(step===-1)return BASE[color]?.[Number(tokenNo)-1]||null;
     if(step<=TRACK_LAST_STEP)return PATH[(START[color]+step)%52];
@@ -394,18 +409,25 @@
     await withBusy(async()=>{
       const move=(state.room?.legal_moves||[]).find(x=>Number(x.token_no)===Number(n));
       const player=myRoomPlayer();
+      if(!move||!player)return;
       state.animating=true;
+      let visualMove=Promise.resolve();
       try{
+        // O peão parte no mesmo clique; o servidor continua sendo a fonte final da jogada.
+        visualMove=animateTokenPath(me(),Number(n),player.color,Number(move.from_steps),Number(move.to_steps));
         const nextRoom=await rpc('jl_ludo_move',{p_token:state.token,p_room:roomData().id,p_token_no:Number(n)});
-        const finalToken=(nextRoom?.tokens||[]).find(t=>t.player_id===me()&&Number(t.token_no)===Number(n));
-        if(move&&player&&finalToken&&Number(finalToken.steps)===Number(move.to_steps)){
-          await animateTokenPath(me(),Number(n),player.color,Number(move.from_steps),Number(move.to_steps));
-        }
+        await visualMove;
         processGameEffects(nextRoom);
         state.room=nextRoom;
         renderRoom();
-      }catch(e){showToast(e.message,'error');}
-      finally{state.animating=false;els.ludoBoard?.classList.remove('piece-moving');}
+      }catch(e){
+        await visualMove.catch(()=>{});
+        renderRoom();
+        showToast(e.message,'error');
+      }finally{
+        state.animating=false;
+        els.ludoBoard?.classList.remove('piece-moving');
+      }
     });
   }
   function maybeAutoMove(){
@@ -588,15 +610,22 @@
     if(state.animating)return;
     els.rollDice.disabled=true;
     els.dice.classList.add('rolling');
+    const stopDiceAnimation=startDiceRollAnimation();
     playRollSound();
     try{
       const nextRoom=await rpc('jl_ludo_roll',{p_token:state.token,p_room:roomData().id});
-      await wait(320);
+      stopDiceAnimation();
       processGameEffects(nextRoom);
       state.room=nextRoom;
       renderRoom();
-    }catch(err){renderDiceFace(null);showToast(err.message,'error');}
-    finally{els.dice.classList.remove('rolling');}
+    }catch(err){
+      stopDiceAnimation();
+      renderDiceFace(null);
+      showToast(err.message,'error');
+    }finally{
+      stopDiceAnimation();
+      els.dice.classList.remove('rolling');
+    }
   }));
   els.rematchButton?.addEventListener('click',()=>withBusy(async()=>{try{const amount=wholeStake(els.rematchBet?.value,'A nova aposta');if(amount===null)return;if(!(await ensureLudoFunds(amount,'repetir o jogo com este valor')))return;const oldRoom=roomData()?.id;const nextRoom=await rpc('jl_ludo_rematch',{p_token:state.token,p_room:oldRoom,p_bet_amount:amount});state.lastFxEventId=0;state.autoMoveKey=null;state.room=nextRoom;await loadStatus(true);showToast('Nova partida criada. Os mesmos jogadores receberam convite particular.','success');}catch(err){if(!handleLudoMoneyError(err,'repetir o jogo'))showToast(err.message,'error');}}));
   els.reenterButton.addEventListener('click',()=>withBusy(async()=>{try{const amount=Number(rules().reentry_amount||0);if(!(await ensureLudoFunds(amount,'pagar a reentrada')))return;state.room=await rpc('jl_ludo_reenter',{p_token:state.token,p_room:roomData().id});renderRoom();showToast('Reentrada confirmada.','success');}catch(err){if(!handleLudoMoneyError(err,'pagar a reentrada'))showToast(err.message,'error');}}));
