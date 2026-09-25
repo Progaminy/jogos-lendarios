@@ -11,6 +11,7 @@
     refreshTimer: null,
     supportPlayerId: null,
     supportThread: null,
+    playerSearch: '',
     countdowns: { number: null, pair: null }
   };
 
@@ -26,6 +27,9 @@
     depositRequests: $('depositRequests'),
     withdrawRequests: $('withdrawRequests'),
     playersList: $('playersList'),
+    playerAdminSearch: $('playerAdminSearch'),
+    clearPlayerAdminSearch: $('clearPlayerAdminSearch'),
+    playersVisibleCount: $('playersVisibleCount'),
     supportThreads: $('supportThreads'),
     supportUnreadBadge: $('supportUnreadBadge'),
     supportConversation: $('supportConversation'),
@@ -414,19 +418,28 @@
         </div>`).join('')
       : '<div class="empty">Nenhum saque pendente.</div>';
 
-    const players = (state.data?.players || []).filter((p)=>!String(p.phone||'').startsWith('deleted-'));
+    const allPlayers = (state.data?.players || []).filter((p)=>!String(p.phone||'').startsWith('deleted-'));
+    const playerQuery = String(state.playerSearch || '').trim().toLowerCase();
+    const players = playerQuery
+      ? allPlayers.filter((p) => String(p.name||'').toLowerCase().includes(playerQuery) || String(p.phone||'').toLowerCase().includes(playerQuery))
+      : allPlayers;
+    if (shared.playersVisibleCount) {
+      shared.playersVisibleCount.textContent = playerQuery ? `${players.length} de ${allPlayers.length}` : `${allPlayers.length} jogador${allPlayers.length === 1 ? '' : 'es'}`;
+      shared.playersVisibleCount.className = `badge ${players.length ? 'muted' : 'warning'}`;
+    }
     shared.playersList.innerHTML = players.length
       ? players.map((p) => `<div class="player-row">
           <div><strong>${escapeHtml(p.name)}</strong><br><small>+${escapeHtml(p.phone)} · ${dateTime(p.created_at)}${p.blocked ? ' · BLOQUEADO' : ''}</small><br><small>Sacável: MZN ${money(p.withdrawable_balance??p.balance)} · Por jogar: MZN ${money(p.deposit_locked||0)}</small></div>
           <strong>MZN ${money(p.balance)}</strong>
           <div class="row-actions">
+            <button class="button ghost small" data-edit-name="${p.id}" data-name="${escapeHtml(p.name)}">Editar nome</button>
             <button class="button ghost small" data-adjust="${p.id}" data-name="${escapeHtml(p.name)}">Ajustar saldo</button>
             <button class="button ghost small" data-force-logout="${p.id}" data-name="${escapeHtml(p.name)}">Encerrar sessões</button>
             <button class="button ${p.blocked ? 'success' : 'danger'} small" data-block="${p.id}" data-value="${p.blocked ? 'false' : 'true'}">${p.blocked ? 'Desbloquear' : 'Bloquear'}</button>
             <button class="button danger small" data-delete-player="${p.id}" data-name="${escapeHtml(p.name)}">Eliminar conta</button>
           </div>
         </div>`).join('')
-      : '<div class="empty">Nenhum jogador cadastrado.</div>';
+      : `<div class="empty">${playerQuery ? 'Nenhum jogador corresponde à pesquisa.' : 'Nenhum jogador cadastrado.'}</div>`;
 
     renderSupportThreads();
     renderSupportConversation();
@@ -602,6 +615,21 @@
   });
 
   shared.playersList.addEventListener('click', async (event) => {
+    const editName = event.target.closest('[data-edit-name]');
+    if (editName) {
+      const currentName = editName.dataset.name || '';
+      const raw = window.prompt('Novo nome do jogador:', currentName);
+      if (raw === null) return;
+      const nextName = raw.trim().replace(/\s+/g, ' ');
+      if (nextName.length < 2 || nextName.length > 60) return toast('O nome deve ter entre 2 e 60 caracteres.', 'error');
+      if (nextName === currentName) return toast('O nome não foi alterado.');
+      await runAction('jl_admin_update_player_name', {
+        p_player_id: editName.dataset.editName,
+        p_name: nextName
+      }, 'Nome do jogador atualizado.');
+      return;
+    }
+
     const adjust = event.target.closest('[data-adjust]');
     if (adjust) {
       const raw = window.prompt(`Ajuste de saldo para ${adjust.dataset.name}.\nPositivo adiciona; negativo retira:`);
@@ -625,6 +653,18 @@
         p_blocked: blocked
       }, blocked ? 'Jogador bloqueado.' : 'Jogador desbloqueado.');
     }
+  });
+
+  shared.playerAdminSearch?.addEventListener('input', (event) => {
+    state.playerSearch = event.target.value || '';
+    renderShared();
+  });
+
+  shared.clearPlayerAdminSearch?.addEventListener('click', () => {
+    state.playerSearch = '';
+    if (shared.playerAdminSearch) shared.playerAdminSearch.value = '';
+    renderShared();
+    shared.playerAdminSearch?.focus();
   });
 
   shared.supportThreads?.addEventListener('click', async (event) => {
