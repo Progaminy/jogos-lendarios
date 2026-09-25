@@ -314,7 +314,12 @@
 
   function renderRecent(type) {
     const ui = games[type];
-    const bets = gameData(type).recent_bets || [];
+    const resetAt = Date.parse(window.__JL_ADMIN_RESET_AT || '');
+    const bets = (gameData(type).recent_bets || []).filter((bet) => {
+      if (!Number.isFinite(resetAt)) return true;
+      const createdAt = Date.parse(bet.created_at || '');
+      return Number.isFinite(createdAt) && createdAt > resetAt;
+    });
 
     if (!bets.length) {
       ui.recent.innerHTML = '<div class="empty">Ainda não há apostas.</div>';
@@ -409,7 +414,7 @@
     const withdrawals = state.data?.pending_withdrawals || [];
     shared.withdrawRequests.innerHTML = withdrawals.length
       ? withdrawals.map((r) => `<div class="request-row">
-          <div><strong>${escapeHtml(r.name)}</strong><br><small>+${escapeHtml(r.phone)} · ${dateTime(r.created_at)}${r.user_note?` · Mensagem: ${escapeHtml(r.user_note)}`:''}</small><br><small>Sacável após bloqueios: MZN ${money(r.withdrawable_balance??0)} · Por jogar: MZN ${money(r.deposit_locked||0)}</small></div>
+          <div><strong>${escapeHtml(r.name)}</strong><br><small>+${escapeHtml(r.phone)} · ${dateTime(r.created_at)}</small><br><small>Sacável após bloqueios: MZN ${money(r.withdrawable_balance??0)} · Por jogar: MZN ${money(r.deposit_locked||0)}</small></div>
           <strong>MZN ${money(r.amount)}</strong>
           <div class="row-actions">
             <button class="button success small" data-withdraw="${r.id}" data-decision="approved">Autorizar</button>
@@ -665,6 +670,12 @@
     if (shared.playerAdminSearch) shared.playerAdminSearch.value = '';
     renderShared();
     shared.playerAdminSearch?.focus();
+  });
+
+  document.addEventListener('jl-admin-reset-since', () => {
+    if (!state.data) return;
+    renderRecent('number');
+    renderRecent('pair');
   });
 
   shared.supportThreads?.addEventListener('click', async (event) => {
