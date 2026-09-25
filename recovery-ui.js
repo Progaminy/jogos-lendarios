@@ -22,12 +22,12 @@
           <button id="pinRecoveryClose" class="recovery-close" type="button" aria-label="Fechar">×</button>
           <p class="eyebrow">RECUPERAÇÃO DE ACESSO</p>
           <h2 id="pinRecoveryTitle">Recuperar PIN</h2>
-          <p class="recovery-help">Informe o número da conta e um email de contacto. O administrador confirma a identidade e fornece um código de recuperação. O pedido público não revela se a conta existe.</p>
+          <p class="recovery-help">Informe o número da conta. O email é opcional e serve apenas como canal adicional de contacto. O administrador confirma a identidade e fornece um código de recuperação. O pedido público não revela se a conta existe.</p>
 
           <div id="pinRecoveryRequestStage">
             <form id="pinRecoveryRequestForm" class="stack-form">
               <label><span>Número de telefone da conta</span><input id="pinRecoveryPhone" inputmode="tel" required placeholder="Ex.: 84xxxxxxx"></label>
-              <label><span>Email para receber o código</span><input id="pinRecoveryEmail" type="email" required placeholder="seuemail@gmail.com"></label>
+              <label><span>Email de contacto (opcional)</span><input id="pinRecoveryEmail" type="email" placeholder="seuemail@gmail.com"></label>
               <button class="button primary" type="submit">Pedir recuperação</button>
             </form>
           </div>
@@ -35,7 +35,7 @@
           <div id="pinRecoveryConfirmStage" class="hidden">
             <div class="recovery-waiting">
               <strong>Pedido enviado ao administrador.</strong>
-              <span>Depois da confirmação da sua identidade, o administrador fornecerá o código. Ele expira e bloqueia após várias tentativas inválidas.</span>
+              <span>Depois da confirmação da sua identidade, o administrador gera o código. Se informou email, ele também pode ser usado como canal de envio. O código expira e bloqueia após várias tentativas inválidas.</span>
             </div>
             <form id="pinRecoveryConfirmForm" class="stack-form">
               <label><span>Código de 6 dígitos</span><input id="pinRecoveryCode" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" required></label>
