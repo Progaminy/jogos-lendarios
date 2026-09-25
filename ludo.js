@@ -65,7 +65,7 @@
       els.dice.classList.add('rolling');
     };
     tick();
-    const timer=setInterval(tick,70);
+    const timer=setInterval(tick,45);
     return()=>clearInterval(timer);
   }
 
