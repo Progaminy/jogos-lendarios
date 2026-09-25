@@ -323,3 +323,37 @@ button.status-metric:hover{border-color:rgba(244,189,66,.5);transform:translateY
   .jl-logout-actions{display:grid;grid-template-columns:1fr 1fr}
   .jl-logout-actions .button{min-width:0}
 }
+
+
+/* LUDO RESPONSE E DADO 2026-09-25 */
+/* Peão jogável: sinal inequívoco, sem deslocar ou sacudir a peça. */
+.piece.legal{
+  outline:none!important;
+  border-radius:50%!important;
+  filter:none!important;
+  box-shadow:
+    0 0 0 3px #ff1f2d,
+    0 0 0 6px rgba(255,31,45,.28),
+    0 0 18px 7px rgba(255,31,45,.72)!important;
+  animation:legalPawnRing .72s ease-in-out infinite!important;
+}
+@keyframes legalPawnRing{
+  0%,100%{box-shadow:0 0 0 3px #ff1f2d,0 0 0 6px rgba(255,31,45,.24),0 0 14px 5px rgba(255,31,45,.58)}
+  50%{box-shadow:0 0 0 4px #ff2638,0 0 0 8px rgba(255,31,45,.34),0 0 22px 9px rgba(255,31,45,.84)}
+}
+
+/* Lançamento mais vivo; as faces mudam durante a chamada e o resultado final não espera atraso artificial. */
+.dice.rolling{
+  will-change:transform,box-shadow;
+  animation:diceRollStrong .34s cubic-bezier(.22,.75,.35,1) infinite!important;
+  box-shadow:0 12px 26px rgba(0,0,0,.42),0 0 0 3px rgba(244,189,66,.22),inset 0 0 0 1px rgba(0,0,0,.08);
+}
+.dice.rolling .pip.on{animation:dicePipFlash .14s ease-in-out infinite alternate}
+@keyframes diceRollStrong{
+  0%{transform:translate3d(0,0,0) rotate(-10deg) scale(.96)}
+  25%{transform:translate3d(0,-6px,0) rotate(15deg) scale(1.08)}
+  55%{transform:translate3d(4px,1px,0) rotate(-13deg) scale(.98)}
+  80%{transform:translate3d(-3px,-3px,0) rotate(9deg) scale(1.05)}
+  100%{transform:translate3d(0,0,0) rotate(-10deg) scale(.96)}
+}
+@keyframes dicePipFlash{from{opacity:.58;transform:scale(.78)}to{opacity:1;transform:scale(1.14)}}
