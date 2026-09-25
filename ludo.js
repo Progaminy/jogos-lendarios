@@ -9,7 +9,8 @@
     pollTimer: null, timeoutTimer: null, clockTimer: null, signalTimer: null,
     lastSignalId: 0, localStream: null, micMuted: true, peers: new Map(), busy: false,
     animating: false, soundEnabled: localStorage.getItem(SOUND_KEY) !== '0', audioCtx: null,
-    rulesFormDirty: false, rulesFormVersion: null, rulesDeclinedVersion: null, lastFxEventId: 0, autoMoveKey: null, lastDirectInviteCount: 0
+    rulesFormDirty: false, rulesFormVersion: null, rulesDeclinedVersion: null, lastFxEventId: 0, autoMoveKey: null, lastDirectInviteCount: 0,
+    moveGeneration: 0
   };
   const els = Object.fromEntries([
     'toast','identityBadge','accountButton','accountMenu','accountMenuCode','accountMenuBalance','accountMenuDeposit','accountMenuWithdraw','accountMenuLogout','ludoStatusStrip','onlinePlayerCount','directNotificationMetric','publicNotificationMetric','topDirectInviteCount','topPublicInviteCount','loggedOut','lobby','boardLobby','ludoLobbyBoard','balanceBadge','createRoomForm','createPlayers','createMode','createBet','createPublic',
@@ -285,6 +286,7 @@
 
   async function loadStatus(silent=false){
     if(state.animating)return;
+    const generationAtStart=state.moveGeneration;
     if(!state.token){state.status=null;state.room=null;renderAll();return;}
     try{
       const nextStatus=await rpc('jl_ludo_my_status',{p_token:state.token});
@@ -294,7 +296,7 @@
       }
       try{nextStatus.public_challenges=await rpc('jl_ludo_public_challenges',{p_token:state.token});}
       catch{nextStatus.public_challenges=[];}
-      if(state.animating)return;
+      if(state.animating||generationAtStart!==state.moveGeneration)return;
       const movement=state.room&&nextRoom&&state.room.room?.id===nextRoom.room?.id?detectForwardMove(state.room,nextRoom):null;
       state.status=nextStatus;
       if(movement&&els.ludoBoard?.childElementCount){
@@ -502,15 +504,21 @@
       const move=(state.room?.legal_moves||[]).find(x=>Number(x.token_no)===Number(n));
       const player=myRoomPlayer();
       if(!move||!player)return;
+      state.moveGeneration+=1;
       state.animating=true;
       let visualMove=Promise.resolve();
       try{
         // O peão parte no mesmo clique; o servidor continua sendo a fonte final da jogada.
         visualMove=animateTokenPath(me(),Number(n),player.color,Number(move.from_steps),Number(move.to_steps));
         const nextRoom=await rpc('jl_ludo_move',{p_token:state.token,p_room:roomData().id,p_token_no:Number(n)});
-        await visualMove;
+
+        // Assim que o servidor confirma, fixe já o estado final.
+        // A animação continua casa por casa no DOM, mas nenhuma atualização concorrente
+        // pode voltar a desenhar o peão na posição antiga.
         processGameEffects(nextRoom);
         state.room=nextRoom;
+
+        await visualMove;
         renderRoom();
       }catch(e){
         await visualMove.catch(()=>{});
