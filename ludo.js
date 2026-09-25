@@ -148,7 +148,7 @@
     state.lastFxEventId=Math.max(state.lastFxEventId,maxId);
   }
   const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
-  const TOKEN_STEP_MS=55;
+  const TOKEN_STEP_MS=95;
   function tokenCoord(color,step,tokenNo){
     if(step===-1)return BASE[color]?.[Number(tokenNo)-1]||null;
     if(step<=TRACK_LAST_STEP)return PATH[(START[color]+step)%52];
