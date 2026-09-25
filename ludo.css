@@ -345,10 +345,10 @@ button.status-metric:hover{border-color:rgba(244,189,66,.5);transform:translateY
 /* Lançamento mais vivo; as faces mudam durante a chamada e o resultado final não espera atraso artificial. */
 .dice.rolling{
   will-change:transform,box-shadow;
-  animation:diceRollStrong .34s cubic-bezier(.22,.75,.35,1) infinite!important;
+  animation:diceRollStrong .20s cubic-bezier(.22,.75,.35,1) infinite!important;
   box-shadow:0 12px 26px rgba(0,0,0,.42),0 0 0 3px rgba(244,189,66,.22),inset 0 0 0 1px rgba(0,0,0,.08);
 }
-.dice.rolling .pip.on{animation:dicePipFlash .14s ease-in-out infinite alternate}
+.dice.rolling .pip.on{animation:dicePipFlash .08s ease-in-out infinite alternate}
 @keyframes diceRollStrong{
   0%{transform:translate3d(0,0,0) rotate(-10deg) scale(.96)}
   25%{transform:translate3d(0,-6px,0) rotate(15deg) scale(1.08)}
