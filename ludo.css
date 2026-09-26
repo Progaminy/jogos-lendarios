@@ -407,3 +407,22 @@ button.status-metric:hover{border-color:rgba(244,189,66,.5);transform:translateY
 @media(max-width:600px){
   .ludo-center .finish-piece{width:25%!important;height:32%!important;font-size:5px!important}
 }
+
+
+/* ESTABILIDADE DE MOVIMENTO E LANCAMENTO 2026-09-26 */
+.ludo-board.piece-moving .piece,
+.piece.path-moving{
+  transition:none!important;
+}
+.dice.rolling-neutral .dice-rolling-mark{
+  position:absolute;
+  inset:0;
+  display:grid;
+  place-items:center;
+  font-size:1.05rem;
+  font-weight:950;
+  letter-spacing:.16em;
+  color:#172333;
+  line-height:1;
+  transform:none!important;
+}
