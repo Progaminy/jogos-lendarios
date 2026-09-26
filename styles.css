@@ -404,40 +404,63 @@ h2 { margin: 0; font-size: clamp(1.25rem, 2.5vw, 1.75rem); letter-spacing: -.025
   .bet-row { grid-template-columns: 1fr; }
   .button.large { width: 100%; }
   .wallet-card {
-    grid-template-columns: repeat(2,minmax(0,1fr));
-    gap: 14px;
-    padding: 21px;
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 12px;
+    padding: 18px !important;
     align-items: stretch;
   }
-  .wallet-card > div:first-child,
-  .wallet-card > .button {
-    grid-column: 1 / -1;
+  .wallet-card > * {
+    grid-column: 1 !important;
+    min-width: 0;
   }
   .wallet-card > div:first-child {
-    min-width: 0;
+    display: grid;
+    gap: 4px;
+    width: 100%;
   }
-  .wallet-card #playerName,
-  .wallet-card #playerPhone {
+  .wallet-card #playerName {
+    margin: 0;
+    font-size: 1.55rem;
+    line-height: 1.15;
+    white-space: normal;
     overflow-wrap: normal;
-    word-break: normal;
+    word-break: keep-all;
   }
-  .balance-box {
+  .wallet-card #playerPhone {
+    margin: 0;
+    white-space: normal;
+    overflow-wrap: normal;
+    word-break: keep-all;
+  }
+  .wallet-card .balance-box {
+    width: 100%;
+    box-sizing: border-box;
     min-width: 0;
     text-align: left;
-    padding: 14px;
+    padding: 14px 16px;
     border: 1px solid rgba(255,255,255,.08);
     border-radius: 14px;
     background: rgba(255,255,255,.025);
   }
-  .balance-box strong {
+  .wallet-card .balance-box span {
+    font-size: .78rem;
+  }
+  .wallet-card .balance-box strong {
     display: block;
+    margin-top: 4px;
     font-size: 1.55rem;
+    line-height: 1.15;
     white-space: nowrap;
   }
-  .balance-box small {
+  .wallet-card .balance-box small {
     display: block;
-    margin-top: 5px;
+    margin-top: 6px;
     line-height: 1.35;
+  }
+  .wallet-card > .button {
+    width: 100%;
+    margin-top: 2px;
   }
   .history-item { grid-template-columns: auto 1fr; }
   .history-result { grid-column: 2; text-align: left; }
