@@ -533,10 +533,16 @@
     return [type, result.round_no ?? '', result.published_at ?? result.drawn_at ?? ''].join(':');
   }
 
-  function randomNumberExcept(except = null) {
-    let n = Math.floor(Math.random() * 11);
-    if (except != null && n === except) n = (n + 1 + Math.floor(Math.random() * 10)) % 11;
-    return n;
+  function randomNumberExcept(...excluded) {
+    const blocked = new Set(
+      excluded
+        .flat()
+        .map(Number)
+        .filter((n) => Number.isInteger(n) && n >= 0 && n <= 10)
+    );
+    const allowed = [];
+    for (let n = 0; n <= 10; n += 1) if (!blocked.has(n)) allowed.push(n);
+    return allowed[Math.floor(Math.random() * allowed.length)] ?? 0;
   }
 
   function finishResultReveal(type, result, key) {
@@ -583,20 +589,26 @@
     title.textContent = `Rodada ${result.round_no} · sorteando números…`;
 
     let step = 0;
-    const totalSteps = 22;
+    const totalSteps = 15;
     const spin = () => {
       step += 1;
+
+      // O último passo revela apenas o resultado oficial. Nenhum quadro da
+      // animação pode antecipar o número vencedor nem parecer um resultado final.
+      if (step >= totalSteps) return finishResultReveal(type, result, key);
+
       if (type === 'number') {
-        els.numberResultNumber.textContent = randomNumberExcept();
+        els.numberResultNumber.textContent = randomNumberExcept(result.drawn_number);
       } else {
-        const a = randomNumberExcept();
-        const b = randomNumberExcept(a);
+        const a = randomNumberExcept(result.pair_drawn_a);
+        const b = randomNumberExcept(result.pair_drawn_b, a);
         els.pairResultA.textContent = a;
         els.pairResultB.textContent = b;
       }
-      if (step >= totalSteps) return finishResultReveal(type, result, key);
-      const delay = step < 12 ? 70 : step < 18 ? 105 : 160;
-      slot.timer = setTimeout(spin, delay);
+
+      // Velocidade constante: não desacelera no fim e não deixa um número falso
+      // parado tempo suficiente para ser confundido com o resultado real.
+      slot.timer = setTimeout(spin, 70);
     };
     spin();
   }
