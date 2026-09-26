@@ -195,33 +195,51 @@
     const room = latestRoomState?.room;
     if (!el || !room) return;
     if (el.classList.contains('rolling') || el.dataset.jlRolling === '1') return;
+
     const count = Number(room.rules?.dice_count || 1);
     const activeValues = Array.isArray(room.dice_values)
       ? room.dice_values.map(Number).filter(v => Number.isInteger(v) && v >= 1 && v <= 6)
       : [];
     const values = activeValues.length ? activeValues : lastRolledValues();
     const position = activeValues.length ? Number(room.dice_position ?? -1) : -1;
-    const roll = document.getElementById('rollDice');
+    const direct = Number(room.dice_result);
+    const current = Number.isInteger(direct) && direct >= 1 && direct <= 6
+      ? direct
+      : Number.isInteger(position) && position >= 0 && position < values.length
+        ? Number(values[position])
+        : Number(values[0]);
 
+    const roll = document.getElementById('rollDice');
     if (roll) roll.textContent = count === 1 ? '🎲 Lançar dado' : `🎲 Lançar ${count} dados`;
-    if (count === 1 || values.length <= 1) {
-      el.classList.remove('multi-dice');
-      delete el.dataset.variantSignature;
-      return;
+
+    // Mesmo quando a regra usa vários dados, a interface mostra somente
+    // o dado que está ativo naquele momento. Nunca renderizar duas ou mais faces.
+    el.classList.remove('multi-dice');
+    delete el.dataset.variantSignature;
+
+    if (Number.isInteger(current) && current >= 1 && current <= 6) {
+      const layouts = {1:[5],2:[1,9],3:[1,5,9],4:[1,3,7,9],5:[1,3,5,7,9],6:[1,3,4,6,7,9]};
+      const visible = new Set(layouts[current]);
+      const signature = `single:${current}`;
+      if (el.dataset.singleDiceSignature !== signature || el.querySelector('.die-face')) {
+        el.dataset.singleDiceSignature = signature;
+        el.classList.remove('empty');
+        el.dataset.value = String(current);
+        el.setAttribute('aria-label', `Dado: ${current}`);
+        el.replaceChildren();
+        for (let i = 1; i <= 9; i += 1) {
+          const pip = document.createElement('span');
+          pip.className = `pip p${i}${visible.has(i) ? ' on' : ''}`;
+          el.appendChild(pip);
+        }
+      }
     }
 
-    const signature = `${values.join('-')}|${position}|${room.turn_phase}`;
-    if (el.dataset.variantSignature === signature && el.querySelector('.die-face')) return;
-    el.dataset.variantSignature = signature;
-    el.classList.add('multi-dice');
-    el.innerHTML = values.map((value, index) => {
-      const cls = index < position ? 'used' : index === position ? 'current' : '';
-      return `<span class="die-face ${cls}" title="Dado ${index + 1}">${value}</span>`;
-    }).join('');
-
     const hint = document.getElementById('moveHint');
-    if (hint && room.turn_phase === 'move' && position >= 0) {
-      hint.textContent = `Dados: ${values.join(' · ')} — usando ${values[position]} (${position + 1}/${values.length}). Escolha uma peça válida.`;
+    if (hint && room.turn_phase === 'move' && Number.isInteger(current)) {
+      hint.textContent = count > 1 && position >= 0
+        ? `Dado atual: ${current} (${position + 1}/${Math.max(values.length, count)}). Escolha uma peça válida.`
+        : `Dado ${current}: escolha uma peça válida.`;
     }
   }
 
