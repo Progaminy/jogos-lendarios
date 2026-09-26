@@ -199,6 +199,7 @@
     const el = document.getElementById('dice');
     const room = latestRoomState?.room;
     if (!el || !room) return;
+    if (el.classList.contains('rolling') || el.dataset.jlRolling === '1') return;
     const count = Number(room.rules?.dice_count || 1);
     const activeValues = Array.isArray(room.dice_values)
       ? room.dice_values.map(Number).filter(v => Number.isInteger(v) && v >= 1 && v <= 6)
