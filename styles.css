@@ -403,9 +403,42 @@ h2 { margin: 0; font-size: clamp(1.25rem, 2.5vw, 1.75rem); letter-spacing: -.025
   .number-button:last-child { grid-column: 2; }
   .bet-row { grid-template-columns: 1fr; }
   .button.large { width: 100%; }
-  .wallet-card { grid-template-columns: 1fr auto; padding: 21px; }
-  .wallet-card > .button { grid-column: 1 / -1; }
-  .balance-box strong { font-size: 1.55rem; }
+  .wallet-card {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+    gap: 14px;
+    padding: 21px;
+    align-items: stretch;
+  }
+  .wallet-card > div:first-child,
+  .wallet-card > .button {
+    grid-column: 1 / -1;
+  }
+  .wallet-card > div:first-child {
+    min-width: 0;
+  }
+  .wallet-card #playerName,
+  .wallet-card #playerPhone {
+    overflow-wrap: normal;
+    word-break: normal;
+  }
+  .balance-box {
+    min-width: 0;
+    text-align: left;
+    padding: 14px;
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 14px;
+    background: rgba(255,255,255,.025);
+  }
+  .balance-box strong {
+    display: block;
+    font-size: 1.55rem;
+    white-space: nowrap;
+  }
+  .balance-box small {
+    display: block;
+    margin-top: 5px;
+    line-height: 1.35;
+  }
   .history-item { grid-template-columns: auto 1fr; }
   .history-result { grid-column: 2; text-align: left; }
   .result-banner { padding: 18px 20px; }
