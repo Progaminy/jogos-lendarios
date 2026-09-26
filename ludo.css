@@ -442,6 +442,19 @@ button.status-metric:hover{border-color:rgba(244,189,66,.5);transform:translateY
   outline:3px solid #fff!important;
   outline-offset:2px;
 }
+.cell.multi.has-legal-piece{
+  cursor:pointer;
+  touch-action:manipulation;
+}
+.cell.multi.has-legal-piece:before{
+  content:"";
+  position:absolute;
+  inset:2px;
+  z-index:3;
+  border:1px dashed rgba(255,242,0,.45);
+  border-radius:5px;
+  pointer-events:none;
+}
 @media(max-width:600px){
   .cell.multi .piece{
     width:60%!important;
