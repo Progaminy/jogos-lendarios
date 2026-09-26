@@ -60,18 +60,27 @@
     if(!els.dice)return;
     els.dice.replaceChildren();
     els.dice.removeAttribute('data-value');
-    els.dice.classList.remove('empty');
+    els.dice.classList.remove('empty','dice-landed');
     els.dice.classList.add('rolling','rolling-neutral');
     els.dice.dataset.jlRolling='1';
     els.dice.setAttribute('aria-label','Dado a girar');
-    const mark=document.createElement('span');
-    mark.className='dice-rolling-mark';
-    mark.textContent='•••';
-    mark.setAttribute('aria-hidden','true');
-    els.dice.appendChild(mark);
+
+    const stage=document.createElement('span');
+    stage.className='dice-roll-stage';
+    stage.setAttribute('aria-hidden','true');
+
+    const cube=document.createElement('span');
+    cube.className='dice-roll-cube';
+    for(const side of ['front','back','right','left','top','bottom']){
+      const face=document.createElement('span');
+      face.className=`dice-roll-face ${side}`;
+      cube.appendChild(face);
+    }
+    stage.appendChild(cube);
+    els.dice.appendChild(stage);
   }
 
-  function startDiceRollAnimation(maxMs=260){
+  function startDiceRollAnimation(maxMs=520){
     if(!els.dice)return()=>{};
     let stopped=false;
     let settleTimer=null;
@@ -79,17 +88,26 @@
       if(stopped)return;
       stopped=true;
       if(settleTimer)clearTimeout(settleTimer);
-      els.dice.classList.remove('rolling','rolling-neutral');
+      els.dice.classList.remove('rolling','rolling-neutral','roll-waiting');
       delete els.dice.dataset.jlRolling;
     };
     renderDiceRollingNeutral();
-    // A animação pode parar cedo, mas o lacre nunca volta para "?" enquanto
-    // a resposta autoritativa do servidor ainda está a chegar.
+    // O giro visual tem duração limitada e não fica preso à latência do servidor.
+    // Se a resposta demorar, o cubo fica parado de forma neutra até chegar o valor real.
     settleTimer=setTimeout(()=>{
       if(stopped)return;
       els.dice.classList.remove('rolling');
+      els.dice.classList.add('roll-waiting');
     },maxMs);
     return stop;
+  }
+
+  function playDiceLanding(){
+    if(!els.dice)return;
+    els.dice.classList.remove('dice-landed');
+    void els.dice.offsetWidth;
+    els.dice.classList.add('dice-landed');
+    setTimeout(()=>els.dice?.classList.remove('dice-landed'),190);
   }
 
   function updateSoundButton(){
@@ -912,6 +930,7 @@
         stopDiceAnimation();
         els.dice.classList.remove('rolling','rolling-neutral');
         renderDiceFace(visibleDiceValue(roomData()));
+        playDiceLanding();
         renderRoom();
       }
     }
