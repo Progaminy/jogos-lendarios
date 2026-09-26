@@ -54,29 +54,34 @@
     for(let i=1;i<=9;i++){const pip=document.createElement('span');pip.className=`pip p${i}${visible.has(i)?' on':''}`;els.dice.appendChild(pip);}
   }
 
-  function startDiceRollAnimation(maxMs=320){
+  function renderDiceRollingNeutral(){
+    if(!els.dice)return;
+    els.dice.replaceChildren();
+    els.dice.removeAttribute('data-value');
+    els.dice.classList.remove('empty');
+    els.dice.classList.add('rolling','rolling-neutral');
+    els.dice.dataset.jlRolling='1';
+    els.dice.setAttribute('aria-label','Dado a girar');
+    const mark=document.createElement('span');
+    mark.className='dice-rolling-mark';
+    mark.textContent='•••';
+    mark.setAttribute('aria-hidden','true');
+    els.dice.appendChild(mark);
+  }
+
+  function startDiceRollAnimation(maxMs=260){
     if(!els.dice)return()=>{};
-    let last=0;
     let stopped=false;
-    let timer=null;
     let deadline=null;
-    const tick=()=>{
-      let next=Math.floor(Math.random()*6)+1;
-      if(next===last)next=(next%6)+1;
-      last=next;
-      renderDiceFace(next,{keepRolling:true});
-      els.dice.classList.add('rolling');
-    };
     const stop=(showWaiting=false)=>{
       if(stopped)return;
       stopped=true;
-      if(timer)clearInterval(timer);
       if(deadline)clearTimeout(deadline);
-      els.dice.classList.remove('rolling');
+      els.dice.classList.remove('rolling','rolling-neutral');
+      delete els.dice.dataset.jlRolling;
       if(showWaiting)renderDiceFace(null);
     };
-    tick();
-    timer=setInterval(tick,45);
+    renderDiceRollingNeutral();
     deadline=setTimeout(()=>stop(true),maxMs);
     return()=>stop(false);
   }
@@ -90,7 +95,13 @@
   function toggleSound(){
     state.soundEnabled=!state.soundEnabled;
     localStorage.setItem(SOUND_KEY,state.soundEnabled?'1':'0');
-    if(state.soundEnabled)ensureAudio();
+    if(state.soundEnabled){
+      ensureAudio();
+      soundTone(520,.08,.03,0,'triangle');
+      showToast('Som do Ludo ligado.','success');
+    }else{
+      showToast('Som do Ludo desligado.');
+    }
     updateSoundButton();
   }
   function ensureAudio(){
@@ -114,7 +125,7 @@
   function playRollSound(){
     if(!state.soundEnabled)return;
     ensureAudio();
-    [0,.055,.11,.165,.22,.275,.33,.385].forEach((d,i)=>soundTone(170+(i%3)*45,.05,.035,d,i%2?'square':'triangle'));
+    [0,.045,.09,.135,.18,.225].forEach((d,i)=>soundTone(170+(i%3)*45,.045,.032,d,i%2?'square':'triangle'));
   }
   function playStepSound(stepIndex){
     if(!state.soundEnabled)return;
@@ -179,26 +190,30 @@
     if(!piece)return;
     const totalSteps=toSteps-fromSteps;
     els.ludoBoard.classList.add('piece-moving');
+    piece.classList.add('path-moving');
     els.rollDice.disabled=true;
     let visualIndex=0;
-    for(let step=fromSteps+1;step<=toSteps;step++){
-      const coord=tokenCoord(color,step,tokenNo);
-      if(!coord)continue;
-      const cell=els.ludoBoard.querySelector(`[data-row="${coord[0]}"][data-col="${coord[1]}"]`);
-      if(!cell)continue;
-      visualIndex+=1;
-      els.moveHint.textContent=`Peão em movimento · ${visualIndex}/${totalSteps}`;
-      piece.style.setProperty('--dx','0%');
-      piece.style.setProperty('--dy','0%');
-      cell.appendChild(piece);
-      piece.classList.remove('step-hop');
-      void piece.offsetWidth;
-      piece.classList.add('step-hop');
-      playStepSound(visualIndex);
-      await wait(TOKEN_STEP_MS);
+    try{
+      for(let step=fromSteps+1;step<=toSteps;step++){
+        const coord=tokenCoord(color,step,tokenNo);
+        if(!coord)continue;
+        const cell=els.ludoBoard.querySelector(`[data-row="${coord[0]}"][data-col="${coord[1]}"]`);
+        if(!cell)continue;
+        visualIndex+=1;
+        els.moveHint.textContent=`Peão em movimento · ${visualIndex}/${totalSteps}`;
+        piece.style.setProperty('--dx','0%');
+        piece.style.setProperty('--dy','0%');
+        cell.appendChild(piece);
+        piece.classList.remove('step-hop');
+        void piece.offsetWidth;
+        piece.classList.add('step-hop');
+        playStepSound(visualIndex);
+        await wait(TOKEN_STEP_MS);
+      }
+    }finally{
+      piece.classList.remove('step-hop','path-moving');
+      els.ludoBoard.classList.remove('piece-moving');
     }
-    piece.classList.remove('step-hop');
-    els.ludoBoard.classList.remove('piece-moving');
   }
   function detectForwardMove(previous,next){
     if(!previous?.tokens||!next?.tokens)return null;
@@ -309,14 +324,23 @@
       try{nextStatus.public_challenges=await rpc('jl_ludo_public_challenges',{p_token:state.token});}
       catch{nextStatus.public_challenges=[];}
       if(state.animating||generationAtStart!==state.moveGeneration)return;
-      const movement=state.room&&nextRoom&&state.room.room?.id===nextRoom.room?.id?detectForwardMove(state.room,nextRoom):null;
+      const previousRoom=state.room;
+      const movement=previousRoom&&nextRoom&&previousRoom.room?.id===nextRoom.room?.id?detectForwardMove(previousRoom,nextRoom):null;
       state.status=nextStatus;
+      if(previousRoom&&!nextRoom)closeVoice();
+
+      // Adota o estado autoritativo antes da animação. Assim, qualquer render concorrente
+      // só conhece a posição final e nunca redesenha o peão de volta à origem.
+      state.room=nextRoom;
       if(movement&&els.ludoBoard?.childElementCount){
         state.animating=true;
-        try{await animateTokenPath(movement.playerId,movement.tokenNo,movement.color,movement.fromSteps,movement.toSteps);}finally{state.animating=false;}
+        try{
+          await animateTokenPath(movement.playerId,movement.tokenNo,movement.color,movement.fromSteps,movement.toSteps);
+        }finally{
+          state.animating=false;
+          els.ludoBoard?.classList.remove('piece-moving');
+        }
       }
-      if(state.room&&!nextRoom)closeVoice();
-      state.room=nextRoom;
       renderAll();
     }catch(e){
       if(/Sessão/.test(e.message)){saveToken('');state.status=null;state.room=null;renderAll();}
@@ -516,17 +540,23 @@
       const move=(state.room?.legal_moves||[]).find(x=>Number(x.token_no)===Number(n));
       const player=myRoomPlayer();
       if(!move||!player)return;
+
+      const roomId=roomData().id;
+      const movingToken=(state.room?.tokens||[]).find(t=>t.player_id===me()&&Number(t.token_no)===Number(n));
+      const originalSteps=movingToken?Number(movingToken.steps):null;
+
+      // Trava localmente o destino assim que o jogador clica. Isso impede o ciclo
+      // visual origem -> destino -> origem -> destino durante polls/renderizações.
+      if(movingToken)movingToken.steps=Number(move.to_steps);
+
       state.moveGeneration+=1;
       state.animating=true;
       let visualMove=Promise.resolve();
+      let serverConfirmed=false;
       try{
-        // O peão parte no mesmo clique; o servidor continua sendo a fonte final da jogada.
         visualMove=animateTokenPath(me(),Number(n),player.color,Number(move.from_steps),Number(move.to_steps));
-        const nextRoom=await rpc('jl_ludo_move',{p_token:state.token,p_room:roomData().id,p_token_no:Number(n)});
-
-        // Assim que o servidor confirma, fixe já o estado final.
-        // A animação continua casa por casa no DOM, mas nenhuma atualização concorrente
-        // pode voltar a desenhar o peão na posição antiga.
+        const nextRoom=await rpc('jl_ludo_move',{p_token:state.token,p_room:roomId,p_token_no:Number(n)});
+        serverConfirmed=true;
         processGameEffects(nextRoom);
         state.room=nextRoom;
 
@@ -534,6 +564,12 @@
         renderRoom();
       }catch(e){
         await visualMove.catch(()=>{});
+        if(!serverConfirmed){
+          if(movingToken&&originalSteps!==null)movingToken.steps=originalSteps;
+          try{
+            state.room=await rpc('jl_ludo_room_state',{p_token:state.token,p_room:roomId});
+          }catch{}
+        }
         renderRoom();
         showToast(e.message,'error');
       }finally{
@@ -560,18 +596,77 @@
     },280);
   }
   function stopVoiceIfRoomEnded(){if(!state.room||['finished','cancelled'].includes(roomData()?.status))closeVoice();}
-  function renderVoice(){const available=Boolean(state.room&&roomData()?.status!=='finished'&&roomData()?.status!=='cancelled');if(!available){closeVoice();els.voiceState.textContent='Indisponível';for(const b of [els.micButton,els.micQuickButton])if(b){b.disabled=true;b.textContent='🎙️ Microfone indisponível';}return;}const on=Boolean(state.localStream);els.voiceState.textContent=!available?'Indisponível':on?'Ligado':'Desligado';const label=!available?'🎙️ Microfone indisponível':on?'🔇 Desligar microfone':'🎙️ Ligar microfone';for(const b of [els.micButton,els.micQuickButton])if(b){b.disabled=!available;b.textContent=label;}if(available)startSignalPolling();else stopSignalPolling();}
-  async function toggleMic(){if(!state.room)return;try{if(!navigator.mediaDevices?.getUserMedia)throw new Error('Este navegador não disponibiliza acesso ao microfone.');if(!state.localStream){state.localStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true},video:false});state.micMuted=false;for(const p of roomPlayers())if(p.player_id!==me())ensurePeer(p.player_id,true);}else{state.localStream.getTracks().forEach(t=>t.stop());state.localStream=null;state.micMuted=true;}renderVoice();}catch(e){showToast(`Microfone: ${e.message}`,'error');}}
+  function renderVoice(){
+    const available=Boolean(state.room&&roomData()?.status!=='finished'&&roomData()?.status!=='cancelled');
+    if(!available){
+      closeVoice();
+      els.voiceState.textContent='Indisponível';
+      for(const b of [els.micButton,els.micQuickButton])if(b){b.disabled=true;b.textContent='🎙️ Microfone indisponível';}
+      return;
+    }
+    const on=Boolean(state.localStream?.getAudioTracks?.().some(t=>t.readyState==='live'));
+    const connected=on&&[...state.peers.values()].some(w=>w.pc.connectionState==='connected');
+    els.voiceState.textContent=on?(connected?'Ligado · conectado':'Ligado · aguardando conexão'):'Desligado';
+    const label=on?'🔇 Desligar microfone':'🎙️ Ligar microfone';
+    for(const b of [els.micButton,els.micQuickButton])if(b){b.disabled=false;b.textContent=label;}
+    startSignalPolling();
+  }
+  async function toggleMic(){
+    if(!state.room)return;
+    try{
+      if(!navigator.mediaDevices?.getUserMedia)throw new Error('Este navegador não disponibiliza acesso ao microfone.');
+      if(!state.localStream){
+        const stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true},video:false});
+        const track=stream.getAudioTracks()[0];
+        if(!track||track.readyState!=='live'){
+          stream.getTracks().forEach(t=>t.stop());
+          throw new Error('O microfone não iniciou áudio ativo.');
+        }
+        track.enabled=true;
+        track.onended=()=>{
+          if(state.localStream===stream){
+            state.localStream=null;
+            state.micMuted=true;
+            renderVoice();
+            showToast('O acesso ao microfone foi interrompido.','error');
+          }
+        };
+        state.localStream=stream;
+        state.micMuted=false;
+        for(const p of roomPlayers())if(p.player_id!==me())ensurePeer(p.player_id,true);
+        showToast('Microfone ligado.','success');
+      }else{
+        state.localStream.getTracks().forEach(t=>t.stop());
+        state.localStream=null;
+        state.micMuted=true;
+        for(const wrap of state.peers.values()){
+          for(const sender of wrap.pc.getSenders()){
+            if(sender.track?.kind==='audio')sender.replaceTrack(null).catch(()=>{});
+          }
+        }
+        showToast('Microfone desligado.');
+      }
+      renderVoice();
+    }catch(e){
+      showToast(`Microfone: ${e.message}`,'error');
+      renderVoice();
+    }
+  }
   function startSignalPolling(){if(state.signalTimer||!state.room)return;state.signalTimer=setInterval(pullSignals,1000);pullSignals();} function stopSignalPolling(){clearInterval(state.signalTimer);state.signalTimer=null;}
   async function sendSignal(to,type,payload){try{await rpc('jl_ludo_signal_send',{p_token:state.token,p_room:roomData().id,p_to_player:to,p_signal_type:type,p_payload:payload});}catch(e){console.warn('signal',e.message);}}
-  function ensurePeer(peerId,addTracks=false){
-    let wrap=state.peers.get(peerId);
-    if(wrap){if(addTracks&&state.localStream)attachTracks(wrap.pc);return wrap;}
-    const pc=new RTCPeerConnection({iceServers:[
+  function voiceIceServers(){
+    const configured=Array.isArray(cfg.ludoIceServers)?cfg.ludoIceServers.filter(Boolean):[];
+    if(configured.length)return configured;
+    return [
       {urls:'stun:stun.l.google.com:19302'},
       {urls:'stun:stun1.l.google.com:19302'},
       {urls:'stun:stun2.l.google.com:19302'}
-    ]});
+    ];
+  }
+  function ensurePeer(peerId,addTracks=false){
+    let wrap=state.peers.get(peerId);
+    if(wrap){if(addTracks&&state.localStream)attachTracks(wrap.pc);return wrap;}
+    const pc=new RTCPeerConnection({iceServers:voiceIceServers()});
     wrap={pc,makingOffer:false,ignoreOffer:false,polite:String(me())>String(peerId),pendingIce:[],restarted:false};
     state.peers.set(peerId,wrap);
     pc.onicecandidate=e=>{if(e.candidate)sendSignal(peerId,'ice',e.candidate.toJSON());};
@@ -590,6 +685,7 @@
       });
     };
     pc.onconnectionstatechange=async()=>{
+      renderVoice();
       if(pc.connectionState==='connected'){wrap.restarted=false;return;}
       if(pc.connectionState==='failed'&&!wrap.restarted){
         wrap.restarted=true;
@@ -664,6 +760,14 @@
   }
   function closeVoice(){stopSignalPolling();for(const w of state.peers.values())w.pc.close();state.peers.clear();if(state.localStream)state.localStream.getTracks().forEach(t=>t.stop());state.localStream=null;state.micMuted=true;state.lastSignalId=0;els.remoteAudio.innerHTML='';}
 
+  function unlockMediaAudio(){
+    if(state.soundEnabled)ensureAudio();
+    for(const audio of els.remoteAudio?.querySelectorAll?.('audio')||[]){
+      if(audio.srcObject&&audio.paused)audio.play().catch(()=>{});
+    }
+  }
+  document.addEventListener('pointerdown',unlockMediaAudio,{passive:true});
+
   els.winModalOk?.addEventListener('click',closeLudoWinNotice);
   els.soundToggle?.addEventListener('click',toggleSound);
   els.micQuickButton?.addEventListener('click',toggleMic);
@@ -721,7 +825,6 @@
   els.stakeModalAccept?.addEventListener('click',()=>withBusy(async()=>{try{els.stakeModalAccept.disabled=true;const amount=Number(roomData()?.bet_amount||0);if(!(await ensureLudoFunds(amount,'confirmar este valor')))return;state.room=await rpc('jl_ludo_commit_stake',{p_token:state.token,p_room:roomData().id});await loadStatus(true);showToast('Valor confirmado.','success');}catch(err){if(!handleLudoMoneyError(err,'confirmar este valor'))showToast(err.message,'error');}finally{els.stakeModalAccept.disabled=false;syncEntryFlowModals();}}));els.rollDice.addEventListener('click',()=>withBusy(async()=>{
     if(state.animating)return;
     els.rollDice.disabled=true;
-    els.dice.classList.add('rolling');
     const stopDiceAnimation=startDiceRollAnimation();
     playRollSound();
     try{
