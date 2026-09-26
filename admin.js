@@ -173,6 +173,9 @@
     state.token = token || '';
     if (state.token) localStorage.setItem(TOKEN_KEY, state.token);
     else localStorage.removeItem(TOKEN_KEY);
+    window.dispatchEvent(new CustomEvent('jl-admin-session-changed', {
+      detail: { authenticated: Boolean(state.token) }
+    }));
   }
 
   function showApp(show) {
