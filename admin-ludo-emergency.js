@@ -119,7 +119,9 @@
     ui.players.textContent = String(players);
     ui.staked.textContent = money(staked);
     ui.queue.textContent = String(queue);
-    ui.cancel.disabled = busy || rooms === 0;
+    // O botão de emergência continua utilizável sempre que há sessão admin.
+    // O próprio backend é autoritativo e responde corretamente mesmo com 0 salas.
+    ui.cancel.disabled = busy || !token();
     if (ui.refresh) ui.refresh.disabled = busy;
 
     if (rooms > 0) {
@@ -138,19 +140,52 @@
       if (!pToken) reset();
       return;
     }
+    let statusData = null;
+    let roomRows = null;
+    let statusError = null;
+    let roomsError = null;
+
     try {
-      const [data, rows] = await Promise.all([
-        rpc('jl_admin_ludo_emergency_status', { p_token: pToken }),
-        rpc('jl_admin_ludo_active_rooms', { p_token: pToken })
-      ]);
-      render(data, rows);
-      if (!silent) ui.message.textContent = '';
+      statusData = await rpc('jl_admin_ludo_emergency_status', { p_token: pToken });
     } catch (error) {
-      ui.cancel.disabled = true;
+      statusError = error;
+    }
+
+    try {
+      roomRows = await rpc('jl_admin_ludo_active_rooms', { p_token: pToken });
+    } catch (error) {
+      roomsError = error;
+    }
+
+    if (!statusData && !roomRows) {
+      const error = statusError || roomsError || new Error('Não foi possível atualizar o Ludo.');
+      ui.cancel.disabled = false;
       if (!silent) {
         ui.message.textContent = error.message;
         toast(error.message, 'error');
       }
+      return;
+    }
+
+    if (!statusData) {
+      const safeRows = Array.isArray(roomRows) ? roomRows : [];
+      statusData = {
+        active_rooms: safeRows.length,
+        active_players: safeRows.reduce((sum, room) => sum + Number(room.active_players || 0), 0),
+        staked_total: safeRows.reduce((sum, room) => sum + Number(room.staked_total || 0), 0),
+        waiting_queue: Number(last?.waiting_queue || 0)
+      };
+    }
+
+    render(statusData, Array.isArray(roomRows) ? roomRows : activeRooms);
+
+    if (roomsError && ui.list) {
+      ui.list.innerHTML = '<div class="empty">Não foi possível atualizar a lista individual. O cancelamento geral continua disponível.</div>';
+    }
+
+    if (!silent) {
+      const partial = statusError || roomsError;
+      ui.message.textContent = partial ? `Atualização parcial: ${partial.message}` : '';
     }
   }
 
@@ -158,12 +193,12 @@
     if (busy) return;
     await refresh(true);
     const rooms = Number(last?.active_rooms || 0);
-    if (!rooms) return render(last, activeRooms);
-
     const players = Number(last?.active_players || 0);
     const staked = Number(last?.staked_total || 0);
     const ok = window.confirm(
-      `EMERGÊNCIA LUDO\n\nCancelar ${rooms} sala(s) ativa(s), retirar ${players} jogador(es) dessas partidas e devolver MZN ${money(staked)} já debitados?\n\nEsta ação encerra os jogos imediatamente.`
+      rooms > 0
+        ? `EMERGÊNCIA LUDO\n\nCancelar ${rooms} sala(s) ativa(s), retirar ${players} jogador(es) dessas partidas e devolver MZN ${money(staked)} já debitados?\n\nEsta ação encerra os jogos imediatamente.`
+        : 'EMERGÊNCIA LUDO\n\nExecutar o cancelamento geral agora? O servidor verificará novamente todas as salas e encerrará qualquer partida que ainda esteja ativa.'
     );
     if (!ok) return;
 
