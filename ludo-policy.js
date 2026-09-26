@@ -103,13 +103,8 @@
     dice.dataset.ludoVariantControl = '1';
     dice.innerHTML = '<span>Quantidade de dados</span><select name="dice_count"><option value="1">1 dado · clássico</option><option value="2">2 dados</option><option value="3">3 dados</option><option value="4">4 dados</option></select>';
 
-    const note = document.createElement('div');
-    note.className = 'variant-note';
-    note.dataset.ludoVariantControl = '1';
-    note.textContent = 'Com 2, 3 ou 4 dados, todos são lançados juntos e usados um por vez, na ordem sorteada. Um dado sem movimento possível é pulado automaticamente. Nesse modo, 6 e captura não geram nova jogada extra e não existe penalização de três 6 seguidos.';
-
     const fragment = document.createDocumentFragment();
-    fragment.append(location, dice, note);
+    fragment.append(location, dice);
     form.prepend(fragment);
 
     dice.querySelector('select').addEventListener('change', syncMultiDiceForm);
