@@ -209,19 +209,36 @@
       const amount=Number(document.getElementById('quickTransactionAmount').value);
       if(!Number.isInteger(amount)||amount<1){document.getElementById('quickTransactionMessage').textContent='Informe um valor inteiro válido.';return;}
       if(quickTransaction.kind==='withdraw'){
-        if(!(await ensureFunds('withdrawal',amount,'fazer este saque')))return;
         const btn=e.currentTarget.querySelector('button[type="submit"]');
-        if(btn)btn.disabled=true;
+        const msg=document.getElementById('quickTransactionMessage');
+        if(btn){btn.disabled=true;btn.textContent='Enviando saque…';}
+        if(msg)msg.textContent='A verificar o saque…';
         try{
+          // A validação final pertence ao RPC de saque. O pré-check serve apenas
+          // para orientar a interface e nunca pode transformar o botão em "nada acontece".
+          let check=null;
+          try{check=await checkFunds('withdrawal',amount);}catch{}
+
+          if(check?.reason==='deposit_not_played'){
+            if(msg)msg.textContent=`Este valor ainda não pode ser sacado: ${formatMoney(check.deposit_locked||0)} MZN de depósito ainda precisa ser jogado.`;
+            return;
+          }
+          if(check?.redirect_to_deposit){
+            close();
+            directToDeposit(check,'fazer este saque');
+            return;
+          }
+
           const result=await rpc('jl_request_withdrawal',{p_token:state.token,p_amount:amount});
           const ok=result?.ok!==false,reference=result?.request_id?result.request_id.slice(0,8).toUpperCase():'';
           close();
           showTransactionModal({kind:'withdraw',amount,message:result?.message,reference,ok});
           await refresh(true);
         }catch(error){
-          document.getElementById('quickTransactionMessage').textContent=error.message;
+          if(msg)msg.textContent=error?.message||'Não foi possível enviar o saque.';
+          showToast(error?.message||'Não foi possível enviar o saque.','error');
         }finally{
-          if(btn)btn.disabled=false;
+          if(btn){btn.disabled=false;btn.textContent='Pedir saque';}
         }
         return;
       }
@@ -264,6 +281,8 @@
     quickTransaction.kind=kind;quickTransaction.amount=0;
     document.getElementById('quickTransactionEyebrow').textContent=kind==='deposit'?'DEPÓSITO':'SAQUE';
     document.getElementById('quickTransactionTitle').textContent=kind==='deposit'?'Quanto deseja depositar?':'Quanto deseja sacar?';
+    const amountButton=document.querySelector('#quickTransactionAmountForm button[type="submit"]');
+    if(amountButton)amountButton.textContent=kind==='deposit'?'Continuar':'Pedir saque';
     document.getElementById('quickTransactionAmount').value=presetAmount>0?String(Math.ceil(presetAmount)):'';
     document.getElementById('quickTransactionNote').value='';
     document.getElementById('quickTransactionMessage').textContent='';
@@ -887,18 +906,32 @@
   els.withdrawForm.addEventListener('submit', async (event) => {
     event.preventDefault();
     const amount = Number(els.withdrawAmount.value);
+    const submit=els.withdrawForm.querySelector('button[type="submit"]');
+
+    if(!Number.isInteger(amount)||amount<1){
+      setMessage(els.withdrawMessage,'Informe um valor inteiro válido para saque.','error');
+      return;
+    }
+
+    if(submit){submit.disabled=true;submit.textContent='Enviando saque…';}
+    setMessage(els.withdrawMessage,'A verificar e enviar o saque…');
+
     try {
-      if (!(await ensureFunds('withdrawal', amount, 'fazer este saque'))) return;
+      // O próprio RPC faz a verificação autoritativa de saldo e depósito por jogar.
+      // Assim o botão nunca fica dependente de um pré-check separado.
       const result = await rpc('jl_request_withdrawal', { p_token: state.token, p_amount: amount });
-      const ok = result.ok !== false;
-      const reference = result.request_id ? result.request_id.slice(0, 8).toUpperCase() : '';
-      setMessage(els.withdrawMessage, result.message, ok ? 'success' : 'error');
-      showTransactionModal({ kind: 'withdraw', amount, message: result.message, reference, ok });
+      const ok = result?.ok !== false;
+      const reference = result?.request_id ? result.request_id.slice(0, 8).toUpperCase() : '';
+      setMessage(els.withdrawMessage, result?.message || (ok?'Pedido de saque enviado.':'Saque não enviado.'), ok ? 'success' : 'error');
+      showTransactionModal({ kind: 'withdraw', amount, message: result?.message, reference, ok });
       if (ok) els.withdrawForm.reset();
       await refresh(true);
     } catch (error) {
-      setMessage(els.withdrawMessage, error.message, 'error');
-      showTransactionModal({ kind: 'withdraw', amount, message: error.message, ok: false });
+      const message=error?.message||'Não foi possível enviar o saque.';
+      setMessage(els.withdrawMessage, message, 'error');
+      showTransactionModal({ kind: 'withdraw', amount, message, ok: false });
+    } finally {
+      if(submit){submit.disabled=false;submit.textContent='Pedir saque';}
     }
   });
 
