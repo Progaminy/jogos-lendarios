@@ -414,17 +414,120 @@ button.status-metric:hover{border-color:rgba(244,189,66,.5);transform:translateY
 .piece.path-moving{
   transition:none!important;
 }
-.dice.rolling-neutral .dice-rolling-mark{
+.dice.rolling-neutral{
+  overflow:visible;
+  perspective:260px;
+}
+.dice.rolling.rolling-neutral{
+  animation:none!important;
+  background:transparent;
+  border-color:transparent;
+  box-shadow:none;
+}
+.dice.rolling-neutral:not(.rolling){
+  background:transparent;
+  border-color:transparent;
+  box-shadow:none;
+}
+.dice-roll-stage{
   position:absolute;
   inset:0;
   display:grid;
   place-items:center;
-  font-size:1.05rem;
-  font-weight:950;
-  letter-spacing:.16em;
-  color:#172333;
-  line-height:1;
-  transform:none!important;
+  perspective:260px;
+  transform-style:preserve-3d;
+}
+.dice-roll-stage:after{
+  content:"";
+  position:absolute;
+  left:50%;
+  bottom:-7px;
+  width:36px;
+  height:9px;
+  border-radius:50%;
+  background:rgba(0,0,0,.34);
+  filter:blur(4px);
+  transform:translateX(-50%) scale(.82);
+  opacity:.72;
+}
+.dice-roll-cube{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:42px;
+  height:42px;
+  margin:-21px 0 0 -21px;
+  transform-style:preserve-3d;
+  transform:translateY(-1px) rotateX(-18deg) rotateY(32deg) rotateZ(-8deg);
+  will-change:transform;
+}
+.dice.rolling.rolling-neutral .dice-roll-cube{
+  animation:diceCubeTumble .52s cubic-bezier(.34,.08,.28,1) infinite;
+}
+.dice.rolling.rolling-neutral .dice-roll-stage:after{
+  animation:diceCubeShadow .52s ease-in-out infinite;
+}
+.dice.roll-waiting .dice-roll-cube{
+  transform:translateY(0) rotateX(-18deg) rotateY(32deg) rotateZ(-8deg);
+  transition:transform .11s ease-out;
+}
+.dice-roll-face{
+  position:absolute;
+  inset:0;
+  border-radius:8px;
+  border:1px solid #d6dce4;
+  background:
+    radial-gradient(circle at 28% 24%,rgba(255,255,255,.95) 0 7%,transparent 8%),
+    linear-gradient(145deg,#ffffff 0%,#f4f5f3 56%,#dfe3e7 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.7),
+    inset -4px -5px 8px rgba(27,39,54,.08),
+    0 1px 1px rgba(255,255,255,.65);
+  backface-visibility:hidden;
+}
+.dice-roll-face:after{
+  content:"";
+  position:absolute;
+  inset:7px;
+  border-radius:6px;
+  background:linear-gradient(135deg,rgba(255,255,255,.55),transparent 58%);
+  opacity:.55;
+}
+.dice-roll-face.front{transform:translateZ(21px)}
+.dice-roll-face.back{transform:rotateY(180deg) translateZ(21px)}
+.dice-roll-face.right{transform:rotateY(90deg) translateZ(21px)}
+.dice-roll-face.left{transform:rotateY(-90deg) translateZ(21px)}
+.dice-roll-face.top{transform:rotateX(90deg) translateZ(21px)}
+.dice-roll-face.bottom{transform:rotateX(-90deg) translateZ(21px)}
+
+@keyframes diceCubeTumble{
+  0%{transform:translateY(1px) rotateX(0deg) rotateY(0deg) rotateZ(0deg) scale(.96)}
+  22%{transform:translateY(-9px) rotateX(150deg) rotateY(98deg) rotateZ(62deg) scale(1.03)}
+  48%{transform:translateY(-3px) rotateX(325deg) rotateY(245deg) rotateZ(148deg) scale(.99)}
+  74%{transform:translateY(-8px) rotateX(530deg) rotateY(390deg) rotateZ(258deg) scale(1.025)}
+  100%{transform:translateY(1px) rotateX(720deg) rotateY(540deg) rotateZ(360deg) scale(.96)}
+}
+@keyframes diceCubeShadow{
+  0%,100%{transform:translateX(-50%) scale(.88);opacity:.72}
+  22%,74%{transform:translateX(-50%) scale(.58);opacity:.36}
+  48%{transform:translateX(-50%) scale(.76);opacity:.55}
+}
+.dice.dice-landed{
+  animation:diceLandImpact .18s cubic-bezier(.2,.75,.25,1)!important;
+}
+@keyframes diceLandImpact{
+  0%{transform:translateY(-4px) rotate(-3deg) scale(1.06)}
+  55%{transform:translateY(1px) rotate(1deg) scale(.97)}
+  100%{transform:translateY(0) rotate(0) scale(1)}
+}
+@media(max-width:600px){
+  .dice-roll-cube{width:38px;height:38px;margin:-19px 0 0 -19px}
+  .dice-roll-face.front{transform:translateZ(19px)}
+  .dice-roll-face.back{transform:rotateY(180deg) translateZ(19px)}
+  .dice-roll-face.right{transform:rotateY(90deg) translateZ(19px)}
+  .dice-roll-face.left{transform:rotateY(-90deg) translateZ(19px)}
+  .dice-roll-face.top{transform:rotateX(90deg) translateZ(19px)}
+  .dice-roll-face.bottom{transform:rotateX(-90deg) translateZ(19px)}
 }
 
 
