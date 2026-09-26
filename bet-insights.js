@@ -226,7 +226,7 @@
     const section = document.createElement('section');
     section.id = 'adminBetSummary';
     section.className = 'card admin-card admin-bet-overview';
-    section.innerHTML = `<div class="section-head"><div><p class="eyebrow">APOSTAS · VISÃO GERAL</p><h2>Movimento dos jogadores</h2></div></div>
+    section.innerHTML = `<div class="section-head"><div><p class="eyebrow">APOSTAS · VISÃO GERAL</p><h2>Movimento dos jogadores</h2></div><button class="button danger small" data-reset-bet-summary type="button">Zerar movimento</button></div>
       <div class="bet-summary-grid">
         ${metricCard('total','Apostas feitas')}
         ${metricCard('pending','Apostas pendentes')}
@@ -235,6 +235,14 @@
       </div>
       <div id="adminHouseNet" class="admin-house-net">Resultado liquidado da casa: —</div>`;
     app.prepend(section);
+    section.querySelector('[data-reset-bet-summary]')?.addEventListener('click', () => {
+      const reset = $('#resetFinancialCounters');
+      if (!reset) {
+        toast('O controlo de reinício ainda não está disponível.', 'error');
+        return;
+      }
+      reset.click();
+    });
   }
 
   function setAdminSummary(s) {
@@ -301,6 +309,7 @@
     bindSelectionGuidance();
     applyHistoryFilter();
     refreshSummaries();
+    document.addEventListener('jl-admin-reset-since', refreshSummaries);
     clearInterval(poll);
     poll = setInterval(()=>{if(document.visibilityState==='visible')refreshSummaries();}, 15000);
   }
