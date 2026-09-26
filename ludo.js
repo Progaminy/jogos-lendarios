@@ -10,7 +10,8 @@
     lastSignalId: 0, localStream: null, micMuted: true, peers: new Map(), busy: false,
     animating: false, soundEnabled: localStorage.getItem(SOUND_KEY) !== '0', audioCtx: null,
     rulesFormDirty: false, rulesFormVersion: null, rulesDeclinedVersion: null, lastFxEventId: 0, autoMoveKey: null, lastDirectInviteCount: 0,
-    moveGeneration: 0
+    moveGeneration: 0,
+    lastDiceValue: null, lastDiceRoomId: null
   };
   const els = Object.fromEntries([
     'toast','identityBadge','accountButton','accountMenu','accountMenuCode','accountMenuBalance','accountMenuDeposit','accountMenuWithdraw','accountMenuLogout','ludoStatusStrip','onlinePlayerCount','directNotificationMetric','publicNotificationMetric','topDirectInviteCount','topPublicInviteCount','loggedOut','lobby','boardLobby','ludoLobbyBoard','balanceBadge','createRoomForm','createPlayers','createMode','createBet','createPublic',
@@ -72,18 +73,22 @@
   function startDiceRollAnimation(maxMs=260){
     if(!els.dice)return()=>{};
     let stopped=false;
-    let deadline=null;
-    const stop=(showWaiting=false)=>{
+    let settleTimer=null;
+    const stop=()=>{
       if(stopped)return;
       stopped=true;
-      if(deadline)clearTimeout(deadline);
+      if(settleTimer)clearTimeout(settleTimer);
       els.dice.classList.remove('rolling','rolling-neutral');
       delete els.dice.dataset.jlRolling;
-      if(showWaiting)renderDiceFace(null);
     };
     renderDiceRollingNeutral();
-    deadline=setTimeout(()=>stop(true),maxMs);
-    return()=>stop(false);
+    // A animação pode parar cedo, mas o lacre nunca volta para "?" enquanto
+    // a resposta autoritativa do servidor ainda está a chegar.
+    settleTimer=setTimeout(()=>{
+      if(stopped)return;
+      els.dice.classList.remove('rolling');
+    },maxMs);
+    return stop;
   }
 
   function updateSoundButton(){
@@ -287,7 +292,24 @@
     return false;
   }
   function latestDiceRoll(){const events=state.room?.events||[];for(let i=events.length-1;i>=0;i--){const event=events[i];if(event?.event_type!=='dice_rolled')continue;const payload=event.payload||{};const values=Array.isArray(payload.dice_values)?payload.dice_values.map(Number).filter(v=>Number.isInteger(v)&&v>=1&&v<=6):[];if(values.length)return{values,playerId:event.player_id,createdAt:event.created_at};const die=Number(payload.dice);if(Number.isInteger(die)&&die>=1&&die<=6)return{values:[die],playerId:event.player_id,createdAt:event.created_at};}return null;}
-  function visibleDiceValue(room){const active=Number(room?.dice_result);if(Number.isInteger(active)&&active>=1&&active<=6)return active;return latestDiceRoll()?.values?.[0]??null;}
+  function visibleDiceValue(room){
+    const roomId=room?.id||null;
+    if(state.lastDiceRoomId!==roomId){
+      state.lastDiceRoomId=roomId;
+      state.lastDiceValue=null;
+    }
+    const active=Number(room?.dice_result);
+    if(Number.isInteger(active)&&active>=1&&active<=6){
+      state.lastDiceValue=active;
+      return active;
+    }
+    const eventValue=Number(latestDiceRoll()?.values?.[0]);
+    if(Number.isInteger(eventValue)&&eventValue>=1&&eventValue<=6){
+      state.lastDiceValue=eventValue;
+      return eventValue;
+    }
+    return state.lastDiceValue;
+  }
   function setAuthMessage(msg='',type=''){els.authMessage.textContent=msg;els.authMessage.style.color=type==='error'?'#ff8994':type==='success'?'#8df1bb':'';}
 
   const LUDO_WIN_SEEN_KEY='jl_seen_ludo_wins_v1';
@@ -347,7 +369,20 @@
       if(!silent)showToast(e.message,'error');
     }
   }
-  async function processTimeouts(){if(!state.token||!state.room?.room?.id||state.busy||state.animating)return;try{const nextRoom=await rpc('jl_ludo_process_timeouts',{p_token:state.token,p_room:state.room.room.id});processGameEffects(nextRoom);state.room=nextRoom;renderRoom();}catch{}}
+  async function processTimeouts(){
+    if(!state.token||!state.room?.room?.id||state.busy||state.animating)return;
+    const generationAtStart=state.moveGeneration;
+    const roomId=state.room.room.id;
+    try{
+      const nextRoom=await rpc('jl_ludo_process_timeouts',{p_token:state.token,p_room:roomId});
+      // Uma resposta de timeout iniciada antes do clique não pode redesenhar
+      // uma posição antiga por cima do movimento que acabou de acontecer.
+      if(state.animating||generationAtStart!==state.moveGeneration||state.room?.room?.id!==roomId)return;
+      processGameEffects(nextRoom);
+      state.room=nextRoom;
+      renderRoom();
+    }catch{}
+  }
   function renderAll(){const authed=Boolean(state.token&&state.status?.identity);els.ludoStatusStrip?.classList.toggle('hidden',!authed);els.loggedOut.classList.toggle('hidden',authed);els.lobby.classList.toggle('hidden',!authed||Boolean(state.room));els.notificationCenter?.classList.toggle('hidden',!authed);els.room.classList.toggle('hidden',!state.room);els.boardLobby.classList.toggle('hidden',Boolean(state.room));if(!state.room)renderLobbyBoard();if(authed){const i=state.status.identity;els.identityBadge.textContent=`${i.code} · ${money(i.balance)} MZN`;els.accountButton.textContent=i.name||i.code;els.accountMenuCode.textContent=`${i.name||'Jogador'} · ${i.code}`;els.accountMenuBalance.textContent=`${money(i.balance)} MZN`;els.balanceBadge.textContent=`${money(i.balance)} MZN`;renderLobby();}else{els.identityBadge.textContent='Não autenticado';els.accountButton.textContent='Entrar';els.accountMenu?.classList.add('hidden');els.accountButton.setAttribute('aria-expanded','false');}if(state.room)renderRoom();}
   function renderLobby(){
     const s=state.status;if(!s)return;
@@ -497,11 +532,18 @@
         b.dataset.playerId=String(it.p.player_id);
         b.dataset.tokenNo=String(it.t.token_no);
         if(list.length>1){
-          const pos=[[-20,-20],[20,-20],[-20,20],[20,20]][idx%4];
+          const layouts={
+            2:[[-36,0],[36,0]],
+            3:[[-36,-28],[36,-28],[0,34]],
+            4:[[-36,-30],[36,-30],[-36,30],[36,30]]
+          };
+          const pos=(layouts[Math.min(4,list.length)]||layouts[4])[idx%Math.min(4,list.length)];
           b.style.setProperty('--dx',`${pos[0]}%`);
           b.style.setProperty('--dy',`${pos[1]}%`);
         }
-        if(it.p.player_id===me()&&legal.includes(Number(it.t.token_no)))b.addEventListener('click',()=>moveToken(it.t.token_no));
+        const isLegalMine=it.p.player_id===me()&&legal.includes(Number(it.t.token_no));
+        b.style.zIndex=isLegalMine?'25':(it.p.player_id===me()?'12':String(7+idx));
+        if(isLegalMine)b.addEventListener('click',()=>moveToken(it.t.token_no));
         cell.appendChild(b);
       });
     }
@@ -835,7 +877,7 @@
       renderRoom();
     }catch(err){
       stopDiceAnimation();
-      renderDiceFace(null);
+      renderDiceFace(visibleDiceValue(roomData()));
       showToast(err.message,'error');
     }finally{
       stopDiceAnimation();
