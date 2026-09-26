@@ -13,6 +13,8 @@
     queue: $('ludoEmergencyQueue'),
     reason: $('ludoEmergencyReason'),
     cancel: $('ludoEmergencyCancelAll'),
+    refresh: $('ludoEmergencyRefresh'),
+    list: $('ludoEmergencyRoomList'),
     message: $('ludoEmergencyMessage'),
     toast: $('toast')
   };
@@ -20,12 +22,21 @@
   if (!ui.cancel) return;
 
   let last = null;
+  let activeRooms = [];
   let busy = false;
 
   const money = (value) => Number(value || 0).toLocaleString('pt-MZ', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   });
+
+  const dateTime = (value) => value
+    ? new Date(value).toLocaleString('pt-MZ', { dateStyle: 'short', timeStyle: 'short' })
+    : '—';
+
+  const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (c) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+  }[c]));
 
   function token() {
     return localStorage.getItem(TOKEN_KEY) || '';
@@ -57,7 +68,47 @@
     toast.timer = setTimeout(() => { ui.toast.className = 'toast'; }, 4500);
   }
 
-  function render(data) {
+  function reset() {
+    last = null;
+    activeRooms = [];
+    if (ui.rooms) ui.rooms.textContent = '—';
+    if (ui.players) ui.players.textContent = '—';
+    if (ui.staked) ui.staked.textContent = '—';
+    if (ui.queue) ui.queue.textContent = '—';
+    if (ui.badge) {
+      ui.badge.textContent = 'Aguardando login';
+      ui.badge.className = 'badge muted';
+    }
+    ui.cancel.disabled = true;
+    if (ui.list) ui.list.innerHTML = '<div class="empty">Entre no admin para ver os jogos ativos.</div>';
+  }
+
+  function renderRooms(rows = []) {
+    activeRooms = Array.isArray(rows) ? rows : [];
+    if (!ui.list) return;
+    if (!activeRooms.length) {
+      ui.list.innerHTML = '<div class="empty">Nenhuma partida de Ludo ativa.</div>';
+      return;
+    }
+
+    ui.list.innerHTML = activeRooms.map((room) => `
+      <div class="request-row">
+        <div>
+          <strong>${escapeHtml(room.code || 'Sala')}</strong><br>
+          <small>${escapeHtml(room.status || '—')} · ${Number(room.active_players || 0)}/${Number(room.player_count || 0)} jogadores · ${escapeHtml(room.mode || '—')} · criada ${dateTime(room.created_at)}</small>
+        </div>
+        <div>
+          <strong>MZN ${money(room.staked_total || 0)}</strong><br>
+          <small>Aposta: MZN ${money(room.bet_amount || 0)}</small>
+        </div>
+        <div class="row-actions">
+          <button class="button danger small" type="button" data-cancel-ludo-room="${escapeHtml(room.id)}" data-room-code="${escapeHtml(room.code || '')}" ${busy ? 'disabled' : ''}>Cancelar este jogo</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function render(data, rows = activeRooms) {
     last = data || {};
     const rooms = Number(last.active_rooms || 0);
     const players = Number(last.active_players || 0);
@@ -69,6 +120,7 @@
     ui.staked.textContent = money(staked);
     ui.queue.textContent = String(queue);
     ui.cancel.disabled = busy || rooms === 0;
+    if (ui.refresh) ui.refresh.disabled = busy;
 
     if (rooms > 0) {
       ui.badge.textContent = `${rooms} ativa${rooms === 1 ? '' : 's'}`;
@@ -77,17 +129,28 @@
       ui.badge.textContent = 'Sem jogos ativos';
       ui.badge.className = 'badge success';
     }
+    renderRooms(rows);
   }
 
   async function refresh(silent = true) {
     const pToken = token();
-    if (!pToken || busy) return;
+    if (!pToken || busy) {
+      if (!pToken) reset();
+      return;
+    }
     try {
-      const data = await rpc('jl_admin_ludo_emergency_status', { p_token: pToken });
-      render(data);
+      const [data, rows] = await Promise.all([
+        rpc('jl_admin_ludo_emergency_status', { p_token: pToken }),
+        rpc('jl_admin_ludo_active_rooms', { p_token: pToken })
+      ]);
+      render(data, rows);
       if (!silent) ui.message.textContent = '';
     } catch (error) {
-      if (!silent) ui.message.textContent = error.message;
+      ui.cancel.disabled = true;
+      if (!silent) {
+        ui.message.textContent = error.message;
+        toast(error.message, 'error');
+      }
     }
   }
 
@@ -95,7 +158,7 @@
     if (busy) return;
     await refresh(true);
     const rooms = Number(last?.active_rooms || 0);
-    if (!rooms) return render(last);
+    if (!rooms) return render(last, activeRooms);
 
     const players = Number(last?.active_players || 0);
     const staked = Number(last?.staked_total || 0);
@@ -105,8 +168,8 @@
     if (!ok) return;
 
     busy = true;
-    ui.cancel.disabled = true;
-    ui.message.textContent = 'A cancelar jogos e devolver apostas…';
+    render(last, activeRooms);
+    ui.message.textContent = 'A cancelar todos os jogos e devolver apostas…';
 
     try {
       const result = await rpc('jl_admin_cancel_all_ludo', {
@@ -121,11 +184,68 @@
     } finally {
       busy = false;
       await refresh(true);
-      render(last);
     }
   });
 
+  ui.list?.addEventListener('click', async (event) => {
+    const button = event.target.closest('[data-cancel-ludo-room]');
+    if (!button || busy) return;
+
+    const roomId = button.dataset.cancelLudoRoom;
+    const roomCode = button.dataset.roomCode || 'esta sala';
+    const room = activeRooms.find((item) => String(item.id) === String(roomId));
+    const staked = Number(room?.staked_total || 0);
+    const ok = window.confirm(
+      `Cancelar apenas ${roomCode}?\n\nJogadores: ${Number(room?.active_players || 0)}\nValor a devolver: MZN ${money(staked)}\n\nAs outras partidas continuam normalmente.`
+    );
+    if (!ok) return;
+
+    busy = true;
+    render(last, activeRooms);
+    ui.message.textContent = `A cancelar ${roomCode}…`;
+
+    try {
+      const result = await rpc('jl_admin_cancel_ludo_room', {
+        p_token: token(),
+        p_room: roomId,
+        p_reason: (ui.reason.value || '').trim() || 'Cancelamento administrativo de partida'
+      });
+      ui.message.textContent = `${result?.room_code || roomCode} cancelada. Reembolso: MZN ${money(result?.refunded_total || 0)}.`;
+      toast(result?.message || 'Partida cancelada.', 'success');
+    } catch (error) {
+      ui.message.textContent = error.message;
+      toast(error.message, 'error');
+    } finally {
+      busy = false;
+      await refresh(true);
+    }
+  });
+
+  ui.refresh?.addEventListener('click', () => refresh(false));
   $('refreshAdmin')?.addEventListener('click', () => refresh(false));
-  setInterval(() => { if (document.visibilityState === 'visible') refresh(true); }, 15000);
-  setTimeout(() => refresh(true), 300);
+
+  window.addEventListener('jl-admin-session-changed', (event) => {
+    if (event.detail?.authenticated) {
+      setTimeout(() => refresh(false), 0);
+    } else {
+      reset();
+    }
+  });
+
+  window.addEventListener('storage', (event) => {
+    if (event.key !== TOKEN_KEY) return;
+    if (event.newValue) refresh(false);
+    else reset();
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && token()) refresh(true);
+  });
+
+  setInterval(() => {
+    if (document.visibilityState === 'visible' && token()) refresh(true);
+  }, 15000);
+
+  if (token()) setTimeout(() => refresh(true), 150);
+  else reset();
 })();
