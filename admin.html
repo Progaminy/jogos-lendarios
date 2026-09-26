@@ -181,6 +181,15 @@
           <button id="ludoEmergencyCancelAll" class="button danger" type="button" disabled>Cancelar todos os jogos do Ludo</button>
         </div>
         <p id="ludoEmergencyMessage" class="form-message"></p>
+
+        <div class="card admin-card" style="box-shadow:none;margin-top:14px">
+          <div class="section-head">
+            <div><p class="eyebrow">PARTIDAS ATIVAS</p><h3>Cancelar jogo individual</h3></div>
+            <button id="ludoEmergencyRefresh" class="button ghost small" type="button">Atualizar</button>
+          </div>
+          <p class="muted-text">Cancele apenas a partida com problema. O valor já debitado dessa sala é devolvido aos jogadores; as outras partidas continuam normalmente.</p>
+          <div id="ludoEmergencyRoomList" class="request-list"><div class="empty">A carregar partidas ativas…</div></div>
+        </div>
       </section>
 
       <div class="admin-two">
@@ -279,8 +288,8 @@
   </main>
 
   <script src="./config.js"></script>
-  <script src="./admin.js?v=20260925-2" defer></script>
-  <script src="./admin-ludo-emergency.js?v=20260923-1" defer></script>
+  <script src="./admin.js?v=20260926-3" defer></script>
+  <script src="./admin-ludo-emergency.js?v=20260926-2" defer></script>
   <script src="./admin-bonus.js?v=20260924-1" defer></script>
   <script src="./admin-recovery.js?v=20260925-2" defer></script>
   <script src="./admin-power.js?v=20260925-2" defer></script>
