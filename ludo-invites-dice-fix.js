@@ -22,7 +22,7 @@
     }
 
     const note = document.querySelector('#rulesForm .variant-note');
-    if (note) note.textContent = 'Com 2, 3 ou 4 dados, todos são lançados juntos e usados um por vez, na ordem sorteada. Um dado sem movimento possível é pulado automaticamente. Nesse modo, 6 e captura não geram nova jogada extra.';
+    if (note) note.remove();
   }
 
   function persistentInviteTexts() {
