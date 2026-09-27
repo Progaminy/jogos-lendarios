@@ -654,7 +654,7 @@
     await withBusy(async()=>{
       const move=(state.room?.legal_moves||[]).find(x=>Number(x.token_no)===Number(n));
       const player=myRoomPlayer();
-      if(!move||!player)return;
+      if(!move||!player){state.autoMoveKey=null;setTimeout(maybeAutoMove,120);return;}
 
       const roomId=roomData().id;
       const movingToken=(state.room?.tokens||[]).find(t=>t.player_id===me()&&Number(t.token_no)===Number(n));
@@ -693,7 +693,7 @@
         els.ludoBoard?.classList.remove('piece-moving');
         renderRoom();
       }
-      if(moveError)showToast(moveError.message,'error');
+      if(moveError){state.autoMoveKey=null;setTimeout(maybeAutoMove,220);showToast(moveError.message,'error');}
     });
   }
   function maybeAutoMove(){
@@ -709,7 +709,7 @@
       const rr=roomData(),currentMoves=state.room?.legal_moves||[];
       const still=rr&&rr.status==='playing'&&rr.current_player_id===me()&&rr.turn_phase==='move'&&currentMoves.length===1&&Number(currentMoves[0].token_no)===Number(only.token_no);
       if(!still){state.autoMoveKey=null;return;}
-      if(state.busy||state.animating){state.autoMoveKey=null;maybeAutoMove();return;}
+      if(state.busy||state.animating){state.autoMoveKey=null;setTimeout(maybeAutoMove,120);return;}
       moveToken(Number(only.token_no));
     },280);
   }
