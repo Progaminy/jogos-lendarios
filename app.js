@@ -6,7 +6,7 @@
   const $ = (id) => document.getElementById(id);
 
   const state = {
-    token: localStorage.getItem(TOKEN_KEY) || '',
+    token: window.JLSession?.getPlayerToken?.() || localStorage.getItem(TOKEN_KEY) || '',
     data: null,
     selectedNumber: null,
     selectedPair: [],
@@ -375,24 +375,7 @@
     showWinModal('Parabéns!', `${noticeMessage} O valor foi creditado no seu saldo.`, noticeKey);
   }
 
-  async function rpc(name, args = {}) {
-    if (!cfg.supabaseUrl || !cfg.supabaseKey) throw new Error('Configuração do Supabase ausente.');
-    const response = await fetch(`${cfg.supabaseUrl}/rest/v1/rpc/${name}`, {
-      method: 'POST',
-      headers: {
-        apikey: cfg.supabaseKey,
-        Authorization: `Bearer ${cfg.supabaseKey}`,
-        'Content-Type': 'application/json',
-        Accept: 'application/json'
-      },
-      body: JSON.stringify(args)
-    });
-    const raw = await response.text();
-    let payload = null;
-    try { payload = raw ? JSON.parse(raw) : null; } catch { payload = raw; }
-    if (!response.ok) throw new Error(payload?.message || payload?.error || payload?.hint || `Erro ${response.status}`);
-    return payload;
-  }
+  const rpc = (name, args = {}) => window.JLApi.rpc(name, args);
 
   const FINANCIAL_REQUESTS_KEY = 'jl_financial_requests_v1';
 
@@ -437,9 +420,11 @@
   }
 
   function saveToken(token) {
-    state.token = token || '';
-    if (state.token) localStorage.setItem(TOKEN_KEY, state.token);
-    else localStorage.removeItem(TOKEN_KEY);
+    state.token = window.JLSession?.setPlayerToken?.(token) ?? String(token || '');
+    if (!window.JLSession) {
+      if (state.token) localStorage.setItem(TOKEN_KEY, state.token);
+      else localStorage.removeItem(TOKEN_KEY);
+    }
     window.JLNotifications?.setActive(Boolean(state.token));
   }
 
