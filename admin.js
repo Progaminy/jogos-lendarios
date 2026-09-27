@@ -489,13 +489,36 @@
     }
   }
 
-  async function runAction(fn, args, success) {
+  async function reauthenticateAdmin() {
+    const code = window.prompt('Por segurança, confirme novamente o código administrativo:');
+    if (code === null) return false;
+    try {
+      const result = await rpc('jl_admin_reauthenticate', {
+        p_token: state.token,
+        p_code: code
+      });
+      toast(result?.message || 'Autenticação reforçada confirmada.', 'success');
+      return true;
+    } catch (error) {
+      toast(error.message, 'error');
+      return false;
+    }
+  }
+
+  window.JLAdminReauthenticate = reauthenticateAdmin;
+
+  async function runAction(fn, args, success, retried = false) {
     try {
       const result = await rpc(fn, { p_token: state.token, ...args });
       toast(result?.message || success || 'Operação concluída.', 'success');
       await refresh(true);
       return result;
     } catch (error) {
+      if (!retried && /REAUTH_REQUIRED/i.test(error.message || '')) {
+        const ok = await reauthenticateAdmin();
+        if (ok) return runAction(fn, args, success, true);
+        return null;
+      }
       toast(error.message, 'error');
       return null;
     }
