@@ -41,6 +41,7 @@
     authModal: $('authModal'), closeAuth: $('closeAuth'), registerTab: $('registerTab'), loginTab: $('loginTab'),
     registerForm: $('registerForm'), loginForm: $('loginForm'), authMessage: $('authMessage'),
     registerName: $('registerName'), registerPhone: $('registerPhone'), registerPin: $('registerPin'), registerPinConfirm: $('registerPinConfirm'),
+    registerInviteCode: $('registerInviteCode'), registerInviteStatus: $('registerInviteStatus'),
     loginPhone: $('loginPhone'), loginPin: $('loginPin'),
     winModal: $('winModal'), winModalTitle: $('winModalTitle'), winModalMessage: $('winModalMessage'), winModalOk: $('winModalOk'),
     transactionModal: $('transactionModal'), transactionModalIcon: $('transactionModalIcon'), transactionModalEyebrow: $('transactionModalEyebrow'),
@@ -808,6 +809,44 @@
     setMessage(els.authMessage);
   }
 
+  async function validateInviteCodeInput() {
+    if (!els.registerInviteCode) return true;
+    const code = els.registerInviteCode.value.trim().toUpperCase();
+    els.registerInviteCode.value = code;
+    if (!code) {
+      if (els.registerInviteStatus) {
+        els.registerInviteStatus.textContent = '';
+        els.registerInviteStatus.style.color = '';
+      }
+      return true;
+    }
+    if (els.registerInviteStatus) {
+      els.registerInviteStatus.textContent = 'A validar código…';
+      els.registerInviteStatus.style.color = '';
+    }
+    try {
+      const result = await rpc('jl_validate_invite_code', { p_code: code });
+      if (!result?.valid) {
+        if (els.registerInviteStatus) {
+          els.registerInviteStatus.textContent = 'Código de convite inválido ou inativo.';
+          els.registerInviteStatus.style.color = '#ff8994';
+        }
+        return false;
+      }
+      if (els.registerInviteStatus) {
+        els.registerInviteStatus.textContent = 'Código válido · ' + (result.influencer || 'Influenciador');
+        els.registerInviteStatus.style.color = '#8df1bb';
+      }
+      return true;
+    } catch (error) {
+      if (els.registerInviteStatus) {
+        els.registerInviteStatus.textContent = error.message || 'Não foi possível validar o código.';
+        els.registerInviteStatus.style.color = '#ff8994';
+      }
+      return false;
+    }
+  }
+
   async function placeNumberBet(number, amount) {
     try {
       if (!(await ensureFunds('number', amount, 'apostar no Número Lendário'))) return;
@@ -882,17 +921,31 @@
     await placePairBet(state.selectedPair, amount);
   });
 
+  els.registerInviteCode?.addEventListener('blur', () => { validateInviteCodeInput(); });
+  els.registerInviteCode?.addEventListener('input', () => {
+    if (els.registerInviteStatus) {
+      els.registerInviteStatus.textContent = '';
+      els.registerInviteStatus.style.color = '';
+    }
+  });
+
   els.registerForm.addEventListener('submit', async (event) => {
     event.preventDefault();
     const pin = els.registerPin.value.trim();
     if (pin !== els.registerPinConfirm.value.trim()) return setMessage(els.authMessage, 'Os PINs não coincidem.', 'error');
+    if (!(await validateInviteCodeInput())) return setMessage(els.authMessage, 'Verifique o código de convite antes de continuar.', 'error');
     try {
       setMessage(els.authMessage, 'Criando conta…');
-      const result = await rpc('jl_register_player', { p_name: els.registerName.value.trim(), p_phone: els.registerPhone.value.trim(), p_pin: pin });
+      const result = await rpc('jl_register_player', {
+        p_name: els.registerName.value.trim(),
+        p_phone: els.registerPhone.value.trim(),
+        p_pin: pin,
+        p_invite_code: els.registerInviteCode?.value.trim() || null
+      });
       saveToken(result.token);
       closeAuth();
       await refresh(true);
-      showToast('Conta criada com sucesso.', 'success');
+      showToast(result.referral ? 'Conta criada com código de convite validado.' : 'Conta criada com sucesso.', 'success');
       await continuePendingBet();
     } catch (error) { setMessage(els.authMessage, error.message, 'error'); }
   });
