@@ -54,13 +54,14 @@
       '.jl-social-zone.hidden{display:none!important}',
       '.jl-social-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}',
       '.jl-social-head h2{margin:0}.jl-social-head .eyebrow{margin-bottom:3px}',
+      '.jl-social-head-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}',
       '.jl-social-counts{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}',
       '.jl-social-pill{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border:1px solid rgba(255,255,255,.11);border-radius:999px;background:rgba(255,255,255,.045);font-size:.72rem;font-weight:850;color:#dbe7f5}',
       '.jl-social-grid{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr);gap:12px}',
       '.jl-social-card{min-width:0}',
       '.jl-social-search{display:flex;gap:8px;margin-top:12px}',
       '.jl-social-search input{min-width:0;flex:1}',
-      '.jl-social-list{display:grid;gap:8px;margin-top:12px;max-height:480px;overflow:auto}',
+      '.jl-social-list{display:grid;gap:8px;margin-top:12px;max-height:320px;overflow:auto;overscroll-behavior:contain}',
       '.jl-social-player{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 12px;border:1px solid rgba(255,255,255,.09);border-radius:13px;background:rgba(255,255,255,.035)}',
       '.jl-social-player-main{min-width:0;display:flex;align-items:center;gap:10px}',
       '.jl-social-status{width:9px;height:9px;border-radius:50%;flex:0 0 auto;background:#66758a;box-shadow:0 0 0 4px rgba(102,117,138,.10)}',
@@ -87,16 +88,21 @@
     injectStyle();
     const section = document.createElement('section');
     section.id = 'socialZone';
-    section.className = 'jl-social-zone hidden';
+    section.className = 'jl-social-zone hidden jl-collapsible';
+    section.dataset.collapseDefault = 'closed';
     section.innerHTML =
       '<div class="jl-social-head">' +
         '<div><p class="eyebrow">JOGADORES</p><h2>Seguindo e online</h2></div>' +
-        '<div class="jl-social-counts">' +
-          '<span id="socialOnlineCount" class="jl-social-pill">0 online</span>' +
-          '<span id="socialFollowingCount" class="jl-social-pill">0 seguindo</span>' +
-          '<span id="socialFollowersCount" class="jl-social-pill">0 seguidores</span>' +
+        '<div class="jl-social-head-actions">' +
+          '<div class="jl-social-counts">' +
+            '<span id="socialOnlineCount" class="jl-social-pill">0 online</span>' +
+            '<span id="socialFollowingCount" class="jl-social-pill">0 seguindo</span>' +
+            '<span id="socialFollowersCount" class="jl-social-pill">0 seguidores</span>' +
+          '</div>' +
+          '<button class="button ghost tiny jl-collapse-toggle" type="button" aria-expanded="false">Expandir</button>' +
         '</div>' +
       '</div>' +
+      '<div class="jl-collapse-body">' +
       '<div class="jl-social-grid">' +
         '<section class="panel jl-social-card">' +
           '<p class="eyebrow">ENCONTRAR</p><h3>Jogadores</h3>' +
@@ -110,6 +116,7 @@
           '<div class="section-head"><div><p class="eyebrow">SEGUINDO</p><h3>Minha lista</h3></div><button id="refreshSocial" class="button ghost tiny" type="button">Atualizar</button></div>' +
           '<div id="socialFollowingList" class="jl-social-list"><div class="jl-social-empty">Você ainda não segue nenhum jogador.</div></div>' +
         '</section>' +
+      '</div>' +
       '</div>';
 
     anchor.insertAdjacentElement('afterend', section);
