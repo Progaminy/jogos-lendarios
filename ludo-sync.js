@@ -56,12 +56,13 @@
       visibleOnly: options.visibleOnly !== false,
       silent: options.silent !== false,
       running: false,
-      nextAt: options.immediate === false ? Date.now() + 1 : 0,
+      nextAt: 0,
       lastRunAt: 0,
       lastError: ''
     };
     tasks.set(task.name, task);
-    if (options.immediate !== false) queueMicrotask(() => runTask(task));
+    if (options.immediate === false) scheduleNext(task);
+    else queueMicrotask(() => runTask(task));
     return () => tasks.delete(task.name);
   }
 
