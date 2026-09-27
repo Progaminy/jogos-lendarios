@@ -9,6 +9,7 @@
   const LEGACY_DEVICE_KEY = 'jl_notifications_device_enabled_v1';
   const MAX_ITEMS = 80;
   const POLL_MS = 8000;
+  const PUSH_POLL_MS = 30000;
 
   const ui = {
     root: null,
@@ -428,10 +429,20 @@
 
   function startPolling() {
     stopPolling();
+    if (window.JLLudoSync?.register) {
+      window.JLLudoSync.register('notifications', syncServer, {
+        interval: () => pushReady ? PUSH_POLL_MS : POLL_MS,
+        when: () => active && Boolean(sessionToken),
+        visibleOnly: true,
+        immediate: false
+      });
+      return;
+    }
     pollTimer = setInterval(syncServer, POLL_MS);
   }
 
   function stopPolling() {
+    window.JLLudoSync?.unregister?.('notifications');
     if (pollTimer) clearInterval(pollTimer);
     pollTimer = null;
   }
