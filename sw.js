@@ -31,7 +31,15 @@ self.addEventListener('push', (event) => {
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   const data = event.notification.data || {};
-  const href = new URL(String(data.href || './index.html'), self.location.origin).href;
+  const originalHref = String(data.href || './index.html');
+
+  let readingHref = new URL('./index.html', self.location.origin).href;
+  try {
+    const target = new URL(originalHref, self.location.origin);
+    if (target.pathname.endsWith('/ludo.html')) {
+      readingHref = new URL('./ludo.html', self.location.origin).href;
+    }
+  } catch {}
 
   event.waitUntil((async () => {
     const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
@@ -41,13 +49,15 @@ self.addEventListener('notificationclick', (event) => {
         client.postMessage({
           type: 'jl-notification-open',
           id: String(data.id || ''),
-          href
+          href: readingHref
         });
         await client.focus();
-        if ('navigate' in client && client.url !== href) await client.navigate(href);
+        if ('navigate' in client && new URL(client.url).pathname !== new URL(readingHref).pathname) {
+          await client.navigate(readingHref);
+        }
         return;
       } catch {}
     }
-    await self.clients.openWindow(href);
+    await self.clients.openWindow(readingHref);
   })());
 });
