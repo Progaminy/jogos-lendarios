@@ -82,29 +82,39 @@
     </section>
 
     <section id="lobby" class="lobby-grid hidden">
-      <div class="panel">
-        <div class="section-head"><div><p class="eyebrow">CRIAR SALA</p><h2>Nova partida</h2></div><span id="balanceBadge" class="balance-pill">0,00 MZN</span></div>
-        <form id="createRoomForm" class="form-grid">
-          <div class="player-count-field"><span>Jogadores</span><div class="player-count-picker" data-select-id="createPlayers" role="group" aria-label="Quantidade de jogadores"><button type="button" data-player-count="2">2</button><button type="button" data-player-count="3">3</button><button type="button" data-player-count="4" class="active">4</button></div><select id="createPlayers" class="player-count-select" aria-hidden="true" tabindex="-1"><option value="2">2 jogadores</option><option value="3">3 jogadores</option><option value="4" selected>4 jogadores</option></select></div>
-          <label><span>Modo</span><select id="createMode"><option value="solo">Cada um por si</option><option value="partners">Parceiros 2 × 2</option></select></label>
-          <label><span>Aposta por jogador</span><div class="money"><span>MZN</span><input id="createBet" type="number" min="10" step="1" value="10" required></div></label>
-          <label class="check-row"><input id="createPublic" type="checkbox"><span>Sala pública · pode entrar pelo código</span></label>
-          <button class="button primary wide" type="submit">Criar sala de Ludo</button>
-        </form>
+      <div class="panel jl-collapsible" data-collapse-default="closed">
+        <div class="section-head">
+          <div><p class="eyebrow">CRIAR SALA</p><h2>Nova partida</h2></div>
+          <div class="jl-collapse-actions"><span id="balanceBadge" class="balance-pill">0,00 MZN</span><button class="button ghost tiny jl-collapse-toggle" type="button" aria-expanded="false">Expandir</button></div>
+        </div>
+        <div class="jl-collapse-body">
+          <form id="createRoomForm" class="form-grid">
+            <div class="player-count-field"><span>Jogadores</span><div class="player-count-picker" data-select-id="createPlayers" role="group" aria-label="Quantidade de jogadores"><button type="button" data-player-count="2">2</button><button type="button" data-player-count="3">3</button><button type="button" data-player-count="4" class="active">4</button></div><select id="createPlayers" class="player-count-select" aria-hidden="true" tabindex="-1"><option value="2">2 jogadores</option><option value="3">3 jogadores</option><option value="4" selected>4 jogadores</option></select></div>
+            <label><span>Modo</span><select id="createMode"><option value="solo">Cada um por si</option><option value="partners">Parceiros 2 × 2</option></select></label>
+            <label><span>Aposta por jogador</span><div class="money"><span>MZN</span><input id="createBet" type="number" min="10" step="1" value="10" required></div></label>
+            <label class="check-row"><input id="createPublic" type="checkbox"><span>Sala pública · pode entrar pelo código</span></label>
+            <button class="button primary wide" type="submit">Criar sala de Ludo</button>
+          </form>
+        </div>
       </div>
 
-      <div class="panel">
-        <p class="eyebrow">ENTRAR / ESPERAR</p><h2>Encontrar partida</h2>
-        <form id="joinCodeForm" class="inline-form"><input id="joinCode" placeholder="LUDO-ABC123" maxlength="11"><button class="button secondary" type="submit">Entrar pelo código</button></form>
-        <div class="divider"></div>
-        <h3>Ficar à espera</h3>
-        <form id="queueForm" class="form-grid compact">
-          <div class="player-count-field"><span>Jogadores</span><div class="player-count-picker" data-select-id="queuePlayers" role="group" aria-label="Quantidade de jogadores"><button type="button" data-player-count="2">2</button><button type="button" data-player-count="3">3</button><button type="button" data-player-count="4" class="active">4</button></div><select id="queuePlayers" class="player-count-select" aria-hidden="true" tabindex="-1"><option value="2">2</option><option value="3">3</option><option value="4" selected>4</option></select></div>
-          <label><span>Modo</span><select id="queueMode"><option value="solo">Cada um por si</option><option value="partners">Parceiros</option></select></label>
-          <label><span>Aposta</span><div class="money"><span>MZN</span><input id="queueBet" type="number" min="10" step="1" value="10"></div></label>
-          <button id="queueButton" class="button secondary" type="submit">Quero jogar</button>
-        </form>
-        <div id="queueStatus" class="status-box hidden"></div>
+      <div class="panel jl-collapsible" data-collapse-default="closed">
+        <div class="section-head">
+          <div><p class="eyebrow">ENTRAR / ESPERAR</p><h2>Encontrar partida</h2></div>
+          <button class="button ghost tiny jl-collapse-toggle" type="button" aria-expanded="false">Expandir</button>
+        </div>
+        <div class="jl-collapse-body">
+          <form id="joinCodeForm" class="inline-form"><input id="joinCode" placeholder="LUDO-ABC123" maxlength="11"><button class="button secondary" type="submit">Entrar pelo código</button></form>
+          <div class="divider"></div>
+          <h3>Ficar à espera</h3>
+          <form id="queueForm" class="form-grid compact">
+            <div class="player-count-field"><span>Jogadores</span><div class="player-count-picker" data-select-id="queuePlayers" role="group" aria-label="Quantidade de jogadores"><button type="button" data-player-count="2">2</button><button type="button" data-player-count="3">3</button><button type="button" data-player-count="4" class="active">4</button></div><select id="queuePlayers" class="player-count-select" aria-hidden="true" tabindex="-1"><option value="2">2</option><option value="3">3</option><option value="4" selected>4</option></select></div>
+            <label><span>Modo</span><select id="queueMode"><option value="solo">Cada um por si</option><option value="partners">Parceiros</option></select></label>
+            <label><span>Aposta</span><div class="money"><span>MZN</span><input id="queueBet" type="number" min="10" step="1" value="10"></div></label>
+            <button id="queueButton" class="button secondary" type="submit">Quero jogar</button>
+          </form>
+          <div id="queueStatus" class="status-box hidden"></div>
+        </div>
       </div>
 
     </section>
@@ -254,7 +264,8 @@
   <script src="./logout-confirm.js?v=20260924-2" defer></script>
   <script src="./notifications.js?v=20260927-4" defer></script>
   <script src="./ludo.js?v=20260927-4" defer></script>
-  <script src="./social.js?v=20260927-2" defer></script>
+  <script src="./social.js?v=20260927-3" defer></script>
+  <script src="./ludo-collapse.js?v=20260927-1" defer></script>
   <script src="./ludo-policy.js?v=20260927-1" defer></script>
 </body>
 </html>
