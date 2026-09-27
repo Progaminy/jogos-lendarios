@@ -351,49 +351,10 @@
   function checkLudoWinNotice(){const r=roomData();if(!r||r.status!=='finished'||!els.winModal?.classList.contains('hidden'))return;const payout=(state.room?.payouts||[]).find(p=>p.player_id===me()&&Number(p.net||0)>0);if(!payout)return;const key=`${r.id||r.code||'room'}:${me()}:${payout.net}`;if(ludoWinSeen().has(key))return;window.JLNotifications?.push({id:`ludo-win:${key}`,title:'Vitória no Ludo',message:`Você ganhou ${money(payout.net)} MZN na partida ${r.code||r.id||'—'}.`,type:'win',href:'./ludo.html#resultPanel',createdAt:r.finished_at||r.ended_at||r.updated_at||new Date().toISOString()});showLudoWinNotice(key,payout.net,r.code||r.id||'—',ludoRoundTime(r));}
   const rpc=(name,args={})=>window.JLApi.rpc(name,args);
 
-  function maxRoomItemId(items){
-    let max=0;
-    for(const item of items||[])max=Math.max(max,Number(item?.id)||0);
-    return max;
-  }
-  function mergeRoomItems(previous,incoming,limit=50){
-    const map=new Map();
-    for(const item of [...(previous||[]),...(incoming||[])])map.set(String(item?.id??''),item);
-    return [...map.values()]
-      .sort((a,b)=>(Number(a?.id)||0)-(Number(b?.id)||0))
-      .slice(-limit);
-  }
-  async function attachRoomExtras(base,previous=null){
-    if(!base?.room?.id)return base;
-    const same=Boolean(previous?.room?.id&&previous.room.id===base.room.id);
-    const afterEvent=same?maxRoomItemId(previous.events):0;
-    const afterChat=same?maxRoomItemId(previous.chat):0;
-    const includePayouts=base.room.status==='finished';
-    let delta=null;
-    try{
-      delta=await rpc('jl_ludo_room_delta',{
-        p_token:state.token,
-        p_room:base.room.id,
-        p_after_event:afterEvent,
-        p_after_chat:afterChat,
-        p_include_payouts:includePayouts
-      });
-    }catch(e){
-      console.warn('ludo delta',e.message);
-    }
-    const incomingEvents=delta?.events||[];
-    const incomingChat=delta?.chat||[];
-    const events=same?mergeRoomItems(previous.events,incomingEvents):incomingEvents.slice(-50);
-    const chat=same?mergeRoomItems(previous.chat,incomingChat):incomingChat.slice(-50);
-    const payouts=includePayouts
-      ? (delta?.payouts||previous?.payouts||[])
-      : (same?(previous?.payouts||[]):[]);
-    return {...base,events,chat,payouts};
-  }
-  async function loadRoomSnapshot(roomId,previous=null){
-    const light=await rpc('jl_ludo_room_state_light',{p_token:state.token,p_room:roomId});
-    return attachRoomExtras(light,previous);
-  }
+  const ludoRoomState=window.JLLudoRoomState.create(()=>state.token);
+  const attachRoomExtras=(base,previous=null)=>ludoRoomState.attachExtras(base,previous);
+  const loadRoomSnapshot=(roomId,previous=null)=>ludoRoomState.load(roomId,previous);
+
   function saveToken(t){state.token=window.JLSession?.setPlayerToken?.(t)??String(t||'');if(!window.JLSession){if(state.token)localStorage.setItem(TOKEN_KEY,state.token);else localStorage.removeItem(TOKEN_KEY);}window.JLNotifications?.setActive(Boolean(state.token));}
   function openAuth(mode='login'){els.authModal.classList.remove('hidden');switchAuth(mode);} function closeAuth(){els.authModal.classList.add('hidden');setAuthMessage('');}
   function switchAuth(mode){const login=mode==='login';els.loginForm.classList.toggle('hidden',!login);els.registerForm.classList.toggle('hidden',login);els.loginTab.classList.toggle('active',login);els.registerTab.classList.toggle('active',!login);}
