@@ -344,9 +344,9 @@
   function ludoRoundTime(r){const raw=r?.finished_at||r?.ended_at||r?.updated_at||r?.created_at;if(!raw)return'hora não disponível';const d=new Date(raw);return Number.isNaN(d.getTime())?'hora não disponível':d.toLocaleTimeString('pt-MZ',{hour:'2-digit',minute:'2-digit'});}
   function showLudoWinNotice(key,amount,roundLabel,roundTime){if(!els.winModal)return;els.winModalTitle.textContent='Parabéns!';els.winModalMessage.textContent=`Você venceu a partida de Ludo e ganhou ${money(amount)} MZN. Partida ${roundLabel} · hora ${roundTime}. O valor foi creditado no seu saldo.`;els.winModal.dataset.winKey=key;els.winModal.classList.remove('hidden');document.body.classList.add('modal-open');}
   function closeLudoWinNotice(){if(!els.winModal)return;const key=els.winModal.dataset.winKey;if(key){const seen=ludoWinSeen();seen.add(key);saveLudoWinSeen(seen);}els.winModal.classList.add('hidden');document.body.classList.remove('modal-open');delete els.winModal.dataset.winKey;}
-  function checkLudoWinNotice(){const r=roomData();if(!r||r.status!=='finished'||!els.winModal?.classList.contains('hidden'))return;const payout=(state.room?.payouts||[]).find(p=>p.player_id===me()&&Number(p.net||0)>0);if(!payout)return;const key=`${r.id||r.code||'room'}:${me()}:${payout.net}`;if(ludoWinSeen().has(key))return;showLudoWinNotice(key,payout.net,r.code||r.id||'—',ludoRoundTime(r));}
+  function checkLudoWinNotice(){const r=roomData();if(!r||r.status!=='finished'||!els.winModal?.classList.contains('hidden'))return;const payout=(state.room?.payouts||[]).find(p=>p.player_id===me()&&Number(p.net||0)>0);if(!payout)return;const key=`${r.id||r.code||'room'}:${me()}:${payout.net}`;if(ludoWinSeen().has(key))return;window.JLNotifications?.push({id:`ludo-win:${key}`,title:'Vitória no Ludo',message:`Você ganhou ${money(payout.net)} MZN na partida ${r.code||r.id||'—'}.`,type:'win',href:'./ludo.html#resultPanel',createdAt:r.finished_at||r.ended_at||r.updated_at||new Date().toISOString()});showLudoWinNotice(key,payout.net,r.code||r.id||'—',ludoRoundTime(r));}
   async function rpc(name,args={}){if(!cfg.supabaseUrl||!cfg.supabaseKey)throw new Error('Configuração do Supabase ausente.');const res=await fetch(`${cfg.supabaseUrl}/rest/v1/rpc/${name}`,{method:'POST',headers:{apikey:cfg.supabaseKey,Authorization:`Bearer ${cfg.supabaseKey}`,'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify(args)});const text=await res.text();let data=null;try{data=text?JSON.parse(text):null}catch{data=text}if(!res.ok)throw new Error(data?.message||data?.hint||data?.error||`Erro ${res.status}`);return data;}
-  function saveToken(t){state.token=t||'';if(t)localStorage.setItem(TOKEN_KEY,t);else localStorage.removeItem(TOKEN_KEY);}
+  function saveToken(t){state.token=t||'';if(t)localStorage.setItem(TOKEN_KEY,t);else localStorage.removeItem(TOKEN_KEY);window.JLNotifications?.setActive(Boolean(state.token));}
   function openAuth(mode='login'){els.authModal.classList.remove('hidden');switchAuth(mode);} function closeAuth(){els.authModal.classList.add('hidden');setAuthMessage('');}
   function switchAuth(mode){const login=mode==='login';els.loginForm.classList.toggle('hidden',!login);els.registerForm.classList.toggle('hidden',login);els.loginTab.classList.toggle('active',login);els.registerTab.classList.toggle('active',!login);}
   function me(){return state.room?.identity?.player_id||state.status?.identity?.player_id||null;} function roomData(){return state.room?.room||null;} function roomPlayers(){return state.room?.players||[];} function myRoomPlayer(){return roomPlayers().find(p=>p.player_id===me());} function isHost(){return roomData()?.host_id===me();} function rules(){return roomData()?.rules||{};}
@@ -410,7 +410,7 @@
       renderRoom();
     }catch{}
   }
-  function renderAll(){const authed=Boolean(state.token&&state.status?.identity);els.ludoStatusStrip?.classList.toggle('hidden',!authed);els.loggedOut.classList.toggle('hidden',authed);els.lobby.classList.toggle('hidden',!authed||Boolean(state.room));els.notificationCenter?.classList.toggle('hidden',!authed);els.room.classList.toggle('hidden',!state.room);els.boardLobby.classList.toggle('hidden',Boolean(state.room));if(!state.room)renderLobbyBoard();if(authed){const i=state.status.identity;els.identityBadge.textContent=`${i.code} · ${money(i.balance)} MZN`;els.accountButton.textContent=i.name||i.code;els.accountMenuCode.textContent=`${i.name||'Jogador'} · ${i.code}`;els.accountMenuBalance.textContent=`${money(i.balance)} MZN`;els.balanceBadge.textContent=`${money(i.balance)} MZN`;renderLobby();}else{els.identityBadge.textContent='Não autenticado';els.accountButton.textContent='Entrar';els.accountMenu?.classList.add('hidden');els.accountButton.setAttribute('aria-expanded','false');}if(state.room)renderRoom();}
+  function renderAll(){const authed=Boolean(state.token&&state.status?.identity);window.JLNotifications?.setActive(authed);els.ludoStatusStrip?.classList.toggle('hidden',!authed);els.loggedOut.classList.toggle('hidden',authed);els.lobby.classList.toggle('hidden',!authed||Boolean(state.room));els.notificationCenter?.classList.toggle('hidden',!authed);els.room.classList.toggle('hidden',!state.room);els.boardLobby.classList.toggle('hidden',Boolean(state.room));if(!state.room)renderLobbyBoard();if(authed){const i=state.status.identity;els.identityBadge.textContent=`${i.code} · ${money(i.balance)} MZN`;els.accountButton.textContent=i.name||i.code;els.accountMenuCode.textContent=`${i.name||'Jogador'} · ${i.code}`;els.accountMenuBalance.textContent=`${money(i.balance)} MZN`;els.balanceBadge.textContent=`${money(i.balance)} MZN`;renderLobby();}else{els.identityBadge.textContent='Não autenticado';els.accountButton.textContent='Entrar';els.accountMenu?.classList.add('hidden');els.accountButton.setAttribute('aria-expanded','false');}if(state.room)renderRoom();}
   function renderLobby(){
     const s=state.status;if(!s)return;
     if(s.queue){
@@ -422,6 +422,16 @@
     }
 
     const invites=s.invites||[];
+    for(const i of invites){
+      window.JLNotifications?.push({
+        id:`ludo-invite:${i.id}`,
+        title:`Convite de ${i.host||i.host_code||'jogador'}`,
+        message:`${i.room_code} · ${i.player_count} jogadores · ${i.mode} · ${money(i.bet_amount)} MZN`,
+        type:'ludo-invite',
+        href:'./ludo.html#notificationCenter',
+        createdAt:i.created_at||new Date().toISOString()
+      });
+    }
     const challenges=s.public_challenges||[];
     const roomBusy=Boolean(state.room);
     const canSwitchOwnRoom=Boolean(state.room&&isHost()&&['waiting','negotiating'].includes(roomData()?.status));
