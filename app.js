@@ -377,47 +377,7 @@
 
   const rpc = (name, args = {}) => window.JLApi.rpc(name, args);
 
-  const FINANCIAL_REQUESTS_KEY = 'jl_financial_requests_v1';
-
-  function newFinancialRequestKey() {
-    if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
-    const bytes = new Uint8Array(16);
-    globalThis.crypto?.getRandomValues?.(bytes);
-    return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('') || `${Date.now()}-${Math.random()}`;
-  }
-
-  function financialRequestStore() {
-    try { return JSON.parse(sessionStorage.getItem(FINANCIAL_REQUESTS_KEY) || '{}') || {}; }
-    catch { return {}; }
-  }
-
-  function financialRequestKey(scope, args) {
-    const payload = { ...args };
-    delete payload.p_token;
-    delete payload.p_idempotency_key;
-    const fingerprint = JSON.stringify(payload);
-    const store = financialRequestStore();
-    const current = store[scope];
-    if (current?.fingerprint === fingerprint && current?.key) return current.key;
-    const key = newFinancialRequestKey();
-    store[scope] = { fingerprint, key };
-    try { sessionStorage.setItem(FINANCIAL_REQUESTS_KEY, JSON.stringify(store)); } catch {}
-    return key;
-  }
-
-  function clearFinancialRequestKey(scope, key) {
-    const store = financialRequestStore();
-    if (store[scope]?.key !== key) return;
-    delete store[scope];
-    try { sessionStorage.setItem(FINANCIAL_REQUESTS_KEY, JSON.stringify(store)); } catch {}
-  }
-
-  async function financialRpc(scope, name, args) {
-    const key = financialRequestKey(scope, args);
-    const result = await rpc(name, { ...args, p_idempotency_key: key });
-    clearFinancialRequestKey(scope, key);
-    return result;
-  }
+  const financialRpc=(scope,name,args)=>window.JLFinancial.rpc(scope,name,args);
 
   function saveToken(token) {
     state.token = window.JLSession?.setPlayerToken?.(token) ?? String(token || '');
