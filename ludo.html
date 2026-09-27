@@ -202,6 +202,7 @@
       <div id="rulesAcceptSummary" class="flow-summary"></div>
       <div class="flow-actions">
         <button id="rulesModalDecline" class="button danger" type="button">Não concordo</button>
+        <button id="rulesModalEdit" class="button secondary" type="button">Retificar e enviar</button>
         <button id="rulesModalAccept" class="button success" type="button">Aceitar regras</button>
       </div>
     </div>
@@ -214,6 +215,14 @@
       <h2 id="stakeAcceptTitle">Aceitar valor</h2>
       <p id="stakeAcceptText" class="flow-value">—</p>
       <p id="stakeBalanceText" class="muted">—</p>
+      <div class="flow-counteroffer">
+        <label>
+          <span>Propor outro valor por jogador</span>
+          <div class="money"><span>MZN</span><input id="stakeProposalAmount" type="number" min="10" step="1" inputmode="numeric"></div>
+        </label>
+        <button id="stakeProposalSend" class="button secondary wide" type="button">Enviar novo valor</button>
+        <small class="muted">Enviar uma proposta não retira dinheiro do saldo. O valor só é reservado quando você confirmar.</small>
+      </div>
       <button id="stakeModalAccept" class="button primary wide large" type="button">Confirmar valor e entrar</button>
     </div>
   </div>
@@ -243,8 +252,8 @@
   <script src="./support-ui.js" defer></script>
   <script src="./recovery-ui.js?v=20260925-1" defer></script>
   <script src="./logout-confirm.js?v=20260924-2" defer></script>
-  <script src="./notifications.js?v=20260927-3" defer></script>
-  <script src="./ludo.js?v=20260927-3" defer></script>
+  <script src="./notifications.js?v=20260927-4" defer></script>
+  <script src="./ludo.js?v=20260927-4" defer></script>
   <script src="./social.js?v=20260927-2" defer></script>
   <script src="./ludo-policy.js?v=20260927-1" defer></script>
 </body>
