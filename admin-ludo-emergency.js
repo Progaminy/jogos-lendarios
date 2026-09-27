@@ -60,6 +60,18 @@
     return payload;
   }
 
+  async function secureRpc(name, args = {}, retried = false) {
+    try {
+      return await rpc(name, args);
+    } catch (error) {
+      if (!retried && /REAUTH_REQUIRED/i.test(error.message || '') && typeof window.JLAdminReauthenticate === 'function') {
+        const ok = await window.JLAdminReauthenticate();
+        if (ok) return secureRpc(name, args, true);
+      }
+      throw error;
+    }
+  }
+
   function toast(message, type = '') {
     if (!ui.toast) return;
     ui.toast.textContent = message;
@@ -207,7 +219,7 @@
     ui.message.textContent = 'A cancelar todos os jogos e devolver apostas…';
 
     try {
-      const result = await rpc('jl_admin_cancel_all_ludo', {
+      const result = await secureRpc('jl_admin_cancel_all_ludo', {
         p_token: token(),
         p_reason: (ui.reason.value || '').trim() || 'Cancelamento administrativo de emergência'
       });
@@ -240,7 +252,7 @@
     ui.message.textContent = `A cancelar ${roomCode}…`;
 
     try {
-      const result = await rpc('jl_admin_cancel_ludo_room', {
+      const result = await secureRpc('jl_admin_cancel_ludo_room', {
         p_token: token(),
         p_room: roomId,
         p_reason: (ui.reason.value || '').trim() || 'Cancelamento administrativo de partida'
