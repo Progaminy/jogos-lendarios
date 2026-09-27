@@ -24,6 +24,8 @@
   let syncBusy = false;
   let swRegistration = null;
   let pushReady = false;
+  let autoPermissionBusy = false;
+  let autoPermissionAttempted = false;
   let sessionToken = localStorage.getItem(TOKEN_KEY) || '';
 
   function token() {
@@ -521,6 +523,39 @@
     else await enableDeviceNotifications();
   }
 
+  async function autoEnableDeviceNotifications() {
+    if (!active || !sessionToken || autoPermissionBusy) return;
+    if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) {
+      updateDeviceButton('Não suportado');
+      return;
+    }
+    if (Notification.permission === 'denied') {
+      updateDeviceButton('Bloqueado no navegador');
+      return;
+    }
+
+    autoPermissionBusy = true;
+    try {
+      if (Notification.permission === 'default') {
+        if (autoPermissionAttempted) return;
+        autoPermissionAttempted = true;
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') {
+          updateDeviceButton('Permissão não concedida');
+          return;
+        }
+      }
+      await registerPushSubscription(false);
+      updateDeviceButton('Avisos no aparelho: ligados');
+    } catch (error) {
+      pushReady = false;
+      updateDeviceButton();
+      console.warn('push auto enable', error && error.message ? error.message : error);
+    } finally {
+      autoPermissionBusy = false;
+    }
+  }
+
   async function silentPushSync() {
     if (!active || !sessionToken) return;
     const enabledPreference =
@@ -598,7 +633,7 @@
     if (active) {
       startPolling();
       syncServer();
-      silentPushSync();
+      autoEnableDeviceNotifications();
     } else {
       stopPolling();
       pushReady = false;
@@ -629,7 +664,7 @@
     if (active) {
       startPolling();
       syncServer();
-      silentPushSync();
+      autoEnableDeviceNotifications();
     }
   };
 
