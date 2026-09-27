@@ -101,81 +101,17 @@
     setTimeout(()=>els.dice?.classList.remove('dice-landed'),190);
   }
 
-  function updateSoundButton(){
-    if(!els.soundToggle)return;
-    els.soundToggle.textContent=state.soundEnabled?'🔊 Som':'🔇 Som';
-    els.soundToggle.setAttribute('aria-pressed',state.soundEnabled?'true':'false');
-    els.soundToggle.title=state.soundEnabled?'Desativar sons do Ludo':'Ativar sons do Ludo';
-  }
-  function toggleSound(){
-    state.soundEnabled=!state.soundEnabled;
-    localStorage.setItem(SOUND_KEY,state.soundEnabled?'1':'0');
-    if(state.soundEnabled){
-      ensureAudio();
-      soundTone(520,.08,.03,0,'triangle');
-      showToast('Som do Ludo ligado.','success');
-    }else{
-      showToast('Som do Ludo desligado.');
-    }
-    updateSoundButton();
-  }
-  function ensureAudio(){
-    if(!state.soundEnabled)return null;
-    const AudioCtx=window.AudioContext||window.webkitAudioContext;
-    if(!AudioCtx)return null;
-    if(!state.audioCtx)state.audioCtx=new AudioCtx();
-    if(state.audioCtx.state==='suspended')state.audioCtx.resume().catch(()=>{});
-    return state.audioCtx;
-  }
-  function soundTone(freq,duration,volume=.035,delay=0,type='triangle'){
-    const ctx=ensureAudio();if(!ctx)return;
-    const start=ctx.currentTime+delay;
-    const osc=ctx.createOscillator(),gain=ctx.createGain();
-    osc.type=type;osc.frequency.setValueAtTime(freq,start);
-    gain.gain.setValueAtTime(.0001,start);
-    gain.gain.exponentialRampToValueAtTime(Math.max(.0002,volume),start+.008);
-    gain.gain.exponentialRampToValueAtTime(.0001,start+duration);
-    osc.connect(gain);gain.connect(ctx.destination);osc.start(start);osc.stop(start+duration+.02);
-  }
-  function playRollSound(){
-    if(!state.soundEnabled)return;
-    ensureAudio();
-    [0,.045,.09,.135,.18,.225].forEach((d,i)=>soundTone(170+(i%3)*45,.045,.032,d,i%2?'square':'triangle'));
-  }
-  function playStepSound(stepIndex){
-    if(!state.soundEnabled)return;
-    soundTone(300+(stepIndex%2)*55,.045,.022,0,'sine');
-  }
-  function playCaptureSound(){
-    if(!state.soundEnabled)return;
-    soundTone(620,.07,.07,0,'square');
-    soundTone(310,.11,.075,.07,'sawtooth');
-  }
-  function playHomeSound(){
-    if(!state.soundEnabled)return;
-    [440,660,880].forEach((f,i)=>soundTone(f,.12,.055,i*.08,'triangle'));
-  }
-  function noiseBurst(delay=0,duration=.18,volume=.08){
-    const ctx=ensureAudio();if(!ctx)return;
-    const length=Math.max(1,Math.floor(ctx.sampleRate*duration));
-    const buffer=ctx.createBuffer(1,length,ctx.sampleRate);
-    const data=buffer.getChannelData(0);
-    for(let i=0;i<length;i++)data[i]=(Math.random()*2-1)*(1-i/length);
-    const src=ctx.createBufferSource(),gain=ctx.createGain();
-    src.buffer=buffer;
-    const start=ctx.currentTime+delay;
-    gain.gain.setValueAtTime(Math.max(.001,volume),start);
-    gain.gain.exponentialRampToValueAtTime(.0001,start+duration);
-    src.connect(gain);gain.connect(ctx.destination);src.start(start);
-  }
-  function playFireworksSound(){
-    if(!state.soundEnabled)return;
-    [0,.22,.46,.72].forEach((d,i)=>{
-      soundTone(520+i*90,.18,.045,d,'sine');
-      soundTone(980+i*70,.10,.035,d+.08,'triangle');
-      noiseBurst(d+.12,.24,.10);
-    });
-  }
+  const ludoSound=window.JLLudoSound.create({state,els,showToast});
+  const {
+    updateSoundButton,
+    toggleSound,
+    ensureAudio,
+    playRollSound,
+    playStepSound,
+    playCaptureSound,
+    playHomeSound,
+    playFireworksSound
+  }=ludoSound;
   function processGameEffects(room){
     const events=(room?.events||[]).slice().sort((a,b)=>Number(a.id)-Number(b.id));
     if(!events.length)return;
@@ -189,61 +125,22 @@
     }
     state.lastFxEventId=Math.max(state.lastFxEventId,maxId);
   }
-  const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
   const TOKEN_STEP_MS=95;
-  function tokenCoord(color,step,tokenNo){
-    if(step===-1)return BASE[color]?.[Number(tokenNo)-1]||null;
-    if(step<=TRACK_LAST_STEP)return PATH[(START[color]+step)%52];
-    if(step<=HOME_LAST_STEP)return HOME[color]?.[step-HOME_FIRST_STEP]||null;
-    if(step===FINISH_STEP)return FINISH_CELL[color]||[7,7];
-    return FINISH_CELL[color]||[7,7];
-  }
-  async function animateTokenPath(playerId,tokenNo,color,fromSteps,toSteps){
-    if(!els.ludoBoard||!Number.isFinite(fromSteps)||!Number.isFinite(toSteps)||toSteps<=fromSteps)return;
-    const selector=`[data-player-id="${CSS.escape(String(playerId))}"][data-token-no="${Number(tokenNo)}"]`;
-    const piece=els.ludoBoard.querySelector(selector);
-    if(!piece)return;
-    const totalSteps=toSteps-fromSteps;
-    els.ludoBoard.classList.add('piece-moving');
-    piece.classList.add('path-moving');
-    els.rollDice.disabled=true;
-    let visualIndex=0;
-    try{
-      for(let step=fromSteps+1;step<=toSteps;step++){
-        const coord=tokenCoord(color,step,tokenNo);
-        if(!coord)continue;
-        const cell=els.ludoBoard.querySelector(`[data-row="${coord[0]}"][data-col="${coord[1]}"]`);
-        if(!cell)continue;
-        visualIndex+=1;
-        els.moveHint.textContent=`Peão em movimento · ${visualIndex}/${totalSteps}`;
-        piece.style.setProperty('--dx','0%');
-        piece.style.setProperty('--dy','0%');
-        cell.appendChild(piece);
-        piece.classList.remove('step-hop');
-        void piece.offsetWidth;
-        piece.classList.add('step-hop');
-        playStepSound(visualIndex);
-        await wait(TOKEN_STEP_MS);
-      }
-    }finally{
-      piece.classList.remove('step-hop','path-moving');
-      els.ludoBoard.classList.remove('piece-moving');
-    }
-  }
-  function detectForwardMove(previous,next){
-    if(!previous?.tokens||!next?.tokens)return null;
-    const prev=new Map(previous.tokens.map(t=>[`${t.player_id}:${t.token_no}`,Number(t.steps)]));
-    for(const t of next.tokens){
-      const from=prev.get(`${t.player_id}:${t.token_no}`);
-      const to=Number(t.steps);
-      if(from===undefined)continue;
-      if((from===-1&&to===0)||(from>=0&&to>from)){
-        const p=(next.players||[]).find(x=>x.player_id===t.player_id);
-        if(p)return {playerId:t.player_id,tokenNo:Number(t.token_no),color:p.color,fromSteps:from,toSteps:to};
-      }
-    }
-    return null;
-  }
+  const ludoAnimation=window.JLLudoAnimation.create({
+    els,
+    path:PATH,
+    start:START,
+    home:HOME,
+    base:BASE,
+    finishCell:FINISH_CELL,
+    trackLastStep:TRACK_LAST_STEP,
+    homeFirstStep:HOME_FIRST_STEP,
+    homeLastStep:HOME_LAST_STEP,
+    finishStep:FINISH_STEP,
+    stepMs:TOKEN_STEP_MS,
+    playStepSound
+  });
+  const {tokenCoord,animateTokenPath,detectForwardMove}=ludoAnimation;
 
   function decorateClassicBoard(cells){
     const at=(r,c)=>cells[r*15+c];
