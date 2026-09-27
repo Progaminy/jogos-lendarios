@@ -89,6 +89,7 @@ begin
 
   if v_rate.blocked_until is not null and v_rate.blocked_until > now() then
     v_retry := greatest(1, ceil(extract(epoch from (v_rate.blocked_until-now())) / 60.0)::integer);
+    perform set_config('response.status','429',true);
     return jsonb_build_object(
       'ok', false,
       'message', format('Muitas tentativas. Tente novamente em %s minuto(s).', v_retry),
@@ -123,6 +124,7 @@ begin
              updated_at=now()
        where scope='player' and subject_key=v_key;
 
+      perform set_config('response.status','429',true);
       return jsonb_build_object(
         'ok', false,
         'message', format('Muitas tentativas. Tente novamente em %s minuto(s).', v_minutes),
@@ -134,6 +136,7 @@ begin
        set failed_attempts=v_failed, last_failed_at=now(), updated_at=now()
      where scope='player' and subject_key=v_key;
 
+    perform set_config('response.status','401',true);
     return jsonb_build_object(
       'ok', false,
       'message', 'Telefone ou PIN incorreto.',
@@ -142,6 +145,7 @@ begin
   end if;
 
   if v_player.blocked then
+    perform set_config('response.status','403',true);
     return jsonb_build_object('ok', false, 'message', 'Esta conta está bloqueada.');
   end if;
 
@@ -224,7 +228,7 @@ begin
 
   if v_rate.blocked_until is not null and v_rate.blocked_until > now() then
     v_retry := greatest(1, ceil(extract(epoch from (v_rate.blocked_until-now())) / 60.0)::integer);
-    return jsonb_build_object(
+    perform set_config('response.status','429',true);\n    return jsonb_build_object(
       'ok', false,
       'message', format('Acesso administrativo temporariamente limitado. Tente novamente em %s minuto(s).', v_retry),
       'retry_after_minutes', v_retry
@@ -273,6 +277,7 @@ begin
         'user_agent',v_agent
       ));
 
+      perform set_config('response.status','429',true);
       return jsonb_build_object(
         'ok', false,
         'message', format('Acesso administrativo temporariamente limitado. Tente novamente em %s minuto(s).', v_minutes),
@@ -284,6 +289,7 @@ begin
        set failed_attempts=v_failed, last_failed_at=now(), updated_at=now()
      where scope='admin' and subject_key=v_key;
 
+    perform set_config('response.status','401',true);
     return jsonb_build_object(
       'ok', false,
       'message', 'Código administrativo incorreto.',
