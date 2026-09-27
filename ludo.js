@@ -21,7 +21,7 @@
     'rulesVersion','rulesSummary','rulesForm','rulesDecision','acceptRules','declineRules','rulesAcceptModal','rulesAcceptTitle','rulesAcceptSummary','rulesModalAccept','rulesModalDecline','stakeAcceptModal','stakeAcceptTitle','stakeAcceptText','stakeBalanceText','stakeModalAccept','searchPlayerForm','searchPlayer','playerSearchResults','refreshWaiting','waitingPlayers',
     'fundingPanel','fundingText','fundButton','gamePanel','turnTitle','dice','ludoBoard','rollDice','soundToggle','micQuickButton','moveHint','reenterButton','voiceState','micButton','remoteAudio',
     'chatMessages','chatForm','chatInput','resultPanel','resultTitle','resultPayouts','rematchBet','rematchButton','rematchHelp','authModal','closeAuth','loginTab','registerTab','loginForm','registerForm','loginPhone','loginPin',
-    'registerName','registerPhone','registerPin','registerPinConfirm','authMessage','winModal','winModalTitle','winModalMessage','winModalOk'
+    'registerName','registerPhone','registerPin','registerPinConfirm','registerInviteCode','registerInviteStatus','authMessage','winModal','winModalTitle','winModalMessage','winModalOk'
   ].map(k => [k, $(k)]));
 
   const PATH = [[6,1],[6,2],[6,3],[6,4],[6,5],[5,6],[4,6],[3,6],[2,6],[1,6],[0,6],[0,7],[0,8],[1,8],[2,8],[3,8],[4,8],[5,8],[6,9],[6,10],[6,11],[6,12],[6,13],[6,14],[7,14],[8,14],[8,13],[8,12],[8,11],[8,10],[8,9],[9,8],[10,8],[11,8],[12,8],[13,8],[14,8],[14,7],[14,6],[13,6],[12,6],[11,6],[10,6],[9,6],[8,5],[8,4],[8,3],[8,2],[8,1],[8,0],[7,0],[6,0]];
@@ -337,6 +337,19 @@
     return visibleDiceValue(bundle.room||bundle,bundle);
   }
   function setAuthMessage(msg='',type=''){els.authMessage.textContent=msg;els.authMessage.style.color=type==='error'?'#ff8994':type==='success'?'#8df1bb':'';}
+  async function validateInviteCodeInput(){
+    if(!els.registerInviteCode)return true;
+    const code=els.registerInviteCode.value.trim().toUpperCase();
+    els.registerInviteCode.value=code;
+    if(!code){if(els.registerInviteStatus){els.registerInviteStatus.textContent='';els.registerInviteStatus.style.color='';}return true;}
+    if(els.registerInviteStatus){els.registerInviteStatus.textContent='A validar código…';els.registerInviteStatus.style.color='';}
+    try{
+      const result=await rpc('jl_validate_invite_code',{p_code:code});
+      if(!result?.valid){if(els.registerInviteStatus){els.registerInviteStatus.textContent='Código de convite inválido ou inativo.';els.registerInviteStatus.style.color='#ff8994';}return false;}
+      if(els.registerInviteStatus){els.registerInviteStatus.textContent='Código válido · '+(result.influencer||'Influenciador');els.registerInviteStatus.style.color='#8df1bb';}
+      return true;
+    }catch(err){if(els.registerInviteStatus){els.registerInviteStatus.textContent=err.message||'Não foi possível validar o código.';els.registerInviteStatus.style.color='#ff8994';}return false;}
+  }
 
   const LUDO_WIN_SEEN_KEY='jl_seen_ludo_wins_v1';
   function ludoWinSeen(){try{return new Set(JSON.parse(localStorage.getItem(LUDO_WIN_SEEN_KEY)||'[]'));}catch{return new Set();}}
@@ -892,7 +905,9 @@
     els.accountButton.setAttribute('aria-expanded','false');
   });document.querySelectorAll('[data-open-auth]').forEach(b=>b.addEventListener('click',()=>openAuth(b.dataset.openAuth)));els.closeAuth.addEventListener('click',closeAuth);els.loginTab.addEventListener('click',()=>switchAuth('login'));els.registerTab.addEventListener('click',()=>switchAuth('register'));els.authModal.addEventListener('click',e=>{if(e.target===els.authModal)closeAuth();});
   els.loginForm.addEventListener('submit',async e=>{e.preventDefault();try{setAuthMessage('Entrando…');const res=await rpc('jl_login_player',{p_phone:els.loginPhone.value.trim(),p_pin:els.loginPin.value.trim()});saveToken(res.token);closeAuth();await loadStatus();showToast('Sessão iniciada.','success');}catch(err){setAuthMessage(err.message,'error');}});
-  els.registerForm.addEventListener('submit',async e=>{e.preventDefault();if(els.registerPin.value!==els.registerPinConfirm.value)return setAuthMessage('Os PINs não coincidem.','error');try{setAuthMessage('Criando conta…');const res=await rpc('jl_register_player',{p_name:els.registerName.value.trim(),p_phone:els.registerPhone.value.trim(),p_pin:els.registerPin.value.trim()});saveToken(res.token);closeAuth();await loadStatus();showToast('Conta criada. O seu código Ludo foi atribuído pela casa.','success');}catch(err){setAuthMessage(err.message,'error');}});
+  els.registerInviteCode?.addEventListener('blur',()=>{validateInviteCodeInput();});
+  els.registerInviteCode?.addEventListener('input',()=>{if(els.registerInviteStatus){els.registerInviteStatus.textContent='';els.registerInviteStatus.style.color='';}});
+  els.registerForm.addEventListener('submit',async e=>{e.preventDefault();if(els.registerPin.value!==els.registerPinConfirm.value)return setAuthMessage('Os PINs não coincidem.','error');if(!(await validateInviteCodeInput()))return setAuthMessage('Verifique o código de convite antes de continuar.','error');try{setAuthMessage('Criando conta…');const res=await rpc('jl_register_player',{p_name:els.registerName.value.trim(),p_phone:els.registerPhone.value.trim(),p_pin:els.registerPin.value.trim(),p_invite_code:els.registerInviteCode?.value.trim()||null});saveToken(res.token);closeAuth();await loadStatus();showToast(res.referral?'Conta criada com código de convite validado.':'Conta criada. O seu código Ludo foi atribuído pela casa.','success');}catch(err){setAuthMessage(err.message,'error');}});
   wirePlayerCountPicker('createPlayers');wirePlayerCountPicker('queuePlayers');
   els.createBet?.addEventListener('change',()=>{const amount=wholeStake(els.createBet.value);if(amount!==null)ensureLudoFunds(amount,'criar uma sala com este valor').catch(err=>showToast(err.message,'error'));});
   els.queueBet?.addEventListener('change',()=>{const amount=wholeStake(els.queueBet.value);if(amount!==null)ensureLudoFunds(amount,'entrar na fila com este valor').catch(err=>showToast(err.message,'error'));});
