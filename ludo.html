@@ -146,8 +146,12 @@
       <div id="playersPanel" class="players-grid"></div>
 
       <div class="room-grid">
-        <section class="panel rules-panel">
-          <div class="section-head"><div><p class="eyebrow">REGRAS DA PARTIDA</p><h2>Negociação</h2></div><span id="rulesVersion" class="badge">v1</span></div>
+        <section class="panel rules-panel jl-collapsible" data-collapse-default="closed">
+          <div class="section-head">
+            <div><p class="eyebrow">REGRAS DA PARTIDA</p><h2>Negociação</h2></div>
+            <div class="jl-collapse-actions"><span id="rulesVersion" class="badge">v1</span><button class="button ghost tiny jl-collapse-toggle" type="button" aria-expanded="false">Expandir</button></div>
+          </div>
+          <div class="jl-collapse-body">
           <div id="rulesSummary" class="rules-summary"></div>
           <p class="muted rules-no-deadline">As regras podem ser aceites a qualquer momento. Se o anfitrião não propuser alterações, valem automaticamente as regras padrão da sala.</p>
           <form id="rulesForm" class="rules-form hidden">
@@ -168,6 +172,7 @@
             <button class="button primary wide" type="submit">Propor estas regras</button>
           </form>
           <div id="rulesDecision" class="decision-row hidden"><span class="muted">A aceitação é feita na janela de confirmação.</span></div>
+          </div>
         </section>
 
         <aside class="panel invite-panel">
