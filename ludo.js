@@ -6,7 +6,7 @@
   const $ = (id) => document.getElementById(id);
   const state = {
     token: localStorage.getItem(TOKEN_KEY) || '', status: null, room: null,
-    pollTimer: null, timeoutTimer: null, clockTimer: null, signalTimer: null,
+    clockTimer: null, signalTimer: null, signalPolling: false,
     lastSignalId: 0, localStream: null, micMuted: true, peers: new Map(), busy: false,
     animating: false, soundEnabled: localStorage.getItem(SOUND_KEY) !== '0', audioCtx: null,
     rulesFormDirty: false, rulesFormVersion: null, rulesDeclinedVersion: null, lastFxEventId: 0, autoMoveKey: null, lastDirectInviteCount: 0,
@@ -426,8 +426,12 @@
       if(nextStatus?.active_room_id){
         nextRoom=await loadRoomSnapshot(nextStatus.active_room_id,state.room);
       }
-      try{nextStatus.public_challenges=await rpc('jl_ludo_public_challenges',{p_token:state.token});}
-      catch{nextStatus.public_challenges=[];}
+      if(!nextStatus?.active_room_id){
+        try{nextStatus.public_challenges=await rpc('jl_ludo_public_challenges',{p_token:state.token});}
+        catch{nextStatus.public_challenges=state.status?.public_challenges||[];}
+      }else{
+        nextStatus.public_challenges=state.status?.public_challenges||[];
+      }
       if(state.animating||generationAtStart!==state.moveGeneration)return;
       const previousRoom=state.room;
       if(nextRoom)rememberDiceBundle(nextRoom);
@@ -815,7 +819,22 @@
       renderVoice();
     }
   }
-  function startSignalPolling(){if(state.signalTimer||!state.room)return;state.signalTimer=setInterval(pullSignals,1000);pullSignals();} function stopSignalPolling(){clearInterval(state.signalTimer);state.signalTimer=null;}
+  function startSignalPolling(){
+    if(!state.room)return;
+    state.signalPolling=true;
+    if(window.JLLudoSync?.kick){
+      window.JLLudoSync.kick('ludo-voice');
+      return;
+    }
+    if(state.signalTimer)return;
+    state.signalTimer=setInterval(pullSignals,1000);
+    pullSignals();
+  }
+  function stopSignalPolling(){
+    state.signalPolling=false;
+    if(state.signalTimer)clearInterval(state.signalTimer);
+    state.signalTimer=null;
+  }
   async function sendSignal(to,type,payload){try{await rpc('jl_ludo_signal_send',{p_token:state.token,p_room:roomData().id,p_to_player:to,p_signal_type:type,p_payload:payload});}catch(e){console.warn('signal',e.message);}}
   function voiceIceServers(){
     const configured=Array.isArray(cfg.ludoIceServers)?cfg.ludoIceServers.filter(Boolean):[];
@@ -1051,5 +1070,39 @@
     }
   });
 
-  state.pollTimer=setInterval(()=>{if(document.visibilityState==='visible')loadStatus(true);},3500);state.timeoutTimer=setInterval(()=>{if(document.visibilityState==='visible')processTimeouts();},4000);state.clockTimer=setInterval(updateClock,250);window.addEventListener('beforeunload',closeVoice);loadStatus();
+  function timeoutIsDue(){
+    const r=roomData();
+    if(!r||!['funding','playing'].includes(r.status)||!r.action_deadline)return false;
+    const deadline=new Date(r.action_deadline).getTime();
+    return Number.isFinite(deadline)&&deadline<=Date.now()+250;
+  }
+
+  if(window.JLLudoSync?.register){
+    window.JLLudoSync.register('ludo-state',()=>loadStatus(true),{
+      interval:()=>state.room?3000:8000,
+      when:()=>Boolean(state.token),
+      visibleOnly:true,
+      immediate:false
+    });
+    window.JLLudoSync.register('ludo-timeout',processTimeouts,{
+      interval:1000,
+      when:()=>Boolean(state.token&&state.room&&timeoutIsDue()),
+      visibleOnly:true,
+      immediate:false
+    });
+    window.JLLudoSync.register('ludo-voice',pullSignals,{
+      interval:1000,
+      when:()=>Boolean(state.token&&state.room&&state.signalPolling),
+      visibleOnly:true,
+      immediate:false
+    });
+    window.JLLudoSync.kick('ludo-state');
+  }else{
+    state.pollTimer=setInterval(()=>{if(document.visibilityState==='visible')loadStatus(true);},3500);
+    state.timeoutTimer=setInterval(()=>{if(document.visibilityState==='visible'&&timeoutIsDue())processTimeouts();},1000);
+  }
+
+  state.clockTimer=setInterval(updateClock,250);
+  window.addEventListener('beforeunload',closeVoice);
+  loadStatus();
 })();
