@@ -27,10 +27,10 @@
   let pushReady = false;
   let autoPermissionBusy = false;
   let autoPermissionAttempted = false;
-  let sessionToken = localStorage.getItem(TOKEN_KEY) || '';
+  let sessionToken = window.JLSession?.getPlayerToken?.() || localStorage.getItem(TOKEN_KEY) || '';
 
   function token() {
-    return localStorage.getItem(TOKEN_KEY) || '';
+    return window.JLSession?.getPlayerToken?.() || localStorage.getItem(TOKEN_KEY) || '';
   }
 
   function tokenHash(value) {
@@ -118,25 +118,7 @@
     };
   }
 
-  async function rpc(name, args = {}) {
-    if (!cfg.supabaseUrl || !cfg.supabaseKey) throw new Error('Configuração do Supabase ausente.');
-    const response = await fetch(cfg.supabaseUrl + '/rest/v1/rpc/' + name, {
-      method: 'POST',
-      headers: {
-        apikey: cfg.supabaseKey,
-        Authorization: 'Bearer ' + cfg.supabaseKey,
-        'Content-Type': 'application/json',
-        Accept: 'application/json'
-      },
-      body: JSON.stringify(args),
-      keepalive: true
-    });
-    const raw = await response.text();
-    let data = null;
-    try { data = raw ? JSON.parse(raw) : null; } catch { data = raw; }
-    if (!response.ok) throw new Error((data && (data.message || data.hint || data.error)) || ('Erro ' + response.status));
-    return data;
-  }
+  const rpc = (name, args = {}) => window.JLApi.rpc(name, args, { keepalive: true });
 
   async function pushService(path, options = {}) {
     if (!cfg.supabaseUrl) throw new Error('Serviço de notificações indisponível.');
