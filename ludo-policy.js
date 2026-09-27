@@ -34,23 +34,12 @@
   };
 
   async function variantRpc(name, args = {}) {
-    if (!cfg.supabaseUrl || !cfg.supabaseKey) return null;
-    const res = await nativeFetch(`${cfg.supabaseUrl}/rest/v1/rpc/${name}`, {
-      method: 'POST',
-      headers: {
-        apikey: cfg.supabaseKey,
-        Authorization: `Bearer ${cfg.supabaseKey}`,
-        'Content-Type': 'application/json',
-        Accept: 'application/json'
-      },
-      body: JSON.stringify(args)
-    });
-    if (!res.ok) return null;
-    try { return await res.json(); } catch (_) { return null; }
+    try { return await window.JLApi.rpc(name, args); }
+    catch (_) { return null; }
   }
 
   async function refreshVariantState() {
-    const token = localStorage.getItem('jl_player_token');
+    const token = window.JLSession?.getPlayerToken?.() || localStorage.getItem('jl_player_token');
     if (!token) return;
     const status = await variantRpc('jl_ludo_my_status', { p_token: token });
     if (!status?.active_room_id) return;
