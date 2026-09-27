@@ -25,7 +25,7 @@
       return finishCell[color] || [7, 7];
     }
 
-    async function animateTokenPath(playerId, tokenNo, color, fromSteps, toSteps) {
+    async function animateTokenPath(playerId, tokenNo, color, fromSteps, toSteps, shouldContinue = () => true) {
       if (!els.ludoBoard || !Number.isFinite(fromSteps) || !Number.isFinite(toSteps) || toSteps <= fromSteps) return;
       const selector = `[data-player-id="${CSS.escape(String(playerId))}"][data-token-no="${Number(tokenNo)}"]`;
       const piece = els.ludoBoard.querySelector(selector);
@@ -39,6 +39,7 @@
 
       try {
         for (let step = fromSteps + 1; step <= toSteps; step += 1) {
+          if (!shouldContinue()) break;
           const coord = tokenCoord(color, step, tokenNo);
           if (!coord) continue;
           const cell = els.ludoBoard.querySelector(`[data-row="${coord[0]}"][data-col="${coord[1]}"]`);
@@ -54,6 +55,7 @@
           piece.classList.add('step-hop');
           playStepSound(visualIndex);
           await wait(stepMs);
+          if (!shouldContinue()) break;
         }
       } finally {
         piece.classList.remove('step-hop', 'path-moving');
