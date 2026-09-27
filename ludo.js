@@ -359,6 +359,50 @@
   function closeLudoWinNotice(){if(!els.winModal)return;const key=els.winModal.dataset.winKey;if(key){const seen=ludoWinSeen();seen.add(key);saveLudoWinSeen(seen);}els.winModal.classList.add('hidden');document.body.classList.remove('modal-open');delete els.winModal.dataset.winKey;}
   function checkLudoWinNotice(){const r=roomData();if(!r||r.status!=='finished'||!els.winModal?.classList.contains('hidden'))return;const payout=(state.room?.payouts||[]).find(p=>p.player_id===me()&&Number(p.net||0)>0);if(!payout)return;const key=`${r.id||r.code||'room'}:${me()}:${payout.net}`;if(ludoWinSeen().has(key))return;window.JLNotifications?.push({id:`ludo-win:${key}`,title:'Vitória no Ludo',message:`Você ganhou ${money(payout.net)} MZN na partida ${r.code||r.id||'—'}.`,type:'win',href:'./ludo.html#resultPanel',createdAt:r.finished_at||r.ended_at||r.updated_at||new Date().toISOString()});showLudoWinNotice(key,payout.net,r.code||r.id||'—',ludoRoundTime(r));}
   async function rpc(name,args={}){if(!cfg.supabaseUrl||!cfg.supabaseKey)throw new Error('Configuração do Supabase ausente.');const res=await fetch(`${cfg.supabaseUrl}/rest/v1/rpc/${name}`,{method:'POST',headers:{apikey:cfg.supabaseKey,Authorization:`Bearer ${cfg.supabaseKey}`,'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify(args)});const text=await res.text();let data=null;try{data=text?JSON.parse(text):null}catch{data=text}if(!res.ok)throw new Error(data?.message||data?.hint||data?.error||`Erro ${res.status}`);return data;}
+
+  function maxRoomItemId(items){
+    let max=0;
+    for(const item of items||[])max=Math.max(max,Number(item?.id)||0);
+    return max;
+  }
+  function mergeRoomItems(previous,incoming,limit=50){
+    const map=new Map();
+    for(const item of [...(previous||[]),...(incoming||[])])map.set(String(item?.id??''),item);
+    return [...map.values()]
+      .sort((a,b)=>(Number(a?.id)||0)-(Number(b?.id)||0))
+      .slice(-limit);
+  }
+  async function attachRoomExtras(base,previous=null){
+    if(!base?.room?.id)return base;
+    const same=Boolean(previous?.room?.id&&previous.room.id===base.room.id);
+    const afterEvent=same?maxRoomItemId(previous.events):0;
+    const afterChat=same?maxRoomItemId(previous.chat):0;
+    const includePayouts=base.room.status==='finished';
+    let delta=null;
+    try{
+      delta=await rpc('jl_ludo_room_delta',{
+        p_token:state.token,
+        p_room:base.room.id,
+        p_after_event:afterEvent,
+        p_after_chat:afterChat,
+        p_include_payouts:includePayouts
+      });
+    }catch(e){
+      console.warn('ludo delta',e.message);
+    }
+    const incomingEvents=delta?.events||[];
+    const incomingChat=delta?.chat||[];
+    const events=same?mergeRoomItems(previous.events,incomingEvents):incomingEvents.slice(-50);
+    const chat=same?mergeRoomItems(previous.chat,incomingChat):incomingChat.slice(-50);
+    const payouts=includePayouts
+      ? (delta?.payouts||previous?.payouts||[])
+      : (same?(previous?.payouts||[]):[]);
+    return {...base,events,chat,payouts};
+  }
+  async function loadRoomSnapshot(roomId,previous=null){
+    const light=await rpc('jl_ludo_room_state_light',{p_token:state.token,p_room:roomId});
+    return attachRoomExtras(light,previous);
+  }
   function saveToken(t){state.token=t||'';if(t)localStorage.setItem(TOKEN_KEY,t);else localStorage.removeItem(TOKEN_KEY);window.JLNotifications?.setActive(Boolean(state.token));}
   function openAuth(mode='login'){els.authModal.classList.remove('hidden');switchAuth(mode);} function closeAuth(){els.authModal.classList.add('hidden');setAuthMessage('');}
   function switchAuth(mode){const login=mode==='login';els.loginForm.classList.toggle('hidden',!login);els.registerForm.classList.toggle('hidden',login);els.loginTab.classList.toggle('active',login);els.registerTab.classList.toggle('active',!login);}
@@ -380,7 +424,7 @@
       const nextStatus=await rpc('jl_ludo_my_status',{p_token:state.token});
       let nextRoom=null;
       if(nextStatus?.active_room_id){
-        nextRoom=await rpc('jl_ludo_room_state',{p_token:state.token,p_room:nextStatus.active_room_id});
+        nextRoom=await loadRoomSnapshot(nextStatus.active_room_id,state.room);
       }
       try{nextStatus.public_challenges=await rpc('jl_ludo_public_challenges',{p_token:state.token});}
       catch{nextStatus.public_challenges=[];}
@@ -414,7 +458,8 @@
     const generationAtStart=state.moveGeneration;
     const roomId=state.room.room.id;
     try{
-      const nextRoom=await rpc('jl_ludo_process_timeouts',{p_token:state.token,p_room:roomId});
+      const timeoutState=await rpc('jl_ludo_process_timeouts',{p_token:state.token,p_room:roomId});
+      const nextRoom=await attachRoomExtras(timeoutState,state.room);
       // Uma resposta de timeout iniciada antes do clique não pode redesenhar
       // uma posição antiga por cima do movimento que acabou de acontecer.
       if(state.animating||generationAtStart!==state.moveGeneration||state.room?.room?.id!==roomId)return;
@@ -684,7 +729,7 @@
         if(!serverConfirmed){
           if(movingToken&&originalSteps!==null)movingToken.steps=originalSteps;
           try{
-            state.room=await rpc('jl_ludo_room_state',{p_token:state.token,p_room:roomId});
+            state.room=await loadRoomSnapshot(roomId,state.room);
             rememberDiceBundle(state.room);
           }catch{}
         }
@@ -989,7 +1034,7 @@
   }));
   els.rematchButton?.addEventListener('click',()=>withBusy(async()=>{try{const amount=wholeStake(els.rematchBet?.value,'A nova aposta');if(amount===null)return;if(!(await ensureLudoFunds(amount,'repetir o jogo com este valor')))return;const oldRoom=roomData()?.id;const nextRoom=await rpc('jl_ludo_rematch',{p_token:state.token,p_room:oldRoom,p_bet_amount:amount});state.lastFxEventId=0;state.autoMoveKey=null;state.room=nextRoom;await loadStatus(true);showToast('Nova partida criada. Os mesmos jogadores receberam convite particular.','success');}catch(err){if(!handleLudoMoneyError(err,'repetir o jogo'))showToast(err.message,'error');}}));
   els.reenterButton.addEventListener('click',()=>withBusy(async()=>{try{const amount=Number(rules().reentry_amount||0);if(!(await ensureLudoFunds(amount,'pagar a reentrada')))return;state.room=await rpc('jl_ludo_reenter',{p_token:state.token,p_room:roomData().id});renderRoom();showToast('Reentrada confirmada.','success');}catch(err){if(!handleLudoMoneyError(err,'pagar a reentrada'))showToast(err.message,'error');}}));
-  els.chatForm.addEventListener('submit',e=>{e.preventDefault();const m=els.chatInput.value.trim();if(!m)return;withBusy(async()=>{try{await rpc('jl_ludo_send_chat',{p_token:state.token,p_room:roomData().id,p_message:m});els.chatInput.value='';state.room=await rpc('jl_ludo_room_state',{p_token:state.token,p_room:roomData().id});renderChat();}catch(err){showToast(err.message,'error');}});});els.micButton.addEventListener('click',toggleMic);
+  els.chatForm.addEventListener('submit',e=>{e.preventDefault();const m=els.chatInput.value.trim();if(!m)return;withBusy(async()=>{try{await rpc('jl_ludo_send_chat',{p_token:state.token,p_room:roomData().id,p_message:m});els.chatInput.value='';state.room=await attachRoomExtras(state.room,state.room);renderChat();}catch(err){showToast(err.message,'error');}});});els.micButton.addEventListener('click',toggleMic);
   window.JLLudoSocial=Object.freeze({
     canInvite(){
       const r=roomData();
