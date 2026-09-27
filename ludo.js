@@ -948,5 +948,21 @@
   els.rematchButton?.addEventListener('click',()=>withBusy(async()=>{try{const amount=wholeStake(els.rematchBet?.value,'A nova aposta');if(amount===null)return;if(!(await ensureLudoFunds(amount,'repetir o jogo com este valor')))return;const oldRoom=roomData()?.id;const nextRoom=await rpc('jl_ludo_rematch',{p_token:state.token,p_room:oldRoom,p_bet_amount:amount});state.lastFxEventId=0;state.autoMoveKey=null;state.room=nextRoom;await loadStatus(true);showToast('Nova partida criada. Os mesmos jogadores receberam convite particular.','success');}catch(err){if(!handleLudoMoneyError(err,'repetir o jogo'))showToast(err.message,'error');}}));
   els.reenterButton.addEventListener('click',()=>withBusy(async()=>{try{const amount=Number(rules().reentry_amount||0);if(!(await ensureLudoFunds(amount,'pagar a reentrada')))return;state.room=await rpc('jl_ludo_reenter',{p_token:state.token,p_room:roomData().id});renderRoom();showToast('Reentrada confirmada.','success');}catch(err){if(!handleLudoMoneyError(err,'pagar a reentrada'))showToast(err.message,'error');}}));
   els.chatForm.addEventListener('submit',e=>{e.preventDefault();const m=els.chatInput.value.trim();if(!m)return;withBusy(async()=>{try{await rpc('jl_ludo_send_chat',{p_token:state.token,p_room:roomData().id,p_message:m});els.chatInput.value='';state.room=await rpc('jl_ludo_room_state',{p_token:state.token,p_room:roomData().id});renderChat();}catch(err){showToast(err.message,'error');}});});els.micButton.addEventListener('click',toggleMic);
+  window.JLLudoSocial=Object.freeze({
+    canInvite(){
+      const r=roomData();
+      return Boolean(state.token&&r?.id&&r.host_id===me()&&['waiting','negotiating'].includes(r.status));
+    },
+    async invite(playerId){
+      const r=roomData();
+      if(!state.token||!r?.id)throw new Error('Crie uma sala de Ludo antes de convidar.');
+      if(r.host_id!==me())throw new Error('Apenas o anfitrião pode convidar jogadores para esta sala.');
+      await rpc('jl_ludo_invite',{p_token:state.token,p_room:r.id,p_target_player:playerId});
+      showToast('Convite enviado.','success');
+      await loadStatus(true);
+      return true;
+    }
+  });
+
   state.pollTimer=setInterval(()=>{if(document.visibilityState==='visible')loadStatus(true);},3500);state.timeoutTimer=setInterval(()=>{if(document.visibilityState==='visible')processTimeouts();},4000);state.clockTimer=setInterval(updateClock,250);window.addEventListener('beforeunload',closeVoice);loadStatus();
 })();
