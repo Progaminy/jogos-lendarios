@@ -243,6 +243,11 @@
   function wirePlayerCountPicker(selectId){const picker=document.querySelector(`.player-count-picker[data-select-id="${selectId}"]`);if(!picker)return;picker.addEventListener('click',e=>{const b=e.target.closest('[data-player-count]');if(!b)return;setPlayerCount(selectId,b.dataset.playerCount);});syncPlayerCountPicker(selectId);}
   function syncCapturePenaltyAvailability(){const r=roomData();const form=els.rulesForm;if(!form)return;const penalty=form.elements.capture_penalty;const help=$('capturePenaltyHelp');if(!penalty)return;const twoPlayers=Number(r?.player_count)===2;if(twoPlayers){penalty.value='lose_turn';for(const opt of penalty.options)opt.disabled=opt.value!=='lose_turn';if(help)help.textContent='Com 2 jogadores, ignorar captura apenas faz perder a vez; eliminação só existe com 3 ou 4 jogadores.';}else{for(const opt of penalty.options)opt.disabled=false;if(help)help.textContent='Com 3 ou 4 jogadores, o anfitrião pode escolher perder a vez, eliminar ou permitir reentrada.';}}
 
+  const movementGuard=window.JLLudoMovementGuard.create({
+    state,
+    getRoomId:()=>roomData()?.id||null
+  });
+
   const ludoRender=window.JLLudoRender.create({
     state,
     els,
@@ -267,7 +272,7 @@
 
   async function loadStatus(silent=false){
     if(state.animating||state.diceRolling)return;
-    const generationAtStart=state.moveGeneration;
+    const snapshotTicket=movementGuard.beginSnapshot();
     if(!state.token){state.status=null;state.room=null;renderAll();return;}
     try{
       const nextStatus=await rpc('jl_ludo_my_status',{p_token:state.token});
@@ -281,26 +286,43 @@
       }else{
         nextStatus.public_challenges=state.status?.public_challenges||[];
       }
-      if(state.animating||generationAtStart!==state.moveGeneration)return;
+
+      // Qualquer resposta iniciada antes de uma jogada, de um lançamento ou
+      // de uma resposta mais nova é descartada antes de tocar no DOM/estado.
+      if(state.animating||state.diceRolling||!movementGuard.canApplySnapshot(snapshotTicket))return;
+
       const previousRoom=state.room;
       if(nextRoom)rememberDiceBundle(nextRoom);
-      const movement=previousRoom&&nextRoom&&previousRoom.room?.id===nextRoom.room?.id?detectForwardMove(previousRoom,nextRoom):null;
+      const movement=previousRoom&&nextRoom&&previousRoom.room?.id===nextRoom.room?.id
+        ?detectForwardMove(previousRoom,nextRoom)
+        :null;
+
+      if(!movementGuard.markSnapshotApplied(snapshotTicket))return;
       state.status=nextStatus;
       if(previousRoom&&!nextRoom)closeVoice();
 
-      // Adota o estado autoritativo antes da animação. Assim, qualquer render concorrente
-      // só conhece a posição final e nunca redesenha o peão de volta à origem.
+      // O destino autoritativo entra primeiro no estado. A animação apenas
+      // representa visualmente o caminho; nunca é fonte da posição.
       state.room=nextRoom;
+
       if(movement&&els.ludoBoard?.childElementCount){
         state.animating=true;
         try{
-          await animateTokenPath(movement.playerId,movement.tokenNo,movement.color,movement.fromSteps,movement.toSteps);
+          await animateTokenPath(
+            movement.playerId,
+            movement.tokenNo,
+            movement.color,
+            movement.fromSteps,
+            movement.toSteps,
+            ()=>movementGuard.canApplySnapshot(snapshotTicket)
+          );
         }finally{
           state.animating=false;
           els.ludoBoard?.classList.remove('piece-moving');
         }
       }
-      renderAll();
+
+      if(movementGuard.canApplySnapshot(snapshotTicket))renderAll();
     }catch(e){
       if(/Sessão/.test(e.message)){saveToken('');state.status=null;state.room=null;renderAll();}
       if(!silent)showToast(e.message,'error');
@@ -308,14 +330,19 @@
   }
   async function processTimeouts(){
     if(!state.token||!state.room?.room?.id||state.busy||state.animating||state.diceRolling)return;
-    const generationAtStart=state.moveGeneration;
+    const snapshotTicket=movementGuard.beginSnapshot();
     const roomId=state.room.room.id;
     try{
       const timeoutState=await rpc('jl_ludo_process_timeouts',{p_token:state.token,p_room:roomId});
       const nextRoom=await attachRoomExtras(timeoutState,state.room);
-      // Uma resposta de timeout iniciada antes do clique não pode redesenhar
-      // uma posição antiga por cima do movimento que acabou de acontecer.
-      if(state.animating||generationAtStart!==state.moveGeneration||state.room?.room?.id!==roomId)return;
+      if(
+        state.animating||
+        state.diceRolling||
+        state.room?.room?.id!==roomId||
+        !movementGuard.canApplySnapshot(snapshotTicket)
+      )return;
+
+      if(!movementGuard.markSnapshotApplied(snapshotTicket))return;
       processGameEffects(nextRoom);
       state.room=nextRoom;
       renderRoom();
@@ -440,29 +467,59 @@
   function renderResult(){const r=roomData();els.resultPanel.classList.toggle('hidden',r.status!=='finished');if(r.status!=='finished')return;checkLudoWinNotice();if(els.rematchBet&&els.rematchBet.dataset.room!==String(r.id)){els.rematchBet.value=String(Math.max(10,Math.trunc(Number(r.bet_amount)||10)));els.rematchBet.dataset.room=String(r.id);}if(els.rematchHelp)els.rematchHelp.textContent=`Mesmos ${r.player_count} jogadores e modo ${r.mode==='partners'?'Parceiros 2 × 2':'Cada um por si'}. Ajuste apenas o valor se quiser.`;const winner=r.mode==='partners'?`Equipa ${r.winner_team}`:(roomPlayers().find(p=>p.player_id===r.winner_player_id)?.code||'Vencedor');els.resultTitle.textContent=`${winner} venceu`;const p=state.room.payouts||[];els.resultPayouts.innerHTML=`<div class="payout-grid">${p.map(x=>{const pl=roomPlayers().find(y=>y.player_id===x.player_id);return `<div class="payout-card"><strong>${escapeHtml(pl?.code||'Jogador')}</strong><br>Bruto ${money(x.gross)} MZN<br>Casa ${money(x.commission)} MZN<br><strong>Líquido ${money(x.net)} MZN</strong></div>`}).join('')}</div>`;}
   async function renderInviter(){const r=roomData(),host=isHost()&&['waiting','negotiating'].includes(r.status);document.querySelector('.invite-panel').classList.toggle('hidden',!host);if(host)await loadWaiting(true);}
   async function loadWaiting(silent=false){if(!state.room||!isHost())return;try{const rows=await rpc('jl_ludo_waiting_players',{p_token:state.token,p_room:roomData().id});els.waitingPlayers.innerHTML=rows.length?rows.map(p=>`<div class="mini-item"><div><strong>${escapeHtml(p.name)}</strong><br><small>${escapeHtml(p.code)}</small></div><button class="button ghost small" data-invite-player="${p.player_id}">Convidar</button></div>`).join(''):'<div class="empty">Nenhum compatível agora.</div>';}catch(e){if(!silent)showToast(e.message,'error');}}
-  async function withBusy(fn){if(state.busy)return;state.busy=true;try{await fn();}finally{state.busy=false;}} async function moveToken(n){
+  async function withBusy(fn){if(state.busy)return;state.busy=true;try{await fn();}finally{state.busy=false;}}
+
+  async function moveToken(n){
     await withBusy(async()=>{
       const move=(state.room?.legal_moves||[]).find(x=>Number(x.token_no)===Number(n));
       const player=myRoomPlayer();
-      if(!move||!player){state.autoMoveKey=null;setTimeout(maybeAutoMove,120);return;}
+      if(!move||!player){
+        state.autoMoveKey=null;
+        movementGuard.scheduleAutoMove(120,maybeAutoMove);
+        return;
+      }
 
       const roomId=roomData().id;
-      const movingToken=(state.room?.tokens||[]).find(t=>t.player_id===me()&&Number(t.token_no)===Number(n));
+      const movingToken=(state.room?.tokens||[]).find(
+        t=>t.player_id===me()&&Number(t.token_no)===Number(n)
+      );
       const originalSteps=movingToken?Number(movingToken.steps):null;
 
-      // Fixa o destino no estado local e só redesenha o tabuleiro depois que
-      // animação + confirmação do servidor terminarem. Nenhum render intermédio
-      // pode recolocar o peão na origem.
+      const moveTicket=movementGuard.beginMove({
+        roomId,
+        playerId:me(),
+        tokenNo:Number(n),
+        fromSteps:Number(move.from_steps),
+        toSteps:Number(move.to_steps)
+      });
+
+      // Otimismo visual: o estado local já conhece o destino. Se qualquer
+      // resposta antiga chegar depois, a geração da jogada invalida-a.
       if(movingToken)movingToken.steps=Number(move.to_steps);
 
-      state.moveGeneration+=1;
       state.animating=true;
       let visualMove=Promise.resolve();
       let serverConfirmed=false;
       let moveError=null;
+
       try{
-        visualMove=animateTokenPath(me(),Number(n),player.color,Number(move.from_steps),Number(move.to_steps));
-        const nextRoom=await rpc('jl_ludo_move',{p_token:state.token,p_room:roomId,p_token_no:Number(n)});
+        visualMove=animateTokenPath(
+          me(),
+          Number(n),
+          player.color,
+          Number(move.from_steps),
+          Number(move.to_steps),
+          ()=>movementGuard.isMoveCurrent(moveTicket)
+        );
+
+        const nextRoom=await rpc('jl_ludo_move',{
+          p_token:state.token,
+          p_room:roomId,
+          p_token_no:Number(n)
+        });
+
+        if(!movementGuard.isMoveCurrent(moveTicket))return;
+
         serverConfirmed=true;
         processGameEffects(nextRoom);
         rememberDiceBundle(nextRoom);
@@ -471,7 +528,8 @@
       }catch(e){
         moveError=e;
         await visualMove.catch(()=>{});
-        if(!serverConfirmed){
+
+        if(!serverConfirmed&&movementGuard.isMoveCurrent(moveTicket)){
           if(movingToken&&originalSteps!==null)movingToken.steps=originalSteps;
           try{
             state.room=await loadRoomSnapshot(roomId,state.room);
@@ -479,29 +537,72 @@
           }catch{}
         }
       }finally{
-        state.animating=false;
-        els.ludoBoard?.classList.remove('piece-moving');
-        renderRoom();
+        const stillCurrent=movementGuard.isMoveCurrent(moveTicket);
+        if(stillCurrent){
+          state.animating=false;
+          els.ludoBoard?.classList.remove('piece-moving');
+          renderRoom();
+        }
+        movementGuard.finishMove(moveTicket);
+        window.JLLudoSync?.kick?.('ludo-state');
       }
-      if(moveError){state.autoMoveKey=null;setTimeout(maybeAutoMove,220);showToast(moveError.message,'error');}
+
+      if(moveError){
+        state.autoMoveKey=null;
+        movementGuard.scheduleAutoMove(220,maybeAutoMove);
+        showToast(moveError.message,'error');
+      }
     });
   }
+
   function maybeAutoMove(){
     const r=roomData(),moves=state.room?.legal_moves||[];
-    const eligible=Boolean(r&&r.status==='playing'&&r.current_player_id===me()&&r.turn_phase==='move'&&moves.length===1);
-    if(!eligible){state.autoMoveKey=null;return;}
+    const eligible=Boolean(
+      r&&
+      r.status==='playing'&&
+      r.current_player_id===me()&&
+      r.turn_phase==='move'&&
+      moves.length===1
+    );
+
+    if(!eligible){
+      state.autoMoveKey=null;
+      movementGuard.cancelAutoMove();
+      return;
+    }
+
     const only=moves[0];
     const key=`${r.id}:${r.dice_position}:${r.dice_result}:${only.token_no}`;
     if(state.autoMoveKey===key)return;
+
     state.autoMoveKey=key;
-    if(els.moveHint)els.moveHint.textContent=`Única jogada possível · peão ${only.token_no} vai mover automaticamente.`;
-    setTimeout(()=>{
+    if(els.moveHint){
+      els.moveHint.textContent=`Única jogada possível · peão ${only.token_no} vai mover automaticamente.`;
+    }
+
+    movementGuard.scheduleAutoMove(280,()=>{
       const rr=roomData(),currentMoves=state.room?.legal_moves||[];
-      const still=rr&&rr.status==='playing'&&rr.current_player_id===me()&&rr.turn_phase==='move'&&currentMoves.length===1&&Number(currentMoves[0].token_no)===Number(only.token_no);
-      if(!still){state.autoMoveKey=null;return;}
-      if(state.busy||state.animating){state.autoMoveKey=null;setTimeout(maybeAutoMove,120);return;}
+      const still=
+        rr&&
+        rr.status==='playing'&&
+        rr.current_player_id===me()&&
+        rr.turn_phase==='move'&&
+        currentMoves.length===1&&
+        Number(currentMoves[0].token_no)===Number(only.token_no);
+
+      if(!still){
+        state.autoMoveKey=null;
+        return;
+      }
+
+      if(state.busy||state.animating){
+        state.autoMoveKey=null;
+        movementGuard.scheduleAutoMove(120,maybeAutoMove);
+        return;
+      }
+
       moveToken(Number(only.token_no));
-    },280);
+    });
   }
   const ludoVoice=window.JLLudoVoice.create({
     state,
