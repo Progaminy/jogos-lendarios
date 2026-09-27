@@ -19,7 +19,7 @@
   <meta name="twitter:description" content="Ludo online para 2, 3 ou 4 jogadores, com modo individual ou parceiros.">
   <title>Ludo Lendário · Jogos Lendários</title>
   <link rel="icon" href="./favicon.ico" sizes="any">
-  <link rel="stylesheet" href="./ludo.css?v=20260927-4">
+  <link rel="stylesheet" href="./ludo.css?v=20260927-5">
   <link rel="stylesheet" href="./support-ui.css?v=20260922-12fix">
   <link rel="stylesheet" href="./recovery-ui.css?v=20260922-13">
   <link rel="stylesheet" href="./site-nav.css?v=20260922-12fix">
@@ -228,7 +228,11 @@
       <span class="flow-step">2 / 2</span>
       <p class="eyebrow">CONFIRMAR APOSTA</p>
       <h2 id="stakeAcceptTitle">Aceitar valor</h2>
-      <p id="stakeAcceptText" class="flow-value">—</p>
+      <div class="flow-stake-value-card" aria-live="polite">
+        <span>VALOR A ACEITAR</span>
+        <strong id="stakeAcceptText">—</strong>
+        <small>por jogador</small>
+      </div>
       <p id="stakeBalanceText" class="muted">—</p>
       <div class="flow-counteroffer">
         <label>
@@ -268,7 +272,7 @@
   <script src="./recovery-ui.js?v=20260925-1" defer></script>
   <script src="./logout-confirm.js?v=20260924-2" defer></script>
   <script src="./notifications.js?v=20260927-4" defer></script>
-  <script src="./ludo.js?v=20260927-4" defer></script>
+  <script src="./ludo.js?v=20260927-5" defer></script>
   <script src="./social.js?v=20260927-3" defer></script>
   <script src="./ludo-collapse.js?v=20260927-1" defer></script>
   <script src="./ludo-policy.js?v=20260927-1" defer></script>
