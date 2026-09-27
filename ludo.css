@@ -570,3 +570,14 @@ button.status-metric:hover{border-color:rgba(244,189,66,.5);transform:translateY
 .flow-counteroffer label{display:grid;gap:6px}.flow-counteroffer small{line-height:1.4}
 .flow-counteroffer .money{width:100%}.flow-counteroffer .money input{width:100%;min-width:0}
 @media(max-width:600px){.flow-actions{display:grid!important;grid-template-columns:1fr!important}.flow-actions .button{width:100%}}
+
+
+/* Valor do convite/aposta: sempre visível antes de aceitar. */
+.invite-bet-value{display:flex;align-items:center;gap:8px;width:max-content;max-width:100%;margin-top:9px;padding:7px 10px;border:1px solid rgba(244,189,66,.38);border-radius:10px;background:rgba(244,189,66,.08)}
+.invite-bet-value small{font-size:.61rem;font-weight:900;letter-spacing:.08em;color:#c8d3e2}
+.invite-bet-value strong{font-size:1rem;color:#ffd36b;white-space:nowrap}
+.flow-stake-value-card{display:grid;gap:4px;margin:18px 0 8px;padding:18px;border:2px solid rgba(244,189,66,.62);border-radius:16px;background:linear-gradient(145deg,rgba(244,189,66,.15),rgba(244,189,66,.05));text-align:center;box-shadow:0 8px 28px rgba(0,0,0,.22)}
+.flow-stake-value-card>span{font-size:.7rem;font-weight:950;letter-spacing:.13em;color:#d9e2ee}
+.flow-stake-value-card>strong{font-size:clamp(2rem,10vw,3rem);line-height:1.05;color:#ffd25f}
+.flow-stake-value-card>small{font-size:.82rem;font-weight:800;color:#aebdd0}
+@media(max-width:520px){.invite-bet-value{width:100%;justify-content:space-between}.flow-stake-value-card{padding:16px 12px}}
