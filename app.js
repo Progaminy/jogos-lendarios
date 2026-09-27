@@ -240,7 +240,7 @@
             return;
           }
 
-          const result=await rpc('jl_request_withdrawal',{p_token:state.token,p_amount:amount});
+          const result=await financialRpc('withdrawal','jl_request_withdrawal_idempotent',{p_token:state.token,p_amount:amount});
           const ok=result?.ok!==false,reference=result?.request_id?result.request_id.slice(0,8).toUpperCase():'';
           close();
           showTransactionModal({kind:'withdraw',amount,message:result?.message,reference,ok});
@@ -273,8 +273,8 @@
       const btn=document.getElementById('quickTransactionSubmit');btn.disabled=true;
       try{
         const result=quickTransaction.kind==='deposit'
-          ? await rpc('jl_request_deposit',{p_token:state.token,p_amount:amount,p_note:note})
-          : await rpc('jl_request_withdrawal',{p_token:state.token,p_amount:amount});
+          ? await financialRpc('deposit','jl_request_deposit_idempotent',{p_token:state.token,p_amount:amount,p_note:note})
+          : await financialRpc('withdrawal','jl_request_withdrawal_idempotent',{p_token:state.token,p_amount:amount});
         const ok=result?.ok!==false,reference=result?.request_id?result.request_id.slice(0,8).toUpperCase():'';
         close();
         showTransactionModal({kind:quickTransaction.kind,amount,message:result?.message,reference,ok});
@@ -392,6 +392,48 @@
     try { payload = raw ? JSON.parse(raw) : null; } catch { payload = raw; }
     if (!response.ok) throw new Error(payload?.message || payload?.error || payload?.hint || `Erro ${response.status}`);
     return payload;
+  }
+
+  const FINANCIAL_REQUESTS_KEY = 'jl_financial_requests_v1';
+
+  function newFinancialRequestKey() {
+    if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
+    const bytes = new Uint8Array(16);
+    globalThis.crypto?.getRandomValues?.(bytes);
+    return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('') || `${Date.now()}-${Math.random()}`;
+  }
+
+  function financialRequestStore() {
+    try { return JSON.parse(sessionStorage.getItem(FINANCIAL_REQUESTS_KEY) || '{}') || {}; }
+    catch { return {}; }
+  }
+
+  function financialRequestKey(scope, args) {
+    const payload = { ...args };
+    delete payload.p_token;
+    delete payload.p_idempotency_key;
+    const fingerprint = JSON.stringify(payload);
+    const store = financialRequestStore();
+    const current = store[scope];
+    if (current?.fingerprint === fingerprint && current?.key) return current.key;
+    const key = newFinancialRequestKey();
+    store[scope] = { fingerprint, key };
+    try { sessionStorage.setItem(FINANCIAL_REQUESTS_KEY, JSON.stringify(store)); } catch {}
+    return key;
+  }
+
+  function clearFinancialRequestKey(scope, key) {
+    const store = financialRequestStore();
+    if (store[scope]?.key !== key) return;
+    delete store[scope];
+    try { sessionStorage.setItem(FINANCIAL_REQUESTS_KEY, JSON.stringify(store)); } catch {}
+  }
+
+  async function financialRpc(scope, name, args) {
+    const key = financialRequestKey(scope, args);
+    const result = await rpc(name, { ...args, p_idempotency_key: key });
+    clearFinancialRequestKey(scope, key);
+    return result;
   }
 
   function saveToken(token) {
@@ -851,7 +893,7 @@
     try {
       if (!(await ensureFunds('number', amount, 'apostar no Número Lendário'))) return;
       els.betButton.disabled = true;
-      const result = await rpc('jl_place_bet', { p_token: state.token, p_selected_number: Number(number), p_amount: Number(amount) });
+      const result = await financialRpc('number-bet','jl_place_bet_idempotent', { p_token: state.token, p_selected_number: Number(number), p_amount: Number(amount) });
       state.pendingBet = null;
       showToast(`Número Lendário: aposta ${result.selected_number} confirmada.`, 'success');
       await refresh(true);
@@ -866,7 +908,7 @@
       if (!(await ensureFunds('pair', amount, 'apostar na Dupla Lendária'))) return;
       els.pairBetButton.disabled = true;
       const [a, b] = [...numbers].sort((x, y) => x - y);
-      const result = await rpc('jl_place_pair_bet', { p_token: state.token, p_number_a: a, p_number_b: b, p_amount: Number(amount) });
+      const result = await financialRpc('pair-bet','jl_place_pair_bet_idempotent', { p_token: state.token, p_number_a: a, p_number_b: b, p_amount: Number(amount) });
       state.pendingBet = null;
       showToast(`Dupla Lendária: ${result.number_a}+${result.number_b} confirmada.`, 'success');
       await refresh(true);
@@ -967,7 +1009,7 @@
     event.preventDefault();
     const amount = Number(els.depositAmount.value);
     try {
-      const result = await rpc('jl_request_deposit', { p_token: state.token, p_amount: amount, p_note: els.depositNote.value.trim() });
+      const result = await financialRpc('deposit','jl_request_deposit_idempotent', { p_token: state.token, p_amount: amount, p_note: els.depositNote.value.trim() });
       const reference = result.request_id ? result.request_id.slice(0, 8).toUpperCase() : '';
       setMessage(els.depositMessage, `${result.message}${reference ? ` Confirmação: ${reference}` : ''}`, 'success');
       showTransactionModal({ kind: 'deposit', amount, message: result.message || 'O pedido foi recebido e aguarda confirmação.', reference, ok: true });
@@ -995,7 +1037,7 @@
     try {
       // O próprio RPC faz a verificação autoritativa de saldo e depósito por jogar.
       // Assim o botão nunca fica dependente de um pré-check separado.
-      const result = await rpc('jl_request_withdrawal', { p_token: state.token, p_amount: amount });
+      const result = await financialRpc('withdrawal','jl_request_withdrawal_idempotent', { p_token: state.token, p_amount: amount });
       const ok = result?.ok !== false;
       const reference = result?.request_id ? result.request_id.slice(0, 8).toUpperCase() : '';
       setMessage(els.withdrawMessage, result?.message || (ok?'Pedido de saque enviado.':'Saque não enviado.'), ok ? 'success' : 'error');
