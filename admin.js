@@ -589,7 +589,20 @@
       shared.adminCode.value = '';
       loginMessage('');
       await refresh(true);
-      toast('Acesso administrativo autorizado.', 'success');
+
+      const alert = result?.security_alert;
+      if (alert) {
+        const origin = [
+          alert.ip_address ? `IP ${alert.ip_address}` : '',
+          alert.country_code ? `país ${alert.country_code}` : ''
+        ].filter(Boolean).join(' · ');
+        toast(
+          `Alerta de segurança: ${Number(alert.count || 1)} bloqueio(s) por tentativas de acesso. Último: ${dateTime(alert.created_at)}${origin ? ` · ${origin}` : ''}.`,
+          'error'
+        );
+      } else {
+        toast('Acesso administrativo autorizado.', 'success');
+      }
     } catch (error) {
       loginMessage(error.message, 'error');
     }
