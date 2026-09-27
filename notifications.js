@@ -88,6 +88,15 @@
     return d.toLocaleString('pt-MZ', { dateStyle: 'short', timeStyle: 'short' });
   }
 
+  function notificationActionLabel(item) {
+    const href = String(item && item.href ? item.href : '').toLowerCase();
+    if (href.includes('deposit')) return 'Ir para depósito';
+    if (href.includes('withdraw')) return 'Ir para saque';
+    if (href.includes('ludo')) return 'Abrir Ludo';
+    if (href.includes('support')) return 'Abrir atendimento';
+    return 'Abrir área relacionada';
+  }
+
   function looksServerBacked(id) {
     return /^(ludo-invite|number-win|pair-win|ludo-win|follow|support|deposit-status|withdraw-status):/.test(String(id || ''));
   }
@@ -168,6 +177,7 @@
       '.jl-notify-item.unread{background:rgba(76,139,245,.09);border-color:rgba(76,139,245,.2)}',
       '.jl-notify-dot{width:8px;height:8px;margin-top:7px;border-radius:50%;background:#6f829d}.jl-notify-item.unread .jl-notify-dot{background:#f4bd42;box-shadow:0 0 0 4px rgba(244,189,66,.10)}',
       '.jl-notify-copy strong{display:block;color:#f4f7fb;font-size:.86rem}.jl-notify-copy p{margin:3px 0 0;color:#c7d3e2;font-size:.78rem;line-height:1.38}.jl-notify-copy time{display:block;margin-top:5px;color:#8195ae;font-size:.68rem}',
+      '.jl-notify-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.jl-notify-open{border-color:rgba(244,189,66,.35);color:#ffdb78;background:rgba(244,189,66,.07)}',
       '.jl-notify-foot{padding:10px 12px;border-top:1px solid rgba(255,255,255,.09);display:flex;align-items:center;justify-content:space-between;gap:10px;color:#91a4bd;font-size:.7rem}',
       '.jl-notify-device.enabled{border-color:rgba(53,201,133,.45);color:#8df1bb}',
       '@media(max-width:600px){.jl-notify-panel{position:fixed;left:10px;right:10px;top:68px;width:auto;max-height:calc(100dvh - 82px)}.jl-notify-button{width:38px;height:38px}.jl-notify-head{align-items:flex-start}.jl-notify-head-actions{max-width:150px}}'
@@ -231,6 +241,13 @@
       const item = event.target.closest('[data-jl-notify-id]');
       if (!item) return;
       markRead(item.dataset.jlNotifyId);
+
+      const action = event.target.closest('[data-jl-notify-open]');
+      if (!action) return;
+
+      event.preventDefault();
+      const href = action.dataset.jlNotifyOpen || '';
+      if (href) window.location.href = href;
     });
 
     document.addEventListener('click', (event) => {
@@ -288,12 +305,13 @@
     if (summary) summary.textContent = unread ? String(unread) + ' não lida' + (unread === 1 ? '' : 's') : 'Sem notificações novas';
 
     ui.list.innerHTML = items.length ? items.map((item) => {
-      const tag = item.href ? 'a' : 'div';
-      const href = item.href ? ' href="' + escapeHtml(item.href) + '"' : '';
-      return '<' + tag + href + ' class="jl-notify-item' + (item.read ? '' : ' unread') + '" data-jl-notify-id="' + escapeHtml(item.id) + '">' +
+      const action = item.href
+        ? '<span class="jl-notify-actions"><button type="button" class="jl-notify-mini jl-notify-open" data-jl-notify-open="' + escapeHtml(item.href) + '">' + escapeHtml(notificationActionLabel(item)) + '</button></span>'
+        : '';
+      return '<div class="jl-notify-item' + (item.read ? '' : ' unread') + '" data-jl-notify-id="' + escapeHtml(item.id) + '">' +
         '<span class="jl-notify-dot" aria-hidden="true"></span>' +
-        '<span class="jl-notify-copy"><strong>' + escapeHtml(item.title || 'Notificação') + '</strong><p>' + escapeHtml(item.message || '') + '</p><time>' + escapeHtml(formatWhen(item.createdAt)) + '</time></span>' +
-      '</' + tag + '>';
+        '<span class="jl-notify-copy"><strong>' + escapeHtml(item.title || 'Notificação') + '</strong><p>' + escapeHtml(item.message || '') + '</p><time>' + escapeHtml(formatWhen(item.createdAt)) + '</time>' + action + '</span>' +
+      '</div>';
     }).join('') : '<div class="jl-notify-empty">Ainda não há notificações.</div>';
 
     updateDeviceButton();
@@ -421,7 +439,7 @@
   async function ensureServiceWorker() {
     if (!('serviceWorker' in navigator)) throw new Error('Service Worker não suportado.');
     if (swRegistration) return swRegistration;
-    swRegistration = await navigator.serviceWorker.register('./sw.js?v=20260927-2', { scope: './' });
+    swRegistration = await navigator.serviceWorker.register('./sw.js?v=20260927-3', { scope: './' });
     await navigator.serviceWorker.ready;
     return swRegistration;
   }
@@ -612,7 +630,11 @@
         n.onclick = () => {
           window.focus();
           markRead(item.id);
-          if (item.href) window.location.href = item.href;
+          if (ui.panel) {
+            ui.panel.classList.remove('hidden');
+            ui.button?.setAttribute('aria-expanded', 'true');
+            render();
+          }
           n.close();
         };
       } catch {}
@@ -698,8 +720,10 @@
       const data = event.data || {};
       if (data.type !== 'jl-notification-open') return;
       if (data.id) markRead(String(data.id));
-      if (data.href && location.href !== new URL(data.href, location.href).href) {
-        location.href = data.href;
+      if (ui.panel) {
+        ui.panel.classList.remove('hidden');
+        ui.button?.setAttribute('aria-expanded', 'true');
+        render();
       }
     });
   }
