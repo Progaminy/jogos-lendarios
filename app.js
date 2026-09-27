@@ -166,6 +166,16 @@
     }
     els.transactionModal.classList.remove('hidden');
     document.body.classList.add('modal-open');
+    if (ok) {
+      const noticeKey = reference || `${kind}:${Number(amount) || 0}:${Date.now()}`;
+      window.JLNotifications?.push({
+        id: `finance:${kind}:${noticeKey}`,
+        title: isDeposit ? 'Depósito solicitado' : 'Saque solicitado',
+        message: `${formatMoney(amount)} MZN · ${message || 'Pedido recebido.'}${reference ? ` · confirmação ${reference}` : ''}`,
+        type: 'finance',
+        href: isDeposit ? './index.html#depositPanel' : './index.html#withdrawPanel'
+      });
+    }
   }
 
   function closeTransactionModal() {
@@ -351,7 +361,16 @@
     if (!winner) return;
     const pair = winner.game_type === 'pair';
     const gameName = pair ? 'Dupla Lendária' : 'Número Lendário';
-    showWinModal('Parabéns!', `Você ganhou ${formatMoney(winner.payout)} MZN no ${gameName}! Rodada ${winner.round_no ?? '—'} · hora ${winRoundTime(winner)}. O valor foi creditado no seu saldo.`, winKey(winner, winner.game_type));
+    const noticeKey = winKey(winner, winner.game_type);
+    const noticeMessage = `Você ganhou ${formatMoney(winner.payout)} MZN no ${gameName}! Rodada ${winner.round_no ?? '—'} · hora ${winRoundTime(winner)}.`;
+    window.JLNotifications?.push({
+      id: `win:${noticeKey}`,
+      title: 'Parabéns! Você ganhou',
+      message: noticeMessage,
+      type: 'win',
+      href: './index.html#playerArea'
+    });
+    showWinModal('Parabéns!', `${noticeMessage} O valor foi creditado no seu saldo.`, noticeKey);
   }
 
   async function rpc(name, args = {}) {
@@ -377,6 +396,7 @@
     state.token = token || '';
     if (state.token) localStorage.setItem(TOKEN_KEY, state.token);
     else localStorage.removeItem(TOKEN_KEY);
+    window.JLNotifications?.setActive(Boolean(state.token));
   }
 
   const game = (type) => state.data?.games?.[type] || null;
@@ -719,11 +739,13 @@
   function renderPlayer() {
     const player = state.data?.player;
     if (!state.token || !player) {
+      window.JLNotifications?.setActive(false);
       els.playerArea.classList.add('hidden');
       els.accountButton.textContent = 'Entrar';
       closeAccountMenu();
       return;
     }
+    window.JLNotifications?.setActive(true);
     els.playerArea.classList.remove('hidden');
     els.playerName.textContent = player.name;
     els.playerPhone.textContent = `+${player.phone}`;
