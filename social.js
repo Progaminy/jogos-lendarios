@@ -4,6 +4,7 @@
   const cfg = window.JL_CONFIG || {};
   const TOKEN_KEY = 'jl_player_token';
   const POLL_MS = 8000;
+  const LUDO_SYNC_MS = 20000;
 
   const state = {
     timer: null,
@@ -307,10 +308,24 @@
     };
 
     refreshVisibility();
-    state.timer = setInterval(refreshVisibility, POLL_MS);
-    document.addEventListener('visibilitychange', refreshVisibility);
+
+    if (window.JLLudoSync?.register) {
+      window.JLLudoSync.register('social', () => loadSocial(true), {
+        interval: LUDO_SYNC_MS,
+        when: () => Boolean(token()),
+        visibleOnly: true,
+        immediate: false
+      });
+    } else {
+      state.timer = setInterval(refreshVisibility, POLL_MS);
+      document.addEventListener('visibilitychange', refreshVisibility);
+    }
+
     window.addEventListener('storage', (event) => {
-      if (event.key === TOKEN_KEY) refreshVisibility();
+      if (event.key === TOKEN_KEY) {
+        refreshVisibility();
+        window.JLLudoSync?.kick?.('social');
+      }
     });
   }
 
