@@ -564,3 +564,9 @@ button.status-metric:hover{border-color:rgba(244,189,66,.5);transform:translateY
     height:72%!important;
   }
 }
+
+/* Counterpropostas: regras e valor permanecem legíveis no modal, inclusive no mobile. */
+.flow-counteroffer{display:grid;gap:9px;margin:12px 0;padding:12px;border:1px solid rgba(255,255,255,.10);border-radius:12px;background:rgba(255,255,255,.035)}
+.flow-counteroffer label{display:grid;gap:6px}.flow-counteroffer small{line-height:1.4}
+.flow-counteroffer .money{width:100%}.flow-counteroffer .money input{width:100%;min-width:0}
+@media(max-width:600px){.flow-actions{display:grid!important;grid-template-columns:1fr!important}.flow-actions .button{width:100%}}
