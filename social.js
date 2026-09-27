@@ -132,6 +132,11 @@
     ui.refresh.addEventListener('click', () => loadSocial(false));
 
     section.addEventListener('click', (event) => {
+      const inviteButton = event.target.closest('[data-social-invite]');
+      if (inviteButton) {
+        invitePlayer(inviteButton.dataset.socialInvite, inviteButton);
+        return;
+      }
       const button = event.target.closest('[data-social-target]');
       if (!button) return;
       const target = button.dataset.socialTarget;
@@ -178,6 +183,7 @@
         '<div class="jl-social-copy"><strong>' + escapeHtml(player.name) + '</strong><small>' + escapeHtml(player.code) + '</small><div class="jl-social-tags">' + tags + '</div></div>' +
       '</div>' +
       '<div class="jl-social-actions">' +
+        ((window.JLLudoSocial && window.JLLudoSocial.canInvite && window.JLLudoSocial.canInvite()) ? '<button class="button primary small" type="button" data-social-invite="' + escapeHtml(player.player_id) + '">Convidar</button>' : '') +
         '<button class="button ' + (following ? 'ghost' : 'secondary') + ' small" type="button" data-social-target="' + escapeHtml(player.player_id) + '" data-social-follow="' + (following ? '0' : '1') + '">' + (following ? 'Deixar de seguir' : 'Seguir') + '</button>' +
       '</div>' +
     '</div>';
@@ -237,6 +243,28 @@
       ui.searchResults.innerHTML = '<div class="jl-social-empty">' + escapeHtml(error && error.message ? error.message : 'Falha na busca.') + '</div>';
     } finally {
       state.searchBusy = false;
+    }
+  }
+
+  async function invitePlayer(target, button) {
+    if (!target || !button || !window.JLLudoSocial || !window.JLLudoSocial.invite) return;
+    button.disabled = true;
+    const oldText = button.textContent;
+    button.textContent = 'Enviando…';
+    try {
+      await window.JLLudoSocial.invite(target);
+      button.textContent = 'Enviado';
+      setTimeout(() => {
+        if (button && button.isConnected) {
+          button.disabled = false;
+          button.textContent = oldText;
+        }
+      }, 2500);
+    } catch (error) {
+      button.disabled = false;
+      button.textContent = oldText;
+      const message = error && error.message ? error.message : 'Não foi possível enviar o convite.';
+      ui.searchResults.insertAdjacentHTML('afterbegin', '<div class="jl-social-empty">' + escapeHtml(message) + '</div>');
     }
   }
 
