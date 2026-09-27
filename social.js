@@ -18,7 +18,7 @@
   const ui = {};
 
   function token() {
-    return localStorage.getItem(TOKEN_KEY) || '';
+    return window.JLSession?.getPlayerToken?.() || localStorage.getItem(TOKEN_KEY) || '';
   }
 
   function escapeHtml(value) {
@@ -27,24 +27,7 @@
     }[c]));
   }
 
-  async function rpc(name, args = {}) {
-    if (!cfg.supabaseUrl || !cfg.supabaseKey) throw new Error('Configuração do Supabase ausente.');
-    const response = await fetch(cfg.supabaseUrl + '/rest/v1/rpc/' + name, {
-      method: 'POST',
-      headers: {
-        apikey: cfg.supabaseKey,
-        Authorization: 'Bearer ' + cfg.supabaseKey,
-        'Content-Type': 'application/json',
-        Accept: 'application/json'
-      },
-      body: JSON.stringify(args)
-    });
-    const raw = await response.text();
-    let data = null;
-    try { data = raw ? JSON.parse(raw) : null; } catch { data = raw; }
-    if (!response.ok) throw new Error((data && (data.message || data.hint || data.error)) || ('Erro ' + response.status));
-    return data;
-  }
+  const rpc = (name, args = {}) => window.JLApi.rpc(name, args);
 
   function injectStyle() {
     if (document.getElementById('jlSocialStyle')) return;
