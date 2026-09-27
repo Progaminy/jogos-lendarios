@@ -228,7 +228,8 @@ begin
 
   if v_rate.blocked_until is not null and v_rate.blocked_until > now() then
     v_retry := greatest(1, ceil(extract(epoch from (v_rate.blocked_until-now())) / 60.0)::integer);
-    perform set_config('response.status','429',true);\n    return jsonb_build_object(
+    perform set_config('response.status','429',true);
+    return jsonb_build_object(
       'ok', false,
       'message', format('Acesso administrativo temporariamente limitado. Tente novamente em %s minuto(s).', v_retry),
       'retry_after_minutes', v_retry
