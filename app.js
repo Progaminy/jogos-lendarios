@@ -364,7 +364,8 @@
     const noticeKey = winKey(winner, winner.game_type);
     const noticeMessage = `Você ganhou ${formatMoney(winner.payout)} MZN no ${gameName}! Rodada ${winner.round_no ?? '—'} · hora ${winRoundTime(winner)}.`;
     window.JLNotifications?.push({
-      id: `win:${noticeKey}`,
+      id: winner.id ? `${pair ? 'pair-win' : 'number-win'}:${winner.id}` : `win:${noticeKey}`,
+      serverBacked: Boolean(winner.id),
       title: 'Parabéns! Você ganhou',
       message: noticeMessage,
       type: 'win',
