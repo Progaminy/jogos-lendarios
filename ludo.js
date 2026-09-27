@@ -459,7 +459,7 @@
     els.notificationCenter?.classList.toggle('has-direct',invites.length>0);
     if(invites.length>state.lastDirectInviteCount&&state.lastDirectInviteCount>=0)showToast(`🔔 Você recebeu ${invites.length-state.lastDirectInviteCount} novo(s) convite(s) individual(is).`,'success');
     state.lastDirectInviteCount=invites.length;
-    els.inviteList.innerHTML=invites.length?invites.map(i=>`<div class="invite-card direct-invite"><div><span class="notice-kind direct">INDIVIDUAL</span><strong>${escapeHtml(i.host)} · ${escapeHtml(i.host_code)}</strong><br><small>${escapeHtml(i.room_code)} · ${i.player_count} jogadores · ${escapeHtml(i.mode)} · ${money(i.bet_amount)} MZN</small>${canSwitchOwnRoom?'<span class="invite-switch-note">Pode aceitar: você sairá da sua sala atual e entrará nesta.</span>':''}</div><div class="notice-actions"><button class="button success small" data-invite-accept="${i.id}" data-bet-amount="${Number(i.bet_amount||0)}" ${roomBusy&&!canSwitchOwnRoom?'disabled title="Termine ou saia da sala atual para aceitar outro convite."':''}>Aceitar</button><button class="button danger small" data-invite-decline="${i.id}">Recusar</button></div></div>`).join(''):'<div class="empty">Nenhum convite individual recebido.</div>';
+    els.inviteList.innerHTML=invites.length?invites.map(i=>`<div class="invite-card direct-invite"><div><span class="notice-kind direct">INDIVIDUAL</span><strong>${escapeHtml(i.host)} · ${escapeHtml(i.host_code)}</strong><br><small>${escapeHtml(i.room_code)} · ${i.player_count} jogadores · ${escapeHtml(i.mode)}</small><span class="invite-bet-value"><small>VALOR POR JOGADOR</small><strong>${money(i.bet_amount)} MZN</strong></span>${canSwitchOwnRoom?'<span class="invite-switch-note">Pode aceitar: você sairá da sua sala atual e entrará nesta.</span>':''}</div><div class="notice-actions"><button class="button success small" data-invite-accept="${i.id}" data-bet-amount="${Number(i.bet_amount||0)}" ${roomBusy&&!canSwitchOwnRoom?'disabled title="Termine ou saia da sala atual para aceitar outro convite."':''}>Aceitar convite</button><button class="button danger small" data-invite-decline="${i.id}">Recusar</button></div></div>`).join(''):'<div class="empty">Nenhum convite individual recebido.</div>';
     els.publicChallengeList.innerHTML=challenges.length?challenges.map(c=>{
       const raw=String(c.expires_at||'');
       const ms=Date.parse(raw);
@@ -507,14 +507,22 @@
     }
     els.rulesAcceptModal?.classList.add('hidden');
     if(needsStake){
-      els.stakeAcceptTitle.textContent='Aceitar ou propor outro valor';
-      els.stakeAcceptText.textContent=`${money(r.bet_amount)} MZN por jogador`;
-      const balance=Number(state.status?.identity?.balance??0);
-      els.stakeBalanceText.textContent=`Seu saldo: ${money(balance)} MZN · depois da confirmação: ${money(Math.max(0,balance-Number(r.bet_amount||0)))} MZN`;
-      if(els.stakeProposalAmount&&document.activeElement!==els.stakeProposalAmount){
-        els.stakeProposalAmount.value=String(Math.trunc(Number(r.bet_amount||10)));
+      const rawStake=Number(r.bet_amount);
+      const stakeAmount=Number.isFinite(rawStake)&&rawStake>0?rawStake:0;
+      els.stakeAcceptTitle.textContent='Confirmar valor da partida';
+      if(els.stakeAcceptText){
+        els.stakeAcceptText.textContent=stakeAmount>0?`${money(stakeAmount)} MZN`:'Valor indisponível';
+        els.stakeAcceptText.dataset.amount=String(stakeAmount);
       }
-      els.stakeModalAccept.textContent=`Aceitar e confirmar ${money(r.bet_amount)} MZN`;
+      const balance=Number(state.status?.identity?.balance??0);
+      els.stakeBalanceText.textContent=stakeAmount>0
+        ?`Este é o valor que você aceita por jogador. Seu saldo: ${money(balance)} MZN · depois da confirmação: ${money(Math.max(0,balance-stakeAmount))} MZN`
+        :'Não foi possível carregar o valor desta partida. Atualize a sala antes de confirmar.';
+      if(els.stakeProposalAmount&&document.activeElement!==els.stakeProposalAmount&&stakeAmount>0){
+        els.stakeProposalAmount.value=String(Math.trunc(stakeAmount));
+      }
+      els.stakeModalAccept.disabled=stakeAmount<=0;
+      els.stakeModalAccept.textContent=stakeAmount>0?`Aceitar ${money(stakeAmount)} MZN por jogador`:'Valor indisponível';
       els.stakeAcceptModal?.classList.remove('hidden');
       document.body.classList.add('flow-modal-open');
       return;
