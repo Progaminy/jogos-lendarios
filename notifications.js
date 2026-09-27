@@ -655,6 +655,12 @@
   function setActive(value = true) {
     const next = Boolean(value);
     const currentToken = token();
+    const sameSession = next && active && currentToken && currentToken === sessionToken;
+
+    if (sameSession) {
+      render();
+      return;
+    }
 
     if (next && currentToken) sessionToken = currentToken;
     if (!next && sessionToken) {
