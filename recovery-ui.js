@@ -2,17 +2,7 @@
   'use strict';
   const cfg=window.JL_CONFIG||{};
   const $=id=>document.getElementById(id);
-  function rpc(name,args={}){
-    return fetch(`${cfg.supabaseUrl}/rest/v1/rpc/${name}`,{
-      method:'POST',
-      headers:{apikey:cfg.supabaseKey,Authorization:`Bearer ${cfg.supabaseKey}`,'Content-Type':'application/json',Accept:'application/json'},
-      body:JSON.stringify(args)
-    }).then(async r=>{
-      const raw=await r.text();let data=null;try{data=raw?JSON.parse(raw):null}catch{data=raw}
-      if(!r.ok)throw new Error(data?.message||data?.hint||data?.error||`Erro ${r.status}`);
-      return data;
-    });
-  }
+  const rpc=(name,args={})=>window.JLApi.rpc(name,args);
   function ensureModal(){
     if($('pinRecoveryModal'))return;
     const wrap=document.createElement('div');
