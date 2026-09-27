@@ -169,6 +169,38 @@
     return payload;
   }
 
+  const ADMIN_FINANCIAL_REQUESTS_KEY = 'jl_admin_financial_requests_v1';
+
+  function newAdminFinancialRequestKey() {
+    if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
+    const bytes = new Uint8Array(16);
+    globalThis.crypto?.getRandomValues?.(bytes);
+    return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('') || `${Date.now()}-${Math.random()}`;
+  }
+
+  function adminFinancialStore() {
+    try { return JSON.parse(sessionStorage.getItem(ADMIN_FINANCIAL_REQUESTS_KEY) || '{}') || {}; }
+    catch { return {}; }
+  }
+
+  function adminFinancialRequestKey(scope, args) {
+    const fingerprint = JSON.stringify(args);
+    const store = adminFinancialStore();
+    const current = store[scope];
+    if (current?.fingerprint === fingerprint && current?.key) return current.key;
+    const key = newAdminFinancialRequestKey();
+    store[scope] = { fingerprint, key };
+    try { sessionStorage.setItem(ADMIN_FINANCIAL_REQUESTS_KEY, JSON.stringify(store)); } catch {}
+    return key;
+  }
+
+  function clearAdminFinancialRequestKey(scope, key) {
+    const store = adminFinancialStore();
+    if (store[scope]?.key !== key) return;
+    delete store[scope];
+    try { sessionStorage.setItem(ADMIN_FINANCIAL_REQUESTS_KEY, JSON.stringify(store)); } catch {}
+  }
+
   function saveToken(token) {
     state.token = token || '';
     if (state.token) localStorage.setItem(TOKEN_KEY, state.token);
@@ -681,11 +713,17 @@
       const delta = Number(String(raw).replace(',', '.'));
       if (!Number.isFinite(delta) || delta === 0) return toast('Ajuste inválido.', 'error');
       const note = window.prompt('Motivo do ajuste (opcional):') || '';
-      await runAction('jl_admin_adjust_balance', {
+      const idemArgs = {
         p_player_id: adjust.dataset.adjust,
         p_delta: delta,
         p_note: note
+      };
+      const idemKey = adminFinancialRequestKey('balance-adjustment', idemArgs);
+      const result = await runAction('jl_admin_adjust_balance_idempotent', {
+        ...idemArgs,
+        p_idempotency_key: idemKey
       }, 'Saldo ajustado.');
+      if (result) clearAdminFinancialRequestKey('balance-adjustment', idemKey);
       return;
     }
 
