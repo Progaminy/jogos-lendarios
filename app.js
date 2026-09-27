@@ -775,100 +775,26 @@
     }
   }
 
-  function openAuth(mode = 'register') {
-    els.authModal.classList.remove('hidden');
-    document.body.classList.add('modal-open');
-    switchAuth(mode);
-    setMessage(els.authMessage);
-  }
+  const playerAuthUI=window.JLPlayerAuthUI.create({els,setMessage});
+  const openAuth=(mode='register')=>playerAuthUI.open(mode);
+  const closeAuth=()=>playerAuthUI.close();
+  const switchAuth=(mode)=>playerAuthUI.switchMode(mode);
+  const validateInviteCodeInput=()=>playerAuthUI.validateInviteCode();
 
-  function closeAuth() {
-    els.authModal.classList.add('hidden');
-    document.body.classList.remove('modal-open');
-  }
+  const betActions=window.JLBetActions.create({
+    state,
+    els,
+    ensureFunds,
+    showToast,
+    refresh,
+    updateBetButtons
+  });
+  const {
+    placeNumberBet,
+    placePairBet,
+    continuePendingBet
+  }=betActions;
 
-  function switchAuth(mode) {
-    const register = mode === 'register';
-    els.registerTab.classList.toggle('active', register);
-    els.loginTab.classList.toggle('active', !register);
-    els.registerForm.classList.toggle('hidden', !register);
-    els.loginForm.classList.toggle('hidden', register);
-    setMessage(els.authMessage);
-  }
-
-  async function validateInviteCodeInput() {
-    if (!els.registerInviteCode) return true;
-    const code = els.registerInviteCode.value.trim().toUpperCase();
-    els.registerInviteCode.value = code;
-    if (!code) {
-      if (els.registerInviteStatus) {
-        els.registerInviteStatus.textContent = '';
-        els.registerInviteStatus.style.color = '';
-      }
-      return true;
-    }
-    if (els.registerInviteStatus) {
-      els.registerInviteStatus.textContent = 'A validar código…';
-      els.registerInviteStatus.style.color = '';
-    }
-    try {
-      const result = await rpc('jl_validate_invite_code', { p_code: code });
-      if (!result?.valid) {
-        if (els.registerInviteStatus) {
-          els.registerInviteStatus.textContent = 'Código de convite inválido ou inativo.';
-          els.registerInviteStatus.style.color = '#ff8994';
-        }
-        return false;
-      }
-      if (els.registerInviteStatus) {
-        els.registerInviteStatus.textContent = 'Código válido · ' + (result.influencer || 'Influenciador');
-        els.registerInviteStatus.style.color = '#8df1bb';
-      }
-      return true;
-    } catch (error) {
-      if (els.registerInviteStatus) {
-        els.registerInviteStatus.textContent = error.message || 'Não foi possível validar o código.';
-        els.registerInviteStatus.style.color = '#ff8994';
-      }
-      return false;
-    }
-  }
-
-  async function placeNumberBet(number, amount) {
-    try {
-      if (!(await ensureFunds('number', amount, 'apostar no Número Lendário'))) return;
-      els.betButton.disabled = true;
-      const result = await financialRpc('number-bet','jl_place_bet_idempotent', { p_token: state.token, p_selected_number: Number(number), p_amount: Number(amount) });
-      state.pendingBet = null;
-      showToast(`Número Lendário: aposta ${result.selected_number} confirmada.`, 'success');
-      await refresh(true);
-    } catch (error) {
-      showToast(error.message, 'error');
-      updateBetButtons();
-    }
-  }
-
-  async function placePairBet(numbers, amount) {
-    try {
-      if (!(await ensureFunds('pair', amount, 'apostar na Dupla Lendária'))) return;
-      els.pairBetButton.disabled = true;
-      const [a, b] = [...numbers].sort((x, y) => x - y);
-      const result = await financialRpc('pair-bet','jl_place_pair_bet_idempotent', { p_token: state.token, p_number_a: a, p_number_b: b, p_amount: Number(amount) });
-      state.pendingBet = null;
-      showToast(`Dupla Lendária: ${result.number_a}+${result.number_b} confirmada.`, 'success');
-      await refresh(true);
-    } catch (error) {
-      showToast(error.message, 'error');
-      updateBetButtons();
-    }
-  }
-
-  async function continuePendingBet() {
-    if (!state.pendingBet) return;
-    const pending = state.pendingBet;
-    if (pending.type === 'pair') await placePairBet(pending.numbers, pending.amount);
-    else await placeNumberBet(pending.number, pending.amount);
-  }
 
   els.betAmount?.addEventListener('change',()=>{const amount=Number(els.betAmount.value);if(state.token&&Number.isInteger(amount)&&amount>0)ensureFunds('number',amount,'apostar no Número Lendário').catch(err=>showToast(err.message,'error'));});
   els.pairBetAmount?.addEventListener('change',()=>{const amount=Number(els.pairBetAmount.value);if(state.token&&Number.isInteger(amount)&&amount>0)ensureFunds('pair',amount,'apostar na Dupla Lendária').catch(err=>showToast(err.message,'error'));});
