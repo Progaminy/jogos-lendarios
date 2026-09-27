@@ -142,24 +142,6 @@
   });
   const {tokenCoord,animateTokenPath,detectForwardMove}=ludoAnimation;
 
-  function decorateClassicBoard(cells){
-    const at=(r,c)=>cells[r*15+c];
-    const yards=[
-      ['red',1,1],['green',1,10],['yellow',10,10],['blue',10,1]
-    ];
-    for(const [color,r0,c0] of yards)for(let r=r0;r<r0+4;r++)for(let c=c0;c<c0+4;c++)at(r,c).classList.add('yard',`yard-${color}`);
-    at(7,0).classList.add('entry-arrow','entry-red');
-    at(0,7).classList.add('entry-arrow','entry-green');
-    at(7,14).classList.add('entry-arrow','entry-yellow');
-    at(14,7).classList.add('entry-arrow','entry-blue');
-  }
-  function classicCenter(){
-    const center=document.createElement('div');
-    center.className='ludo-center';
-    center.setAttribute('aria-hidden','true');
-    return center;
-  }
-
   function escapeHtml(v){return String(v ?? '').replace(/[&<>'\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','\"':'&quot;'}[c]));}
   function money(v){return Number(v||0).toLocaleString('pt-MZ',{minimumFractionDigits:2,maximumFractionDigits:2});}
   function showToast(msg,type=''){els.toast.textContent=msg;els.toast.className=`toast show ${type}`;clearTimeout(showToast.t);showToast.t=setTimeout(()=>els.toast.className='toast',3500);}
@@ -261,9 +243,27 @@
   function wirePlayerCountPicker(selectId){const picker=document.querySelector(`.player-count-picker[data-select-id="${selectId}"]`);if(!picker)return;picker.addEventListener('click',e=>{const b=e.target.closest('[data-player-count]');if(!b)return;setPlayerCount(selectId,b.dataset.playerCount);});syncPlayerCountPicker(selectId);}
   function syncCapturePenaltyAvailability(){const r=roomData();const form=els.rulesForm;if(!form)return;const penalty=form.elements.capture_penalty;const help=$('capturePenaltyHelp');if(!penalty)return;const twoPlayers=Number(r?.player_count)===2;if(twoPlayers){penalty.value='lose_turn';for(const opt of penalty.options)opt.disabled=opt.value!=='lose_turn';if(help)help.textContent='Com 2 jogadores, ignorar captura apenas faz perder a vez; eliminação só existe com 3 ou 4 jogadores.';}else{for(const opt of penalty.options)opt.disabled=false;if(help)help.textContent='Com 3 ou 4 jogadores, o anfitrião pode escolher perder a vez, eliminar ou permitir reentrada.';}}
 
-  function renderStaticBoard(target,colors=['red','green','yellow','blue']){if(!target)return;const cells=[];for(let i=0;i<225;i++){const d=document.createElement('div');d.className='cell';d.dataset.row=String(Math.floor(i/15));d.dataset.col=String(i%15);cells.push(d);}const at=(row,col)=>cells[row*15+col];for(let rr=0;rr<6;rr++)for(let cc=0;cc<6;cc++)at(rr,cc).classList.add('base','red');for(let rr=0;rr<6;rr++)for(let cc=9;cc<15;cc++)at(rr,cc).classList.add('base','green');for(let rr=9;rr<15;rr++)for(let cc=9;cc<15;cc++)at(rr,cc).classList.add('base','yellow');for(let rr=9;rr<15;rr++)for(let cc=0;cc<6;cc++)at(rr,cc).classList.add('base','blue');PATH.forEach(([r,c],i)=>{at(r,c).classList.add('path');if(SAFE.has(i))at(r,c).classList.add('safe');});Object.entries(HOME).forEach(([color,coords])=>coords.forEach(([r,c])=>at(r,c).classList.add(`home-${color}`)));for(let r=6;r<=8;r++)for(let c=6;c<=8;c++)at(r,c).classList.add('center');decorateClassicBoard(cells);for(const color of colors){if(!BASE[color])continue;BASE[color].forEach(([r,c],index)=>{const p=document.createElement('span');p.className=`piece ${color} preview-piece`;p.textContent=index+1;p.setAttribute('aria-hidden','true');at(r,c).appendChild(p);});}target.replaceChildren(...cells,classicCenter());}
-  function renderLobbyBoard(){renderStaticBoard(els.ludoLobbyBoard);}
-  function renderPregameBoard(){const colors=roomPlayers().filter(p=>p.status!=='left'&&BASE[p.color]).map(p=>p.color);renderStaticBoard(els.ludoBoard,colors);}
+  const ludoRender=window.JLLudoRender.create({
+    state,
+    els,
+    path:PATH,
+    start:START,
+    home:HOME,
+    base:BASE,
+    safe:SAFE,
+    finishStep:FINISH_STEP,
+    trackLastStep:TRACK_LAST_STEP,
+    homeFirstStep:HOME_FIRST_STEP,
+    roomPlayers,
+    me,
+    moveToken:(tokenNo)=>moveToken(tokenNo)
+  });
+  const {
+    renderLobbyBoard,
+    renderPregameBoard,
+    renderBoard
+  }=ludoRender;
+
 
   async function loadStatus(silent=false){
     if(state.animating||state.diceRolling)return;
@@ -436,114 +436,6 @@
   function updateClock(){const r=roomData();if(r?.status==='negotiating'){els.deadlineClock.textContent='Sem prazo';els.deadlineBar.style.borderColor='';return;}if(!r?.action_deadline){els.deadlineClock.textContent='—';els.deadlineBar.style.borderColor='';return;}const s=Math.max(0,Math.ceil((new Date(r.action_deadline)-Date.now())/1000));els.deadlineClock.textContent=`${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;els.deadlineBar.style.borderColor=s<=10?'#b44b59':'';}
   function renderFunding(){const r=roomData(),mine=myRoomPlayer(),show=r.status==='funding';els.fundingPanel.classList.toggle('hidden',!show);if(!show)return;els.fundingText.textContent=`${roomPlayers().filter(p=>p.stake_paid).length}/${r.player_count} jogadores já confirmaram ${money(r.bet_amount)} MZN. Você pode aceitar o valor atual ou enviar uma contraproposta antes do jogo começar.`;els.fundButton.classList.add('hidden');els.fundButton.disabled=Boolean(mine?.stake_paid);}
   function renderGame(){const r=roomData(),playing=['playing','finished'].includes(r.status);els.gamePanel.classList.remove('hidden');const current=roomPlayers().find(p=>p.player_id===r.current_player_id);if(!playing){els.turnTitle.textContent=r.status==='waiting'?'Tabuleiro pronto · aguardando jogadores':r.status==='negotiating'?'Tabuleiro pronto · negociação das regras':r.status==='funding'?'Tabuleiro pronto · aguardando apostas':'Tabuleiro pronto';renderDiceFace(null);els.rollDice.disabled=true;els.rollDice.classList.add('hidden');els.moveHint.textContent=r.status==='waiting'?'Convide ou aguarde os outros jogadores.':r.status==='negotiating'?'Todos devem concordar com as mesmas regras antes de jogar.':r.status==='funding'?'Confirme a aposta para iniciar a partida.':'Aguardando preparação da partida.';els.reenterButton.classList.add('hidden');renderPregameBoard();renderChat();renderVoice();return;}els.turnTitle.textContent=r.status==='finished'?'Partida terminada':current?`Vez de ${current.name} · ${current.code}`:'Aguardando…';if(!state.diceRolling)renderDiceFace(visibleDiceValue(r));const myTurn=r.current_player_id===me();els.rollDice.disabled=!(r.status==='playing'&&myTurn&&r.turn_phase==='roll');els.rollDice.classList.toggle('hidden',r.status!=='playing');const legal=(state.room.legal_moves||[]).map(x=>Number(x.token_no));if(myTurn&&r.turn_phase==='move')els.moveHint.textContent=`Dado ${r.dice_result}: escolha uma peça destacada em até ${rules().move_seconds}s.`;else if(myTurn)els.moveHint.textContent='É a sua vez. Lance o dado.';else els.moveHint.textContent=current?`Aguardando ${current.code}.`:'Aguardando.';const mine=myRoomPlayer();els.reenterButton.classList.toggle('hidden',mine?.status!=='reentry');if(mine?.status==='reentry')els.reenterButton.textContent=`Pagar ${money(rules().reentry_amount)} MZN e continuar`;renderBoard(legal);renderChat();renderVoice();maybeAutoMove();}
-  function renderBoard(legal=[]){
-    // Enquanto um peão percorre o caminho, não reconstruir o tabuleiro.
-    // Isso elimina o efeito visual destino -> origem -> destino.
-    if(state.animating&&els.ludoBoard?.childElementCount)return;
-    const cells=[];
-    for(let i=0;i<225;i++){
-      const d=document.createElement('div');
-      d.className='cell';
-      d.dataset.row=String(Math.floor(i/15));
-      d.dataset.col=String(i%15);
-      cells.push(d);
-    }
-    const at=(row,col)=>cells[row*15+col];
-    for(let rr=0;rr<6;rr++)for(let cc=0;cc<6;cc++)at(rr,cc).classList.add('base','red');
-    for(let rr=0;rr<6;rr++)for(let cc=9;cc<15;cc++)at(rr,cc).classList.add('base','green');
-    for(let rr=9;rr<15;rr++)for(let cc=9;cc<15;cc++)at(rr,cc).classList.add('base','yellow');
-    for(let rr=9;rr<15;rr++)for(let cc=0;cc<6;cc++)at(rr,cc).classList.add('base','blue');
-    PATH.forEach(([r,c],i)=>{at(r,c).classList.add('path');if(SAFE.has(i))at(r,c).classList.add('safe');});
-    Object.entries(HOME).forEach(([color,coords])=>coords.forEach(([r,c])=>at(r,c).classList.add(`home-${color}`)));
-    for(let r=6;r<=8;r++)for(let c=6;c<=8;c++)at(r,c).classList.add('center');
-    decorateClassicBoard(cells);
-
-    const players=roomPlayers();
-    const grouped=new Map();
-    const finished=[];
-
-    for(const t of state.room.tokens||[]){
-      const p=players.find(x=>x.player_id===t.player_id);
-      if(!p)continue;
-
-      // 56 já venceu: não ocupa mais a última casa da HOME.
-      if(Number(t.steps)>=FINISH_STEP){
-        finished.push({t,p});
-        continue;
-      }
-
-      let coord;
-      if(t.steps===-1)coord=BASE[p.color][t.token_no-1];
-      else if(t.steps<=TRACK_LAST_STEP)coord=PATH[(START[p.color]+t.steps)%52];
-      else coord=HOME[p.color][Math.max(0,t.steps-HOME_FIRST_STEP)];
-
-      const key=coord.join(',');
-      if(!grouped.has(key))grouped.set(key,[]);
-      grouped.get(key).push({t,p,coord});
-    }
-
-    for(const list of grouped.values()){
-      const [r,c]=list[0].coord,cell=at(r,c);
-      if(list.length>1)cell.classList.add('multi');
-      const legalMineInCell=list.filter(it=>it.p.player_id===me()&&legal.includes(Number(it.t.token_no)));
-      if(list.length>1&&legalMineInCell.length){
-        cell.classList.add('has-legal-piece');
-        cell.title='Toque nesta casa para mover um dos seus peões jogáveis.';
-        cell.addEventListener('click',(event)=>{
-          if(event.target.closest('.piece.legal'))return;
-          moveToken(Number(legalMineInCell[0].t.token_no));
-        });
-      }
-      list.forEach((it,idx)=>{
-        const b=document.createElement('button');
-        b.type='button';
-        b.className=`piece ${it.p.color} ${it.p.player_id===me()?'mine':''} ${it.p.player_id===me()&&legal.includes(Number(it.t.token_no))?'legal':''}`;
-        b.textContent=it.t.token_no;
-        b.title=`${it.p.code} · peão ${it.t.token_no}`;
-        b.dataset.playerId=String(it.p.player_id);
-        b.dataset.tokenNo=String(it.t.token_no);
-        if(list.length>1){
-          const layouts={
-            2:[[-44,0],[44,0]],
-            3:[[-42,-30],[42,-30],[0,38]],
-            4:[[-42,-34],[42,-34],[-42,34],[42,34]]
-          };
-          const pos=(layouts[Math.min(4,list.length)]||layouts[4])[idx%Math.min(4,list.length)];
-          b.style.setProperty('--dx',`${pos[0]}%`);
-          b.style.setProperty('--dy',`${pos[1]}%`);
-        }
-        const isLegalMine=it.p.player_id===me()&&legal.includes(Number(it.t.token_no));
-        b.style.zIndex=isLegalMine?'25':(it.p.player_id===me()?'12':String(7+idx));
-        if(isLegalMine)b.addEventListener('click',()=>moveToken(it.t.token_no));
-        cell.appendChild(b);
-      });
-    }
-
-    const center=classicCenter();
-    const finishedByColor=new Map();
-    for(const it of finished){
-      if(!finishedByColor.has(it.p.color))finishedByColor.set(it.p.color,[]);
-      finishedByColor.get(it.p.color).push(it);
-    }
-
-    for(const [color,list] of finishedByColor.entries()){
-      list.forEach((it,idx)=>{
-        const b=document.createElement('button');
-        b.type='button';
-        b.disabled=true;
-        b.className=`piece ${color} finish-piece`;
-        b.textContent=it.t.token_no;
-        b.title=`${it.p.code} · peão ${it.t.token_no} · chegou`;
-        b.dataset.playerId=String(it.p.player_id);
-        b.dataset.tokenNo=String(it.t.token_no);
-        b.dataset.finishColor=color;
-        b.dataset.finishIndex=String(idx);
-        center.appendChild(b);
-      });
-    }
-
-    els.ludoBoard.replaceChildren(...cells,center);
-  }
   function renderChat(){const enabled=Boolean(rules().chat_enabled);els.chatForm.classList.toggle('hidden',!enabled);const msgs=state.room.chat||[];els.chatMessages.innerHTML=msgs.length?msgs.map(m=>`<div class="chat-msg"><strong>${escapeHtml(m.code)}</strong><span>${escapeHtml(m.message)}</span></div>`).join(''):'<div class="empty">Sem mensagens.</div>';els.chatMessages.scrollTop=els.chatMessages.scrollHeight;}
   function renderResult(){const r=roomData();els.resultPanel.classList.toggle('hidden',r.status!=='finished');if(r.status!=='finished')return;checkLudoWinNotice();if(els.rematchBet&&els.rematchBet.dataset.room!==String(r.id)){els.rematchBet.value=String(Math.max(10,Math.trunc(Number(r.bet_amount)||10)));els.rematchBet.dataset.room=String(r.id);}if(els.rematchHelp)els.rematchHelp.textContent=`Mesmos ${r.player_count} jogadores e modo ${r.mode==='partners'?'Parceiros 2 × 2':'Cada um por si'}. Ajuste apenas o valor se quiser.`;const winner=r.mode==='partners'?`Equipa ${r.winner_team}`:(roomPlayers().find(p=>p.player_id===r.winner_player_id)?.code||'Vencedor');els.resultTitle.textContent=`${winner} venceu`;const p=state.room.payouts||[];els.resultPayouts.innerHTML=`<div class="payout-grid">${p.map(x=>{const pl=roomPlayers().find(y=>y.player_id===x.player_id);return `<div class="payout-card"><strong>${escapeHtml(pl?.code||'Jogador')}</strong><br>Bruto ${money(x.gross)} MZN<br>Casa ${money(x.commission)} MZN<br><strong>Líquido ${money(x.net)} MZN</strong></div>`}).join('')}</div>`;}
   async function renderInviter(){const r=roomData(),host=isHost()&&['waiting','negotiating'].includes(r.status);document.querySelector('.invite-panel').classList.toggle('hidden',!host);if(host)await loadWaiting(true);}
