@@ -4,16 +4,7 @@
   const TOKEN_KEY = 'jl_player_token';
   const SOUND_KEY = 'jl_ludo_sound_enabled';
   const $ = (id) => document.getElementById(id);
-  const state = {
-    token: localStorage.getItem(TOKEN_KEY) || '', status: null, room: null,
-    clockTimer: null, signalTimer: null, signalPolling: false,
-    lastSignalId: 0, localStream: null, micMuted: true, peers: new Map(), busy: false,
-    animating: false, soundEnabled: localStorage.getItem(SOUND_KEY) !== '0', audioCtx: null,
-    rulesFormDirty: false, rulesFormVersion: null, rulesDeclinedVersion: null, lastFxEventId: 0, autoMoveKey: null, lastDirectInviteCount: 0,
-    moveGeneration: 0,
-    diceRolling: false, diceRollSerial: 0,
-    lastDiceValue: null, lastDiceRoomId: null
-  };
+  const state = window.JLLudoState.create();
   const els = Object.fromEntries([
     'toast','identityBadge','accountButton','accountMenu','accountMenuCode','accountMenuBalance','accountMenuDeposit','accountMenuWithdraw','accountMenuLogout','ludoStatusStrip','onlinePlayerCount','directNotificationMetric','publicNotificationMetric','topDirectInviteCount','topPublicInviteCount','loggedOut','lobby','boardLobby','ludoLobbyBoard','balanceBadge','createRoomForm','createPlayers','createMode','createBet','createPublic',
     'joinCodeForm','joinCode','queueForm','queuePlayers','queueMode','queueBet','queueButton','queueStatus','notificationCenter','inviteList','directInviteCount','publicChallengeList','publicChallengeCount','refreshLobby',
@@ -358,7 +349,7 @@
   function showLudoWinNotice(key,amount,roundLabel,roundTime){if(!els.winModal)return;els.winModalTitle.textContent='Parabéns!';els.winModalMessage.textContent=`Você venceu a partida de Ludo e ganhou ${money(amount)} MZN. Partida ${roundLabel} · hora ${roundTime}. O valor foi creditado no seu saldo.`;els.winModal.dataset.winKey=key;els.winModal.classList.remove('hidden');document.body.classList.add('modal-open');}
   function closeLudoWinNotice(){if(!els.winModal)return;const key=els.winModal.dataset.winKey;if(key){const seen=ludoWinSeen();seen.add(key);saveLudoWinSeen(seen);}els.winModal.classList.add('hidden');document.body.classList.remove('modal-open');delete els.winModal.dataset.winKey;}
   function checkLudoWinNotice(){const r=roomData();if(!r||r.status!=='finished'||!els.winModal?.classList.contains('hidden'))return;const payout=(state.room?.payouts||[]).find(p=>p.player_id===me()&&Number(p.net||0)>0);if(!payout)return;const key=`${r.id||r.code||'room'}:${me()}:${payout.net}`;if(ludoWinSeen().has(key))return;window.JLNotifications?.push({id:`ludo-win:${key}`,title:'Vitória no Ludo',message:`Você ganhou ${money(payout.net)} MZN na partida ${r.code||r.id||'—'}.`,type:'win',href:'./ludo.html#resultPanel',createdAt:r.finished_at||r.ended_at||r.updated_at||new Date().toISOString()});showLudoWinNotice(key,payout.net,r.code||r.id||'—',ludoRoundTime(r));}
-  async function rpc(name,args={}){if(!cfg.supabaseUrl||!cfg.supabaseKey)throw new Error('Configuração do Supabase ausente.');const res=await fetch(`${cfg.supabaseUrl}/rest/v1/rpc/${name}`,{method:'POST',headers:{apikey:cfg.supabaseKey,Authorization:`Bearer ${cfg.supabaseKey}`,'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify(args)});const text=await res.text();let data=null;try{data=text?JSON.parse(text):null}catch{data=text}if(!res.ok)throw new Error(data?.message||data?.hint||data?.error||`Erro ${res.status}`);return data;}
+  const rpc=(name,args={})=>window.JLApi.rpc(name,args);
 
   function maxRoomItemId(items){
     let max=0;
@@ -403,7 +394,7 @@
     const light=await rpc('jl_ludo_room_state_light',{p_token:state.token,p_room:roomId});
     return attachRoomExtras(light,previous);
   }
-  function saveToken(t){state.token=t||'';if(t)localStorage.setItem(TOKEN_KEY,t);else localStorage.removeItem(TOKEN_KEY);window.JLNotifications?.setActive(Boolean(state.token));}
+  function saveToken(t){state.token=window.JLSession?.setPlayerToken?.(t)??String(t||'');if(!window.JLSession){if(state.token)localStorage.setItem(TOKEN_KEY,state.token);else localStorage.removeItem(TOKEN_KEY);}window.JLNotifications?.setActive(Boolean(state.token));}
   function openAuth(mode='login'){els.authModal.classList.remove('hidden');switchAuth(mode);} function closeAuth(){els.authModal.classList.add('hidden');setAuthMessage('');}
   function switchAuth(mode){const login=mode==='login';els.loginForm.classList.toggle('hidden',!login);els.registerForm.classList.toggle('hidden',login);els.loginTab.classList.toggle('active',login);els.registerTab.classList.toggle('active',!login);}
   function me(){return state.room?.identity?.player_id||state.status?.identity?.player_id||null;} function roomData(){return state.room?.room||null;} function roomPlayers(){return state.room?.players||[];} function myRoomPlayer(){return roomPlayers().find(p=>p.player_id===me());} function isHost(){return roomData()?.host_id===me();} function rules(){return roomData()?.rules||{};}
