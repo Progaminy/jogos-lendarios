@@ -5,22 +5,11 @@
   const $ = (id) => document.getElementById(id);
   let pollTimer = null;
 
-  function token(){ return localStorage.getItem(TOKEN_KEY) || ''; }
+  function token(){ return window.JLSession?.getPlayerToken?.() || localStorage.getItem(TOKEN_KEY) || ''; }
   function escapeHtml(v){ return String(v ?? '').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
   function when(v){ return v ? new Date(v).toLocaleString('pt-MZ',{dateStyle:'short',timeStyle:'short'}) : '—'; }
 
-  async function rpc(name,args={}){
-    if(!cfg.supabaseUrl||!cfg.supabaseKey) throw new Error('Configuração do Supabase ausente.');
-    const res=await fetch(`${cfg.supabaseUrl}/rest/v1/rpc/${name}`,{
-      method:'POST',
-      headers:{apikey:cfg.supabaseKey,Authorization:`Bearer ${cfg.supabaseKey}`,'Content-Type':'application/json',Accept:'application/json'},
-      body:JSON.stringify(args)
-    });
-    const raw=await res.text(); let data=null;
-    try{ data=raw?JSON.parse(raw):null; }catch{ data=raw; }
-    if(!res.ok) throw new Error(data?.message||data?.hint||data?.error||`Erro ${res.status}`);
-    return data;
-  }
+  const rpc=(name,args={})=>window.JLApi.rpc(name,args);
 
   function ensureModal(){
     if($('supportModal')) return;
