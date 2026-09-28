@@ -156,10 +156,14 @@
     const el = document.getElementById('roomMeta');
     const rules = latestRoomState?.room?.rules;
     if (!el || !rules) return;
-    const base = (el.textContent || '').replace(/\s·\s(?:Online|Presencial)\s·\s(?:[1-4])\s+dados?.*$/,'');
+    const mobile = window.matchMedia?.('(max-width:600px)')?.matches;
+    const base = (el.textContent || '').replace(/\s·\s(?:Online|Presencial|On|Pres\.)\s·\s(?:[1-4])(?:\s+dados?|D).*$/,'');
     const count = Number(rules.dice_count || 1);
-    const location = rules.play_location === 'presential' ? 'Presencial' : 'Online';
-    const next = `${base} · ${location} · ${count} ${count === 1 ? 'dado' : 'dados'}`;
+    const location = mobile
+      ? (rules.play_location === 'presential' ? 'Pres.' : 'On')
+      : (rules.play_location === 'presential' ? 'Presencial' : 'Online');
+    const dice = mobile ? `${count}D` : `${count} ${count === 1 ? 'dado' : 'dados'}`;
+    const next = `${base} · ${location} · ${dice}`;
     if (el.textContent !== next) el.textContent = next;
   }
 
