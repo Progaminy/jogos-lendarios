@@ -25,8 +25,41 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="stylesheet" href="./ludo.css?v=20260928-27">
+  <link rel="stylesheet" href="./ludo.css?v=20260928-28">
   <link rel="stylesheet" href="./site-nav.css?v=20260928-20">
+  <style id="ludo-critical-mobile-fix">
+    @media (max-width:600px){
+      #ludoStatusStrip{
+        display:grid!important;
+        grid-template-columns:repeat(5,minmax(0,1fr))!important;
+        grid-auto-flow:column!important;
+        gap:3px!important;
+        width:100%!important;
+        margin:8px 0 6px!important;
+      }
+      #ludoStatusStrip>.status-metric{
+        width:auto!important;
+        min-width:0!important;
+        max-width:none!important;
+        min-height:36px!important;
+        height:36px!important;
+        padding:2px 3px!important;
+        margin:0!important;
+        gap:3px!important;
+        border-radius:8px!important;
+        font-size:.62rem!important;
+        line-height:1!important;
+        overflow:hidden!important;
+        white-space:nowrap!important;
+      }
+      #ludoStatusStrip .status-icon{font-size:.68rem!important}
+      #ludoStatusStrip .shortcut-label{font-size:.48rem!important}
+      #ludoStatusStrip strong{font-size:.72rem!important;margin:0!important}
+      #socialZone .jl-social-head>.eyebrow,
+      #socialZone .jl-social-head>div:first-child:not(.jl-social-head-actions){display:none!important}
+      #socialZone .jl-social-head{margin-top:0!important}
+    }
+  </style>
 </head>
 <body>
   <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
@@ -285,7 +318,7 @@
   <script src="./js/ludo/animation.js?v=20260928-2"></script>
   <script src="./js/ludo/render.js?v=20260928-2"></script>
   <script src="./js/ludo/voice.js?v=20260928-2"></script>
-  <script src="./js/platform/feature-loader.js?v=20260928-29" defer></script>
+  <script src="./js/platform/feature-loader.js?v=20260928-30" defer></script>
   <script src="./logout-confirm.js?v=20260924-2" defer></script>
   <script src="./ludo-sync.js?v=20260928-1" defer></script>
   <script src="./ludo.js?v=20260928-14" defer></script>
