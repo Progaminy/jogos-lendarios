@@ -23,3 +23,12 @@ A lógica atual contém duas exceções explícitas e o ponto 26 deve preservá-
 - restantes jogadores: 6 forçado depois de 11 falhas.
 
 A suíte testa estes três contratos exatamente como estão hoje. Alterá-los fará a CI falhar.
+
+
+## JL-LUDO-BASE-DRIFT — produção versus reconstrução local
+
+A função atualmente instalada em produção, `jl_ludo_legal_moves_data`, exige explicitamente `p_dice = 6` para retirar um peão da base.
+
+Ao reconstruir a base apenas pelas migrations canónicas, a implementação resultante ainda diverge neste detalhe. O ponto 26 não altera funções nem migrations, por isso o teste fica como **TODO pgTAP**.
+
+Isto é um detector permanente de drift: quando a reconciliação correspondente for feita num ponto próprio, remova o TODO e mantenha a asserção como obrigatória.
