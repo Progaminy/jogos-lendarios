@@ -52,6 +52,15 @@
     return raw.split(/\s+/)[0]||'Jogador';
   }
 
+  function syncTurnTitleColor(player){
+    if(!els.turnTitle)return;
+    els.turnTitle.classList.remove('turn-red','turn-green','turn-yellow','turn-blue');
+    const color=String(player?.color||'').toLowerCase();
+    if(['red','green','yellow','blue'].includes(color)){
+      els.turnTitle.classList.add(`turn-${color}`);
+    }
+  }
+
   function renderDiceFace(value,{keepRolling=false}={}){
     if(!els.dice)return;
     const n=Number(value);
@@ -569,6 +578,7 @@
             ?'Tabuleiro pronto · aguardando apostas'
             :'Tabuleiro pronto';
       if(els.turnTitle.textContent!==title)els.turnTitle.textContent=title;
+      syncTurnTitleColor(null);
       announceLive(els.ludoTurnLive,title);
 
       renderDiceFace(null);
@@ -595,6 +605,7 @@
         :'Aguardando…';
 
     if(els.turnTitle.textContent!==title)els.turnTitle.textContent=title;
+    syncTurnTitleColor(r.status==='playing'?current:null);
     announceLive(els.ludoTurnLive,title);
 
     if(!state.diceRolling)renderDiceFace(visibleDiceValue(r));
