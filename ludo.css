@@ -1140,3 +1140,23 @@ body.ludo-pinned .pin-ludo-button{
     margin-top:8px!important;
   }
 }
+
+
+/* ESTRELAS SEGURAS GRANDES E COLORIDAS 2026-09-29 */
+.cell.safe:after{
+  content:"★"!important;
+  font-size:clamp(15px,2.8vw,30px)!important;
+  line-height:1!important;
+  opacity:1!important;
+  font-weight:900!important;
+  text-shadow:0 1px 1px rgba(0,0,0,.18);
+}
+.cell.safe-red:after{color:#ef2737!important}
+.cell.safe-green:after{color:#079a54!important}
+.cell.safe-yellow:after{color:#d4aa00!important}
+.cell.safe-blue:after{color:#158ccb!important}
+@media(max-width:600px){
+  .cell.safe:after{
+    font-size:clamp(15px,4.2vw,24px)!important;
+  }
+}
