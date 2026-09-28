@@ -1,0 +1,46 @@
+{
+  "schema": 1,
+  "strategy": "route-isolated",
+  "note": "A página inicial carrega somente o shell e jogos incorporados. Jogos futuros devem ter rota e bundle próprios.",
+  "games": [
+    {
+      "id": "number",
+      "name": "Número Lendário",
+      "category": "sorteios",
+      "status": "live",
+      "route": "./index.html#numero-lendario",
+      "homeEmbedded": true,
+      "assets": []
+    },
+    {
+      "id": "pair",
+      "name": "Dupla Lendária",
+      "category": "sorteios",
+      "status": "live",
+      "route": "./index.html#dupla-lendaria",
+      "homeEmbedded": true,
+      "assets": []
+    },
+    {
+      "id": "ludo",
+      "name": "Ludo Lendário",
+      "category": "tabuleiro",
+      "status": "live",
+      "route": "./ludo.html",
+      "homeEmbedded": false,
+      "assets": [
+        "./ludo.css",
+        "./ludo.js"
+      ]
+    },
+    {
+      "id": "dama",
+      "name": "Dama Lendária",
+      "category": "tabuleiro",
+      "status": "coming_soon",
+      "route": null,
+      "homeEmbedded": false,
+      "assets": []
+    }
+  ]
+}

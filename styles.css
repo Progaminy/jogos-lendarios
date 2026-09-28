@@ -943,3 +943,14 @@ h2 { margin: 0; font-size: clamp(1.25rem, 2.5vw, 1.75rem); letter-spacing: -.025
   .game-catalog { grid-template-columns: 1fr; }
   .category-head { align-items: flex-start; flex-direction: column; }
 }
+
+
+/* POINT 27 — scalable rendering
+   Secções fora do viewport não precisam de layout/pintura imediata.
+   O DOM continua disponível e âncoras/JS continuam a funcionar normalmente. */
+@supports (content-visibility: auto) {
+  .jl-deferred-render {
+    content-visibility: auto;
+    contain-intrinsic-size: 760px;
+  }
+}

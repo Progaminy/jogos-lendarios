@@ -26,8 +26,6 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="stylesheet" href="./styles.css?v=20260928-20">
-  <link rel="stylesheet" href="./support-ui.css?v=20260922-12fix">
-  <link rel="stylesheet" href="./recovery-ui.css?v=20260922-13">
   <link rel="stylesheet" href="./site-nav.css?v=20260928-20">
 </head>
 <body>
@@ -38,7 +36,7 @@
     <nav class="game-nav" aria-label="Categorias de jogos">
       <a class="active" href="#catalogo">Todos</a>
       <a href="#sorteios">Sorteios</a>
-      <a href="./ludo.html">Tabuleiro</a>
+      <a href="./ludo.html" data-jl-route-prefetch>Tabuleiro</a>
       <a href="#playerArea">Conta</a>
     </nav>
     <div class="top-actions" style="flex-wrap:wrap;justify-content:flex-end">
@@ -82,7 +80,7 @@
           <span class="promo-cta">Jogar agora →</span>
         </a>
 
-        <a class="hero-promo-slide promo-ludo" href="./ludo.html">
+        <a class="hero-promo-slide promo-ludo" href="./ludo.html" data-jl-route-prefetch>
           <span class="promo-kicker">LUDO LENDÁRIO</span>
           <strong>2–4</strong>
           <small>Jogadores, voz, parceiros e regras negociadas</small>
@@ -100,7 +98,7 @@
       </div>
     </section>
 
-    <section id="sorteios" class="catalog-section">
+    <section id="sorteios" class="catalog-section jl-deferred-render">
       <div class="category-head">
         <div><span class="category-marker">SORTEIOS</span><h2>Jogos de números</h2></div>
       </div>
@@ -142,7 +140,7 @@
       </div>
     </section>
 
-    <section id="numero-lendario" class="game-layout">
+    <section id="numero-lendario" class="game-layout jl-deferred-render">
       <div class="card play-card">
         <div class="section-head">
           <div>
@@ -169,7 +167,7 @@
 
     </section>
 
-    <section id="dupla-lendaria" class="game-layout">
+    <section id="dupla-lendaria" class="game-layout jl-deferred-render">
       <div class="card play-card">
         <div class="section-head">
           <div>
@@ -199,7 +197,7 @@
 
     </section>
 
-    <section id="playerArea" class="player-area hidden">
+    <section id="playerArea" class="player-area hidden jl-deferred-render">
       <div class="card wallet-card">
         <div>
           <p class="eyebrow">MINHA CONTA</p>
@@ -314,17 +312,11 @@
   <script src="./js/auth/session.js?v=20260928-2"></script>
   <script src="./js/a11y/dialogs.js?v=20260928-2"></script>
   <script src="./js/auth/player-ui.js?v=20260928-1"></script>
-  <script src="./js/auth/player-sessions.js?v=20260928-1" defer></script>
   <script src="./js/bets/financial.js?v=20260928-1"></script>
   <script src="./js/bets/actions.js?v=20260928-1"></script>
   <script src="./js/wallet/transactions.js?v=20260928-2"></script>
   <script src="./bet-guard.js"></script>
-  <script src="./support-ui.js?v=20260928-1" defer></script>
-  <script src="./recovery-ui.js?v=20260928-2" defer></script>
-  <script src="./promo-rotator.js?v=20260924-1" defer></script>
-  <script src="./logout-confirm.js?v=20260924-2" defer></script>  <script src="./number-orb.js?v=20260924-2" defer></script>
-  <script src="./js/notifications/client.js?v=20260928-22" defer></script>
-  <script src="./app.js?v=20260928-5" defer></script>
-  <script src="./js/player/ui.js?v=20260928-1" defer></script>
+  <script src="./js/platform/feature-loader.js?v=20260928-27" defer></script>
+  <script src="./logout-confirm.js?v=20260924-2" defer></script>  <script src="./app.js?v=20260928-5" defer></script>
 </body>
 </html>

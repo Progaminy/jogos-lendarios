@@ -26,20 +26,18 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="stylesheet" href="./ludo.css?v=20260928-21">
-  <link rel="stylesheet" href="./support-ui.css?v=20260922-12fix">
-  <link rel="stylesheet" href="./recovery-ui.css?v=20260922-13">
   <link rel="stylesheet" href="./site-nav.css?v=20260928-20">
 </head>
 <body>
   <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
   <header class="topbar">
     <div>
-      <a class="brand" href="./index.html">Jogos <strong>Lendários</strong></a>
+      <a class="brand" href="./index.html" data-jl-route-prefetch>Jogos <strong>Lendários</strong></a>
       <span class="product-tag">LUDO</span>
     </div>
     <nav class="game-nav" aria-label="Categorias de jogos">
-      <a href="./index.html#catalogo">Todos</a>
-      <a href="./index.html#sorteios">Sorteios</a>
+      <a href="./index.html#catalogo" data-jl-route-prefetch>Todos</a>
+      <a href="./index.html#sorteios" data-jl-route-prefetch>Sorteios</a>
       <a class="active" href="./ludo.html">Tabuleiro</a>
       <a href="./index.html#playerArea">Conta</a>
     </nav>
@@ -283,7 +281,6 @@
   <script src="./js/api/rpc.js?v=20260928-1"></script>
   <script src="./js/auth/session.js?v=20260928-2"></script>
   <script src="./js/a11y/dialogs.js?v=20260928-2"></script>
-  <script src="./js/auth/player-sessions.js?v=20260928-1" defer></script>
   <script src="./js/ludo/state.js?v=20260928-1"></script>
   <script src="./js/ludo/room-state.js?v=20260928-1"></script>
   <script src="./js/ludo/movement-guard.js?v=20260928-1"></script>
@@ -291,11 +288,9 @@
   <script src="./js/ludo/animation.js?v=20260928-2"></script>
   <script src="./js/ludo/render.js?v=20260928-2"></script>
   <script src="./js/ludo/voice.js?v=20260928-2"></script>
-  <script src="./support-ui.js?v=20260928-1" defer></script>
-  <script src="./recovery-ui.js?v=20260928-2" defer></script>
+  <script src="./js/platform/feature-loader.js?v=20260928-27" defer></script>
   <script src="./logout-confirm.js?v=20260924-2" defer></script>
   <script src="./ludo-sync.js?v=20260928-1" defer></script>
-  <script src="./js/notifications/client.js?v=20260928-22" defer></script>
   <script src="./ludo.js?v=20260928-8" defer></script>
   <script src="./social.js?v=20260928-2" defer></script>
   <script src="./js/ui/collapse.js?v=20260928-1" defer></script>
