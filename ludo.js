@@ -452,7 +452,15 @@
     }).join(''):'<div class="empty">Nenhum convite popular disponível agora.</div>';
   }
   function commissionText(){const r=roomData();if(!r)return '—';const pot=Number(r.pot||0)||Number(r.bet_amount||0)*Number(r.player_count||0);if(r.mode==='partners'){const gross=pot/2,comm=Math.min(gross,Math.max(1,Math.ceil(gross*.01)));return `Dupla vencedora: ${money(gross)} MZN brutos por parceiro · comissão ${money(comm)} MZN por parceiro · ${money(gross-comm)} MZN líquidos cada.`;}const comm=Math.min(pot,Math.max(1,Math.ceil(pot*.01)));return `Vencedor: ${money(pot)} MZN brutos · comissão ${money(comm)} MZN · ${money(pot-comm)} MZN líquidos.`;}
-  function renderRoom(){const r=roomData();if(!r)return;els.roomCode.textContent=r.code;els.roomMeta.textContent=`${r.player_count} jogadores · ${r.mode==='partners'?'Parceiros 2 × 2':'Cada um por si'} · ${money(r.bet_amount)} MZN por jogador · ${r.is_public?'Pública':'Privada'}`;if(els.roomPot)els.roomPot.textContent=`${money(r.pot)} MZN`;if(els.roomPrize)els.roomPrize.textContent=commissionText();els.rulesVersion.textContent=`v${r.rules_version}`;const playing=r.status==='playing';els.leaveRoom?.classList.toggle('hidden',playing);els.forfeitRoom?.classList.toggle('hidden',!playing);renderPlayers();renderRules();renderDeadline();renderFunding();renderGame();renderResult();renderInviter();syncEntryFlowModals();}
+  function roomMetaBase(r){
+    const mobile=window.matchMedia?.('(max-width:600px)')?.matches;
+    if(mobile){
+      const amount=Number(r.bet_amount||0).toLocaleString('pt-MZ',{maximumFractionDigits:2});
+      return `${r.player_count}J · ${r.mode==='partners'?'Dupla':'Solo'} · ${amount} MZN · ${r.is_public?'Púb.':'Priv.'}`;
+    }
+    return `${r.player_count} jogadores · ${r.mode==='partners'?'Parceiros 2 × 2':'Cada um por si'} · ${money(r.bet_amount)} MZN por jogador · ${r.is_public?'Pública':'Privada'}`;
+  }
+  function renderRoom(){const r=roomData();if(!r)return;els.roomCode.textContent=r.code;els.roomMeta.textContent=roomMetaBase(r);if(els.roomPot)els.roomPot.textContent=`${money(r.pot)} MZN`;if(els.roomPrize)els.roomPrize.textContent=commissionText();els.rulesVersion.textContent=`v${r.rules_version}`;const playing=r.status==='playing';els.leaveRoom?.classList.toggle('hidden',playing);els.forfeitRoom?.classList.toggle('hidden',!playing);renderPlayers();renderRules();renderDeadline();renderFunding();renderGame();renderResult();renderInviter();syncEntryFlowModals();}
   function entryRuleRows(){
     const r=roomData(),x=rules();
     const rows=[
