@@ -929,3 +929,52 @@ textarea:focus-visible {
   #socialZone .jl-social-head>.eyebrow,
   #socialZone .jl-social-head>div:first-child:not(.jl-social-head-actions){display:none!important}
 }
+
+
+/* MOBILE — refresh nitido, toggle iconico e cronometro 2026-09-29 */
+.top-refresh-button{
+  font-size:1.75rem!important;
+  font-weight:900!important;
+  line-height:1!important;
+  font-family:Arial,"Noto Sans Symbols 2","Segoe UI Symbol",sans-serif!important;
+}
+.turn-timer{
+  min-width:66px;
+  padding:6px 9px;
+  border:1px solid rgba(244,189,66,.38);
+  border-radius:10px;
+  background:rgba(244,189,66,.08);
+  color:#ffd15a;
+  font-size:.9rem;
+  font-weight:950;
+  line-height:1;
+  text-align:center;
+  font-variant-numeric:tabular-nums;
+  letter-spacing:.03em;
+}
+.turn-timer.urgent{
+  color:#ffb2b2;
+  border-color:rgba(255,80,96,.62);
+  background:rgba(156,53,67,.22);
+}
+@media(max-width:600px){
+  .top-refresh-button{
+    font-size:1.62rem!important;
+  }
+  .board-game-head{
+    display:grid!important;
+    grid-template-columns:minmax(72px,auto) minmax(58px,1fr) auto!important;
+    align-items:center!important;
+    gap:6px!important;
+  }
+  .board-game-head>div:first-child{
+    min-width:0;
+  }
+  .turn-timer{
+    justify-self:center;
+    min-width:58px;
+    padding:5px 6px;
+    border-radius:8px;
+    font-size:.78rem;
+  }
+}
