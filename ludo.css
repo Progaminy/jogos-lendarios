@@ -1032,3 +1032,18 @@ textarea:focus-visible {
     text-align:center;
   }
 }
+
+
+/* FIXAR INDICADORES MOBILE 2026-09-29 */
+@media(max-width:600px){
+  #ludoStatusStrip{
+    position:sticky!important;
+    top:calc(var(--ludo-sticky-top, 0px) + 2px)!important;
+    z-index:39!important;
+    padding:4px 0!important;
+    background:rgba(7,16,29,.96)!important;
+    backdrop-filter:blur(12px);
+    -webkit-backdrop-filter:blur(12px);
+    box-shadow:0 8px 18px rgba(0,0,0,.22);
+  }
+}
