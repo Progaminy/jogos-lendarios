@@ -1145,18 +1145,28 @@ body.ludo-pinned .pin-ludo-button{
 /* ESTRELAS SEGURAS GRANDES E COLORIDAS 2026-09-29 */
 .cell.safe:after{
   content:"★"!important;
-  font-size:clamp(17px,3.2vw,34px)!important;
+  font-size:clamp(20px,3.8vw,38px)!important;
   line-height:1!important;
   opacity:1!important;
   font-weight:900!important;
   text-shadow:0 1px 1px rgba(0,0,0,.18);
 }
-.cell.safe-red:after{color:#ef2737!important}
-.cell.safe-green:after{color:#079a54!important}
-.cell.safe-yellow:after{color:#d4aa00!important}
-.cell.safe-blue:after{color:#158ccb!important}
+.cell.safe-red:after{color:#ff0033!important}
+.cell.safe-green:after{color:#00d95f!important}
+.cell.safe-yellow:after{color:#ffd400!important}
+.cell.safe-blue:after{color:#009dff!important}
 @media(max-width:600px){
   .cell.safe:after{
-    font-size:clamp(17px,4.8vw,28px)!important;
+    font-size:clamp(19px,5.4vw,32px)!important;
   }
+}
+
+
+/* ESTRELAS SEGURAS — CONTRASTE VIVO 2026-09-29 */
+.cell.safe:after{
+  text-shadow:
+    0 1px 1px rgba(0,0,0,.22),
+    0 0 3px rgba(255,255,255,.10)!important;
+  transform:scale(1.04);
+  transform-origin:center;
 }
