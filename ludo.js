@@ -10,7 +10,7 @@
     'joinCodeForm','joinCode','queueForm','queuePlayers','queueMode','queueBet','queueButton','queueStatus','notificationCenter','inviteList','directInviteCount','publicChallengeList','publicChallengeCount','refreshLobby',
     'room','roomCode','roomMeta','roomPot','roomPrize','copyRoomCode','leaveRoom','forfeitRoom','deadlineBar','deadlineLabel','deadlineClock','playersPanel',
     'rulesVersion','rulesSummary','rulesForm','rulesDecision','acceptRules','declineRules','rulesAcceptModal','rulesAcceptTitle','rulesAcceptSummary','rulesModalAccept','rulesModalDecline','rulesModalEdit','stakeAcceptModal','stakeAcceptTitle','stakeAcceptText','stakeBalanceText','stakeModalAccept','stakeProposalAmount','stakeProposalSend','searchPlayerForm','searchPlayer','playerSearchResults','refreshWaiting','waitingPlayers',
-    'fundingPanel','fundingText','fundButton','gamePanel','turnTitle','turnTimer','dice','ludoBoard','rollDice','soundToggle','micQuickButton','moveHint','reenterButton','voiceState','micButton','remoteAudio',
+    'fundingPanel','fundingText','fundButton','gamePanel','turnTitle','turnTimer','pinLudo','dice','ludoBoard','rollDice','soundToggle','micQuickButton','moveHint','reenterButton','voiceState','micButton','remoteAudio',
     'chatMessages','chatForm','chatInput','resultPanel','resultTitle','resultPayouts','rematchBet','rematchButton','rematchHelp','authModal','closeAuth','loginTab','registerTab','loginForm','registerForm','loginPhone','loginPin',
     'registerName','registerPhone','registerPin','registerPinConfirm','registerInviteCode','registerInviteStatus','authMessage','winModal','winModalTitle','winModalMessage','winModalOk','ludoDiceLive','ludoTurnLive','ludoErrorLive','ludoVictoryLive'
   ].map(k => [k, $(k)]));
@@ -785,6 +785,14 @@
   document.addEventListener('pointerdown',unlockMediaAudio,{passive:true});
 
   els.winModalOk?.addEventListener('click',closeLudoWinNotice);
+  els.pinLudo?.addEventListener('click',()=>{
+    const pinned=document.body.classList.toggle('ludo-pinned');
+    els.pinLudo.setAttribute('aria-pressed',pinned?'true':'false');
+    els.pinLudo.textContent=pinned?'Desafixar':'Fixar Ludo';
+    if(pinned){
+      requestAnimationFrame(()=>document.querySelector('#gamePanel>.board-panel')?.scrollTo({top:0,behavior:'smooth'}));
+    }
+  });
   els.soundToggle?.addEventListener('click',toggleSound);
   els.micQuickButton?.addEventListener('click',toggleMic);
   updateSoundButton();
