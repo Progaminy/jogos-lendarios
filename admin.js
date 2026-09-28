@@ -6,7 +6,7 @@
   const $ = (id) => document.getElementById(id);
 
   const state = {
-    token: localStorage.getItem(TOKEN_KEY) || '',
+    token: window.JLSession?.getAdminToken?.() || sessionStorage.getItem(TOKEN_KEY) || '',
     data: null,
     refreshTimer: null,
     supportPlayerId: null,
@@ -202,12 +202,15 @@
   }
 
   function saveToken(token) {
-    state.token = token || '';
-    if (state.token) localStorage.setItem(TOKEN_KEY, state.token);
-    else localStorage.removeItem(TOKEN_KEY);
-    window.dispatchEvent(new CustomEvent('jl-admin-session-changed', {
-      detail: { authenticated: Boolean(state.token) }
-    }));
+    state.token = window.JLSession?.setAdminToken?.(token) ?? String(token || '');
+    if (!window.JLSession) {
+      localStorage.removeItem(TOKEN_KEY);
+      if (state.token) sessionStorage.setItem(TOKEN_KEY, state.token);
+      else sessionStorage.removeItem(TOKEN_KEY);
+      window.dispatchEvent(new CustomEvent('jl-admin-session-changed', {
+        detail: { authenticated: Boolean(state.token) }
+      }));
+    }
   }
 
   function showApp(show) {
