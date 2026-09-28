@@ -695,3 +695,113 @@ textarea:focus-visible {
     white-space:normal;
   }
 }
+
+
+/* MOBILE — notificacoes compactas, sem redundancia 2026-09-28 */
+@media(max-width:600px){
+  .ludo-status-strip{
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:4px;
+    margin-bottom:8px;
+  }
+  .status-metric{
+    min-height:58px;
+    padding:7px 5px;
+    gap:4px;
+    border-radius:11px;
+  }
+  .status-metric small{
+    font-size:.48rem;
+    line-height:1;
+    letter-spacing:.055em;
+  }
+  .status-metric strong{
+    margin-top:2px;
+    font-size:.98rem;
+    line-height:1;
+  }
+  .status-icon{
+    font-size:.78rem;
+  }
+
+  .notification-center{
+    margin-top:8px;
+  }
+  .notification-head{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    align-items:center;
+    gap:8px;
+    margin-bottom:7px;
+  }
+  .notification-head .eyebrow{
+    margin:0;
+    font-size:.56rem;
+    line-height:1;
+    letter-spacing:.10em;
+  }
+  #refreshLobby{
+    min-height:30px;
+    padding:4px 8px;
+    border-radius:8px;
+    font-size:.58rem;
+    line-height:1;
+    white-space:nowrap;
+  }
+
+  .notification-grid{
+    gap:6px;
+  }
+  .notification-grid:not(:has(.invite-card)){
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+  .notification-grid:has(.invite-card){
+    grid-template-columns:1fr;
+  }
+  .notification-panel{
+    min-width:0;
+    padding:9px 10px;
+    border-radius:13px;
+  }
+  .notification-panel .section-head{
+    gap:6px;
+  }
+  .notification-panel .eyebrow{
+    margin:0;
+    font-size:.53rem;
+    line-height:1;
+    letter-spacing:.09em;
+  }
+  .notification-count{
+    min-width:24px;
+    height:24px;
+    padding:0 6px;
+    font-size:.61rem;
+  }
+  .notification-list{
+    min-height:0;
+    max-height:190px;
+    padding:0;
+    margin:0;
+  }
+  .notification-list:empty{
+    display:none;
+  }
+  .notification-list .invite-card{
+    margin-top:7px;
+    padding:8px;
+    gap:6px;
+  }
+  .notification-list .invite-card strong{
+    font-size:.72rem;
+  }
+  .notification-list .invite-card small{
+    font-size:.61rem;
+    line-height:1.2;
+  }
+  .notification-list .notice-actions .button{
+    min-height:28px;
+    padding:4px 7px;
+    font-size:.57rem;
+  }
+}
