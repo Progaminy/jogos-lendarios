@@ -25,7 +25,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="stylesheet" href="./ludo.css?v=20260928-26">
+  <link rel="stylesheet" href="./ludo.css?v=20260928-27">
   <link rel="stylesheet" href="./site-nav.css?v=20260928-20">
 </head>
 <body>
@@ -42,6 +42,7 @@
       <a href="./index.html#playerArea">Conta</a>
     </nav>
     <div class="top-actions">
+      <button id="refreshLobby" class="top-refresh-button" type="button" aria-label="Atualizar">↻</button>
       <span id="identityBadge" class="badge">Não autenticado</span>
       <div class="account-popover-wrap">
         <button id="accountButton" class="button ghost small" type="button" aria-expanded="false" aria-controls="accountMenu">Entrar</button>
@@ -66,6 +67,8 @@
       <div class="status-metric online-metric" aria-label="Jogadores online"><span class="status-icon" aria-hidden="true">●</span><strong id="onlinePlayerCount">0</strong></div>
       <button id="directNotificationMetric" class="status-metric notification-metric" type="button" aria-label="Convites individuais"><span class="status-icon" aria-hidden="true">🔔</span><strong id="topDirectInviteCount">0</strong></button>
       <button id="publicNotificationMetric" class="status-metric notification-metric" type="button" aria-label="Convites populares"><span class="status-icon" aria-hidden="true">📣</span><strong id="topPublicInviteCount">0</strong></button>
+      <button id="directListShortcut" class="status-metric list-shortcut" type="button" aria-label="Particulares"><span class="shortcut-label">Part.</span><strong id="directInviteCount">0</strong></button>
+      <button id="publicListShortcut" class="status-metric list-shortcut" type="button" aria-label="Populares"><span class="shortcut-label">Pop.</span><strong id="publicChallengeCount">0</strong></button>
     </section>
 
     <section class="hero panel">
@@ -124,17 +127,11 @@
     </section>
 
     <section id="notificationCenter" class="notification-zone notification-center hidden">
-      <div class="section-head notification-head">
-        <div><p class="eyebrow">NOTIFICAÇÕES DE LUDO</p></div>
-        <button id="refreshLobby" class="button ghost small" type="button" aria-label="Atualizar listas de convites">Atualizar</button>
-      </div>
       <div class="notification-grid">
-        <section class="panel notification-panel direct-panel" aria-label="Convites particulares">
-          <div class="section-head"><p class="eyebrow">PARTICULARES</p><span id="directInviteCount" class="notification-count direct-count">0</span></div>
+        <section class="panel notification-panel direct-panel hidden" aria-label="Convites particulares">
           <div id="inviteList" class="invite-list notification-list"></div>
         </section>
-        <section class="panel notification-panel public-panel" aria-label="Convites populares">
-          <div class="section-head"><p class="eyebrow">POPULARES</p><span id="publicChallengeCount" class="notification-count public-count">0</span></div>
+        <section class="panel notification-panel public-panel hidden" aria-label="Convites populares">
           <div id="publicChallengeList" class="invite-list notification-list"></div>
         </section>
       </div>
@@ -288,10 +285,10 @@
   <script src="./js/ludo/animation.js?v=20260928-2"></script>
   <script src="./js/ludo/render.js?v=20260928-2"></script>
   <script src="./js/ludo/voice.js?v=20260928-2"></script>
-  <script src="./js/platform/feature-loader.js?v=20260928-28" defer></script>
+  <script src="./js/platform/feature-loader.js?v=20260928-29" defer></script>
   <script src="./logout-confirm.js?v=20260924-2" defer></script>
   <script src="./ludo-sync.js?v=20260928-1" defer></script>
-  <script src="./ludo.js?v=20260928-13" defer></script>
+  <script src="./ludo.js?v=20260928-14" defer></script>
   <script src="./js/ui/collapse.js?v=20260928-1" defer></script>
   <script src="./js/ludo/policy.js?v=20260928-2" defer></script>
 </body>
