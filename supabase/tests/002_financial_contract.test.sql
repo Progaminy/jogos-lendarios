@@ -8,7 +8,7 @@ select ok(
   exists(
     select 1 from pg_constraint
     where conrelid='public.players'::regclass
-      and pg_get_constraintdef(oid) like '%balance >= 0%'
+      and conname in ('players_balance_check','players_balance_nonnegative_ck')
   ),
   'Finanças: saldo do jogador não pode ficar negativo'
 );
@@ -159,7 +159,7 @@ select ok(
   exists(
     select 1 from pg_constraint
     where conrelid='public.transactions'::regclass
-      and pg_get_constraintdef(oid) like '%amount <> 0%'
+      and conname='transactions_amount_nonzero_ck'
   ),
   'Finanças: transação de valor zero é rejeitada'
 );
