@@ -19,7 +19,7 @@
   <meta name="twitter:description" content="Ludo online para 2, 3 ou 4 jogadores, com modo individual ou parceiros.">
   <title>Ludo Lendário · Jogos Lendários</title>
   <link rel="icon" href="./favicon.ico" sizes="any">
-  <link rel="stylesheet" href="./ludo.css?v=20260928-20">
+  <link rel="stylesheet" href="./ludo.css?v=20260928-21">
   <link rel="stylesheet" href="./support-ui.css?v=20260922-12fix">
   <link rel="stylesheet" href="./recovery-ui.css?v=20260922-13">
   <link rel="stylesheet" href="./site-nav.css?v=20260928-20">
@@ -266,8 +266,8 @@
       <button id="closeAuth" class="modal-close" type="button" aria-label="Fechar">×</button>
       <p class="eyebrow">CONTA DO JOGADOR</p><h2 id="authTitle">Entre ou crie a sua conta</h2>
       <div class="tabs"><button id="loginTab" class="tab active" type="button">Entrar</button><button id="registerTab" class="tab" type="button">Criar conta</button></div>
-      <form id="loginForm" class="stack-form"><label><span>Celular</span><input id="loginPhone" inputmode="tel" required></label><label><span>PIN</span><input id="loginPin" type="password" inputmode="numeric" minlength="4" maxlength="8" required></label><button class="button primary" type="submit">Entrar</button></form>
-      <form id="registerForm" class="stack-form hidden"><label><span>Nome</span><input id="registerName" maxlength="60" required></label><label><span>Celular</span><input id="registerPhone" inputmode="tel" required></label><label><span>Definir PIN</span><input id="registerPin" type="password" inputmode="numeric" minlength="4" maxlength="8" required></label><label><span>Confirmar PIN</span><input id="registerPinConfirm" type="password" inputmode="numeric" minlength="4" maxlength="8" required></label><label><span>Código de convite <small>(opcional)</small></span><input id="registerInviteCode" maxlength="20" autocomplete="off" autocapitalize="characters" placeholder="Ex.: JL-A1B2C3D4"><small id="registerInviteStatus" class="muted"></small></label><button class="button primary" type="submit">Criar conta</button></form>
+      <form id="loginForm" class="stack-form"><label><span>Celular</span><input id="loginPhone" inputmode="tel" data-dialog-initial required></label><label><span>PIN</span><input id="loginPin" type="password" inputmode="numeric" minlength="4" maxlength="8" required></label><button class="button primary" type="submit">Entrar</button></form>
+      <form id="registerForm" class="stack-form hidden"><label><span>Nome</span><input id="registerName" maxlength="60" data-dialog-initial required></label><label><span>Celular</span><input id="registerPhone" inputmode="tel" required></label><label><span>Definir PIN</span><input id="registerPin" type="password" inputmode="numeric" minlength="4" maxlength="8" required></label><label><span>Confirmar PIN</span><input id="registerPinConfirm" type="password" inputmode="numeric" minlength="4" maxlength="8" required></label><label><span>Código de convite <small>(opcional)</small></span><input id="registerInviteCode" maxlength="20" autocomplete="off" autocapitalize="characters" placeholder="Ex.: JL-A1B2C3D4"><small id="registerInviteStatus" class="muted"></small></label><button class="button primary" type="submit">Criar conta</button></form>
       <p id="authMessage" class="form-message"></p>
     </div>
   </div>
@@ -275,21 +275,21 @@
   <script src="./config.js"></script>
   <script src="./js/api/rpc.js?v=20260928-1"></script>
   <script src="./js/auth/session.js?v=20260928-2"></script>
-  <script src="./js/a11y/dialogs.js?v=20260928-1"></script>
+  <script src="./js/a11y/dialogs.js?v=20260928-2"></script>
   <script src="./js/auth/player-sessions.js?v=20260928-1" defer></script>
   <script src="./js/ludo/state.js?v=20260928-1"></script>
   <script src="./js/ludo/room-state.js?v=20260928-1"></script>
   <script src="./js/ludo/movement-guard.js?v=20260928-1"></script>
   <script src="./js/ludo/sound.js?v=20260928-1"></script>
   <script src="./js/ludo/animation.js?v=20260928-2"></script>
-  <script src="./js/ludo/render.js?v=20260928-1"></script>
-  <script src="./js/ludo/voice.js?v=20260928-1"></script>
+  <script src="./js/ludo/render.js?v=20260928-2"></script>
+  <script src="./js/ludo/voice.js?v=20260928-2"></script>
   <script src="./support-ui.js?v=20260928-1" defer></script>
   <script src="./recovery-ui.js?v=20260928-1" defer></script>
   <script src="./logout-confirm.js?v=20260924-2" defer></script>
   <script src="./ludo-sync.js?v=20260928-1" defer></script>
   <script src="./js/notifications/client.js?v=20260928-2" defer></script>
-  <script src="./ludo.js?v=20260928-7" defer></script>
+  <script src="./ludo.js?v=20260928-8" defer></script>
   <script src="./social.js?v=20260928-2" defer></script>
   <script src="./js/ui/collapse.js?v=20260928-1" defer></script>
   <script src="./js/ludo/policy.js?v=20260928-1" defer></script>
