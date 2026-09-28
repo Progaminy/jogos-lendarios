@@ -5,7 +5,7 @@
   const TOKEN_KEY = 'jl_admin_token';
   const $ = (id) => document.getElementById(id);
 
-  const token = () => localStorage.getItem(TOKEN_KEY) || '';
+  const token = () => window.JLSession?.getAdminToken?.() || sessionStorage.getItem(TOKEN_KEY) || '';
 
   const esc = (value) => String(value ?? '').replace(/[&<>'"]/g, (c) => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
@@ -265,12 +265,6 @@
 
   window.addEventListener('jl-admin-session-changed', (event) => {
     if (event.detail?.authenticated) setTimeout(() => refresh(true), 0);
-    else reset();
-  });
-
-  window.addEventListener('storage', (event) => {
-    if (event.key !== TOKEN_KEY) return;
-    if (event.newValue) refresh(true);
     else reset();
   });
 
