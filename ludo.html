@@ -25,7 +25,7 @@
   <link rel="stylesheet" href="./site-nav.css?v=20260928-20">
 </head>
 <body>
-  <div id="toast" class="toast" aria-live="polite"></div>
+  <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
   <header class="topbar">
     <div>
       <a class="brand" href="./index.html">Jogos <strong>Lendários</strong></a>
@@ -192,14 +192,14 @@
 
       <section id="gamePanel" class="game-grid hidden">
         <div class="panel board-panel">
-          <div class="section-head"><div><p class="eyebrow">TABULEIRO</p><h2 id="turnTitle">—</h2></div><div class="dice-tools"><button id="micQuickButton" class="sound-toggle quick-mic" type="button">🎙️ Ligar micro</button><button id="soundToggle" class="sound-toggle" type="button" aria-pressed="true">🔊 Som</button><div id="dice" class="dice" aria-label="Dado">?</div></div></div>
+          <div class="section-head"><div><p class="eyebrow">TABULEIRO</p><h2 id="turnTitle">—</h2></div><div class="dice-tools"><button id="micQuickButton" class="sound-toggle quick-mic" type="button" aria-pressed="false" aria-label="Ligar microfone">🎙️ Ligar micro</button><button id="soundToggle" class="sound-toggle" type="button" aria-pressed="true">🔊 Som</button><div id="dice" class="dice" aria-label="Dado">?</div></div></div>
           <div id="ludoBoard" class="ludo-board" aria-label="Tabuleiro do Ludo"></div>
           <div class="game-controls"><button id="rollDice" class="button primary large" type="button">🎲 Lançar dado</button><span id="moveHint" class="muted">Aguarde a sua vez.</span></div>
           <button id="reenterButton" class="button warning wide hidden" type="button">Pagar e continuar</button>
         </div>
 
         <aside class="side-column">
-          <div class="panel voice-panel"><div class="section-head"><div><p class="eyebrow">VOZ</p><h2>Microfone</h2></div><span id="voiceState" class="badge">Desligado</span></div><p class="muted">Durante a partida, cada jogador pode ligar ou desligar o próprio microfone quando quiser.</p><button id="micButton" class="button secondary wide" type="button">🎙️ Ligar microfone</button><div id="remoteAudio"></div></div>
+          <div class="panel voice-panel"><div class="section-head"><div><p class="eyebrow">VOZ</p><h2>Microfone</h2></div><span id="voiceState" class="badge">Desligado</span></div><p class="muted">Durante a partida, cada jogador pode ligar ou desligar o próprio microfone quando quiser.</p><button id="micButton" class="button secondary wide" type="button" aria-pressed="false">🎙️ Ligar microfone</button><div id="remoteAudio"></div></div>
           <div class="panel chat-panel"><p class="eyebrow">CONVERSA</p><div id="chatMessages" class="chat-messages"></div><form id="chatForm" class="inline-form"><input id="chatInput" maxlength="500" placeholder="Mensagem…"><button class="button secondary" type="submit">Enviar</button></form></div>
         </aside>
       </section>
@@ -207,6 +207,11 @@
       <section id="resultPanel" class="panel result-panel hidden"><p class="eyebrow">RESULTADO</p><h2 id="resultTitle">Partida terminada</h2><div id="resultPayouts"></div><div class="rematch-box"><h3>🔁 Repetir jogo</h3><p class="muted" id="rematchHelp">Mesmos jogadores e modo. Pode ajustar o valor.</p><div class="rematch-controls"><label><span>Nova aposta por jogador</span><div class="money"><span>MZN</span><input id="rematchBet" type="number" min="10" step="1" value="10"></div></label><button id="rematchButton" class="button primary" type="button">Repetir jogo</button></div></div></section>
     </section>
   </main>
+
+  <div class="sr-only" aria-live="polite" aria-atomic="true" id="ludoDiceLive"></div>
+  <div class="sr-only" aria-live="polite" aria-atomic="true" id="ludoTurnLive"></div>
+  <div class="sr-only" role="alert" aria-live="assertive" aria-atomic="true" id="ludoErrorLive"></div>
+  <div class="sr-only" role="status" aria-live="assertive" aria-atomic="true" id="ludoVictoryLive"></div>
 
   <div id="rulesAcceptModal" class="flow-modal hidden" role="dialog" aria-modal="true" aria-labelledby="rulesAcceptTitle">
     <div class="flow-modal-card">
@@ -218,7 +223,7 @@
       <div class="flow-actions">
         <button id="rulesModalDecline" class="button danger" type="button">Não concordo</button>
         <button id="rulesModalEdit" class="button secondary" type="button">Retificar e enviar</button>
-        <button id="rulesModalAccept" class="button success" type="button">Aceitar regras</button>
+        <button id="rulesModalAccept" class="button success" type="button" data-dialog-initial>Aceitar regras</button>
       </div>
     </div>
   </div>
@@ -242,7 +247,7 @@
         <button id="stakeProposalSend" class="button secondary wide" type="button">Enviar novo valor</button>
         <small class="muted">Enviar uma proposta não retira dinheiro do saldo. O valor só é reservado quando você confirmar.</small>
       </div>
-      <button id="stakeModalAccept" class="button primary wide large" type="button">Confirmar valor e entrar</button>
+      <button id="stakeModalAccept" class="button primary wide large" type="button" data-dialog-initial>Confirmar valor e entrar</button>
     </div>
   </div>
 
@@ -252,14 +257,14 @@
       <p class="eyebrow">VITÓRIA</p>
       <h2 id="winModalTitle">Parabéns!</h2>
       <p id="winModalMessage" class="win-modal-message">Você ganhou.</p>
-      <button id="winModalOk" class="button primary large" type="button">OK</button>
+      <button id="winModalOk" class="button primary large" type="button" data-dialog-initial>OK</button>
     </div>
   </div>
 
-  <div id="authModal" class="modal hidden" role="dialog" aria-modal="true">
+  <div id="authModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="authTitle">
     <div class="modal-card">
-      <button id="closeAuth" class="modal-close" type="button">×</button>
-      <p class="eyebrow">CONTA DO JOGADOR</p><h2>Entre ou crie a sua conta</h2>
+      <button id="closeAuth" class="modal-close" type="button" aria-label="Fechar">×</button>
+      <p class="eyebrow">CONTA DO JOGADOR</p><h2 id="authTitle">Entre ou crie a sua conta</h2>
       <div class="tabs"><button id="loginTab" class="tab active" type="button">Entrar</button><button id="registerTab" class="tab" type="button">Criar conta</button></div>
       <form id="loginForm" class="stack-form"><label><span>Celular</span><input id="loginPhone" inputmode="tel" required></label><label><span>PIN</span><input id="loginPin" type="password" inputmode="numeric" minlength="4" maxlength="8" required></label><button class="button primary" type="submit">Entrar</button></form>
       <form id="registerForm" class="stack-form hidden"><label><span>Nome</span><input id="registerName" maxlength="60" required></label><label><span>Celular</span><input id="registerPhone" inputmode="tel" required></label><label><span>Definir PIN</span><input id="registerPin" type="password" inputmode="numeric" minlength="4" maxlength="8" required></label><label><span>Confirmar PIN</span><input id="registerPinConfirm" type="password" inputmode="numeric" minlength="4" maxlength="8" required></label><label><span>Código de convite <small>(opcional)</small></span><input id="registerInviteCode" maxlength="20" autocomplete="off" autocapitalize="characters" placeholder="Ex.: JL-A1B2C3D4"><small id="registerInviteStatus" class="muted"></small></label><button class="button primary" type="submit">Criar conta</button></form>
@@ -270,6 +275,7 @@
   <script src="./config.js"></script>
   <script src="./js/api/rpc.js?v=20260928-1"></script>
   <script src="./js/auth/session.js?v=20260928-2"></script>
+  <script src="./js/a11y/dialogs.js?v=20260928-1"></script>
   <script src="./js/auth/player-sessions.js?v=20260928-1" defer></script>
   <script src="./js/ludo/state.js?v=20260928-1"></script>
   <script src="./js/ludo/room-state.js?v=20260928-1"></script>
