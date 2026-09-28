@@ -72,7 +72,7 @@
           <p id="quickTransactionEyebrow" class="eyebrow">OPERAÇÃO</p>
           <h2 id="quickTransactionTitle">Valor</h2>
           <form id="quickTransactionAmountForm" class="stack-form">
-            <label class="field"><span>Valor</span><div class="money-input"><span>MZN</span><input id="quickTransactionAmount" type="number" min="1" step="1" required></div></label>
+            <label class="field"><span>Valor</span><div class="money-input"><span>MZN</span><input id="quickTransactionAmount" data-dialog-initial type="number" min="1" step="1" required></div></label>
             <button class="button primary" type="submit">Continuar</button>
           </form>
           <form id="quickTransactionNoteForm" class="stack-form hidden">
