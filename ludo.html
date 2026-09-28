@@ -25,7 +25,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="stylesheet" href="./ludo.css?v=20260928-24">
+  <link rel="stylesheet" href="./ludo.css?v=20260928-25">
   <link rel="stylesheet" href="./site-nav.css?v=20260928-20">
 </head>
 <body>
@@ -125,17 +125,17 @@
 
     <section id="notificationCenter" class="notification-zone notification-center hidden">
       <div class="section-head notification-head">
-        <div><p class="eyebrow">NOTIFICAÇÕES DE LUDO</p><h2>Particulares e populares</h2></div>
-        <button id="refreshLobby" class="button ghost small" type="button">Atualizar listas</button>
+        <div><p class="eyebrow">NOTIFICAÇÕES DE LUDO</p></div>
+        <button id="refreshLobby" class="button ghost small" type="button" aria-label="Atualizar listas de convites">Atualizar</button>
       </div>
       <div class="notification-grid">
-        <section class="panel notification-panel direct-panel">
-          <div class="section-head"><div><p class="eyebrow">PARTICULARES</p><h3>Convites para você</h3></div><span id="directInviteCount" class="notification-count direct-count">0</span></div>
-          <div id="inviteList" class="invite-list notification-list"><div class="empty">Nenhum convite particular.</div></div>
+        <section class="panel notification-panel direct-panel" aria-label="Convites particulares">
+          <div class="section-head"><p class="eyebrow">PARTICULARES</p><span id="directInviteCount" class="notification-count direct-count">0</span></div>
+          <div id="inviteList" class="invite-list notification-list"></div>
         </section>
-        <section class="panel notification-panel public-panel">
-          <div class="section-head"><div><p class="eyebrow">POPULARES</p><h3>Convites públicos</h3></div><span id="publicChallengeCount" class="notification-count public-count">0</span></div>
-          <div id="publicChallengeList" class="invite-list notification-list"><div class="empty">Nenhum convite popular disponível.</div></div>
+        <section class="panel notification-panel public-panel" aria-label="Convites populares">
+          <div class="section-head"><p class="eyebrow">POPULARES</p><span id="publicChallengeCount" class="notification-count public-count">0</span></div>
+          <div id="publicChallengeList" class="invite-list notification-list"></div>
         </section>
       </div>
     </section>
@@ -291,7 +291,7 @@
   <script src="./js/platform/feature-loader.js?v=20260928-27" defer></script>
   <script src="./logout-confirm.js?v=20260924-2" defer></script>
   <script src="./ludo-sync.js?v=20260928-1" defer></script>
-  <script src="./ludo.js?v=20260928-11" defer></script>
+  <script src="./ludo.js?v=20260928-12" defer></script>
   <script src="./js/ui/collapse.js?v=20260928-1" defer></script>
   <script src="./js/ludo/policy.js?v=20260928-2" defer></script>
 </body>
