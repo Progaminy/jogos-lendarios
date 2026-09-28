@@ -13,7 +13,7 @@
   };
 
   function token() {
-    return localStorage.getItem(TOKEN_KEY) || '';
+    return window.JLSession?.getAdminToken?.() || sessionStorage.getItem(TOKEN_KEY) || '';
   }
 
   function escapeHtml(value) {
