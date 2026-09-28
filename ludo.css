@@ -805,3 +805,33 @@ textarea:focus-visible {
     font-size:.57rem;
   }
 }
+
+
+/* MOBILE — indicadores somente simbolo e numero 2026-09-28 */
+@media(max-width:600px){
+  .ludo-status-strip{
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:4px;
+    margin-bottom:8px;
+  }
+  .status-metric{
+    min-height:46px;
+    padding:5px 4px;
+    gap:6px;
+    border-radius:10px;
+  }
+  .status-metric .status-icon{
+    font-size:.82rem;
+    line-height:1;
+  }
+  .status-metric strong{
+    margin:0;
+    font-size:.92rem;
+    line-height:1;
+  }
+  #turnTitle{
+    font-size:1rem!important;
+    line-height:1.08!important;
+    margin:0!important;
+  }
+}
