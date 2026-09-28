@@ -25,7 +25,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="stylesheet" href="./ludo.css?v=20260929-2">
+  <link rel="stylesheet" href="./ludo.css?v=20260929-3">
   <link rel="stylesheet" href="./site-nav.css?v=20260928-20">
   <style id="ludo-critical-mobile-fix">
     @media (max-width:600px){
@@ -228,7 +228,7 @@
         <div class="panel board-panel">
           <div class="section-head board-game-head"><div><p class="eyebrow">TABULEIRO</p><h2 id="turnTitle">—</h2></div><div id="turnTimer" class="turn-timer hidden" aria-label="Tempo da jogada">--:--</div><div class="dice-tools"><button id="micQuickButton" class="sound-toggle quick-mic" type="button" aria-pressed="false" aria-label="Ligar microfone">🎙️ Ligar micro</button><button id="soundToggle" class="sound-toggle" type="button" aria-pressed="true">🔊 Som</button></div></div>
           <div id="ludoBoard" class="ludo-board" aria-label="Tabuleiro do Ludo"></div>
-          <div class="game-controls dice-roll-controls"><button id="dice" class="dice roll-dice-control" type="button" aria-label="Lançar dado">?</button><span id="moveHint" class="muted">Aguarde a sua vez.</span></div>
+          <div class="game-controls dice-roll-controls"><button id="pinLudo" class="button ghost pin-ludo-button" type="button" aria-pressed="false">Fixar Ludo</button><button id="dice" class="dice roll-dice-control" type="button" aria-label="Lançar dado">?</button><span id="moveHint" class="muted">Aguarde a sua vez.</span></div>
           <button id="reenterButton" class="button warning wide hidden" type="button">Pagar e continuar</button>
         </div>
 
@@ -321,7 +321,7 @@
   <script src="./js/platform/feature-loader.js?v=20260928-31" defer></script>
   <script src="./logout-confirm.js?v=20260924-2" defer></script>
   <script src="./ludo-sync.js?v=20260928-1" defer></script>
-  <script src="./ludo.js?v=20260929-2" defer></script>
+  <script src="./ludo.js?v=20260929-3" defer></script>
   <script src="./js/ui/collapse.js?v=20260928-2" defer></script>
   <script src="./js/ludo/policy.js?v=20260928-2" defer></script>
 </body>
