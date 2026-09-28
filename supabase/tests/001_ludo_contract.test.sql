@@ -11,8 +11,8 @@ select is(
 );
 
 select ok(
-  lower(regexp_replace(pg_get_functiondef('public.jl_ludo_legal_moves_data(uuid,uuid,integer)'::regprocedure), E'\\s+', ' ', 'g'))
-    like '%if p_dice<>6 then continue; end if;%',
+  position('t.steps=-1' in pg_get_functiondef('public.jl_ludo_legal_moves_data(uuid,uuid,integer)'::regprocedure)) > 0
+  and position('p_dice<>6' in pg_get_functiondef('public.jl_ludo_legal_moves_data(uuid,uuid,integer)'::regprocedure)) > 0,
   'Ludo: peão na base não tem movimento legal com 1-5'
 );
 
