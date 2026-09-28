@@ -76,7 +76,6 @@
     section.dataset.collapseDefault = 'closed';
     section.innerHTML =
       '<div class="jl-social-head">' +
-        '<div><p class="eyebrow">JOGADORES</p></div>' +
         '<div class="jl-social-head-actions">' +
           '<div class="jl-social-counts">' +
             '<span id="socialOnlineCount" class="jl-social-pill">0 online</span>' +
