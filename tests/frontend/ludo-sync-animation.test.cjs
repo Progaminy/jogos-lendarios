@@ -41,6 +41,21 @@ test('3G lento: polling iniciado antes da jogada não pode regressar o peão', a
   assert.equal(await delayed, false);
 });
 
+test('3G lento: polling iniciado antes do lançamento não pode restaurar uma fase antiga', () => {
+  const state = { moveGeneration: 0 };
+  const guard = window.JLLudoMovementGuard.create({
+    state,
+    getRoomId: () => 'room-roll'
+  });
+
+  const staleBeforeRoll = guard.beginSnapshot();
+  guard.invalidateSnapshots();
+
+  assert.equal(guard.canApplySnapshot(staleBeforeRoll), false);
+  const freshAfterRoll = guard.beginSnapshot();
+  assert.equal(guard.canApplySnapshot(freshAfterRoll), true);
+});
+
 test('sincronização: resposta mais velha não sobrescreve a mais nova', () => {
   const state = { moveGeneration: 0 };
   const guard = window.JLLudoMovementGuard.create({
@@ -171,6 +186,13 @@ test('animação detecta apenas movimento para frente e não cria vai-e-vem', ()
     }
   );
   assert.equal(backwards, null);
+});
+
+test('lançamento invalida snapshots antigos e recupera o estado do servidor em conflito', () => {
+  const source = fs.readFileSync('ludo.js', 'utf8');
+  assert.match(source, /movementGuard\.invalidateSnapshots\(\);[\s\S]{0,1200}jl_ludo_roll/);
+  assert.match(source, /recoverAuthoritativeRoom\(roomId\)/);
+  assert.match(source, /Não é hora de lançar o dado\|Tempo da jogada expirou/);
 });
 
 test('triângulo final mantém uma coordenada própria por cor', () => {
