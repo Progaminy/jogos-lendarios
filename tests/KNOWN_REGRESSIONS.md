@@ -2,17 +2,13 @@
 
 Este ficheiro documenta comportamentos que o ponto 26 **testa sem alterar**.
 
-## JL-LUDO-006 — 6 sem jogada legal
+## JL-LUDO-006 — 6 sem jogada legal — CORRIGIDA
 
-Contrato pretendido: se sair 6 e não existir jogada legal, a vez termina.
+Contrato obrigatório: se sair 6 e não existir qualquer jogada legal, a vez termina para todos os jogadores, inclusive quando o 6 foi forçado.
 
-Estado atual preservado por ordem explícita: a definição instalada de `jl_ludo_roll` ainda passa `six_extra_turn` nesse ramo.
+A regressão foi corrigida novamente após a migration de reconciliação `20260928014639` ter restaurado uma definição antiga de `jl_ludo_roll`.
 
-O teste correspondente existe em `supabase/tests/001_ludo_contract.test.sql` como **TODO pgTAP**. Assim:
-
-- a regressão não é esquecida;
-- a CI continua verde enquanto o ponto 26 não mexe na lógica;
-- quando a lógica for corrigida num ponto próprio, o TODO deve ser removido e a mesma asserção passa a ser obrigatória.
+A asserção em `supabase/tests/001_ludo_contract.test.sql` deixou de ser TODO e agora é obrigatória. A CI deve falhar se qualquer migration futura voltar a usar `six_extra_turn` no ramo sem jogada legal.
 
 ## Exceções privilegiadas do 6 forçado
 
@@ -47,3 +43,11 @@ O ponto 26 não pode criar/corrigir migrations nem alterar lógica. Por isso o t
 - continua permanentemente rastreado aqui até a divergência de migrations ser reconciliada num ponto próprio.
 
 Isto não significa que o teste de concorrência passou; significa apenas que a CI não tenta corrigir ou contornar lógica de banco fora do escopo do ponto 26.
+
+## JL-LUDO-SYNC-ROLL — estado antigo após lançamento — CORRIGIDA
+
+A gravação de tela de 28/09/2026 mostrou o cliente exibindo uma fase antiga e permitindo tentar lançar enquanto o servidor ainda estava em `move`, resultando em “Não é hora de lançar o dado.”.
+
+A proteção de sincronização agora invalida snapshots iniciados antes de lançamento, movimento ou timeout. Em conflito de fase, o cliente recarrega o estado autoritativo do servidor; um lançamento rejeitado não toca animação de aterragem nem anuncia um resultado inexistente.
+
+O cenário está coberto por `tests/frontend/ludo-sync-animation.test.cjs`.

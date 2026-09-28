@@ -16,6 +16,8 @@ A concorrência real de entrada em salas continua coberta por `tests/point15-roo
 `node --test tests/frontend/*.test.cjs` cobre:
 
 - resposta atrasada em 3G;
+- polling iniciado antes do lançamento não pode restaurar uma fase antiga;
+- conflito de fase no lançamento recupera o estado autoritativo do servidor;
 - snapshots fora de ordem;
 - retry antigo durante movimento;
 - estado incremental de eventos/chat;
