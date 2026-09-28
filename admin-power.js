@@ -1,7 +1,7 @@
 (() => {
   'use strict';
   const cfg=window.JL_CONFIG||{},TOKEN_KEY='jl_admin_token',$=id=>document.getElementById(id);
-  const token=()=>localStorage.getItem(TOKEN_KEY)||'';
+  const token=()=>window.JLSession?.getAdminToken?.()||sessionStorage.getItem(TOKEN_KEY)||'';
   const money=v=>Number(v||0).toLocaleString('pt-MZ',{minimumFractionDigits:2,maximumFractionDigits:2});
   const toLocalInput=date=>new Date(date.getTime()-date.getTimezoneOffset()*60000).toISOString().slice(0,16);
   async function rpc(name,args={}){
