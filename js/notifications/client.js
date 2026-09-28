@@ -10,6 +10,8 @@
   const MAX_ITEMS = 80;
   const POLL_MS = 8000;
   const PUSH_POLL_MS = 30000;
+  const PUSH_SYNC_PREFIX = 'jl_push_subscription_sync_v1_';
+  const PUSH_SYNC_MAX_AGE_MS = 12 * 60 * 60 * 1000;
 
   const ui = {
     root: null,
@@ -27,6 +29,7 @@
   let pushReady = false;
   let autoPermissionBusy = false;
   let autoPermissionAttempted = false;
+  let highlightedNotificationId = '';
   let sessionToken = window.JLSession?.getPlayerToken?.() || localStorage.getItem(TOKEN_KEY) || '';
 
   function token() {
@@ -45,6 +48,78 @@
   function storageKey(prefix = STORAGE_PREFIX) {
     const t = token() || sessionToken;
     return t ? prefix + tokenHash(t) : '';
+  }
+
+  function pushSyncKey(forToken = sessionToken) {
+    return forToken ? PUSH_SYNC_PREFIX + tokenHash(forToken) : '';
+  }
+
+  function subscriptionFingerprint(subscription, forToken = sessionToken) {
+    const data = subscription?.toJSON?.() || {};
+    const keys = data.keys || {};
+    return tokenHash([
+      String(forToken || ''),
+      String(data.endpoint || subscription?.endpoint || ''),
+      String(keys.p256dh || ''),
+      String(keys.auth || '')
+    ].join('|'));
+  }
+
+  function readPushSync(forToken = sessionToken) {
+    const key = pushSyncKey(forToken);
+    if (!key) return null;
+    try {
+      const data = JSON.parse(localStorage.getItem(key) || 'null');
+      return data && typeof data === 'object' ? data : null;
+    } catch {
+      return null;
+    }
+  }
+
+  function writePushSync(subscription, forToken = sessionToken) {
+    const key = pushSyncKey(forToken);
+    if (!key) return;
+    try {
+      localStorage.setItem(key, JSON.stringify({
+        fingerprint: subscriptionFingerprint(subscription, forToken),
+        syncedAt: Date.now()
+      }));
+    } catch {}
+  }
+
+  function clearPushSync(forToken = sessionToken) {
+    const key = pushSyncKey(forToken);
+    if (!key) return;
+    try { localStorage.removeItem(key); } catch {}
+  }
+
+  function shouldSyncPushSubscription(subscription, force = false, forToken = sessionToken) {
+    if (force) return true;
+    const previous = readPushSync(forToken);
+    if (!previous) return true;
+    if (previous.fingerprint !== subscriptionFingerprint(subscription, forToken)) return true;
+    const age = Date.now() - Number(previous.syncedAt || 0);
+    return !Number.isFinite(age) || age < 0 || age >= PUSH_SYNC_MAX_AGE_MS;
+  }
+
+  async function syncPushSubscription(subscription, force = false) {
+    if (!subscription || !sessionToken) throw new Error('Subscrição push indisponível.');
+    if (!shouldSyncPushSubscription(subscription, force, sessionToken)) {
+      pushReady = true;
+      return { ok: true, reused: true, local: true };
+    }
+
+    const result = await pushService('/subscribe', {
+      method: 'POST',
+      body: JSON.stringify({
+        token: sessionToken,
+        subscription: subscription.toJSON()
+      })
+    });
+
+    writePushSync(subscription, sessionToken);
+    pushReady = true;
+    return result;
   }
 
   function migrateLegacyStorage() {
@@ -158,6 +233,7 @@
       '.jl-notify-item{display:grid;grid-template-columns:10px minmax(0,1fr);gap:10px;padding:12px;border-radius:12px;border:1px solid transparent;color:inherit;text-decoration:none;cursor:pointer}',
       '.jl-notify-item:hover{background:rgba(255,255,255,.045)}',
       '.jl-notify-item.unread{background:rgba(76,139,245,.09);border-color:rgba(76,139,245,.2)}',
+      '.jl-notify-item.highlighted{outline:2px solid rgba(244,189,66,.72);outline-offset:-2px;background:rgba(244,189,66,.09)}',
       '.jl-notify-dot{width:8px;height:8px;margin-top:7px;border-radius:50%;background:#6f829d}.jl-notify-item.unread .jl-notify-dot{background:#f4bd42;box-shadow:0 0 0 4px rgba(244,189,66,.10)}',
       '.jl-notify-copy strong{display:block;color:#f4f7fb;font-size:.86rem}.jl-notify-copy p{margin:3px 0 0;color:#c7d3e2;font-size:.78rem;line-height:1.38}.jl-notify-copy time{display:block;margin-top:5px;color:#8195ae;font-size:.68rem}',
       '.jl-notify-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.jl-notify-open{border-color:rgba(244,189,66,.35);color:#ffdb78;background:rgba(244,189,66,.07)}',
@@ -223,14 +299,20 @@
     ui.list.addEventListener('click', (event) => {
       const item = event.target.closest('[data-jl-notify-id]');
       if (!item) return;
-      markRead(item.dataset.jlNotifyId);
 
+      const id = String(item.dataset.jlNotifyId || '');
       const action = event.target.closest('[data-jl-notify-open]');
-      if (!action) return;
+
+      if (!action) {
+        event.preventDefault();
+        focusNotification(id);
+        return;
+      }
 
       event.preventDefault();
-      const href = action.dataset.jlNotifyOpen || '';
-      if (href) window.location.href = href;
+      markRead(id);
+      const href = safeActionHref(action.dataset.jlNotifyOpen || '');
+      if (href) window.location.assign(href);
     });
 
     document.addEventListener('click', (event) => {
@@ -291,13 +373,71 @@
       const action = item.href
         ? '<span class="jl-notify-actions"><button type="button" class="jl-notify-mini jl-notify-open" data-jl-notify-open="' + escapeHtml(item.href) + '">' + escapeHtml(notificationActionLabel(item)) + '</button></span>'
         : '';
-      return '<div class="jl-notify-item' + (item.read ? '' : ' unread') + '" data-jl-notify-id="' + escapeHtml(item.id) + '">' +
+      return '<div class="jl-notify-item' + (item.read ? '' : ' unread') + (item.id === highlightedNotificationId ? ' highlighted' : '') + '" data-jl-notify-id="' + escapeHtml(item.id) + '">' +
         '<span class="jl-notify-dot" aria-hidden="true"></span>' +
         '<span class="jl-notify-copy"><strong>' + escapeHtml(item.title || 'Notificação') + '</strong><p>' + escapeHtml(item.message || '') + '</p><time>' + escapeHtml(formatWhen(item.createdAt)) + '</time>' + action + '</span>' +
       '</div>';
     }).join('') : '<div class="jl-notify-empty">Ainda não há notificações.</div>';
 
     updateDeviceButton();
+  }
+
+  function safeActionHref(href) {
+    if (!href) return '';
+    try {
+      const url = new URL(String(href), window.location.href);
+      if (url.origin !== window.location.origin) return '';
+      const path = url.pathname.replace(/\/+$/, '') || '/';
+      if (!['/', '/index.html', '/ludo.html'].includes(path)) return '';
+      return url.href;
+    } catch {
+      return '';
+    }
+  }
+
+  function focusNotification(id) {
+    const noticeId = String(id || '');
+    if (!noticeId) return;
+
+    highlightedNotificationId = noticeId;
+    markRead(noticeId);
+
+    if (ui.panel) {
+      ui.panel.classList.remove('hidden');
+      ui.button?.setAttribute('aria-expanded', 'true');
+      render();
+    }
+
+    requestAnimationFrame(() => {
+      const nodes = ui.list?.querySelectorAll?.('[data-jl-notify-id]') || [];
+      const target = [...nodes].find((node) => node.dataset.jlNotifyId === noticeId);
+      target?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
+    });
+
+    clearTimeout(focusNotification.timer);
+    focusNotification.timer = setTimeout(() => {
+      if (highlightedNotificationId !== noticeId) return;
+      highlightedNotificationId = '';
+      render();
+    }, 2600);
+  }
+
+  function pendingNotificationIdFromUrl() {
+    try {
+      return new URL(window.location.href).searchParams.get('jl_notice') || '';
+    } catch {
+      return '';
+    }
+  }
+
+  function clearPendingNotificationUrl() {
+    try {
+      const url = new URL(window.location.href);
+      if (!url.searchParams.has('jl_notice')) return;
+      url.searchParams.delete('jl_notice');
+      if (url.hash === '#notifications') url.hash = '';
+      history.replaceState(null, '', url.pathname + url.search + url.hash);
+    } catch {}
   }
 
   async function persistRead(item) {
@@ -432,7 +572,7 @@
   async function ensureServiceWorker() {
     if (!('serviceWorker' in navigator)) throw new Error('Service Worker não suportado.');
     if (swRegistration) return swRegistration;
-    swRegistration = await navigator.serviceWorker.register('./sw.js?v=20260927-3', { scope: './' });
+    swRegistration = await navigator.serviceWorker.register('./sw.js?v=20260928-1', { scope: './' });
     await navigator.serviceWorker.ready;
     return swRegistration;
   }
@@ -464,15 +604,7 @@
       });
     }
 
-    await pushService('/subscribe', {
-      method: 'POST',
-      body: JSON.stringify({
-        token: sessionToken,
-        subscription: subscription.toJSON()
-      })
-    });
-
-    pushReady = true;
+    await syncPushSubscription(subscription, requireNew);
     localStorage.setItem(DEVICE_KEY, '1');
     updateDeviceButton();
     return subscription;
@@ -488,6 +620,7 @@
         method: 'POST',
         body: JSON.stringify({ token: forToken, endpoint: subscription.endpoint })
       });
+      clearPushSync(forToken);
       if (browserUnsubscribe) await subscription.unsubscribe();
     } catch {}
   }
@@ -586,11 +719,7 @@
         updateDeviceButton();
         return;
       }
-      await pushService('/subscribe', {
-        method: 'POST',
-        body: JSON.stringify({ token: sessionToken, subscription: subscription.toJSON() })
-      });
-      pushReady = true;
+      await syncPushSubscription(subscription, false);
     } catch {
       pushReady = false;
     }
@@ -653,7 +782,14 @@
     active = next;
     if (active) {
       startPolling();
-      syncServer();
+      const pendingId = pendingNotificationIdFromUrl();
+      const firstSync = syncServer();
+      if (pendingId) {
+        Promise.resolve(firstSync).finally(() => {
+          focusNotification(pendingId);
+          clearPendingNotificationUrl();
+        });
+      }
       autoEnableDeviceNotifications();
     } else {
       stopPolling();
@@ -718,12 +854,7 @@
     navigator.serviceWorker.addEventListener('message', (event) => {
       const data = event.data || {};
       if (data.type !== 'jl-notification-open') return;
-      if (data.id) markRead(String(data.id));
-      if (ui.panel) {
-        ui.panel.classList.remove('hidden');
-        ui.button?.setAttribute('aria-expanded', 'true');
-        render();
-      }
+      if (data.id) focusNotification(String(data.id));
     });
   }
 })();
