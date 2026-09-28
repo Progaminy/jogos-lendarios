@@ -901,3 +901,31 @@ textarea:focus-visible {
     border-radius:11px!important;
   }
 }
+
+
+/* FORCE — cinco indicadores realmente na mesma fila 2026-09-28 */
+@media(max-width:600px){
+  #ludoStatusStrip{
+    display:grid!important;
+    grid-template-columns:repeat(5,minmax(0,1fr))!important;
+    grid-auto-flow:column!important;
+    gap:3px!important;
+    width:100%!important;
+  }
+  #ludoStatusStrip>.status-metric{
+    width:auto!important;
+    min-width:0!important;
+    min-height:36px!important;
+    height:36px!important;
+    padding:2px 3px!important;
+    gap:3px!important;
+    border-radius:8px!important;
+    overflow:hidden!important;
+    white-space:nowrap!important;
+  }
+  #ludoStatusStrip .status-icon{font-size:.68rem!important}
+  #ludoStatusStrip .shortcut-label{font-size:.48rem!important}
+  #ludoStatusStrip strong{font-size:.72rem!important;margin:0!important}
+  #socialZone .jl-social-head>.eyebrow,
+  #socialZone .jl-social-head>div:first-child:not(.jl-social-head-actions){display:none!important}
+}
