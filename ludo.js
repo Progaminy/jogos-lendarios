@@ -14,6 +14,8 @@
     'chatMessages','chatForm','chatInput','resultPanel','resultTitle','resultPayouts','rematchBet','rematchButton','rematchHelp','authModal','closeAuth','loginTab','registerTab','loginForm','registerForm','loginPhone','loginPin',
     'registerName','registerPhone','registerPin','registerPinConfirm','registerInviteCode','registerInviteStatus','authMessage','winModal','winModalTitle','winModalMessage','winModalOk','ludoDiceLive','ludoTurnLive','ludoErrorLive','ludoVictoryLive'
   ].map(k => [k, $(k)]));
+  // O próprio dado é o botão de lançamento.
+  els.rollDice = els.dice;
 
   const PATH = [[6,1],[6,2],[6,3],[6,4],[6,5],[5,6],[4,6],[3,6],[2,6],[1,6],[0,6],[0,7],[0,8],[1,8],[2,8],[3,8],[4,8],[5,8],[6,9],[6,10],[6,11],[6,12],[6,13],[6,14],[7,14],[8,14],[8,13],[8,12],[8,11],[8,10],[8,9],[9,8],[10,8],[11,8],[12,8],[13,8],[14,8],[14,7],[14,6],[13,6],[12,6],[11,6],[10,6],[9,6],[8,5],[8,4],[8,3],[8,2],[8,1],[8,0],[7,0],[6,0]];
   const START = { red:0, green:13, yellow:26, blue:39 };
@@ -42,12 +44,12 @@
     if(!Number.isInteger(n)||n<1||n>6){
       els.dice.classList.add('empty');
       els.dice.removeAttribute('data-value');
-      els.dice.setAttribute('aria-label','Dado ainda não lançado');
+      els.dice.setAttribute('aria-label',els.rollDice&&!els.rollDice.disabled?'Lançar dado':'Dado ainda não lançado');
       const q=document.createElement('span');q.className='dice-placeholder';q.textContent='?';els.dice.appendChild(q);return;
     }
     els.dice.classList.remove('empty');
     els.dice.dataset.value=String(n);
-    els.dice.setAttribute('aria-label',`Dado: ${n}`);
+    els.dice.setAttribute('aria-label',els.rollDice&&!els.rollDice.disabled?`Dado: ${n}. Toque para lançar`:`Dado: ${n}`);
     const visible=new Set(DICE_LAYOUTS[n]);
     for(let i=1;i<=9;i++){const pip=document.createElement('span');pip.className=`pip p${i}${visible.has(i)?' on':''}`;els.dice.appendChild(pip);}
   }
