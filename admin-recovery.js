@@ -2,7 +2,7 @@
   'use strict';
   const cfg=window.JL_CONFIG||{}, TOKEN_KEY='jl_admin_token', $=id=>document.getElementById(id);
   let timer=null,emailConfigured=false;
-  const token=()=>localStorage.getItem(TOKEN_KEY)||'';
+  const token=()=>window.JLSession?.getAdminToken?.()||sessionStorage.getItem(TOKEN_KEY)||'';
   const esc=v=>String(v??'').replace(/[&<>'\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','\"':'&quot;'}[c]));
   const dt=v=>v?new Date(v).toLocaleString('pt-MZ',{dateStyle:'short',timeStyle:'short'}):'—';
   async function rpc(name,args={}){
