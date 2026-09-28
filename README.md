@@ -653,3 +653,27 @@ O backend também repete a validação para impedir que o controlo seja contorna
 - Reentrada no Ludo conta para a obrigação de jogar depósitos antes do saque.
 - A pasta `supabase/migrations` é o espelho canónico do histórico aplicado no Supabase, com versões UTC únicas de 14 dígitos.
 - `supabase/` e `scripts/` não são publicados como assets do site.
+
+
+# Migrations e produção — regra canónica
+
+O histórico canónico do banco é:
+
+```text
+supabase/migrations
+```
+
+Produção e `main` devem ter exatamente as mesmas migrations: mesmo timestamp, mesmo nome e mesmo SQL aplicado.
+
+**Regra rígida:** não editar funções, triggers, tabelas, índices, grants, policies ou cron diretamente em produção sem criar e enviar imediatamente a migration equivalente. Uma correção de emergência direta só é considerada concluída depois de a definição exata aplicada estar registrada em migration no `main`.
+
+Não renomear migrations já aplicadas para timestamps “mais bonitos”. O nome no GitHub deve refletir a versão que o Supabase realmente registrou.
+
+O snapshot de reconciliação atual está em:
+
+```text
+supabase/PRODUCTION_SNAPSHOT_20260928.md
+```
+
+Esse snapshot é de rastreabilidade; ele não altera regras nem lógica dos jogos.
+
