@@ -26,7 +26,7 @@
       js: ['./js/player/ui.js?v=20260928-1']
     },
     social: {
-      js: ['./social.js?v=20260929-1']
+      js: ['./social.js?v=20260929-2']
     }
   });
 
