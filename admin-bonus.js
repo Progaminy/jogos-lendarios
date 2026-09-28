@@ -6,7 +6,7 @@
   let data={players:[],recent_grants:[]};
   let timer=null;
 
-  function token(){return localStorage.getItem(TOKEN_KEY)||'';}
+  function token(){return window.JLSession?.getAdminToken?.()||sessionStorage.getItem(TOKEN_KEY)||'';}
   function esc(v){return String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
   function money(v){return Number(v||0).toLocaleString('pt-MZ',{minimumFractionDigits:2,maximumFractionDigits:2});}
   function dt(v){return v?new Date(v).toLocaleString('pt-MZ',{dateStyle:'short',timeStyle:'short'}):'—';}
