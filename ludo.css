@@ -1178,7 +1178,11 @@ body.ludo-pinned .pin-ludo-button{
 .player-card.yellow h3{color:#ffd400}
 .player-card.blue h3{color:#009dff}
 
-#turnTitle.turn-red{color:#ff0033!important}
-#turnTitle.turn-green{color:#00d95f!important}
-#turnTitle.turn-yellow{color:#ffd400!important}
-#turnTitle.turn-blue{color:#009dff!important}
+
+
+/* COR SOMENTE NO NOME DA VEZ 2026-09-29 */
+#turnTitle .turn-player-name{font:inherit;font-weight:inherit}
+#turnTitle .turn-player-name.red{color:#ff0033}
+#turnTitle .turn-player-name.green{color:#00d95f}
+#turnTitle .turn-player-name.yellow{color:#ffd400}
+#turnTitle .turn-player-name.blue{color:#009dff}
