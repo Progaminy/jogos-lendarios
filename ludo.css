@@ -1049,7 +1049,7 @@ textarea:focus-visible {
 }
 
 
-/* FIXAR LUDO 2026-09-29 */
+/* FIXAR LUDO — modo foco igual ao tabuleiro normal 2026-09-29 */
 .dice-roll-controls{
   display:grid;
   grid-template-columns:1fr auto 1fr;
@@ -1073,26 +1073,47 @@ textarea:focus-visible {
   justify-self:center;
   text-align:center;
 }
+
+/* Fixar = modo foco. Nada flutua sobre a página. */
 body.ludo-pinned{
-  overflow:hidden;
+  overflow:auto!important;
+}
+body.ludo-pinned #notificationCenter,
+body.ludo-pinned #socialZone,
+body.ludo-pinned #room>.room-header,
+body.ludo-pinned #room>#playersPanel,
+body.ludo-pinned #room>.room-grid,
+body.ludo-pinned #room>#fundingPanel,
+body.ludo-pinned #room>#resultPanel,
+body.ludo-pinned #gamePanel>.side-column{
+  display:none!important;
+}
+body.ludo-pinned #room{
+  display:block!important;
+  margin-top:6px!important;
+}
+body.ludo-pinned #gamePanel{
+  display:block!important;
+  margin:0!important;
 }
 body.ludo-pinned #gamePanel>.board-panel{
-  position:fixed;
-  z-index:38;
-  left:50%;
-  transform:translateX(-50%);
-  top:calc(var(--ludo-sticky-top, 0px) + 48px);
-  width:min(760px,calc(100vw - 16px));
-  max-height:calc(100dvh - var(--ludo-sticky-top, 0px) - 56px);
-  overflow:auto;
-  overscroll-behavior:contain;
-  box-shadow:0 22px 70px rgba(0,0,0,.7);
+  position:static!important;
+  inset:auto!important;
+  left:auto!important;
+  top:auto!important;
+  transform:none!important;
+  width:100%!important;
+  max-width:none!important;
+  max-height:none!important;
+  overflow:visible!important;
+  box-shadow:var(--shadow)!important;
 }
 body.ludo-pinned .pin-ludo-button{
   border-color:rgba(244,189,66,.65);
   background:rgba(244,189,66,.12);
   color:#ffd15a;
 }
+
 @media(max-width:600px){
   .dice-roll-controls{
     grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
@@ -1104,10 +1125,18 @@ body.ludo-pinned .pin-ludo-button{
     font-size:.62rem;
     border-radius:8px;
   }
+  body.ludo-pinned .shell{
+    width:calc(100% - 10px)!important;
+    margin-top:6px!important;
+  }
+  body.ludo-pinned #room{
+    margin-top:4px!important;
+  }
   body.ludo-pinned #gamePanel>.board-panel{
-    top:calc(var(--ludo-sticky-top, 0px) + 45px);
-    width:calc(100vw - 10px);
-    max-height:calc(100dvh - var(--ludo-sticky-top, 0px) - 50px);
-    border-radius:14px;
+    border-radius:14px!important;
+    padding:12px!important;
+  }
+  body.ludo-pinned #ludoBoard{
+    margin-top:8px!important;
   }
 }
