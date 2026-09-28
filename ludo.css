@@ -633,3 +633,11 @@ textarea:focus-visible {
     0 0 0 7px rgba(255,31,45,.3),
     0 0 18px 8px rgba(255,31,45,.72) !important;
 }
+
+
+/* Ponto 27 — renderização progressiva
+   Painéis fora da área visível não consomem layout/pintura até se aproximarem. */
+.shell > section:not(.hero):not(#ludoStatusStrip) {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 900px;
+}

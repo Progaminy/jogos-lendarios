@@ -954,3 +954,14 @@ h2 { margin: 0; font-size: clamp(1.25rem, 2.5vw, 1.75rem); letter-spacing: -.025
     contain-intrinsic-size: 760px;
   }
 }
+
+
+/* Ponto 27 — renderização progressiva
+   Mantém o DOM e o visual, mas evita layout/pintura de secções distantes. */
+.catalog-section,
+.result-banner,
+.game-layout,
+.player-area {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 720px;
+}

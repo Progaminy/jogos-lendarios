@@ -30,7 +30,7 @@ jobs:
           node --check js/ludo/movement-guard.js
           node --check js/ludo/room-state.js
           node --check js/ludo/animation.js
-      - name: Delayed sync and animation tests
+      - name: Delayed sync, animation and platform-scaling tests
         run: node --test tests/frontend/*.test.cjs
 
   database:
