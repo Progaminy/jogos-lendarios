@@ -14,6 +14,8 @@
         for (const b of [els.micButton, els.micQuickButton]) {
           if (b) {
             b.disabled = true;
+            b.setAttribute('aria-pressed', 'false');
+            b.setAttribute('aria-label', 'Microfone indisponível');
             b.textContent = '🎙️ Microfone indisponível';
           }
         }
@@ -30,6 +32,8 @@
       for (const b of [els.micButton, els.micQuickButton]) {
         if (b) {
           b.disabled = false;
+          b.setAttribute('aria-pressed', on ? 'true' : 'false');
+          b.setAttribute('aria-label', on ? 'Desligar microfone' : 'Ligar microfone');
           b.textContent = label;
         }
       }
