@@ -25,7 +25,7 @@
   <link rel="stylesheet" href="./site-nav.css?v=20260928-20">
 </head>
 <body>
-  <div id="toast" class="toast" aria-live="polite"></div>
+  <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 
   <header class="topbar">
     <a class="brand" href="./index.html" aria-label="Jogos Lendários">Jogos <strong>Lendários</strong></a>
@@ -260,7 +260,7 @@
       <p id="transactionModalAmount" class="transaction-modal-amount">—</p>
       <p id="transactionModalMessage" class="transaction-modal-message">—</p>
       <div id="transactionModalReference" class="transaction-modal-reference hidden"></div>
-      <button id="transactionModalOk" class="button primary large" type="button">OK</button>
+      <button id="transactionModalOk" class="button primary large" type="button" data-dialog-initial>OK</button>
     </div>
   </div>
 
@@ -270,7 +270,7 @@
       <p class="eyebrow">VITÓRIA</p>
       <h2 id="winModalTitle">Parabéns!</h2>
       <p id="winModalMessage" class="win-modal-message">Você ganhou.</p>
-      <button id="winModalOk" class="button primary large" type="button">OK</button>
+      <button id="winModalOk" class="button primary large" type="button" data-dialog-initial>OK</button>
     </div>
   </div>
 
@@ -305,6 +305,7 @@
   <script src="./config.js?v=20260924-6"></script>
   <script src="./js/api/rpc.js?v=20260928-1"></script>
   <script src="./js/auth/session.js?v=20260928-2"></script>
+  <script src="./js/a11y/dialogs.js?v=20260928-1"></script>
   <script src="./js/auth/player-ui.js?v=20260928-1"></script>
   <script src="./js/auth/player-sessions.js?v=20260928-1" defer></script>
   <script src="./js/bets/financial.js?v=20260928-1"></script>
