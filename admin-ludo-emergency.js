@@ -39,7 +39,7 @@
   }[c]));
 
   function token() {
-    return localStorage.getItem(TOKEN_KEY) || '';
+    return window.JLSession?.getAdminToken?.() || sessionStorage.getItem(TOKEN_KEY) || '';
   }
 
   async function rpc(name, args = {}) {
@@ -277,12 +277,6 @@
     } else {
       reset();
     }
-  });
-
-  window.addEventListener('storage', (event) => {
-    if (event.key !== TOKEN_KEY) return;
-    if (event.newValue) refresh(false);
-    else reset();
   });
 
   document.addEventListener('visibilitychange', () => {
