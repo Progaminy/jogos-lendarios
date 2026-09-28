@@ -1,6 +1,3 @@
--- Server-backed player notifications, social following and Web Push.
--- VAPID private material and dispatch credentials are provisioned in Supabase Vault
--- and are intentionally not stored in this repository.
 
 create extension if not exists pg_net with schema extensions;
 
@@ -146,7 +143,7 @@ begin
   where token_hash=public.jl_token_hash(p_token)
     and expires_at>now();
 
-  select coalesce(jsonb_agg(x order by x."createdAt" desc),'[]'::jsonb)
+  select coalesce(jsonb_agg(x order by x.created_at desc),'[]'::jsonb)
   into rows
   from (
     select

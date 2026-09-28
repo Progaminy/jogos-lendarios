@@ -1,3 +1,4 @@
+
 alter table public.ludo_room_players
   add column if not exists rolls_without_six integer not null default 0;
 

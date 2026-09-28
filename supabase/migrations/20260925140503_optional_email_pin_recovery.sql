@@ -1,3 +1,4 @@
+
 alter table public.pin_recovery_requests
   alter column recovery_email drop not null;
 
@@ -27,10 +28,12 @@ begin
   where phone=v_phone and deleted_at is null
   limit 1;
 
+  -- A resposta é deliberadamente igual para conta existente ou inexistente.
   if v_player.id is null then
     return jsonb_build_object('ok',true,'message',v_message);
   end if;
 
+  -- Um terceiro não pode cancelar/substituir um pedido ativo nem trocar o contacto.
   if exists(
     select 1 from public.pin_recovery_requests
     where player_id=v_player.id
@@ -71,6 +74,7 @@ begin
     return jsonb_build_object('ok',false,'error','Código inválido ou expirado.');
   end if;
 
+  -- O e-mail é apenas um canal opcional de contacto. A confirmação usa telefone + código.
   select pr.* into r
   from public.pin_recovery_requests pr
   join public.players p on p.id=pr.player_id and p.deleted_at is null

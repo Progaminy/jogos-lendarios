@@ -1,10 +1,3 @@
--- Ludo Lendário:
--- Se sair 6 mas não houver nenhum movimento legal para esse 6,
--- a vez termina. O 6 só concede nova jogada quando puder ser usado
--- numa jogada válida.
---
--- Esta migração altera somente o ramo "no_legal_move" e preserva
--- quaisquer outras regras/ajustes existentes em jl_ludo_roll.
 
 do $$
 declare

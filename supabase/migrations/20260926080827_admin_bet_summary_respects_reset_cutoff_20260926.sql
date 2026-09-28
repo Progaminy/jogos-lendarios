@@ -1,3 +1,4 @@
+
 create or replace function public.jl_admin_bet_summary(p_token text)
 returns jsonb
 language plpgsql

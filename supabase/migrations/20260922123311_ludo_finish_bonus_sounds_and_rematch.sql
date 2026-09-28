@@ -1,3 +1,4 @@
+
 alter table public.ludo_rooms
 add column if not exists finish_bonus_pending boolean not null default false;
 

@@ -1,3 +1,4 @@
+
 -- Melhoria 7: regras sem prazo de aceitação e negociação estável.
 
 create or replace function public.jl_ludo_join_room_internal(p_room uuid, p_player uuid)

@@ -1,3 +1,4 @@
+
 create or replace function public.jl_ludo_reenter(p_token text, p_room uuid)
 returns jsonb
 language plpgsql

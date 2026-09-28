@@ -1,3 +1,4 @@
+
 -- Melhoria 5: em partidas de 2 jogadores, ignorar captura nunca elimina.
 -- A única penalização permitida nesse caso é perder a vez.
 

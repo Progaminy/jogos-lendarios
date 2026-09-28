@@ -1,3 +1,4 @@
+
 create table if not exists public.influencers (
   id uuid primary key default extensions.gen_random_uuid(),
   name text not null,
@@ -40,16 +41,22 @@ begin
     return jsonb_build_object('valid',false,'code','');
   end if;
 
-  select i.name into v_name
+  select i.name
+    into v_name
   from public.influencers i
-  where i.code = v_code and i.active
+  where i.code = v_code
+    and i.active
   limit 1;
 
   if v_name is null then
     return jsonb_build_object('valid',false,'code',v_code);
   end if;
 
-  return jsonb_build_object('valid',true,'code',v_code,'influencer',v_name);
+  return jsonb_build_object(
+    'valid',true,
+    'code',v_code,
+    'influencer',v_name
+  );
 end;
 $function$;
 
@@ -83,9 +90,11 @@ begin
   end if;
 
   if v_invite_code <> '' then
-    select * into v_influencer
+    select *
+      into v_influencer
     from public.influencers i
-    where i.code = v_invite_code and i.active
+    where i.code = v_invite_code
+      and i.active
     limit 1;
 
     if v_influencer.id is null then
@@ -94,7 +103,8 @@ begin
   end if;
 
   if exists(
-    select 1 from public.players
+    select 1
+    from public.players
     where deleted_at is null
       and public.jl_phone(phone) = v_phone
   ) then

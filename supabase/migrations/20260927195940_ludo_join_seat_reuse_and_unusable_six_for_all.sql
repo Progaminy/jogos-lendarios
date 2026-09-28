@@ -1,10 +1,3 @@
--- Corrige dois problemas de Ludo sem substituir a lógica existente:
--- 1) lugares deixados por jogadores em salas ainda em pré-jogo não podem bloquear novas entradas;
--- 2) um 6 sem jogada legal termina a vez para todos, inclusive quando o 6 foi forçado.
---
--- As duas alterações são cirúrgicas: leem a definição atualmente instalada e
--- apenas inserem/substituem os trechos necessários, preservando regras já ativas.
-
 do $$
 declare
   v_def text;

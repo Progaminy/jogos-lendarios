@@ -1,3 +1,4 @@
+
 create table if not exists public.deposit_wager_requirements (
   id uuid primary key default extensions.gen_random_uuid(),
   deposit_request_id uuid not null unique references public.deposit_requests(id) on delete restrict,

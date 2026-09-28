@@ -1,3 +1,4 @@
+
 create or replace function public.jl_notify_number_win()
 returns trigger
 language plpgsql

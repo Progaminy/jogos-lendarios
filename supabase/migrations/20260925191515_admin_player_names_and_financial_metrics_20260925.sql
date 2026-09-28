@@ -1,3 +1,4 @@
+
 alter table public.admin_metric_baselines
   add column if not exists number_house numeric not null default 0,
   add column if not exists pair_house numeric not null default 0,
@@ -267,6 +268,8 @@ begin
 end;
 $$;
 
+-- Estas RPCs administrativas são chamadas pelo frontend público com token administrativo próprio.
+-- Removemos o EXECUTE herdado de PUBLIC/authenticated e mantemos apenas os papéis usados pelo app.
 revoke execute on function public.jl_admin_financial_summary(text) from public, authenticated;
 grant execute on function public.jl_admin_financial_summary(text) to anon, service_role;
 

@@ -1,3 +1,4 @@
+
 -- Casas seguras são uma regra fixa do Ludo Lendário.
 -- Nenhuma sala pode desativá-las, inclusive por chamada direta à RPC.
 

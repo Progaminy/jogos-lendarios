@@ -1,3 +1,4 @@
+
 create or replace function public.jl_social_follow(
   p_token text,
   p_target_player uuid,

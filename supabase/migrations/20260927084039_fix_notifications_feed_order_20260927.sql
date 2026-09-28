@@ -1,3 +1,4 @@
+
 create or replace function public.jl_notifications_feed(
   p_token text,
   p_limit integer default 80

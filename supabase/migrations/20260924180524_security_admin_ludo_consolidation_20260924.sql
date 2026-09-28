@@ -1,3 +1,4 @@
+
 -- Jogos Lendários — consolidação de segurança, recuperação, invariantes financeiros e poderes do admin.
 -- 2026-09-24. Esta migration é deliberadamente posterior às migrations legadas de 8 dígitos.
 

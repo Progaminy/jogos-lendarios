@@ -1,3 +1,4 @@
+
 -- Melhoria 4: timeout de turno nunca elimina; desistência é explícita.
 
 create or replace function public.jl_ludo_process_timeouts(p_token text, p_room uuid)

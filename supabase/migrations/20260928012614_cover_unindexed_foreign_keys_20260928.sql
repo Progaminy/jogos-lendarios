@@ -1,6 +1,3 @@
--- Ponto 23 — cobrir as foreign keys sinalizadas pelo Database Advisor.
--- Não remove índices existentes, inclusive os ainda marcados como unused.
-
 create index if not exists bonus_usages_grant_id_idx
   on public.bonus_usages (grant_id);
 

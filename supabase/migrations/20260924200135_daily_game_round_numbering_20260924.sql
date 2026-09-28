@@ -1,3 +1,4 @@
+
 alter table public.game_rounds
   rename column round_no to global_round_no;
 

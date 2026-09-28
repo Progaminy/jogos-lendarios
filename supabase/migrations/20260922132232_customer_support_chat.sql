@@ -1,3 +1,4 @@
+
 create table if not exists public.customer_support_messages (
   id uuid primary key default extensions.gen_random_uuid(),
   player_id uuid not null references public.players(id) on delete cascade,

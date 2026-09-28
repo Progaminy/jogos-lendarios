@@ -1,3 +1,4 @@
+
 revoke all on function public.jl_notify_ludo_invite() from public, anon, authenticated;
 revoke all on function public.jl_notify_support_reply() from public, anon, authenticated;
 revoke all on function public.jl_notify_deposit_status() from public, anon, authenticated;

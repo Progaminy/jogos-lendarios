@@ -1,3 +1,4 @@
+
 -- Ludo counterproposals: any room member may propose revised rules before funding,
 -- and any member may counterpropose the per-player stake during funding.
 
@@ -49,6 +50,7 @@ begin
   set accepted_rules_version=null
   where room_id=p_room and status<>'left';
 
+  -- Quem enviou a retificação já concorda com a própria proposta.
   update public.ludo_room_players
   set accepted_rules_version=r.rules_version
   where room_id=p_room and player_id=me and status<>'left';
@@ -126,6 +128,7 @@ begin
       and stake_paid
   ) into had_paid;
 
+  -- Se alguém já confirmou o valor anterior, devolve antes de trocar a proposta.
   if had_paid then
     perform public.jl_ludo_refund_room(
       p_room,

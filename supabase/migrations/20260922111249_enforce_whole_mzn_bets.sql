@@ -1,3 +1,4 @@
+
 alter table public.game_settings
   drop constraint if exists game_settings_whole_mzn_check;
 alter table public.game_settings

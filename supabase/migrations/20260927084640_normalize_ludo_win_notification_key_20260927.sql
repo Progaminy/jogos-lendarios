@@ -1,3 +1,4 @@
+
 create or replace function public.jl_notify_ludo_payout()
 returns trigger
 language plpgsql
