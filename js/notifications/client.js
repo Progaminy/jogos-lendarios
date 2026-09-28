@@ -572,7 +572,7 @@
   async function ensureServiceWorker() {
     if (!('serviceWorker' in navigator)) throw new Error('Service Worker não suportado.');
     if (swRegistration) return swRegistration;
-    swRegistration = await navigator.serviceWorker.register('./sw.js?v=20260928-1', { scope: './' });
+    swRegistration = await navigator.serviceWorker.register('./sw.js?v=20260928-22', { scope: './' });
     await navigator.serviceWorker.ready;
     return swRegistration;
   }
