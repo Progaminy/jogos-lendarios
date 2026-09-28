@@ -151,6 +151,28 @@
           b.dataset.playerId = String(it.p.player_id);
           b.dataset.tokenNo = String(it.t.token_no);
 
+          const colorName = ({
+            red: 'vermelho',
+            green: 'verde',
+            yellow: 'amarelo',
+            blue: 'azul'
+          })[it.p.color] || it.p.color;
+
+          b.tabIndex = isLegalMine ? 0 : -1;
+          b.setAttribute(
+            'aria-label',
+            isLegalMine
+              ? `Peão ${it.t.token_no}, ${colorName}, jogável. Pressione Enter ou Espaço para mover.`
+              : `Peão ${it.t.token_no}, ${colorName}, não jogável neste momento.`
+          );
+
+          if (isLegalMine) {
+            b.setAttribute('aria-keyshortcuts', 'Enter Space');
+            b.removeAttribute('aria-disabled');
+          } else {
+            b.setAttribute('aria-disabled', 'true');
+          }
+
           if (list.length > 1) {
             const layouts = {
               2: [[-44, 0], [44, 0]],
