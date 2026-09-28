@@ -31,6 +31,22 @@
   const FINISH_CELL={red:[7,6],green:[6,7],yellow:[7,8],blue:[8,7]};
   const DICE_LAYOUTS={1:[5],2:[1,9],3:[1,5,9],4:[1,3,7,9],5:[1,3,5,7,9],6:[1,3,4,6,7,9]};
 
+  function syncLudoStickyTop(){
+    const topbar=document.querySelector('.topbar');
+    if(!topbar)return;
+    document.documentElement.style.setProperty('--ludo-sticky-top',`${Math.ceil(topbar.getBoundingClientRect().height)}px`);
+  }
+  function installLudoStickyTop(){
+    const topbar=document.querySelector('.topbar');
+    if(!topbar)return;
+    syncLudoStickyTop();
+    if('ResizeObserver' in window){
+      const observer=new ResizeObserver(syncLudoStickyTop);
+      observer.observe(topbar);
+    }
+    window.addEventListener('resize',syncLudoStickyTop,{passive:true});
+  }
+
   function firstPlayerName(player){
     const raw=String(player?.name||player?.code||'Jogador').trim();
     return raw.split(/\s+/)[0]||'Jogador';
@@ -953,6 +969,7 @@
     state.timeoutTimer=setInterval(()=>{if(document.visibilityState==='visible'&&timeoutIsDue())processTimeouts();},1000);
   }
 
+  installLudoStickyTop();
   state.clockTimer=setInterval(updateClock,250);
   window.addEventListener('beforeunload',closeVoice);
   loadStatus();
