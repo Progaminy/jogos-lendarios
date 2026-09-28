@@ -12,7 +12,7 @@
     'rulesVersion','rulesSummary','rulesForm','rulesDecision','acceptRules','declineRules','rulesAcceptModal','rulesAcceptTitle','rulesAcceptSummary','rulesModalAccept','rulesModalDecline','rulesModalEdit','stakeAcceptModal','stakeAcceptTitle','stakeAcceptText','stakeBalanceText','stakeModalAccept','stakeProposalAmount','stakeProposalSend','searchPlayerForm','searchPlayer','playerSearchResults','refreshWaiting','waitingPlayers',
     'fundingPanel','fundingText','fundButton','gamePanel','turnTitle','dice','ludoBoard','rollDice','soundToggle','micQuickButton','moveHint','reenterButton','voiceState','micButton','remoteAudio',
     'chatMessages','chatForm','chatInput','resultPanel','resultTitle','resultPayouts','rematchBet','rematchButton','rematchHelp','authModal','closeAuth','loginTab','registerTab','loginForm','registerForm','loginPhone','loginPin',
-    'registerName','registerPhone','registerPin','registerPinConfirm','registerInviteCode','registerInviteStatus','authMessage','winModal','winModalTitle','winModalMessage','winModalOk'
+    'registerName','registerPhone','registerPin','registerPinConfirm','registerInviteCode','registerInviteStatus','authMessage','winModal','winModalTitle','winModalMessage','winModalOk','ludoDiceLive','ludoTurnLive','ludoErrorLive','ludoVictoryLive'
   ].map(k => [k, $(k)]));
 
   const PATH = [[6,1],[6,2],[6,3],[6,4],[6,5],[5,6],[4,6],[3,6],[2,6],[1,6],[0,6],[0,7],[0,8],[1,8],[2,8],[3,8],[4,8],[5,8],[6,9],[6,10],[6,11],[6,12],[6,13],[6,14],[7,14],[8,14],[8,13],[8,12],[8,11],[8,10],[8,9],[9,8],[10,8],[11,8],[12,8],[13,8],[14,8],[14,7],[14,6],[13,6],[12,6],[11,6],[10,6],[9,6],[8,5],[8,4],[8,3],[8,2],[8,1],[8,0],[7,0],[6,0]];
@@ -144,7 +144,36 @@
 
   function escapeHtml(v){return String(v ?? '').replace(/[&<>'\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','\"':'&quot;'}[c]));}
   function money(v){return Number(v||0).toLocaleString('pt-MZ',{minimumFractionDigits:2,maximumFractionDigits:2});}
-  function showToast(msg,type=''){els.toast.textContent=msg;els.toast.className=`toast show ${type}`;clearTimeout(showToast.t);showToast.t=setTimeout(()=>els.toast.className='toast',3500);}
+  function announceLive(el,message,{force=false}={}){
+    if(!el||!message)return;
+    const text=String(message);
+    if(!force&&el.dataset.lastAnnouncement===text)return;
+    el.dataset.lastAnnouncement=text;
+    if(force&&el.textContent===text){
+      el.textContent='';
+      requestAnimationFrame(()=>{if(el)el.textContent=text;});
+    }else{
+      el.textContent=text;
+    }
+  }
+  function showToast(msg,type=''){
+    els.toast.textContent=msg;
+    els.toast.className=`toast show ${type}`;
+    if(type==='error'){
+      els.toast.removeAttribute('role');
+      els.toast.setAttribute('aria-live','off');
+      announceLive(els.ludoErrorLive,msg,{force:true});
+    }else{
+      els.toast.setAttribute('role','status');
+      els.toast.setAttribute('aria-live','polite');
+    }
+    clearTimeout(showToast.t);
+    showToast.t=setTimeout(()=>{
+      els.toast.className='toast';
+      els.toast.setAttribute('role','status');
+      els.toast.setAttribute('aria-live','polite');
+    },3500);
+  }
   function wholeStake(value,label='A aposta'){const amount=Number(value);if(!Number.isFinite(amount)||!Number.isInteger(amount)||amount<10){showToast(`${label} deve ser um valor inteiro a partir de 10 MZN.`,'error');return null;}return amount;}
 
   function redirectToDeposit(check, context='continuar no Ludo'){
@@ -225,7 +254,7 @@
   function ludoWinSeen(){try{return new Set(JSON.parse(localStorage.getItem(LUDO_WIN_SEEN_KEY)||'[]'));}catch{return new Set();}}
   function saveLudoWinSeen(seen){try{localStorage.setItem(LUDO_WIN_SEEN_KEY,JSON.stringify([...seen].slice(-100)));}catch{}}
   function ludoRoundTime(r){const raw=r?.finished_at||r?.ended_at||r?.updated_at||r?.created_at;if(!raw)return'hora não disponível';const d=new Date(raw);return Number.isNaN(d.getTime())?'hora não disponível':d.toLocaleTimeString('pt-MZ',{hour:'2-digit',minute:'2-digit'});}
-  function showLudoWinNotice(key,amount,roundLabel,roundTime){if(!els.winModal)return;els.winModalTitle.textContent='Parabéns!';els.winModalMessage.textContent=`Você venceu a partida de Ludo e ganhou ${money(amount)} MZN. Partida ${roundLabel} · hora ${roundTime}. O valor foi creditado no seu saldo.`;els.winModal.dataset.winKey=key;els.winModal.classList.remove('hidden');document.body.classList.add('modal-open');}
+  function showLudoWinNotice(key,amount,roundLabel,roundTime){if(!els.winModal)return;els.winModalTitle.textContent='Parabéns!';const message=`Você venceu a partida de Ludo e ganhou ${money(amount)} MZN. Partida ${roundLabel} · hora ${roundTime}. O valor foi creditado no seu saldo.`;els.winModalMessage.textContent=message;announceLive(els.ludoVictoryLive,message,{force:true});els.winModal.dataset.winKey=key;els.winModal.classList.remove('hidden');document.body.classList.add('modal-open');}
   function closeLudoWinNotice(){if(!els.winModal)return;const key=els.winModal.dataset.winKey;if(key){const seen=ludoWinSeen();seen.add(key);saveLudoWinSeen(seen);}els.winModal.classList.add('hidden');document.body.classList.remove('modal-open');delete els.winModal.dataset.winKey;}
   function checkLudoWinNotice(){const r=roomData();if(!r||r.status!=='finished'||!els.winModal?.classList.contains('hidden'))return;const payout=(state.room?.payouts||[]).find(p=>p.player_id===me()&&Number(p.net||0)>0);if(!payout)return;const key=`${r.id||r.code||'room'}:${me()}:${payout.net}`;if(ludoWinSeen().has(key))return;window.JLNotifications?.push({id:`ludo-win:${key}`,title:'Vitória no Ludo',message:`Você ganhou ${money(payout.net)} MZN na partida ${r.code||r.id||'—'}.`,type:'win',href:'./ludo.html#resultPanel',createdAt:r.finished_at||r.ended_at||r.updated_at||new Date().toISOString()});showLudoWinNotice(key,payout.net,r.code||r.id||'—',ludoRoundTime(r));}
   const rpc=(name,args={})=>window.JLApi.rpc(name,args);
@@ -462,7 +491,72 @@
   function renderDeadline(){const r=roomData();let label='';if(r.status==='negotiating')label='Aceitação das regras · sem prazo';else if(r.status==='funding')label='Tempo para confirmar a aposta';else if(r.status==='playing')label=r.turn_phase==='move'?'Tempo para escolher a peça':'Tempo da jogada';else if(r.status==='waiting')label='Aguardando completar a sala';else if(r.status==='finished')label='Partida terminada';else label=r.status;els.deadlineLabel.textContent=label;updateClock();}
   function updateClock(){const r=roomData();if(r?.status==='negotiating'){els.deadlineClock.textContent='Sem prazo';els.deadlineBar.style.borderColor='';return;}if(!r?.action_deadline){els.deadlineClock.textContent='—';els.deadlineBar.style.borderColor='';return;}const s=Math.max(0,Math.ceil((new Date(r.action_deadline)-Date.now())/1000));els.deadlineClock.textContent=`${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;els.deadlineBar.style.borderColor=s<=10?'#b44b59':'';}
   function renderFunding(){const r=roomData(),mine=myRoomPlayer(),show=r.status==='funding';els.fundingPanel.classList.toggle('hidden',!show);if(!show)return;els.fundingText.textContent=`${roomPlayers().filter(p=>p.stake_paid).length}/${r.player_count} jogadores já confirmaram ${money(r.bet_amount)} MZN. Você pode aceitar o valor atual ou enviar uma contraproposta antes do jogo começar.`;els.fundButton.classList.add('hidden');els.fundButton.disabled=Boolean(mine?.stake_paid);}
-  function renderGame(){const r=roomData(),playing=['playing','finished'].includes(r.status);els.gamePanel.classList.remove('hidden');const current=roomPlayers().find(p=>p.player_id===r.current_player_id);if(!playing){els.turnTitle.textContent=r.status==='waiting'?'Tabuleiro pronto · aguardando jogadores':r.status==='negotiating'?'Tabuleiro pronto · negociação das regras':r.status==='funding'?'Tabuleiro pronto · aguardando apostas':'Tabuleiro pronto';renderDiceFace(null);els.rollDice.disabled=true;els.rollDice.classList.add('hidden');els.moveHint.textContent=r.status==='waiting'?'Convide ou aguarde os outros jogadores.':r.status==='negotiating'?'Todos devem concordar com as mesmas regras antes de jogar.':r.status==='funding'?'Confirme a aposta para iniciar a partida.':'Aguardando preparação da partida.';els.reenterButton.classList.add('hidden');renderPregameBoard();renderChat();renderVoice();return;}els.turnTitle.textContent=r.status==='finished'?'Partida terminada':current?`Vez de ${current.name} · ${current.code}`:'Aguardando…';if(!state.diceRolling)renderDiceFace(visibleDiceValue(r));const myTurn=r.current_player_id===me();els.rollDice.disabled=!(r.status==='playing'&&myTurn&&r.turn_phase==='roll');els.rollDice.classList.toggle('hidden',r.status!=='playing');const legal=(state.room.legal_moves||[]).map(x=>Number(x.token_no));if(myTurn&&r.turn_phase==='move')els.moveHint.textContent=`Dado ${r.dice_result}: escolha uma peça destacada em até ${rules().move_seconds}s.`;else if(myTurn)els.moveHint.textContent='É a sua vez. Lance o dado.';else els.moveHint.textContent=current?`Aguardando ${current.code}.`:'Aguardando.';const mine=myRoomPlayer();els.reenterButton.classList.toggle('hidden',mine?.status!=='reentry');if(mine?.status==='reentry')els.reenterButton.textContent=`Pagar ${money(rules().reentry_amount)} MZN e continuar`;renderBoard(legal);renderChat();renderVoice();maybeAutoMove();}
+  function renderGame(){
+    const r=roomData(),playing=['playing','finished'].includes(r.status);
+    els.gamePanel.classList.remove('hidden');
+    const current=roomPlayers().find(p=>p.player_id===r.current_player_id);
+
+    if(!playing){
+      const title=r.status==='waiting'
+        ?'Tabuleiro pronto · aguardando jogadores'
+        :r.status==='negotiating'
+          ?'Tabuleiro pronto · negociação das regras'
+          :r.status==='funding'
+            ?'Tabuleiro pronto · aguardando apostas'
+            :'Tabuleiro pronto';
+      if(els.turnTitle.textContent!==title)els.turnTitle.textContent=title;
+      announceLive(els.ludoTurnLive,title);
+
+      renderDiceFace(null);
+      els.rollDice.disabled=true;
+      els.rollDice.classList.add('hidden');
+      els.moveHint.textContent=r.status==='waiting'
+        ?'Convide ou aguarde os outros jogadores.'
+        :r.status==='negotiating'
+          ?'Todos devem concordar com as mesmas regras antes de jogar.'
+          :r.status==='funding'
+            ?'Confirme a aposta para iniciar a partida.'
+            :'Aguardando preparação da partida.';
+      els.reenterButton.classList.add('hidden');
+      renderPregameBoard();
+      renderChat();
+      renderVoice();
+      return;
+    }
+
+    const title=r.status==='finished'
+      ?'Partida terminada'
+      :current
+        ?`Vez de ${current.name} · ${current.code}`
+        :'Aguardando…';
+
+    if(els.turnTitle.textContent!==title)els.turnTitle.textContent=title;
+    announceLive(els.ludoTurnLive,title);
+
+    if(!state.diceRolling)renderDiceFace(visibleDiceValue(r));
+
+    const myTurn=r.current_player_id===me();
+    els.rollDice.disabled=!(r.status==='playing'&&myTurn&&r.turn_phase==='roll');
+    els.rollDice.classList.toggle('hidden',r.status!=='playing');
+
+    const legal=(state.room.legal_moves||[]).map(x=>Number(x.token_no));
+    if(myTurn&&r.turn_phase==='move'){
+      els.moveHint.textContent=`Dado ${r.dice_result}: escolha uma peça destacada em até ${rules().move_seconds}s.`;
+    }else if(myTurn){
+      els.moveHint.textContent='É a sua vez. Lance o dado.';
+    }else{
+      els.moveHint.textContent=current?`Aguardando ${current.code}.`:'Aguardando.';
+    }
+
+    const mine=myRoomPlayer();
+    els.reenterButton.classList.toggle('hidden',mine?.status!=='reentry');
+    if(mine?.status==='reentry')els.reenterButton.textContent=`Pagar ${money(rules().reentry_amount)} MZN e continuar`;
+
+    renderBoard(legal);
+    renderChat();
+    renderVoice();
+    maybeAutoMove();
+  }
   function renderChat(){const enabled=Boolean(rules().chat_enabled);els.chatForm.classList.toggle('hidden',!enabled);const msgs=state.room.chat||[];els.chatMessages.innerHTML=msgs.length?msgs.map(m=>`<div class="chat-msg"><strong>${escapeHtml(m.code)}</strong><span>${escapeHtml(m.message)}</span></div>`).join(''):'<div class="empty">Sem mensagens.</div>';els.chatMessages.scrollTop=els.chatMessages.scrollHeight;}
   function renderResult(){const r=roomData();els.resultPanel.classList.toggle('hidden',r.status!=='finished');if(r.status!=='finished')return;checkLudoWinNotice();if(els.rematchBet&&els.rematchBet.dataset.room!==String(r.id)){els.rematchBet.value=String(Math.max(10,Math.trunc(Number(r.bet_amount)||10)));els.rematchBet.dataset.room=String(r.id);}if(els.rematchHelp)els.rematchHelp.textContent=`Mesmos ${r.player_count} jogadores e modo ${r.mode==='partners'?'Parceiros 2 × 2':'Cada um por si'}. Ajuste apenas o valor se quiser.`;const winner=r.mode==='partners'?`Equipa ${r.winner_team}`:(roomPlayers().find(p=>p.player_id===r.winner_player_id)?.code||'Vencedor');els.resultTitle.textContent=`${winner} venceu`;const p=state.room.payouts||[];els.resultPayouts.innerHTML=`<div class="payout-grid">${p.map(x=>{const pl=roomPlayers().find(y=>y.player_id===x.player_id);return `<div class="payout-card"><strong>${escapeHtml(pl?.code||'Jogador')}</strong><br>Bruto ${money(x.gross)} MZN<br>Casa ${money(x.commission)} MZN<br><strong>Líquido ${money(x.net)} MZN</strong></div>`}).join('')}</div>`;}
   async function renderInviter(){const r=roomData(),host=isHost()&&['waiting','negotiating'].includes(r.status);document.querySelector('.invite-panel').classList.toggle('hidden',!host);if(host)await loadWaiting(true);}
@@ -721,7 +815,11 @@
         state.diceRolling=false;
         stopDiceAnimation();
         els.dice.classList.remove('rolling','rolling-neutral');
-        renderDiceFace(visibleDiceValue(roomData()));
+        const finalDice=visibleDiceValue(roomData());
+        renderDiceFace(finalDice);
+        if(Number.isInteger(Number(finalDice))){
+          announceLive(els.ludoDiceLive,`Resultado do dado: ${Number(finalDice)}.`,{force:true});
+        }
         playDiceLanding();
         renderRoom();
       }
