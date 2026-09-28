@@ -474,6 +474,27 @@ jogos-lendarios/
 
 As migrações do Ludo ficam registradas no repositório com o mesmo fluxo aplicado no Supabase.
 
+## Regra canónica de migrations e produção
+
+`supabase/migrations` deve reproduzir **exatamente** o histórico aplicado em produção: mesmo timestamp, mesmo nome e mesmo SQL guardado em `supabase_migrations.schema_migrations`.
+
+Regras obrigatórias:
+
+1. Não editar função, trigger, tabela, índice, grant ou qualquer outro objeto diretamente em produção sem uma migration.
+2. Toda alteração de banco deve ser aplicada por migration e o ficheiro correspondente deve entrar no `main` imediatamente.
+3. Se uma intervenção de emergência já tiver alterado produção fora do fluxo normal, criar uma migration de reconciliação que registe **exatamente o estado que já está instalado**, sem aproveitar a reconciliação para mudar a lógica.
+4. Antes de considerar uma alteração concluída, comparar produção e GitHub por **versão, nome e conteúdo SQL**.
+5. Os snapshots em `supabase/snapshots/` são apenas referência de auditoria e detecção de drift; não substituem migrations e não devem ser executados como migration.
+6. Diferenças de lógica encontradas durante uma reconciliação devem ser tratadas no ponto/regra funcional correspondente, nunca escondidas dentro da reconciliação.
+
+Snapshot-base desta reconciliação:
+
+```text
+supabase/snapshots/20260928_production_routines.sql
+supabase/snapshots/20260928_production_inventory.json
+```
+
+
 # Como clonar e testar localmente
 
 ```bash
