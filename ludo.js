@@ -6,7 +6,7 @@
   const $ = (id) => document.getElementById(id);
   const state = window.JLLudoState.create();
   const els = Object.fromEntries([
-    'toast','identityBadge','accountButton','accountMenu','accountMenuCode','accountMenuBalance','accountMenuDeposit','accountMenuWithdraw','accountMenuLogout','ludoStatusStrip','onlinePlayerCount','directNotificationMetric','publicNotificationMetric','topDirectInviteCount','topPublicInviteCount','loggedOut','lobby','boardLobby','ludoLobbyBoard','balanceBadge','createRoomForm','createPlayers','createMode','createBet','createPublic',
+    'toast','identityBadge','accountButton','accountMenu','accountMenuCode','accountMenuBalance','accountMenuDeposit','accountMenuWithdraw','accountMenuLogout','ludoStatusStrip','onlinePlayerCount','directNotificationMetric','publicNotificationMetric','directListShortcut','publicListShortcut','topDirectInviteCount','topPublicInviteCount','loggedOut','lobby','boardLobby','ludoLobbyBoard','balanceBadge','createRoomForm','createPlayers','createMode','createBet','createPublic',
     'joinCodeForm','joinCode','queueForm','queuePlayers','queueMode','queueBet','queueButton','queueStatus','notificationCenter','inviteList','directInviteCount','publicChallengeList','publicChallengeCount','refreshLobby',
     'room','roomCode','roomMeta','roomPot','roomPrize','copyRoomCode','leaveRoom','forfeitRoom','deadlineBar','deadlineLabel','deadlineClock','playersPanel',
     'rulesVersion','rulesSummary','rulesForm','rulesDecision','acceptRules','declineRules','rulesAcceptModal','rulesAcceptTitle','rulesAcceptSummary','rulesModalAccept','rulesModalDecline','rulesModalEdit','stakeAcceptModal','stakeAcceptTitle','stakeAcceptText','stakeBalanceText','stakeModalAccept','stakeProposalAmount','stakeProposalSend','searchPlayerForm','searchPlayer','playerSearchResults','refreshWaiting','waitingPlayers',
@@ -443,6 +443,10 @@
     if(els.topPublicInviteCount)els.topPublicInviteCount.textContent=String(challenges.length);
     els.directNotificationMetric?.classList.toggle('has-items',invites.length>0);
     els.publicNotificationMetric?.classList.toggle('has-items',challenges.length>0);
+    els.directListShortcut?.classList.toggle('has-items',invites.length>0);
+    els.publicListShortcut?.classList.toggle('has-items',challenges.length>0);
+    document.querySelector('.direct-panel')?.classList.toggle('hidden',invites.length===0);
+    document.querySelector('.public-panel')?.classList.toggle('hidden',challenges.length===0);
     els.notificationCenter?.classList.toggle('has-direct',invites.length>0);
     if(invites.length>state.lastDirectInviteCount&&state.lastDirectInviteCount>=0)showToast(`🔔 Você recebeu ${invites.length-state.lastDirectInviteCount} novo(s) convite(s) individual(is).`,'success');
     state.lastDirectInviteCount=invites.length;
@@ -802,8 +806,12 @@
   els.createRoomForm.addEventListener('submit',e=>{e.preventDefault();const amount=wholeStake(els.createBet.value);if(amount===null)return;withBusy(async()=>{try{if(!(await ensureLudoFunds(amount,'criar esta sala')))return;state.room=await rpc('jl_ludo_create_room',{p_token:state.token,p_player_count:Number(els.createPlayers.value),p_bet_amount:amount,p_mode:els.createMode.value,p_is_public:els.createPublic.checked,p_rules:{}});await loadStatus(true);focusActiveLudoRoom();showToast('Sala criada. Você foi direcionado para o Ludo.','success');}catch(err){if(!handleLudoMoneyError(err,'criar esta sala'))showToast(err.message,'error');}});});
   els.joinCodeForm.addEventListener('submit',e=>{e.preventDefault();withBusy(async()=>{try{state.room=await rpc('jl_ludo_join_public_room',{p_token:state.token,p_code:els.joinCode.value.trim()});await loadStatus(true);showToast('Entrou na sala.','success');}catch(err){if(!handleLudoMoneyError(err,'entrar nesta sala'))showToast(err.message,'error');}});});
   els.queueForm.addEventListener('submit',e=>{e.preventDefault();withBusy(async()=>{try{if(els.queueButton.dataset.queued)await rpc('jl_ludo_leave_queue',{p_token:state.token});else{const amount=wholeStake(els.queueBet.value);if(amount===null)return;if(!(await ensureLudoFunds(amount,'entrar na fila com este valor')))return;await rpc('jl_ludo_enter_queue',{p_token:state.token,p_bet_amount:amount,p_player_count:Number(els.queuePlayers.value),p_mode:els.queueMode.value});}await loadStatus(true);}catch(err){if(!handleLudoMoneyError(err,'entrar na fila'))showToast(err.message,'error');}});});els.refreshLobby.addEventListener('click',()=>loadStatus());
-  els.directNotificationMetric?.addEventListener('click',()=>{els.notificationCenter?.scrollIntoView({behavior:'smooth',block:'start'});setTimeout(()=>els.inviteList?.scrollIntoView({behavior:'smooth',block:'center'}),250);});
-  els.publicNotificationMetric?.addEventListener('click',()=>{els.notificationCenter?.scrollIntoView({behavior:'smooth',block:'start'});setTimeout(()=>els.publicChallengeList?.scrollIntoView({behavior:'smooth',block:'center'}),250);});
+  const openDirectList=()=>{if(!els.inviteList?.childElementCount)return;els.notificationCenter?.scrollIntoView({behavior:'smooth',block:'start'});setTimeout(()=>els.inviteList?.scrollIntoView({behavior:'smooth',block:'center'}),250);};
+  const openPublicList=()=>{if(!els.publicChallengeList?.childElementCount)return;els.notificationCenter?.scrollIntoView({behavior:'smooth',block:'start'});setTimeout(()=>els.publicChallengeList?.scrollIntoView({behavior:'smooth',block:'center'}),250);};
+  els.directNotificationMetric?.addEventListener('click',openDirectList);
+  els.publicNotificationMetric?.addEventListener('click',openPublicList);
+  els.directListShortcut?.addEventListener('click',openDirectList);
+  els.publicListShortcut?.addEventListener('click',openPublicList);
   els.inviteList.addEventListener('click',e=>{const a=e.target.closest('[data-invite-accept]'),d=e.target.closest('[data-invite-decline]');if(!a&&!d)return;withBusy(async()=>{try{if(a){const amount=Number(a.dataset.betAmount||0);if(amount>0&&!(await ensureLudoFunds(amount,'aceitar este convite')))return;}await rpc('jl_ludo_accept_invite',{p_token:state.token,p_invitation:(a||d).dataset[a?'inviteAccept':'inviteDecline'],p_accept:Boolean(a)});await loadStatus(true);}catch(err){if(!handleLudoMoneyError(err,'aceitar este convite'))showToast(err.message,'error');}});});
   els.publicChallengeList.addEventListener('click',e=>{const b=e.target.closest('[data-public-accept]');if(!b)return;withBusy(async()=>{try{const amount=Number(b.dataset.betAmount||0);if(amount>0&&!(await ensureLudoFunds(amount,'entrar neste desafio')))return;state.room=await rpc('jl_ludo_accept_public_challenge',{p_token:state.token,p_code:b.dataset.publicAccept});await loadStatus(true);showToast('Entrou no desafio público.','success');}catch(err){if(!handleLudoMoneyError(err,'entrar neste desafio'))showToast(err.message,'error');}});});
 
