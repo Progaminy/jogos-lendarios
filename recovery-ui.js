@@ -16,7 +16,7 @@
 
           <div id="pinRecoveryRequestStage">
             <form id="pinRecoveryRequestForm" class="stack-form">
-              <label><span>Número de telefone da conta</span><input id="pinRecoveryPhone" inputmode="tel" required placeholder="Ex.: 84xxxxxxx"></label>
+              <label><span>Número de telefone da conta</span><input id="pinRecoveryPhone" data-dialog-initial inputmode="tel" required placeholder="Ex.: 84xxxxxxx"></label>
               <label><span>Email de contacto (opcional)</span><input id="pinRecoveryEmail" type="email" placeholder="seuemail@gmail.com"></label>
               <button class="button primary" type="submit">Pedir recuperação</button>
             </form>
