@@ -285,7 +285,7 @@
       </div>
 
       <form id="registerForm" class="stack-form">
-        <label class="field"><span>Nome</span><input id="registerName" maxlength="60" autocomplete="name" required></label>
+        <label class="field"><span>Nome</span><input id="registerName" maxlength="60" autocomplete="name" data-dialog-initial required></label>
         <label class="field"><span>Número de celular</span><input id="registerPhone" inputmode="tel" autocomplete="tel" placeholder="Ex.: 84xxxxxxx" required></label>
         <label class="field"><span>Definir PIN</span><input id="registerPin" type="password" inputmode="numeric" pattern="[0-9]{4,8}" minlength="4" maxlength="8" autocomplete="new-password" required></label>
         <label class="field"><span>Confirmar PIN</span><input id="registerPinConfirm" type="password" inputmode="numeric" pattern="[0-9]{4,8}" minlength="4" maxlength="8" autocomplete="new-password" required></label>
@@ -294,7 +294,7 @@
       </form>
 
       <form id="loginForm" class="stack-form hidden">
-        <label class="field"><span>Número de celular</span><input id="loginPhone" inputmode="tel" autocomplete="tel" required></label>
+        <label class="field"><span>Número de celular</span><input id="loginPhone" inputmode="tel" autocomplete="tel" data-dialog-initial required></label>
         <label class="field"><span>PIN</span><input id="loginPin" type="password" inputmode="numeric" minlength="4" maxlength="8" autocomplete="current-password" required></label>
         <button class="button primary" type="submit">Entrar</button>
       </form>
@@ -305,12 +305,12 @@
   <script src="./config.js?v=20260924-6"></script>
   <script src="./js/api/rpc.js?v=20260928-1"></script>
   <script src="./js/auth/session.js?v=20260928-2"></script>
-  <script src="./js/a11y/dialogs.js?v=20260928-1"></script>
+  <script src="./js/a11y/dialogs.js?v=20260928-2"></script>
   <script src="./js/auth/player-ui.js?v=20260928-1"></script>
   <script src="./js/auth/player-sessions.js?v=20260928-1" defer></script>
   <script src="./js/bets/financial.js?v=20260928-1"></script>
   <script src="./js/bets/actions.js?v=20260928-1"></script>
-  <script src="./js/wallet/transactions.js?v=20260928-1"></script>
+  <script src="./js/wallet/transactions.js?v=20260928-2"></script>
   <script src="./bet-guard.js"></script>
   <script src="./support-ui.js?v=20260928-1" defer></script>
   <script src="./recovery-ui.js?v=20260928-1" defer></script>
