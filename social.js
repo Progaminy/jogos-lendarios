@@ -42,24 +42,24 @@
       '.jl-social-counts{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}',
       '.jl-social-pill{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border:1px solid rgba(255,255,255,.11);border-radius:999px;background:rgba(255,255,255,.045);font-size:.72rem;font-weight:850;color:#dbe7f5}',
       '.jl-social-grid{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr);gap:12px}',
-      '.jl-social-card{min-width:0}',
+      '.jl-social-card{min-width:0;padding:14px}',
       '.jl-social-search{display:flex;gap:8px;margin-top:12px}',
       '.jl-social-search input{min-width:0;flex:1}',
-      '.jl-social-list{display:grid;gap:8px;margin-top:12px;max-height:320px;overflow:auto;overscroll-behavior:contain}',
-      '.jl-social-player{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 12px;border:1px solid rgba(255,255,255,.09);border-radius:13px;background:rgba(255,255,255,.035)}',
-      '.jl-social-player-main{min-width:0;display:flex;align-items:center;gap:10px}',
+      '.jl-social-list{display:grid;gap:7px;margin-top:9px;max-height:320px;overflow:auto;overscroll-behavior:contain}',
+      '.jl-social-player{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px;padding:9px 10px;border:1px solid rgba(255,255,255,.09);border-radius:11px;background:rgba(255,255,255,.035)}',
+      '.jl-social-player-main{min-width:0;display:flex;align-items:center;gap:8px}',
       '.jl-social-status{width:9px;height:9px;border-radius:50%;flex:0 0 auto;background:#66758a;box-shadow:0 0 0 4px rgba(102,117,138,.10)}',
       '.jl-social-status.online{background:#42dd8d;box-shadow:0 0 0 4px rgba(66,221,141,.12),0 0 12px rgba(66,221,141,.45)}',
-      '.jl-social-copy{min-width:0}.jl-social-copy strong{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.jl-social-copy small{display:block;margin-top:2px;color:#91a4bd}',
-      '.jl-social-tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px}',
-      '.jl-social-tag{padding:3px 6px;border-radius:999px;background:rgba(255,255,255,.07);font-size:.62rem;font-weight:800;color:#b9c9dc}',
+      '.jl-social-copy{min-width:0}.jl-social-copy strong{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.86rem}.jl-social-copy small{display:block;margin-top:1px;color:#91a4bd;font-size:.7rem}',
+      '.jl-social-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}',
+      '.jl-social-tag{padding:2px 5px;border-radius:999px;background:rgba(255,255,255,.07);font-size:.56rem;font-weight:800;color:#b9c9dc}',
       '.jl-social-tag.online{color:#83efb3;background:rgba(66,221,141,.09)}',
       '.jl-social-tag.game{color:#ffd776;background:rgba(244,189,66,.09)}',
-      '.jl-social-actions{display:flex;gap:6px;flex:0 0 auto}',
-      '.jl-social-empty{padding:22px 10px;text-align:center;color:#91a4bd;border:1px dashed rgba(255,255,255,.10);border-radius:12px}',
+      '.jl-social-actions{display:flex;gap:5px;flex:0 0 auto;align-items:center}.jl-social-actions .button{min-height:30px;padding:5px 8px;border-radius:8px;font-size:.62rem;white-space:nowrap}',
+      '.jl-social-empty{padding:14px 8px;text-align:center;color:#91a4bd;border:1px dashed rgba(255,255,255,.10);border-radius:10px;font-size:.72rem}.jl-social-refresh{min-width:34px!important;width:34px;height:32px;padding:0!important;font-size:1rem!important}',
       '.online-metric.jl-social-link{cursor:pointer}.online-metric.jl-social-link:focus{outline:2px solid rgba(244,189,66,.55);outline-offset:3px}',
-      '@media(max-width:760px){.jl-social-grid{grid-template-columns:1fr}.jl-social-head{align-items:flex-start;flex-direction:column}.jl-social-counts{justify-content:flex-start}.jl-social-player{align-items:flex-start}.jl-social-actions{align-self:center}}',
-      '@media(max-width:430px){.jl-social-player{flex-direction:column}.jl-social-actions{width:100%}.jl-social-actions .button{width:100%}}'
+      '@media(max-width:760px){.jl-social-grid{grid-template-columns:1fr;gap:8px}.jl-social-card{padding:10px}.jl-social-head{align-items:center;flex-direction:row}.jl-social-counts{justify-content:flex-start}.jl-social-list{max-height:none;overflow:visible}.jl-social-player{align-items:center}.jl-social-actions{align-self:center}.jl-social-search{margin-top:8px}.jl-social-zone:not(.is-collapsed) .jl-collapse-body{padding-bottom:4px}}',
+      '@media(max-width:430px){.jl-social-player{grid-template-columns:minmax(0,1fr) auto;padding:8px}.jl-social-player-main{gap:7px}.jl-social-status{width:8px;height:8px}.jl-social-actions{width:auto;display:flex;flex-direction:column;gap:4px}.jl-social-actions .button{width:auto;min-width:64px;min-height:28px;padding:4px 6px;font-size:.58rem}.jl-social-card .section-head{align-items:center}.jl-social-card .eyebrow{font-size:.58rem}.jl-social-card h3{font-size:.88rem}.jl-social-search input{font-size:.72rem;padding:8px 9px}.jl-social-search .button{padding:7px 9px;font-size:.62rem}}'
     ].join('');
     document.head.appendChild(style);
   }
@@ -88,7 +88,7 @@
       '<div class="jl-collapse-body">' +
       '<div class="jl-social-grid">' +
         '<section class="panel jl-social-card">' +
-          '<p class="eyebrow">ENCONTRAR</p><h3>Jogadores</h3>' +
+          '<p class="eyebrow">ENCONTRAR</p>' +
           '<form id="socialSearchForm" class="jl-social-search">' +
             '<input id="socialSearch" maxlength="60" placeholder="Nome ou João001" autocomplete="off">' +
             '<button class="button ghost small" type="submit">Buscar</button>' +
@@ -96,7 +96,7 @@
           '<div id="socialSearchResults" class="jl-social-list"><div class="jl-social-empty">Busque um jogador para seguir.</div></div>' +
         '</section>' +
         '<section class="panel jl-social-card">' +
-          '<div class="section-head"><div><p class="eyebrow">SEGUINDO</p><h3>Minha lista</h3></div><button id="refreshSocial" class="button ghost tiny" type="button">Atualizar</button></div>' +
+          '<div class="section-head"><p class="eyebrow">SEGUINDO</p><button id="refreshSocial" class="button ghost tiny jl-social-refresh" type="button" aria-label="Atualizar">⟳</button></div>' +
           '<div id="socialFollowingList" class="jl-social-list"><div class="jl-social-empty">Você ainda não segue nenhum jogador.</div></div>' +
         '</section>' +
       '</div>' +
@@ -174,7 +174,7 @@
       '</div>' +
       '<div class="jl-social-actions">' +
         ((window.JLLudoSocial && window.JLLudoSocial.canInvite && window.JLLudoSocial.canInvite()) ? '<button class="button primary small" type="button" data-social-invite="' + escapeHtml(player.player_id) + '">Convidar</button>' : '') +
-        '<button class="button ' + (following ? 'ghost' : 'secondary') + ' small" type="button" data-social-target="' + escapeHtml(player.player_id) + '" data-social-follow="' + (following ? '0' : '1') + '">' + (following ? 'Deixar de seguir' : 'Seguir') + '</button>' +
+        '<button class="button ' + (following ? 'ghost' : 'secondary') + ' small" type="button" data-social-target="' + escapeHtml(player.player_id) + '" data-social-follow="' + (following ? '0' : '1') + '">' + (following ? 'Deixar' : 'Seguir') + '</button>' +
       '</div>' +
     '</div>';
   }
