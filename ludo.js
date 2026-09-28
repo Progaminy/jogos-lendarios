@@ -29,6 +29,11 @@
   const FINISH_CELL={red:[7,6],green:[6,7],yellow:[7,8],blue:[8,7]};
   const DICE_LAYOUTS={1:[5],2:[1,9],3:[1,5,9],4:[1,3,7,9],5:[1,3,5,7,9],6:[1,3,4,6,7,9]};
 
+  function firstPlayerName(player){
+    const raw=String(player?.name||player?.code||'Jogador').trim();
+    return raw.split(/\s+/)[0]||'Jogador';
+  }
+
   function renderDiceFace(value,{keepRolling=false}={}){
     if(!els.dice)return;
     const n=Number(value);
@@ -563,7 +568,7 @@
     const title=r.status==='finished'
       ?'Partida terminada'
       :current
-        ?`Vez de ${current.name} · ${current.code}`
+        ?`Vez de ${firstPlayerName(current)}`
         :'Aguardando…';
 
     if(els.turnTitle.textContent!==title)els.turnTitle.textContent=title;
