@@ -1145,7 +1145,7 @@ body.ludo-pinned .pin-ludo-button{
 /* ESTRELAS SEGURAS GRANDES E COLORIDAS 2026-09-29 */
 .cell.safe:after{
   content:"★"!important;
-  font-size:clamp(15px,2.8vw,30px)!important;
+  font-size:clamp(17px,3.2vw,34px)!important;
   line-height:1!important;
   opacity:1!important;
   font-weight:900!important;
@@ -1157,6 +1157,6 @@ body.ludo-pinned .pin-ludo-button{
 .cell.safe-blue:after{color:#158ccb!important}
 @media(max-width:600px){
   .cell.safe:after{
-    font-size:clamp(15px,4.2vw,24px)!important;
+    font-size:clamp(17px,4.8vw,28px)!important;
   }
 }
