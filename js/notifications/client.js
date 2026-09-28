@@ -586,7 +586,7 @@
     return output;
   }
 
-  async function registerPushSubscription(requireNew = false) {
+  async function registerPushSubscription(requireNew = false, forceServerSync = false) {
     if (!sessionToken) throw new Error('Entre na sua conta primeiro.');
     const registration = await ensureServiceWorker();
     let subscription = await registration.pushManager.getSubscription();
@@ -604,7 +604,7 @@
       });
     }
 
-    await syncPushSubscription(subscription, requireNew);
+    await syncPushSubscription(subscription, requireNew || forceServerSync);
     localStorage.setItem(DEVICE_KEY, '1');
     updateDeviceButton();
     return subscription;
@@ -650,7 +650,7 @@
         localStorage.setItem(DEVICE_KEY, '0');
         return updateDeviceButton('Permissão não concedida');
       }
-      await registerPushSubscription(false);
+      await registerPushSubscription(false, true);
       updateDeviceButton('Avisos no aparelho: ligados');
     } catch (error) {
       pushReady = false;
