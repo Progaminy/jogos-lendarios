@@ -1,0 +1,70 @@
+name: Jogos Lendários CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: jogos-lendarios-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend:
+    name: Front-end sync/animation
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: JavaScript syntax
+        run: |
+          node --check ludo.js
+          node --check app.js
+          node --check js/ludo/movement-guard.js
+          node --check js/ludo/room-state.js
+          node --check js/ludo/animation.js
+      - name: Delayed sync and animation tests
+        run: node --test tests/frontend/*.test.cjs
+
+  database:
+    name: Database rules and finance
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: 2.118.0
+
+      - name: Initialize local Supabase config
+        run: |
+          if [ ! -f supabase/config.toml ]; then
+            supabase init
+          fi
+
+      - name: Start disposable local Supabase
+        run: supabase start
+
+      - name: Rebuild database from canonical migrations
+        run: supabase db reset --local
+
+      - name: Run pgTAP database suite
+        run: supabase test db
+
+      - name: Run real room-entry concurrency test
+        env:
+          JL_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+        run: bash tests/point15-room-entry-concurrency.sh
+
+      - name: Stop local Supabase
+        if: always()
+        run: supabase stop --no-backup
