@@ -65,6 +65,7 @@
       modal.className = 'transaction-modal hidden';
       modal.setAttribute('role', 'dialog');
       modal.setAttribute('aria-modal', 'true');
+      modal.setAttribute('aria-labelledby', 'quickTransactionTitle');
       modal.innerHTML = `
         <div class="transaction-modal-card">
           <button id="quickTransactionClose" class="modal-close" type="button" aria-label="Fechar">×</button>
