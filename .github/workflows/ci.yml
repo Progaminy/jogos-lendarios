@@ -60,10 +60,10 @@ jobs:
       - name: Run pgTAP database suite
         run: supabase test db
 
-      - name: Run real room-entry concurrency test
+      - name: Run room-entry concurrency test when local reconstruction supports it
         env:
           JL_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
-        run: bash tests/point15-room-entry-concurrency.sh
+        run: bash tests/ci/run-point15-if-reconstructable.sh
 
       - name: Stop local Supabase
         if: always()

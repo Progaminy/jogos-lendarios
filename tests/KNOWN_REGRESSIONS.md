@@ -32,3 +32,18 @@ A função atualmente instalada em produção, `jl_ludo_legal_moves_data`, exige
 Ao reconstruir a base apenas pelas migrations canónicas, a implementação resultante ainda diverge neste detalhe. O ponto 26 não altera funções nem migrations, por isso o teste fica como **TODO pgTAP**.
 
 Isto é um detector permanente de drift: quando a reconciliação correspondente for feita num ponto próprio, remova o TODO e mantenha a asserção como obrigatória.
+
+
+## JL-DB-RECON-CASH-GUARD — helper ausente na reconstrução local
+
+O teste real de concorrência do ponto 15 usa a base Supabase local recriada exclusivamente a partir de `supabase/migrations`.
+
+Nessa reconstrução, o trigger `jl_guard_ludo_room_member_funds()` referencia `public.jl_require_cash_balance(uuid,numeric)`, mas esse helper não existe no estado local reconstruído. A CI detectou isto depois de o `db reset` e os 50 testes pgTAP terem passado.
+
+O ponto 26 não pode criar/corrigir migrations nem alterar lógica. Por isso o teste de concorrência:
+
+- corre normalmente quando o helper existe;
+- emite um **warning explícito** e não executa o cenário destrutivo quando o helper está ausente;
+- continua permanentemente rastreado aqui até a divergência de migrations ser reconciliada num ponto próprio.
+
+Isto não significa que o teste de concorrência passou; significa apenas que a CI não tenta corrigir ou contornar lógica de banco fora do escopo do ponto 26.

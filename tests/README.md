@@ -9,7 +9,7 @@ O ponto 26 cria testes sem alterar a lógica de produção.
 - `001_ludo_contract.test.sql`: dado/base/6 forçado, exceções privilegiadas, três 6, casas seguras, captura, chegada exata, parceiros, timeout, reconexão/reentrada, desistência e proteção de assentos.
 - `002_financial_contract.test.sql`: stake, refund, comissão, saldo insuficiente, payout único, idempotência, depósito/saldo/saque e requisitos de depósito jogado.
 
-A concorrência real de entrada em salas continua coberta por `tests/point15-room-entry-concurrency.sh`, executada apenas contra a base local descartável da CI.
+A concorrência real de entrada em salas continua coberta por `tests/point15-room-entry-concurrency.sh`, executada apenas contra a base local descartável da CI. O wrapper `tests/ci/run-point15-if-reconstructable.sh` faz um preflight: se a reconstrução local ainda não contiver os helpers necessários, a CI emite um warning de drift conhecido em vez de alterar migrations ou lógica.
 
 ## Front-end
 
