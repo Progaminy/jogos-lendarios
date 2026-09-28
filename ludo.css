@@ -835,3 +835,69 @@ textarea:focus-visible {
     margin:0!important;
   }
 }
+
+
+/* MOBILE — cinco atalhos e refresh iconico 2026-09-28 */
+.top-refresh-button{
+  width:42px;
+  height:42px;
+  display:grid;
+  place-items:center;
+  padding:0;
+  border:1px solid rgba(255,255,255,.13);
+  border-radius:12px;
+  background:#14233a;
+  color:#f4bd42;
+  font-size:1.45rem;
+  font-weight:900;
+  line-height:1;
+  cursor:pointer;
+}
+.top-refresh-button:active{transform:rotate(18deg)}
+@media(max-width:600px){
+  .top-refresh-button{
+    width:38px;
+    height:38px;
+    border-radius:10px;
+    font-size:1.3rem;
+  }
+  .ludo-status-strip{
+    grid-template-columns:repeat(5,minmax(0,1fr))!important;
+    gap:3px!important;
+    margin-bottom:6px!important;
+  }
+  .status-metric{
+    min-height:42px!important;
+    padding:4px 3px!important;
+    gap:3px!important;
+    border-radius:9px!important;
+    flex-direction:row!important;
+  }
+  .status-metric .status-icon{
+    font-size:.72rem!important;
+  }
+  .status-metric strong{
+    font-size:.78rem!important;
+  }
+  .list-shortcut{
+    color:#fff;
+    background:linear-gradient(180deg,rgba(24,43,68,.98),rgba(13,28,47,.98));
+  }
+  .shortcut-label{
+    font-size:.45rem;
+    font-weight:900;
+    line-height:1;
+    letter-spacing:.01em;
+  }
+  .notification-center{
+    margin-top:0!important;
+  }
+  .notification-grid{
+    grid-template-columns:1fr!important;
+    gap:5px!important;
+  }
+  .notification-panel{
+    padding:7px!important;
+    border-radius:11px!important;
+  }
+}
