@@ -978,3 +978,57 @@ textarea:focus-visible {
     font-size:.78rem;
   }
 }
+
+
+/* DADO CLICAVEL NO LUGAR DO BOTAO 2026-09-29 */
+.dice-roll-controls{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  margin-top:8px;
+}
+.roll-dice-control{
+  appearance:none;
+  -webkit-appearance:none;
+  cursor:pointer;
+  flex:0 0 auto;
+  width:68px;
+  height:68px;
+  padding:9px;
+  border:2px solid #d9dfe6;
+  outline:none;
+  transition:transform .14s ease,box-shadow .14s ease,opacity .14s ease;
+}
+.roll-dice-control:not(:disabled):hover{
+  transform:translateY(-2px) scale(1.03);
+  box-shadow:0 9px 22px rgba(0,0,0,.34),inset 0 0 0 1px rgba(0,0,0,.05);
+}
+.roll-dice-control:not(:disabled):active{
+  transform:scale(.94);
+}
+.roll-dice-control:disabled{
+  cursor:default;
+  opacity:.62;
+}
+.roll-dice-control:focus-visible{
+  outline:3px solid #f4bd42!important;
+  outline-offset:4px;
+}
+@media(max-width:600px){
+  .dice-roll-controls{
+    margin-top:5px;
+    gap:6px;
+  }
+  .roll-dice-control{
+    width:64px!important;
+    height:64px!important;
+    padding:8px!important;
+  }
+  .dice-roll-controls #moveHint{
+    font-size:.72rem;
+    line-height:1.2;
+    text-align:center;
+  }
+}
