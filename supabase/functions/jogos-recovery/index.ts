@@ -67,7 +67,7 @@ async function sendRecoveryEmail(to:string,code:string){
     const body=[
       'Jogos Lendários','',
       `O seu código temporário para recuperar o PIN é: ${code}`,'',
-      'O código expira em 10 minutos e só pode ser usado uma vez.',
+      'O código expira em 24 horas e só pode ser usado uma vez.',
       'Este envio foi autorizado manualmente depois da confirmação do administrador.',
       'Se não pediu esta recuperação, ignore esta mensagem.','',
       'Jogos Lendários',
@@ -102,7 +102,7 @@ Deno.serve(async(req)=>{
       const i=pathname.indexOf(marker)
       if(i>=0){path=pathname.slice(i+marker.length)||'/';break}
     }
-    if(req.method==='GET'&&path==='/health')return out({ok:true,from:RECOVERY_EMAIL_FROM,emailConfigured:Boolean(RECOVERY_EMAIL_APP_PASSWORD)})
+    if(req.method==='GET'&&path==='/health')return out({ok:true,service:'jogos-recovery',version:4})
     if(req.method==='POST'&&path==='/approve-send'){
       const auth=req.headers.get('authorization')??''
       const token=auth.startsWith('Bearer ')?auth.slice(7):''
