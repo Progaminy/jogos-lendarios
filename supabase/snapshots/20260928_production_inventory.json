@@ -1,0 +1,1900 @@
+{
+    "tables": [
+        {
+            "rls": true,
+            "table": "admin_accounts",
+            "rows_estimate": -1
+        },
+        {
+            "rls": true,
+            "table": "admin_config",
+            "rows_estimate": -1
+        },
+        {
+            "rls": true,
+            "table": "admin_login_alerts",
+            "rows_estimate": -1
+        },
+        {
+            "rls": true,
+            "table": "admin_metric_baselines",
+            "rows_estimate": -1
+        },
+        {
+            "rls": true,
+            "table": "admin_sessions",
+            "rows_estimate": 2
+        },
+        {
+            "rls": true,
+            "table": "audit_log",
+            "rows_estimate": 450
+        },
+        {
+            "rls": true,
+            "table": "bets",
+            "rows_estimate": 42
+        },
+        {
+            "rls": true,
+            "table": "bonus_grants",
+            "rows_estimate": -1
+        },
+        {
+            "rls": true,
+            "table": "bonus_usages",
+            "rows_estimate": -1
+        },
+        {
+            "rls": true,
+            "table": "customer_support_messages",
+            "rows_estimate": -1
+        },
+        {
+            "rls": true,
+            "table": "deposit_requests",
+            "rows_estimate": 61
+        },
+        {
+            "rls": true,
+            "table": "deposit_wager_requirements",
+            "rows_estimate": 42
+        },
+        {
+            "rls": true,
+            "table": "deposit_wager_usages",
+            "rows_estimate": 124
+        },
+        {
+            "rls": true,
+            "table": "draw_schedule",
+            "rows_estimate": 423
+        },
+        {
+            "rls": true,
+            "table": "financial_idempotency",
+            "rows_estimate": -1
+        },
+        {
+            "rls": true,
+            "table": "game_rounds",
+            "rows_estimate": 425
+        },
+        {
+            "rls": true,
+            "table": "game_settings",
+            "rows_estimate": -1
+        },
+        {
+            "rls": true,
+            "table": "influencer_referrals",
+            "rows_estimate": -1
+        },
+        {
+            "rls": true,
+            "table": "influencers",
+            "rows_estimate": -1
+        },
+        {
+            "rls": true,
+            "table": "login_rate_limits",
+            "rows_estimate": -1
+        },
+        {
+            "rls": true,
+            "table": "ludo_chat",
+            "rows_estimate": -1
+        },
+        {
+            "rls": true,
+            "table": "ludo_events",
+            "rows_estimate": 11919
+        },
+        {
+            "rls": true,
+            "table": "ludo_events_archive",
+            "rows_estimate": -1
+        },
+        {
+            "rls": true,
+            "table": "ludo_invitations",
+            "rows_estimate": 26
+        },
+        {
+            "rls": true,
+            "table": "ludo_payouts",
+            "rows_estimate": -1
+        },
+        {
+            "rls": true,
+            "table": "ludo_player_codes",
+            "rows_estimate": -1
+        },
+        {
+            "rls": true,
+            "table": "ludo_room_players",
+            "rows_estimate": 111
+        },
+        {
+            "rls": true,
+            "table": "ludo_rooms",
+            "rows_estimate": 78
+        },
+        {
+            "rls": true,
+            "table": "ludo_signals",
+            "rows_estimate": 34
+        },
+        {
+            "rls": true,
+            "table": "ludo_tokens",
+            "rows_estimate": 208
+        },
+        {
+            "rls": true,
+            "table": "ludo_waiting_queue",
+            "rows_estimate": -1
+        },
+        {
+            "rls": true,
+            "table": "pair_bets",
+            "rows_estimate": -1
+        },
+        {
+            "rls": true,
+            "table": "pin_recovery_requests",
+            "rows_estimate": 3
+        },
+        {
+            "rls": true,
+            "table": "player_follows",
+            "rows_estimate": -1
+        },
+        {
+            "rls": true,
+            "table": "player_notifications",
+            "rows_estimate": -1
+        },
+        {
+            "rls": true,
+            "table": "player_push_subscriptions",
+            "rows_estimate": 6
+        },
+        {
+            "rls": true,
+            "table": "player_sessions",
+            "rows_estimate": 24
+        },
+        {
+            "rls": true,
+            "table": "players",
+            "rows_estimate": 31
+        },
+        {
+            "rls": true,
+            "table": "transactions",
+            "rows_estimate": 261
+        },
+        {
+            "rls": true,
+            "table": "withdrawal_requests",
+            "rows_estimate": -1
+        }
+    ],
+    "indexes": [
+        {
+            "name": "admin_accounts_one_primary_idx",
+            "table": "admin_accounts",
+            "definition": "CREATE UNIQUE INDEX admin_accounts_one_primary_idx ON public.admin_accounts USING btree (is_primary) WHERE is_primary"
+        },
+        {
+            "name": "admin_accounts_pkey",
+            "table": "admin_accounts",
+            "definition": "CREATE UNIQUE INDEX admin_accounts_pkey ON public.admin_accounts USING btree (id)"
+        },
+        {
+            "name": "admin_config_pkey",
+            "table": "admin_config",
+            "definition": "CREATE UNIQUE INDEX admin_config_pkey ON public.admin_config USING btree (id)"
+        },
+        {
+            "name": "admin_login_alerts_pkey",
+            "table": "admin_login_alerts",
+            "definition": "CREATE UNIQUE INDEX admin_login_alerts_pkey ON public.admin_login_alerts USING btree (id)"
+        },
+        {
+            "name": "admin_login_alerts_unseen_idx",
+            "table": "admin_login_alerts",
+            "definition": "CREATE INDEX admin_login_alerts_unseen_idx ON public.admin_login_alerts USING btree (created_at DESC) WHERE (seen_at IS NULL)"
+        },
+        {
+            "name": "admin_metric_baselines_pkey",
+            "table": "admin_metric_baselines",
+            "definition": "CREATE UNIQUE INDEX admin_metric_baselines_pkey ON public.admin_metric_baselines USING btree (id)"
+        },
+        {
+            "name": "admin_sessions_admin_id_idx",
+            "table": "admin_sessions",
+            "definition": "CREATE INDEX admin_sessions_admin_id_idx ON public.admin_sessions USING btree (admin_id)"
+        },
+        {
+            "name": "admin_sessions_expiry_idx",
+            "table": "admin_sessions",
+            "definition": "CREATE INDEX admin_sessions_expiry_idx ON public.admin_sessions USING btree (expires_at)"
+        },
+        {
+            "name": "admin_sessions_pkey",
+            "table": "admin_sessions",
+            "definition": "CREATE UNIQUE INDEX admin_sessions_pkey ON public.admin_sessions USING btree (id)"
+        },
+        {
+            "name": "admin_sessions_token_hash_key",
+            "table": "admin_sessions",
+            "definition": "CREATE UNIQUE INDEX admin_sessions_token_hash_key ON public.admin_sessions USING btree (token_hash)"
+        },
+        {
+            "name": "audit_log_actor_admin_idx",
+            "table": "audit_log",
+            "definition": "CREATE INDEX audit_log_actor_admin_idx ON public.audit_log USING btree (actor_admin_id, created_at DESC)"
+        },
+        {
+            "name": "audit_log_pkey",
+            "table": "audit_log",
+            "definition": "CREATE UNIQUE INDEX audit_log_pkey ON public.audit_log USING btree (id)"
+        },
+        {
+            "name": "audit_log_target_idx",
+            "table": "audit_log",
+            "definition": "CREATE INDEX audit_log_target_idx ON public.audit_log USING btree (target_type, target_id, created_at DESC)"
+        },
+        {
+            "name": "bets_pkey",
+            "table": "bets",
+            "definition": "CREATE UNIQUE INDEX bets_pkey ON public.bets USING btree (id)"
+        },
+        {
+            "name": "bets_player_idx",
+            "table": "bets",
+            "definition": "CREATE INDEX bets_player_idx ON public.bets USING btree (player_id, created_at DESC)"
+        },
+        {
+            "name": "bets_round_number_idx",
+            "table": "bets",
+            "definition": "CREATE INDEX bets_round_number_idx ON public.bets USING btree (round_id, selected_number)"
+        },
+        {
+            "name": "bonus_grants_pkey",
+            "table": "bonus_grants",
+            "definition": "CREATE UNIQUE INDEX bonus_grants_pkey ON public.bonus_grants USING btree (id)"
+        },
+        {
+            "name": "bonus_grants_player_active_idx",
+            "table": "bonus_grants",
+            "definition": "CREATE INDEX bonus_grants_player_active_idx ON public.bonus_grants USING btree (player_id, game_scope, created_at) WHERE ((status = 'active'::text) AND (remaining_amount > (0)::numeric))"
+        },
+        {
+            "name": "bonus_usages_grant_id_idx",
+            "table": "bonus_usages",
+            "definition": "CREATE INDEX bonus_usages_grant_id_idx ON public.bonus_usages USING btree (grant_id)"
+        },
+        {
+            "name": "bonus_usages_pkey",
+            "table": "bonus_usages",
+            "definition": "CREATE UNIQUE INDEX bonus_usages_pkey ON public.bonus_usages USING btree (id)"
+        },
+        {
+            "name": "bonus_usages_player_id_idx",
+            "table": "bonus_usages",
+            "definition": "CREATE INDEX bonus_usages_player_id_idx ON public.bonus_usages USING btree (player_id)"
+        },
+        {
+            "name": "customer_support_messages_admin_unread_idx",
+            "table": "customer_support_messages",
+            "definition": "CREATE INDEX customer_support_messages_admin_unread_idx ON public.customer_support_messages USING btree (read_by_admin, created_at DESC) WHERE (sender = 'player'::text)"
+        },
+        {
+            "name": "customer_support_messages_pkey",
+            "table": "customer_support_messages",
+            "definition": "CREATE UNIQUE INDEX customer_support_messages_pkey ON public.customer_support_messages USING btree (id)"
+        },
+        {
+            "name": "customer_support_messages_player_created_idx",
+            "table": "customer_support_messages",
+            "definition": "CREATE INDEX customer_support_messages_player_created_idx ON public.customer_support_messages USING btree (player_id, created_at DESC)"
+        },
+        {
+            "name": "deposit_requests_pkey",
+            "table": "deposit_requests",
+            "definition": "CREATE UNIQUE INDEX deposit_requests_pkey ON public.deposit_requests USING btree (id)"
+        },
+        {
+            "name": "deposit_requests_player_idx",
+            "table": "deposit_requests",
+            "definition": "CREATE INDEX deposit_requests_player_idx ON public.deposit_requests USING btree (player_id, created_at DESC)"
+        },
+        {
+            "name": "deposit_requests_status_idx",
+            "table": "deposit_requests",
+            "definition": "CREATE INDEX deposit_requests_status_idx ON public.deposit_requests USING btree (status, created_at DESC)"
+        },
+        {
+            "name": "deposit_wager_requirements_deposit_request_id_key",
+            "table": "deposit_wager_requirements",
+            "definition": "CREATE UNIQUE INDEX deposit_wager_requirements_deposit_request_id_key ON public.deposit_wager_requirements USING btree (deposit_request_id)"
+        },
+        {
+            "name": "deposit_wager_requirements_pkey",
+            "table": "deposit_wager_requirements",
+            "definition": "CREATE UNIQUE INDEX deposit_wager_requirements_pkey ON public.deposit_wager_requirements USING btree (id)"
+        },
+        {
+            "name": "deposit_wager_requirements_player_active_idx",
+            "table": "deposit_wager_requirements",
+            "definition": "CREATE INDEX deposit_wager_requirements_player_active_idx ON public.deposit_wager_requirements USING btree (player_id, created_at) WHERE ((status = 'active'::text) AND (remaining_amount > (0)::numeric))"
+        },
+        {
+            "name": "deposit_wager_usages_pkey",
+            "table": "deposit_wager_usages",
+            "definition": "CREATE UNIQUE INDEX deposit_wager_usages_pkey ON public.deposit_wager_usages USING btree (id)"
+        },
+        {
+            "name": "deposit_wager_usages_reference_idx",
+            "table": "deposit_wager_usages",
+            "definition": "CREATE INDEX deposit_wager_usages_reference_idx ON public.deposit_wager_usages USING btree (player_id, source_type, reference_id) WHERE (reversed_at IS NULL)"
+        },
+        {
+            "name": "deposit_wager_usages_requirement_id_idx",
+            "table": "deposit_wager_usages",
+            "definition": "CREATE INDEX deposit_wager_usages_requirement_id_idx ON public.deposit_wager_usages USING btree (requirement_id)"
+        },
+        {
+            "name": "draw_schedule_game_draw_at_uidx",
+            "table": "draw_schedule",
+            "definition": "CREATE UNIQUE INDEX draw_schedule_game_draw_at_uidx ON public.draw_schedule USING btree (game_type, draw_at)"
+        },
+        {
+            "name": "draw_schedule_game_status_draw_idx",
+            "table": "draw_schedule",
+            "definition": "CREATE INDEX draw_schedule_game_status_draw_idx ON public.draw_schedule USING btree (game_type, status, draw_at)"
+        },
+        {
+            "name": "draw_schedule_pkey",
+            "table": "draw_schedule",
+            "definition": "CREATE UNIQUE INDEX draw_schedule_pkey ON public.draw_schedule USING btree (id)"
+        },
+        {
+            "name": "draw_schedule_round_id_idx",
+            "table": "draw_schedule",
+            "definition": "CREATE INDEX draw_schedule_round_id_idx ON public.draw_schedule USING btree (round_id)"
+        },
+        {
+            "name": "draw_schedule_status_draw_at_idx",
+            "table": "draw_schedule",
+            "definition": "CREATE INDEX draw_schedule_status_draw_at_idx ON public.draw_schedule USING btree (status, draw_at)"
+        },
+        {
+            "name": "financial_idempotency_created_idx",
+            "table": "financial_idempotency",
+            "definition": "CREATE INDEX financial_idempotency_created_idx ON public.financial_idempotency USING btree (created_at DESC)"
+        },
+        {
+            "name": "financial_idempotency_pkey",
+            "table": "financial_idempotency",
+            "definition": "CREATE UNIQUE INDEX financial_idempotency_pkey ON public.financial_idempotency USING btree (subject_type, subject_id, operation, request_key)"
+        },
+        {
+            "name": "game_rounds_game_day_round_key",
+            "table": "game_rounds",
+            "definition": "CREATE UNIQUE INDEX game_rounds_game_day_round_key ON public.game_rounds USING btree (game_type, round_day, round_no)"
+        },
+        {
+            "name": "game_rounds_game_status_draw_idx",
+            "table": "game_rounds",
+            "definition": "CREATE INDEX game_rounds_game_status_draw_idx ON public.game_rounds USING btree (game_type, status, draw_at)"
+        },
+        {
+            "name": "game_rounds_global_round_no_key",
+            "table": "game_rounds",
+            "definition": "CREATE UNIQUE INDEX game_rounds_global_round_no_key ON public.game_rounds USING btree (global_round_no)"
+        },
+        {
+            "name": "game_rounds_pkey",
+            "table": "game_rounds",
+            "definition": "CREATE UNIQUE INDEX game_rounds_pkey ON public.game_rounds USING btree (id)"
+        },
+        {
+            "name": "game_rounds_schedule_id_idx",
+            "table": "game_rounds",
+            "definition": "CREATE INDEX game_rounds_schedule_id_idx ON public.game_rounds USING btree (schedule_id)"
+        },
+        {
+            "name": "game_rounds_status_draw_at_idx",
+            "table": "game_rounds",
+            "definition": "CREATE INDEX game_rounds_status_draw_at_idx ON public.game_rounds USING btree (status, draw_at)"
+        },
+        {
+            "name": "game_rounds_status_idx",
+            "table": "game_rounds",
+            "definition": "CREATE INDEX game_rounds_status_idx ON public.game_rounds USING btree (status, opened_at DESC)"
+        },
+        {
+            "name": "game_settings_pkey",
+            "table": "game_settings",
+            "definition": "CREATE UNIQUE INDEX game_settings_pkey ON public.game_settings USING btree (game_type)"
+        },
+        {
+            "name": "influencer_referrals_influencer_created_idx",
+            "table": "influencer_referrals",
+            "definition": "CREATE INDEX influencer_referrals_influencer_created_idx ON public.influencer_referrals USING btree (influencer_id, created_at DESC)"
+        },
+        {
+            "name": "influencer_referrals_pkey",
+            "table": "influencer_referrals",
+            "definition": "CREATE UNIQUE INDEX influencer_referrals_pkey ON public.influencer_referrals USING btree (player_id)"
+        },
+        {
+            "name": "influencers_code_key",
+            "table": "influencers",
+            "definition": "CREATE UNIQUE INDEX influencers_code_key ON public.influencers USING btree (code)"
+        },
+        {
+            "name": "influencers_pkey",
+            "table": "influencers",
+            "definition": "CREATE UNIQUE INDEX influencers_pkey ON public.influencers USING btree (id)"
+        },
+        {
+            "name": "login_rate_limits_pkey",
+            "table": "login_rate_limits",
+            "definition": "CREATE UNIQUE INDEX login_rate_limits_pkey ON public.login_rate_limits USING btree (scope, subject_key)"
+        },
+        {
+            "name": "ludo_chat_pkey",
+            "table": "ludo_chat",
+            "definition": "CREATE UNIQUE INDEX ludo_chat_pkey ON public.ludo_chat USING btree (id)"
+        },
+        {
+            "name": "ludo_chat_player_idx",
+            "table": "ludo_chat",
+            "definition": "CREATE INDEX ludo_chat_player_idx ON public.ludo_chat USING btree (player_id)"
+        },
+        {
+            "name": "ludo_chat_room_idx",
+            "table": "ludo_chat",
+            "definition": "CREATE INDEX ludo_chat_room_idx ON public.ludo_chat USING btree (room_id, id DESC)"
+        },
+        {
+            "name": "ludo_events_created_at_idx",
+            "table": "ludo_events",
+            "definition": "CREATE INDEX ludo_events_created_at_idx ON public.ludo_events USING btree (created_at, room_id)"
+        },
+        {
+            "name": "ludo_events_pkey",
+            "table": "ludo_events",
+            "definition": "CREATE UNIQUE INDEX ludo_events_pkey ON public.ludo_events USING btree (id)"
+        },
+        {
+            "name": "ludo_events_player_idx",
+            "table": "ludo_events",
+            "definition": "CREATE INDEX ludo_events_player_idx ON public.ludo_events USING btree (player_id)"
+        },
+        {
+            "name": "ludo_events_room_idx",
+            "table": "ludo_events",
+            "definition": "CREATE INDEX ludo_events_room_idx ON public.ludo_events USING btree (room_id, id DESC)"
+        },
+        {
+            "name": "ludo_events_archive_created_at_idx",
+            "table": "ludo_events_archive",
+            "definition": "CREATE INDEX ludo_events_archive_created_at_idx ON public.ludo_events_archive USING btree (created_at DESC)"
+        },
+        {
+            "name": "ludo_events_archive_created_idx",
+            "table": "ludo_events_archive",
+            "definition": "CREATE INDEX ludo_events_archive_created_idx ON public.ludo_events_archive USING btree (created_at DESC)"
+        },
+        {
+            "name": "ludo_events_archive_pkey",
+            "table": "ludo_events_archive",
+            "definition": "CREATE UNIQUE INDEX ludo_events_archive_pkey ON public.ludo_events_archive USING btree (id)"
+        },
+        {
+            "name": "ludo_events_archive_player_idx",
+            "table": "ludo_events_archive",
+            "definition": "CREATE INDEX ludo_events_archive_player_idx ON public.ludo_events_archive USING btree (player_id)"
+        },
+        {
+            "name": "ludo_events_archive_room_idx",
+            "table": "ludo_events_archive",
+            "definition": "CREATE INDEX ludo_events_archive_room_idx ON public.ludo_events_archive USING btree (room_id, id DESC)"
+        },
+        {
+            "name": "ludo_invitations_pkey",
+            "table": "ludo_invitations",
+            "definition": "CREATE UNIQUE INDEX ludo_invitations_pkey ON public.ludo_invitations USING btree (id)"
+        },
+        {
+            "name": "ludo_invites_invited_by_idx",
+            "table": "ludo_invitations",
+            "definition": "CREATE INDEX ludo_invites_invited_by_idx ON public.ludo_invitations USING btree (invited_by)"
+        },
+        {
+            "name": "ludo_invites_room_idx",
+            "table": "ludo_invitations",
+            "definition": "CREATE INDEX ludo_invites_room_idx ON public.ludo_invitations USING btree (room_id)"
+        },
+        {
+            "name": "ludo_invites_target_idx",
+            "table": "ludo_invitations",
+            "definition": "CREATE INDEX ludo_invites_target_idx ON public.ludo_invitations USING btree (target_player_id, status, expires_at)"
+        },
+        {
+            "name": "ludo_payouts_pkey",
+            "table": "ludo_payouts",
+            "definition": "CREATE UNIQUE INDEX ludo_payouts_pkey ON public.ludo_payouts USING btree (id)"
+        },
+        {
+            "name": "ludo_payouts_player_idx",
+            "table": "ludo_payouts",
+            "definition": "CREATE INDEX ludo_payouts_player_idx ON public.ludo_payouts USING btree (player_id)"
+        },
+        {
+            "name": "ludo_payouts_room_id_player_id_key",
+            "table": "ludo_payouts",
+            "definition": "CREATE UNIQUE INDEX ludo_payouts_room_id_player_id_key ON public.ludo_payouts USING btree (room_id, player_id)"
+        },
+        {
+            "name": "ludo_player_codes_house_number_key",
+            "table": "ludo_player_codes",
+            "definition": "CREATE UNIQUE INDEX ludo_player_codes_house_number_key ON public.ludo_player_codes USING btree (house_number)"
+        },
+        {
+            "name": "ludo_player_codes_pkey",
+            "table": "ludo_player_codes",
+            "definition": "CREATE UNIQUE INDEX ludo_player_codes_pkey ON public.ludo_player_codes USING btree (player_id)"
+        },
+        {
+            "name": "ludo_room_players_pkey",
+            "table": "ludo_room_players",
+            "definition": "CREATE UNIQUE INDEX ludo_room_players_pkey ON public.ludo_room_players USING btree (room_id, player_id)"
+        },
+        {
+            "name": "ludo_room_players_player_idx",
+            "table": "ludo_room_players",
+            "definition": "CREATE INDEX ludo_room_players_player_idx ON public.ludo_room_players USING btree (player_id, status)"
+        },
+        {
+            "name": "ludo_room_players_room_id_color_key",
+            "table": "ludo_room_players",
+            "definition": "CREATE UNIQUE INDEX ludo_room_players_room_id_color_key ON public.ludo_room_players USING btree (room_id, color)"
+        },
+        {
+            "name": "ludo_room_players_room_id_seat_key",
+            "table": "ludo_room_players",
+            "definition": "CREATE UNIQUE INDEX ludo_room_players_room_id_seat_key ON public.ludo_room_players USING btree (room_id, seat)"
+        },
+        {
+            "name": "ludo_rooms_code_key",
+            "table": "ludo_rooms",
+            "definition": "CREATE UNIQUE INDEX ludo_rooms_code_key ON public.ludo_rooms USING btree (code)"
+        },
+        {
+            "name": "ludo_rooms_current_player_idx",
+            "table": "ludo_rooms",
+            "definition": "CREATE INDEX ludo_rooms_current_player_idx ON public.ludo_rooms USING btree (current_player_id)"
+        },
+        {
+            "name": "ludo_rooms_host_idx",
+            "table": "ludo_rooms",
+            "definition": "CREATE INDEX ludo_rooms_host_idx ON public.ludo_rooms USING btree (host_id)"
+        },
+        {
+            "name": "ludo_rooms_pkey",
+            "table": "ludo_rooms",
+            "definition": "CREATE UNIQUE INDEX ludo_rooms_pkey ON public.ludo_rooms USING btree (id)"
+        },
+        {
+            "name": "ludo_rooms_status_idx",
+            "table": "ludo_rooms",
+            "definition": "CREATE INDEX ludo_rooms_status_idx ON public.ludo_rooms USING btree (status, created_at DESC)"
+        },
+        {
+            "name": "ludo_rooms_winner_idx",
+            "table": "ludo_rooms",
+            "definition": "CREATE INDEX ludo_rooms_winner_idx ON public.ludo_rooms USING btree (winner_player_id)"
+        },
+        {
+            "name": "ludo_signals_from_player_idx",
+            "table": "ludo_signals",
+            "definition": "CREATE INDEX ludo_signals_from_player_idx ON public.ludo_signals USING btree (from_player_id)"
+        },
+        {
+            "name": "ludo_signals_pkey",
+            "table": "ludo_signals",
+            "definition": "CREATE UNIQUE INDEX ludo_signals_pkey ON public.ludo_signals USING btree (id)"
+        },
+        {
+            "name": "ludo_signals_room_idx",
+            "table": "ludo_signals",
+            "definition": "CREATE INDEX ludo_signals_room_idx ON public.ludo_signals USING btree (room_id)"
+        },
+        {
+            "name": "ludo_signals_target_idx",
+            "table": "ludo_signals",
+            "definition": "CREATE INDEX ludo_signals_target_idx ON public.ludo_signals USING btree (to_player_id, room_id, id)"
+        },
+        {
+            "name": "ludo_tokens_pkey",
+            "table": "ludo_tokens",
+            "definition": "CREATE UNIQUE INDEX ludo_tokens_pkey ON public.ludo_tokens USING btree (room_id, player_id, token_no)"
+        },
+        {
+            "name": "ludo_queue_match_idx",
+            "table": "ludo_waiting_queue",
+            "definition": "CREATE INDEX ludo_queue_match_idx ON public.ludo_waiting_queue USING btree (player_count, mode, bet_amount, joined_at)"
+        },
+        {
+            "name": "ludo_waiting_queue_pkey",
+            "table": "ludo_waiting_queue",
+            "definition": "CREATE UNIQUE INDEX ludo_waiting_queue_pkey ON public.ludo_waiting_queue USING btree (player_id)"
+        },
+        {
+            "name": "pair_bets_pkey",
+            "table": "pair_bets",
+            "definition": "CREATE UNIQUE INDEX pair_bets_pkey ON public.pair_bets USING btree (id)"
+        },
+        {
+            "name": "pair_bets_player_created_idx",
+            "table": "pair_bets",
+            "definition": "CREATE INDEX pair_bets_player_created_idx ON public.pair_bets USING btree (player_id, created_at DESC)"
+        },
+        {
+            "name": "pair_bets_round_idx",
+            "table": "pair_bets",
+            "definition": "CREATE INDEX pair_bets_round_idx ON public.pair_bets USING btree (round_id)"
+        },
+        {
+            "name": "pair_bets_round_pair_idx",
+            "table": "pair_bets",
+            "definition": "CREATE INDEX pair_bets_round_pair_idx ON public.pair_bets USING btree (round_id, number_a, number_b)"
+        },
+        {
+            "name": "pin_recovery_one_active_per_player_idx",
+            "table": "pin_recovery_requests",
+            "definition": "CREATE UNIQUE INDEX pin_recovery_one_active_per_player_idx ON public.pin_recovery_requests USING btree (player_id) WHERE (status = ANY (ARRAY['pending_admin'::text, 'sending'::text, 'code_sent'::text]))"
+        },
+        {
+            "name": "pin_recovery_one_active_unmatched_phone_idx",
+            "table": "pin_recovery_requests",
+            "definition": "CREATE UNIQUE INDEX pin_recovery_one_active_unmatched_phone_idx ON public.pin_recovery_requests USING btree (phone) WHERE ((player_id IS NULL) AND (status = ANY (ARRAY['pending_admin'::text, 'sending'::text, 'code_sent'::text])))"
+        },
+        {
+            "name": "pin_recovery_phone_requested_idx",
+            "table": "pin_recovery_requests",
+            "definition": "CREATE INDEX pin_recovery_phone_requested_idx ON public.pin_recovery_requests USING btree (phone, requested_at DESC)"
+        },
+        {
+            "name": "pin_recovery_requests_pkey",
+            "table": "pin_recovery_requests",
+            "definition": "CREATE UNIQUE INDEX pin_recovery_requests_pkey ON public.pin_recovery_requests USING btree (id)"
+        },
+        {
+            "name": "pin_recovery_requests_player_idx",
+            "table": "pin_recovery_requests",
+            "definition": "CREATE INDEX pin_recovery_requests_player_idx ON public.pin_recovery_requests USING btree (player_id, requested_at DESC)"
+        },
+        {
+            "name": "pin_recovery_requests_status_idx",
+            "table": "pin_recovery_requests",
+            "definition": "CREATE INDEX pin_recovery_requests_status_idx ON public.pin_recovery_requests USING btree (status, requested_at DESC)"
+        },
+        {
+            "name": "player_follows_followed_idx",
+            "table": "player_follows",
+            "definition": "CREATE INDEX player_follows_followed_idx ON public.player_follows USING btree (followed_id, created_at DESC)"
+        },
+        {
+            "name": "player_follows_pkey",
+            "table": "player_follows",
+            "definition": "CREATE UNIQUE INDEX player_follows_pkey ON public.player_follows USING btree (follower_id, followed_id)"
+        },
+        {
+            "name": "player_notifications_pkey",
+            "table": "player_notifications",
+            "definition": "CREATE UNIQUE INDEX player_notifications_pkey ON public.player_notifications USING btree (id)"
+        },
+        {
+            "name": "player_notifications_player_created_idx",
+            "table": "player_notifications",
+            "definition": "CREATE INDEX player_notifications_player_created_idx ON public.player_notifications USING btree (player_id, created_at DESC) WHERE (dismissed_at IS NULL)"
+        },
+        {
+            "name": "player_notifications_source_uidx",
+            "table": "player_notifications",
+            "definition": "CREATE UNIQUE INDEX player_notifications_source_uidx ON public.player_notifications USING btree (player_id, source_key) WHERE (source_key IS NOT NULL)"
+        },
+        {
+            "name": "player_push_subscriptions_endpoint_key",
+            "table": "player_push_subscriptions",
+            "definition": "CREATE UNIQUE INDEX player_push_subscriptions_endpoint_key ON public.player_push_subscriptions USING btree (endpoint)"
+        },
+        {
+            "name": "player_push_subscriptions_pkey",
+            "table": "player_push_subscriptions",
+            "definition": "CREATE UNIQUE INDEX player_push_subscriptions_pkey ON public.player_push_subscriptions USING btree (id)"
+        },
+        {
+            "name": "player_push_subscriptions_player_idx",
+            "table": "player_push_subscriptions",
+            "definition": "CREATE INDEX player_push_subscriptions_player_idx ON public.player_push_subscriptions USING btree (player_id) WHERE (disabled_at IS NULL)"
+        },
+        {
+            "name": "player_sessions_expiry_idx",
+            "table": "player_sessions",
+            "definition": "CREATE INDEX player_sessions_expiry_idx ON public.player_sessions USING btree (expires_at)"
+        },
+        {
+            "name": "player_sessions_last_seen_idx",
+            "table": "player_sessions",
+            "definition": "CREATE INDEX player_sessions_last_seen_idx ON public.player_sessions USING btree (last_seen_at DESC)"
+        },
+        {
+            "name": "player_sessions_pkey",
+            "table": "player_sessions",
+            "definition": "CREATE UNIQUE INDEX player_sessions_pkey ON public.player_sessions USING btree (id)"
+        },
+        {
+            "name": "player_sessions_player_expiry_idx",
+            "table": "player_sessions",
+            "definition": "CREATE INDEX player_sessions_player_expiry_idx ON public.player_sessions USING btree (player_id, expires_at DESC)"
+        },
+        {
+            "name": "player_sessions_player_idx",
+            "table": "player_sessions",
+            "definition": "CREATE INDEX player_sessions_player_idx ON public.player_sessions USING btree (player_id)"
+        },
+        {
+            "name": "player_sessions_player_seen_idx",
+            "table": "player_sessions",
+            "definition": "CREATE INDEX player_sessions_player_seen_idx ON public.player_sessions USING btree (player_id, last_seen_at DESC)"
+        },
+        {
+            "name": "player_sessions_token_hash_key",
+            "table": "player_sessions",
+            "definition": "CREATE UNIQUE INDEX player_sessions_token_hash_key ON public.player_sessions USING btree (token_hash)"
+        },
+        {
+            "name": "players_active_phone_canonical_key",
+            "table": "players",
+            "definition": "CREATE UNIQUE INDEX players_active_phone_canonical_key ON public.players USING btree (jl_phone(phone)) WHERE (deleted_at IS NULL)"
+        },
+        {
+            "name": "players_phone_key",
+            "table": "players",
+            "definition": "CREATE UNIQUE INDEX players_phone_key ON public.players USING btree (phone)"
+        },
+        {
+            "name": "players_pkey",
+            "table": "players",
+            "definition": "CREATE UNIQUE INDEX players_pkey ON public.players USING btree (id)"
+        },
+        {
+            "name": "transactions_pkey",
+            "table": "transactions",
+            "definition": "CREATE UNIQUE INDEX transactions_pkey ON public.transactions USING btree (id)"
+        },
+        {
+            "name": "transactions_player_idx",
+            "table": "transactions",
+            "definition": "CREATE INDEX transactions_player_idx ON public.transactions USING btree (player_id, created_at DESC)"
+        },
+        {
+            "name": "transactions_reference_once_idx",
+            "table": "transactions",
+            "definition": "CREATE UNIQUE INDEX transactions_reference_once_idx ON public.transactions USING btree (kind, reference_id, player_id) WHERE ((reference_id IS NOT NULL) AND (kind = ANY (ARRAY['deposit'::text, 'withdrawal'::text, 'withdrawal_refund'::text, 'bet'::text, 'payout'::text, 'ludo_payout'::text])))"
+        },
+        {
+            "name": "withdrawal_requests_pkey",
+            "table": "withdrawal_requests",
+            "definition": "CREATE UNIQUE INDEX withdrawal_requests_pkey ON public.withdrawal_requests USING btree (id)"
+        },
+        {
+            "name": "withdrawal_requests_player_idx",
+            "table": "withdrawal_requests",
+            "definition": "CREATE INDEX withdrawal_requests_player_idx ON public.withdrawal_requests USING btree (player_id, created_at DESC)"
+        },
+        {
+            "name": "withdrawal_requests_status_idx",
+            "table": "withdrawal_requests",
+            "definition": "CREATE INDEX withdrawal_requests_status_idx ON public.withdrawal_requests USING btree (status, created_at DESC)"
+        }
+    ],
+    "policies": [
+    ],
+    "triggers": [
+        {
+            "name": "trg_jl_audit_admin_accounts",
+            "event": "UPDATE",
+            "table": "admin_accounts",
+            "timing": "AFTER",
+            "statement": "EXECUTE FUNCTION jl_audit_admin_row_change()"
+        },
+        {
+            "name": "trg_jl_audit_admin_accounts",
+            "event": "INSERT",
+            "table": "admin_accounts",
+            "timing": "AFTER",
+            "statement": "EXECUTE FUNCTION jl_audit_admin_row_change()"
+        },
+        {
+            "name": "trg_jl_enrich_admin_audit",
+            "event": "INSERT",
+            "table": "audit_log",
+            "timing": "BEFORE",
+            "statement": "EXECUTE FUNCTION jl_enrich_admin_audit()"
+        },
+        {
+            "name": "trg_jl_notify_number_win",
+            "event": "UPDATE",
+            "table": "bets",
+            "timing": "AFTER",
+            "statement": "EXECUTE FUNCTION jl_notify_number_win()"
+        },
+        {
+            "name": "trg_jl_notify_number_win",
+            "event": "INSERT",
+            "table": "bets",
+            "timing": "AFTER",
+            "statement": "EXECUTE FUNCTION jl_notify_number_win()"
+        },
+        {
+            "name": "trg_jl_notify_support_reply",
+            "event": "INSERT",
+            "table": "customer_support_messages",
+            "timing": "AFTER",
+            "statement": "EXECUTE FUNCTION jl_notify_support_reply()"
+        },
+        {
+            "name": "trg_jl_audit_deposits_admin",
+            "event": "UPDATE",
+            "table": "deposit_requests",
+            "timing": "AFTER",
+            "statement": "EXECUTE FUNCTION jl_audit_admin_row_change()"
+        },
+        {
+            "name": "trg_jl_notify_deposit_status",
+            "event": "INSERT",
+            "table": "deposit_requests",
+            "timing": "AFTER",
+            "statement": "EXECUTE FUNCTION jl_notify_deposit_status()"
+        },
+        {
+            "name": "trg_jl_notify_deposit_status",
+            "event": "UPDATE",
+            "table": "deposit_requests",
+            "timing": "AFTER",
+            "statement": "EXECUTE FUNCTION jl_notify_deposit_status()"
+        },
+        {
+            "name": "trg_jl_audit_draw_schedule_admin",
+            "event": "INSERT",
+            "table": "draw_schedule",
+            "timing": "AFTER",
+            "statement": "EXECUTE FUNCTION jl_audit_admin_row_change()"
+        },
+        {
+            "name": "trg_jl_audit_draw_schedule_admin",
+            "event": "UPDATE",
+            "table": "draw_schedule",
+            "timing": "AFTER",
+            "statement": "EXECUTE FUNCTION jl_audit_admin_row_change()"
+        },
+        {
+            "name": "jl_game_round_daily_no",
+            "event": "INSERT",
+            "table": "game_rounds",
+            "timing": "BEFORE",
+            "statement": "EXECUTE FUNCTION jl_assign_daily_round_no()"
+        },
+        {
+            "name": "trg_jl_audit_game_rounds_admin",
+            "event": "UPDATE",
+            "table": "game_rounds",
+            "timing": "AFTER",
+            "statement": "EXECUTE FUNCTION jl_audit_admin_row_change()"
+        },
+        {
+            "name": "trg_jl_audit_game_rounds_admin",
+            "event": "INSERT",
+            "table": "game_rounds",
+            "timing": "AFTER",
+            "statement": "EXECUTE FUNCTION jl_audit_admin_row_change()"
+        },
+        {
+            "name": "trg_jl_audit_game_settings_admin",
+            "event": "UPDATE",
+            "table": "game_settings",
+            "timing": "AFTER",
+            "statement": "EXECUTE FUNCTION jl_audit_admin_row_change()"
+        },
+        {
+            "name": "trg_jl_audit_influencers_admin",
+            "event": "UPDATE",
+            "table": "influencers",
+            "timing": "AFTER",
+            "statement": "EXECUTE FUNCTION jl_audit_admin_row_change()"
+        },
+        {
+            "name": "trg_jl_audit_influencers_admin",
+            "event": "INSERT",
+            "table": "influencers",
+            "timing": "AFTER",
+            "statement": "EXECUTE FUNCTION jl_audit_admin_row_change()"
+        },
+        {
+            "name": "trg_jl_notify_ludo_invite",
+            "event": "INSERT",
+            "table": "ludo_invitations",
+            "timing": "AFTER",
+            "statement": "EXECUTE FUNCTION jl_notify_ludo_invite()"
+        },
+        {
+            "name": "trg_jl_persist_ludo_invite",
+            "event": "INSERT",
+            "table": "ludo_invitations",
+            "timing": "BEFORE",
+            "statement": "EXECUTE FUNCTION jl_persist_ludo_invite()"
+        },
+        {
+            "name": "trg_jl_persist_ludo_invite",
+            "event": "UPDATE",
+            "table": "ludo_invitations",
+            "timing": "BEFORE",
+            "statement": "EXECUTE FUNCTION jl_persist_ludo_invite()"
+        },
+        {
+            "name": "trg_jl_notify_ludo_payout",
+            "event": "INSERT",
+            "table": "ludo_payouts",
+            "timing": "AFTER",
+            "statement": "EXECUTE FUNCTION jl_notify_ludo_payout()"
+        },
+        {
+            "name": "trg_jl_guard_ludo_room_member_funds",
+            "event": "INSERT",
+            "table": "ludo_room_players",
+            "timing": "BEFORE",
+            "statement": "EXECUTE FUNCTION jl_guard_ludo_room_member_funds()"
+        },
+        {
+            "name": "trg_jl_guard_ludo_room_member_funds",
+            "event": "UPDATE",
+            "table": "ludo_room_players",
+            "timing": "BEFORE",
+            "statement": "EXECUTE FUNCTION jl_guard_ludo_room_member_funds()"
+        },
+        {
+            "name": "trg_jl_persist_ludo_room_waiting",
+            "event": "INSERT",
+            "table": "ludo_rooms",
+            "timing": "BEFORE",
+            "statement": "EXECUTE FUNCTION jl_persist_ludo_room_waiting()"
+        },
+        {
+            "name": "trg_jl_persist_ludo_room_waiting",
+            "event": "UPDATE",
+            "table": "ludo_rooms",
+            "timing": "BEFORE",
+            "statement": "EXECUTE FUNCTION jl_persist_ludo_room_waiting()"
+        },
+        {
+            "name": "trg_jl_guard_ludo_queue_funds",
+            "event": "UPDATE",
+            "table": "ludo_waiting_queue",
+            "timing": "BEFORE",
+            "statement": "EXECUTE FUNCTION jl_guard_ludo_queue_funds()"
+        },
+        {
+            "name": "trg_jl_guard_ludo_queue_funds",
+            "event": "INSERT",
+            "table": "ludo_waiting_queue",
+            "timing": "BEFORE",
+            "statement": "EXECUTE FUNCTION jl_guard_ludo_queue_funds()"
+        },
+        {
+            "name": "trg_jl_notify_pair_win",
+            "event": "UPDATE",
+            "table": "pair_bets",
+            "timing": "AFTER",
+            "statement": "EXECUTE FUNCTION jl_notify_pair_win()"
+        },
+        {
+            "name": "trg_jl_notify_pair_win",
+            "event": "INSERT",
+            "table": "pair_bets",
+            "timing": "AFTER",
+            "statement": "EXECUTE FUNCTION jl_notify_pair_win()"
+        },
+        {
+            "name": "trg_jl_audit_pin_recovery_admin",
+            "event": "UPDATE",
+            "table": "pin_recovery_requests",
+            "timing": "AFTER",
+            "statement": "EXECUTE FUNCTION jl_audit_admin_row_change()"
+        },
+        {
+            "name": "trg_jl_push_after_notification_insert",
+            "event": "INSERT",
+            "table": "player_notifications",
+            "timing": "AFTER",
+            "statement": "EXECUTE FUNCTION jl_push_after_notification_insert()"
+        },
+        {
+            "name": "trg_jl_audit_players_admin",
+            "event": "UPDATE",
+            "table": "players",
+            "timing": "AFTER",
+            "statement": "EXECUTE FUNCTION jl_audit_admin_row_change()"
+        },
+        {
+            "name": "trg_jl_guard_ludo_reentry_wager",
+            "event": "INSERT",
+            "table": "transactions",
+            "timing": "AFTER",
+            "statement": "EXECUTE FUNCTION jl_guard_ludo_reentry_wager()"
+        },
+        {
+            "name": "trg_jl_audit_withdrawals_admin",
+            "event": "UPDATE",
+            "table": "withdrawal_requests",
+            "timing": "AFTER",
+            "statement": "EXECUTE FUNCTION jl_audit_admin_row_change()"
+        },
+        {
+            "name": "trg_jl_notify_withdrawal_status",
+            "event": "INSERT",
+            "table": "withdrawal_requests",
+            "timing": "AFTER",
+            "statement": "EXECUTE FUNCTION jl_notify_withdrawal_status()"
+        },
+        {
+            "name": "trg_jl_notify_withdrawal_status",
+            "event": "UPDATE",
+            "table": "withdrawal_requests",
+            "timing": "AFTER",
+            "statement": "EXECUTE FUNCTION jl_notify_withdrawal_status()"
+        }
+    ],
+    "cron_jobs": [
+        {
+            "name": "jogos_lendarios_engine",
+            "jobid": 2,
+            "active": true,
+            "command": "select public.jl_process_game_engine_tick();",
+            "schedule": "2 seconds"
+        },
+        {
+            "name": "jogos_lendarios_cron_history_cleanup",
+            "jobid": 4,
+            "active": true,
+            "command": "select public.jl_cron_prune_history();",
+            "schedule": "17 * * * *"
+        },
+        {
+            "name": "jogos_lendarios_ludo_data_retention",
+            "jobid": 5,
+            "active": true,
+            "command": "select public.jl_ludo_data_retention_maintenance(90,5000);",
+            "schedule": "37 * * * *"
+        },
+        {
+            "name": "jogos_lendarios_ludo_retention",
+            "jobid": 6,
+            "active": true,
+            "command": "select public.jl_ludo_retention_cleanup();",
+            "schedule": "23 * * * *"
+        }
+    ],
+    "generated_at": "2026-09-28T01:48:38.090824+00:00",
+    "migration_head": {
+        "name": "reconcile_live_ludo_roll_definition_20260928",
+        "version": "20260928014639"
+    },
+    "routine_hashes": [
+        {
+            "sha256": "d7091ac2ed27b47e1d8ae9f873b647073043eaf9fd8c310c975e18dd387d5187",
+            "signature": "jl_admin_account_id(text)"
+        },
+        {
+            "sha256": "d44b29d8cdd676268e3df053ae9fe92ab0cf05b61cecbd8025b50f9c839494d5",
+            "signature": "jl_admin_add_draw_time(text,timestamp with time zone)"
+        },
+        {
+            "sha256": "0246eba8925671ac5009f774ded100816aaec3355672d1886e19e9ff0f41942b",
+            "signature": "jl_admin_add_game_draw_time(text,text,timestamp with time zone)"
+        },
+        {
+            "sha256": "473b03ca91f7401d48084de8b8885433ec7045fd8f88eb13b1b108792eac926d",
+            "signature": "jl_admin_adjust_balance_idempotent(text,uuid,numeric,text,text)"
+        },
+        {
+            "sha256": "ffb43a569e7aecbd3bbf9a10ebff35f2b164d5598bf36bb1e114747f42aa822d",
+            "signature": "jl_admin_adjust_balance(text,uuid,numeric,text)"
+        },
+        {
+            "sha256": "00122101577cae6498be1b9c9857ee05b37db9c6978b3b6de5b3809640ed7d18",
+            "signature": "jl_admin_bet_summary(text)"
+        },
+        {
+            "sha256": "a8daa1e2ea44f284bc849af2a2227ba9c18ed1941b207a838eee27d900311cfa",
+            "signature": "jl_admin_bonus_overview(text)"
+        },
+        {
+            "sha256": "1f1c209aaf3b09b866d7ff2b69c4efa3c80e4ccf0a347eda05ef98a65a2d10fa",
+            "signature": "jl_admin_cancel_all_ludo(text,text)"
+        },
+        {
+            "sha256": "f5388b23afd09a57144c29dcf57cfe97a5880dd9527fc406d5f15276d523b11e",
+            "signature": "jl_admin_cancel_draw_time(text,uuid)"
+        },
+        {
+            "sha256": "25a34b8fc00f512608271cda9f56500b3350e89beb50289fd0d42a48b19a04ee",
+            "signature": "jl_admin_cancel_game_draw_time(text,text,uuid)"
+        },
+        {
+            "sha256": "4d5d079733a1207299165a58274299069c6cb55f7a38a9b4bc667e6321c65901",
+            "signature": "jl_admin_cancel_ludo_room(text,uuid,text)"
+        },
+        {
+            "sha256": "1f7e86db3f73ccfda0152a81b40bd7324a8b8acce3e856d9240dd55d2aa97c3b",
+            "signature": "jl_admin_change_own_code(text,text,text)"
+        },
+        {
+            "sha256": "de3b0cb42f5cddf987b98fc5263b6c2d7006fbeb22bc191a94c61e5c05edaa67",
+            "signature": "jl_admin_clear_draw_schedule(text)"
+        },
+        {
+            "sha256": "7ff16e0526392dd6b37b16941a274ef34b5e2442d560ed226669e42c819bbea9",
+            "signature": "jl_admin_clear_game_schedule(text,text)"
+        },
+        {
+            "sha256": "e95f0f2c253bb6e8d89b7c1639336e61fdab075e1ecf250fc6d8dddfa4d24d07",
+            "signature": "jl_admin_close_game_round(text,text)"
+        },
+        {
+            "sha256": "414db47af21f80c9dc882fbaf8c4a29cc383bebabd2a6e47769a8d76337fa4b9",
+            "signature": "jl_admin_close_round(text)"
+        },
+        {
+            "sha256": "ad5ece06cf792f2e294358aa39dcffa2181b03657f438fd34d05bb259abe9cb0",
+            "signature": "jl_admin_create_account(text,text,text,text)"
+        },
+        {
+            "sha256": "7603d6e49a5d770c1777a14318dc70b17509c16ae9ac4fcd8112d53f35636b1d",
+            "signature": "jl_admin_create_influencer(text,text,text)"
+        },
+        {
+            "sha256": "6c2a7d0c243b356f03554cdeb31683a030edb9d407f79d236670ba4776be4d32",
+            "signature": "jl_admin_dashboard(text)"
+        },
+        {
+            "sha256": "bc8eff9609f12e9552ea9bb08e2827e8ccfb36f7bdc2c6e23078aabeee2e8ac3",
+            "signature": "jl_admin_delete_player(text,uuid,text)"
+        },
+        {
+            "sha256": "2ccf9038bfb673162541738e85b298907de572595f4fe4560bdd47623c19d393",
+            "signature": "jl_admin_draw_round(text)"
+        },
+        {
+            "sha256": "71db87553cb441212e0336655cd25ece09b9802f1b7448c58510df08d70fae53",
+            "signature": "jl_admin_financial_summary(text)"
+        },
+        {
+            "sha256": "ed694a7b5007e0a8bc1110bb4c747c3f0bc219fbc3ad8236b4c0030ee5380b97",
+            "signature": "jl_admin_force_logout_player(text,uuid)"
+        },
+        {
+            "sha256": "faae210f575af47df51363ad7e0e3cc73bfc5b74e78ee3e744a480c676dbccfd",
+            "signature": "jl_admin_game_snapshot(text)"
+        },
+        {
+            "sha256": "82042785b08cc4dcb8352bfaf3125f694bfada0145b18e79f384cabdd4854c15",
+            "signature": "jl_admin_grant_bonus(text,uuid[],text,text,numeric,text)"
+        },
+        {
+            "sha256": "83b4d5f0671bbaf51da3113f1d8d288f18d96a435c364e7b45448cd80be5912c",
+            "signature": "jl_admin_influencers(text)"
+        },
+        {
+            "sha256": "68008d95d44aa13bb1834b46f371ae91a9f50fd525356ebe4825a69e7cd27a68",
+            "signature": "jl_admin_issue_recovery_code(text,uuid,text)"
+        },
+        {
+            "sha256": "83a61caeeae5fb572ec17f011831f6447db84ae58d7b52258c4910f3242f3fe8",
+            "signature": "jl_admin_list_accounts(text)"
+        },
+        {
+            "sha256": "86e8ccc66cd979418aa5b393f6c8309c9ff439b9a7ed24dde83f1caee4a02049",
+            "signature": "jl_admin_login(text)"
+        },
+        {
+            "sha256": "898725f4a0b03b5b199bbdb02e577a378aaa29baf8414192b2d5d1cd3eea233c",
+            "signature": "jl_admin_logout(text)"
+        },
+        {
+            "sha256": "5eb07f8b0e27c03ebc409622d4fef83a9e3c26c4e5fd71be405b9332693c953e",
+            "signature": "jl_admin_ludo_active_rooms(text)"
+        },
+        {
+            "sha256": "649048a3d4d09cd4ad80f571b542a7ed80acbf3a3529e9afb35aeaf6c496d389",
+            "signature": "jl_admin_ludo_emergency_status(text)"
+        },
+        {
+            "sha256": "056d442b5918553656c11b3425c7bb3cdb089068cbda3b6c23238020ccdd3fc6",
+            "signature": "jl_admin_mark_recovery_sent(text,uuid)"
+        },
+        {
+            "sha256": "c55a4f3a97d397bf8071f27667162581bc39f22888ffa47301b38bf98a20bb3d",
+            "signature": "jl_admin_ok(text)"
+        },
+        {
+            "sha256": "d9c1b686cf806940c3516e616c6ab859ec16c57096277a622efbbe4de3484715",
+            "signature": "jl_admin_open_game_round(text,text,timestamp with time zone)"
+        },
+        {
+            "sha256": "bda8202a63824f648d45db00806491cf110fe8040be711e5ad0ec165227aa36f",
+            "signature": "jl_admin_open_round(text,timestamp with time zone)"
+        },
+        {
+            "sha256": "6f13eeec4a87673d4ef8e9e1ecb2b074ad541d98c0dabb4e9c50760278cb3639",
+            "signature": "jl_admin_prepare_recovery_send(text,uuid,text)"
+        },
+        {
+            "sha256": "3b37dd250033b6cc314d1c306f510c95efad4f4748624118920c156a4214f567",
+            "signature": "jl_admin_publish_round(text)"
+        },
+        {
+            "sha256": "0cd1ed089cb8012775c6520464071f791b162ed2c9964fb6b4615c217e97c663",
+            "signature": "jl_admin_reauthenticate(text,text)"
+        },
+        {
+            "sha256": "5a9dbe8b126e5b00a585903395da5c7dc439859f0c4b325de799cabc7120a793",
+            "signature": "jl_admin_recent_audit(text,integer)"
+        },
+        {
+            "sha256": "713c42ad9dea8b09e29d1afc50674eeea14b478774e85ad5ce056917d9e50df8",
+            "signature": "jl_admin_recovery_requests(text)"
+        },
+        {
+            "sha256": "80355743b2066f4e4860d710ef5badf70804933054f199622432be1684b20ff2",
+            "signature": "jl_admin_recovery_send_failed(text,uuid)"
+        },
+        {
+            "sha256": "bb44b710c668dc848e3209ce97d79fe3e6cdbd242b5b771b7e482d2f2727a08b",
+            "signature": "jl_admin_reject_recovery(text,uuid)"
+        },
+        {
+            "sha256": "320adfb3a9cb6200e63bf32ae8fdc945e1ac3f6bd88d25defa70076fc8185c68",
+            "signature": "jl_admin_reset_financial_counters(text,text)"
+        },
+        {
+            "sha256": "f42e6fbe2dfaa5687951533efcb29a5a3e246110b3ccd93c776f9585ba473d5b",
+            "signature": "jl_admin_review_deposit(text,uuid,text)"
+        },
+        {
+            "sha256": "4e11620a3e3d746604244d2ffa96f6d3972102a32f469d3d1b63d9837f47fb21",
+            "signature": "jl_admin_review_withdrawal(text,uuid,text)"
+        },
+        {
+            "sha256": "d97568c8a56b423ca7970ca082391a96b886e4a36686ffa44ddaf6b2d8ecdbd2",
+            "signature": "jl_admin_schedule_draws(text,timestamp with time zone,timestamp with time zone,integer)"
+        },
+        {
+            "sha256": "5b8b6253830c0ee6566dfdc7b0b42badf0e5e41652dafa5349b34cfe14db6b06",
+            "signature": "jl_admin_schedule_game_draws(text,text,timestamp with time zone,timestamp with time zone,integer)"
+        },
+        {
+            "sha256": "49116f6622c38d92cb32ee5768c3a7d05960870c7755bc3a6f1cec8eead05fb9",
+            "signature": "jl_admin_session_info(text)"
+        },
+        {
+            "sha256": "f29af5949b744ee71961e78869d792e7ec0afe1e826ac50578f551f4cb529773",
+            "signature": "jl_admin_set_account_active(text,uuid,boolean)"
+        },
+        {
+            "sha256": "495c22979a467eb1fbeffe0bf73b653dab867806a02078c874a90b0f6769a317",
+            "signature": "jl_admin_set_blocked(text,uuid,boolean)"
+        },
+        {
+            "sha256": "6b293a616b60b3a9e4d33189396901ac780404dd6b77f9116dc5031f5651b7cf",
+            "signature": "jl_admin_set_influencer_active(text,uuid,boolean)"
+        },
+        {
+            "sha256": "fbf8949803adae4899a4ecea385c468cadacb5a1b605f58d0fe5f69a4b1c0eb3",
+            "signature": "jl_admin_support_reply(text,uuid,text)"
+        },
+        {
+            "sha256": "d11590c301539f87f6c8f46b96390dfe47997659bbebcd9f750d1263d4f91940",
+            "signature": "jl_admin_support_thread(text,uuid)"
+        },
+        {
+            "sha256": "a91efb4dd2568bb766e04bfce34d5d43b0995a4f74ee576ba61c750346de407e",
+            "signature": "jl_admin_support_threads(text)"
+        },
+        {
+            "sha256": "c2c15e09afb0ccd272b1b8ab9947c5e128d292dfc9dce6f3e3308e1d3f527ed5",
+            "signature": "jl_admin_update_game_settings(text,text,numeric,numeric,numeric,integer,text,boolean)"
+        },
+        {
+            "sha256": "c99888c7053a94508e98a2dfc582d65bb1fe6f2486d7b79f85195c59a2f7dba0",
+            "signature": "jl_admin_update_player_name(text,uuid,text)"
+        },
+        {
+            "sha256": "e04b629a897eced4fc6ab4bd1ef67b5189e882fedc86a72a4525f91ae932d9a3",
+            "signature": "jl_admin_verify_account_code(uuid,text)"
+        },
+        {
+            "sha256": "a158d6783521e7c13afb0f2563faff707a3afa6f90b472b54fcedf2746c3cf43",
+            "signature": "jl_admin_verify_code_for_token(text,text)"
+        },
+        {
+            "sha256": "b73645ce0656aadfb836c55b4e43c1bb52a5c78448533134189ee7bede16add1",
+            "signature": "jl_apply_cash_wager(uuid,numeric,text,uuid)"
+        },
+        {
+            "sha256": "ecef44dd7e00ba1a7d65cbcd06ab78b3622bc5ee902babb8cb29c381dba9f0bd",
+            "signature": "jl_assign_daily_round_no()"
+        },
+        {
+            "sha256": "d1b788afd8408918db32c530e52dc1a6411c718c8ce73024f9cea16bd7bf7948",
+            "signature": "jl_audit_admin_row_change()"
+        },
+        {
+            "sha256": "2e9ac6449bbd64db31b07f0701492ac6dfc9909e2b680343b8a029639957f355",
+            "signature": "jl_bonus_available(uuid,text)"
+        },
+        {
+            "sha256": "1e585046793ea0410ab18db904f80ca25bf511f77bebd6b8ac3fb06ad83efd6d",
+            "signature": "jl_check_funds(text,text,numeric)"
+        },
+        {
+            "sha256": "320783566b84e08faeebce7c2170caedb4f6fc2e55e37c65ce9b7db291fbf49a",
+            "signature": "jl_confirm_pin_recovery(text,text,text,text)"
+        },
+        {
+            "sha256": "3a002c8e6dd7ba5e52f85079b329dceef28978f51d4f4285a9d75271a1b8f009",
+            "signature": "jl_consume_bonus(uuid,text,numeric,uuid)"
+        },
+        {
+            "sha256": "25e6938e7f52edcc69caebd9508e882b47b78a9c74fb202519965f4f223b81a8",
+            "signature": "jl_cron_prune_history()"
+        },
+        {
+            "sha256": "660e8e14701c4024cd601f4a0a50ff13ca0f4d54c174809ad5290e4b1e672daa",
+            "signature": "jl_deposit_wager_locked(uuid)"
+        },
+        {
+            "sha256": "82b1d36ce6901b80ba76fb8dc6740b2cd662dc426ee6fc28015098efe61c836a",
+            "signature": "jl_enrich_admin_audit()"
+        },
+        {
+            "sha256": "81e9de1422ce739826d8e4ffba82be50b5ad9fe900dbc848f6e9a475c17a65a4",
+            "signature": "jl_finalize_due_rounds()"
+        },
+        {
+            "sha256": "d597ebc1034f753ac31edf859b4583adcfaccfede03b58059f449f1e07179baa",
+            "signature": "jl_finalize_game_due_rounds(text)"
+        },
+        {
+            "sha256": "2eef991047dad22b7ac4655c33e7292d31914ec779e31b523e21b29b2e09dd00",
+            "signature": "jl_financial_idempotency_claim(text,uuid,text,text,text)"
+        },
+        {
+            "sha256": "c41a87b7889bbb96e38198a085648041eb82ab3bb5f59bce6e45cc2aab3ee5b6",
+            "signature": "jl_financial_idempotency_complete(text,uuid,text,text,jsonb)"
+        },
+        {
+            "sha256": "51926c8b797687996484d2b280e390aced2bd30857c5e88ce12149cd1a659f45",
+            "signature": "jl_game_public_state(text)"
+        },
+        {
+            "sha256": "2e1e97f499b91880e196aebbf7dbf271ae7974bf8ecb08cfe9c9139c9b2de820",
+            "signature": "jl_guard_ludo_queue_funds()"
+        },
+        {
+            "sha256": "34dbe5ee864111a60c2804568fdc0ce39de492e6136d8702fb70f159a1af5c3a",
+            "signature": "jl_guard_ludo_reentry_wager()"
+        },
+        {
+            "sha256": "516ae40d7663ec5f14cde84a729961e46b6e3d49e3f459a039c9de3fc56c640d",
+            "signature": "jl_guard_ludo_room_member_funds()"
+        },
+        {
+            "sha256": "f173853e22b8e35a87c428b0a26204864fc9f8058cc15819f1d764d5e42b1cf5",
+            "signature": "jl_login_player(text,text)"
+        },
+        {
+            "sha256": "b60533eeb7fb290745c827c6c5f9d85b668bd2eb76a4a05fa24e930430a72fa4",
+            "signature": "jl_logout_player(text)"
+        },
+        {
+            "sha256": "6f52277a757c7ca3deba3b59891abc76af0c6d6a4faa81254c7f6a48b555fdf6",
+            "signature": "jl_ludo_accept_invite(text,uuid,boolean)"
+        },
+        {
+            "sha256": "a30f7668235f3b2f1ab27a5dfd3177c7c6044fc82a3a7494d50e5c985eab5e24",
+            "signature": "jl_ludo_accept_public_challenge(text,text)"
+        },
+        {
+            "sha256": "42e246020051a8aa305d09f83fe4e4190f443331e647af4f73d0bf91cdaf464d",
+            "signature": "jl_ludo_accept_rules(text,uuid,boolean)"
+        },
+        {
+            "sha256": "c2e16f43597a8c4ef505552fb9283484021a7d650d0f634eba57faf0aad286c8",
+            "signature": "jl_ludo_advance_turn(uuid,uuid,boolean)"
+        },
+        {
+            "sha256": "4ff56cee879bfdc4eece96c0b98266ba962af9ab9eb8bea3e08c7a7977e2e19c",
+            "signature": "jl_ludo_apply_capture_penalty(uuid,uuid)"
+        },
+        {
+            "sha256": "8902c47975a853a8f4e785a4a74939b3ec68d3e75fa89ce2bcd9340a9cb2fc0d",
+            "signature": "jl_ludo_cancel_or_leave(text,uuid)"
+        },
+        {
+            "sha256": "e1c3007da7053e16e56fbfa2f95609948beb60aa65c6baa5efd34ecaefa97f3b",
+            "signature": "jl_ludo_check_finish(uuid)"
+        },
+        {
+            "sha256": "b39ec04ff4bec11c24452fcb0603280cbd26337169e782819ca6df0bc8a2723b",
+            "signature": "jl_ludo_color_start(text)"
+        },
+        {
+            "sha256": "55f36d77a23b928b07df3349f70b31ab3eac3fc784329691f495e86b9854ab62",
+            "signature": "jl_ludo_commit_stake(text,uuid)"
+        },
+        {
+            "sha256": "0df62a3f062f7ba9c002c66092ea2b525d992cd52a329162a0aa5eae2a113a72",
+            "signature": "jl_ludo_continue_multi_dice(uuid,uuid)"
+        },
+        {
+            "sha256": "194b78a299d7821025e6c8cea43d6144dc4b2459e94d874a06deaeadd31913a6",
+            "signature": "jl_ludo_create_room(text,integer,numeric,text,boolean,jsonb)"
+        },
+        {
+            "sha256": "a7319ca6e7aa32538a7cf5cca7dc2a7a7f9714f7473963ac374ddbd49259796d",
+            "signature": "jl_ludo_data_retention_maintenance(integer,integer)"
+        },
+        {
+            "sha256": "7f7808417d7bc4cbf03d3033fabadc48e6204d6f171e9c88588a4efdd3ea74aa",
+            "signature": "jl_ludo_defaults()"
+        },
+        {
+            "sha256": "b52060f0b628f4186bc78c09675216e664468db776168f6b84d0803584cf3553",
+            "signature": "jl_ludo_display_code(uuid)"
+        },
+        {
+            "sha256": "a6113743a08581747770b38129b9dd9bb6c25facf674b377d4573799b1869f67",
+            "signature": "jl_ludo_ensure_code(uuid)"
+        },
+        {
+            "sha256": "ab69394c8d44baf0d9cd13623d130c31a70648ec5d7b11969a118d7a6192c848",
+            "signature": "jl_ludo_enter_queue(text,numeric,integer,text)"
+        },
+        {
+            "sha256": "5f008716ddb2444b1bc04bbf37a75493de32d26cf149914e046a560ada433ace",
+            "signature": "jl_ludo_event(uuid,uuid,text,jsonb)"
+        },
+        {
+            "sha256": "38c3995849114e1acf1dddd04c47d0ba6fe66017074b9eeb6ca37dcf48ca4bac",
+            "signature": "jl_ludo_find_players(text,text)"
+        },
+        {
+            "sha256": "8e98fb3ce5fbfd2169a4a28d74e2a8ed234bfb9018f674cc72e9013cc72df706",
+            "signature": "jl_ludo_finish_room(uuid,uuid,integer)"
+        },
+        {
+            "sha256": "bc0736e94a37c6cac61ce0ca93c695b4302ab6ad2aff066333c0a0faf9982fb6",
+            "signature": "jl_ludo_forfeit(text,uuid)"
+        },
+        {
+            "sha256": "9da99a69633ace5f485e4952d0f05446e43370de26a593106059e723edce7154",
+            "signature": "jl_ludo_global_cell(text,integer)"
+        },
+        {
+            "sha256": "ac843c3c54fade10d4f6d1046ba263830b2c22fea88f00dc861f7778a7431542",
+            "signature": "jl_ludo_invite(text,uuid,uuid)"
+        },
+        {
+            "sha256": "bb0662a74bf400e7e18e37ebee6fbb63e54bb310cb80418c3deef56b841f7fdb",
+            "signature": "jl_ludo_is_member(uuid,uuid)"
+        },
+        {
+            "sha256": "dc5d9df411bad27643dcca40b978960c73e6a1d49ca10ed2124a040337a8c140",
+            "signature": "jl_ludo_is_safe_cell(integer)"
+        },
+        {
+            "sha256": "c2d7581e8792500e3aa209bc5ee6206b0718ce86bdd6fab7d836c90220a7f493",
+            "signature": "jl_ludo_join_public_room(text,text)"
+        },
+        {
+            "sha256": "8743b4b5ba7e5b35b8944a7169974eb95f89fdb088525228e5d229380b2538e7",
+            "signature": "jl_ludo_join_room_internal(uuid,uuid)"
+        },
+        {
+            "sha256": "673140cd49b9b77854a595bdde27688be0cebbe4bab41d1cae7b61bc98baa7a9",
+            "signature": "jl_ludo_leave_queue(text)"
+        },
+        {
+            "sha256": "3ca4489920ceadad8a26bea6f36e09272257b340231afd5e5172a141f9dd5a58",
+            "signature": "jl_ludo_legal_moves_data(uuid,uuid,integer)"
+        },
+        {
+            "sha256": "b849f264acefdbfd7c76e85a87056af90f6fc69c35d91ead0b1327da9ae99232",
+            "signature": "jl_ludo_move(text,uuid,integer)"
+        },
+        {
+            "sha256": "4a15a94cf02d7cabe4400eafe44384b6b8266c1ab008229c3a2a1cf761dc78e0",
+            "signature": "jl_ludo_my_invites(text)"
+        },
+        {
+            "sha256": "aa787200168bd7cf38c24ac7f27539653331317b1ce65af86fed3e7e9e116bc5",
+            "signature": "jl_ludo_my_status(text)"
+        },
+        {
+            "sha256": "0a47d274882edb3c64746b593962ff136456230c15f1d7629981bf45fd8bf2b6",
+            "signature": "jl_ludo_process_timeouts(text,uuid)"
+        },
+        {
+            "sha256": "686394b4bb62744cdc48d2c33b8295f18e22d47aae83e7ad6f697c524c7b2720",
+            "signature": "jl_ludo_propose_bet(text,uuid,numeric)"
+        },
+        {
+            "sha256": "0c1b4a49c763e67ea89b5f81ad2c0655135c2fa944e961b08222f68358373890",
+            "signature": "jl_ludo_public_challenges(text)"
+        },
+        {
+            "sha256": "4dd4b17238519b73fe77904ca962d54119e3dcfc1b797c0845d270ff9f297e07",
+            "signature": "jl_ludo_rebroadcast_challenge(text,uuid)"
+        },
+        {
+            "sha256": "b5fb12594935bd07204d677f9d2b6f81a762f7a4f31042f45d473082b68cf7e2",
+            "signature": "jl_ludo_reenter(text,uuid)"
+        },
+        {
+            "sha256": "c28dbca360d6e9d55a2bc7970ed97544e2e890019f82b3b9bfdd861d715708fa",
+            "signature": "jl_ludo_refund_room(uuid,text)"
+        },
+        {
+            "sha256": "399f2db7546f7791611d9489fdf99708a13df200a9d22576cd65bf61fd9d8a67",
+            "signature": "jl_ludo_rematch(text,uuid,numeric)"
+        },
+        {
+            "sha256": "a784a10c6b454818bc490a90bb0f52b9f4156f9ff995cb3f5472065b3a93dde8",
+            "signature": "jl_ludo_retention_cleanup()"
+        },
+        {
+            "sha256": "acac1f3a1fff93c7c0f088f292609cf40ec55b89b15fcb8fd7e34505125c1373",
+            "signature": "jl_ludo_roll(text,uuid)"
+        },
+        {
+            "sha256": "744d24f4b9938d13a1208570be3b23ce16be081206a53acca766c6c256344db8",
+            "signature": "jl_ludo_room_code()"
+        },
+        {
+            "sha256": "c7e2f962b18b31c5c890c7c0b8153a3f0aa3a60c76fa6e985a70c2c765469adb",
+            "signature": "jl_ludo_room_delta(text,uuid,bigint,bigint,boolean)"
+        },
+        {
+            "sha256": "4b8d93ac3eea011a356c913c2c7559b3111964ee4301807f35a34c5eb8361136",
+            "signature": "jl_ludo_room_invites(text,uuid)"
+        },
+        {
+            "sha256": "12395efe0b0bad6bfc07fcc759503b6797ffc790a187c2c811ad03777c9b7f59",
+            "signature": "jl_ludo_room_state_light(text,uuid)"
+        },
+        {
+            "sha256": "223d5184068a6f5510ab246ac163a5b6fb0080894e9bc7513c6b5e28727495f0",
+            "signature": "jl_ludo_room_state(text,uuid)"
+        },
+        {
+            "sha256": "14db41bf43e9bc42f0b3bfeebd9d3cd33528fc4e811357fa3f3664e5ef3c74dd",
+            "signature": "jl_ludo_rules(jsonb,numeric)"
+        },
+        {
+            "sha256": "82a81374c1ad633182b39cb677887327fd8d9841e89c73ee61c0e170b192619f",
+            "signature": "jl_ludo_send_chat(text,uuid,text)"
+        },
+        {
+            "sha256": "4137975921b1fd6b560da2e9ea87f948dee4535152e9a868927c7d771d96744a",
+            "signature": "jl_ludo_signal_pull(text,uuid,bigint)"
+        },
+        {
+            "sha256": "9cf9444d16f20f1f51d860f33d0172f1c7d3f24e072305baad1790fa4336c5db",
+            "signature": "jl_ludo_signal_send(text,uuid,uuid,text,jsonb)"
+        },
+        {
+            "sha256": "8d70acbda5ecf5d51d3435067e161555f81ebf346da90f72f2600c44b5096edf",
+            "signature": "jl_ludo_start_game(uuid)"
+        },
+        {
+            "sha256": "354d789fb2381929d10f6ddd8fa4728be156a799f05cccc83153af489b7f5f36",
+            "signature": "jl_ludo_sync_room(text,uuid)"
+        },
+        {
+            "sha256": "737d73eef7bfffc4a48c368de9e9b9393e1cdc32e9985bec9735376b580068bb",
+            "signature": "jl_ludo_update_rules(text,uuid,jsonb)"
+        },
+        {
+            "sha256": "a59c1c339fb5a2d2d9f9c64e1b76b24dafda4d61a1e998875d04e845efc2a15d",
+            "signature": "jl_ludo_waiting_players(text,uuid)"
+        },
+        {
+            "sha256": "7fbfed953ce62f2a35412164ec16db92d0b9b60d3b61f1b8f6a4e32f31915f76",
+            "signature": "jl_notification_create(uuid,text,text,text,text,text)"
+        },
+        {
+            "sha256": "2d5905327ec9af341decc41ff6dcb672415a939ced85bf1ced172a481dec3cf5",
+            "signature": "jl_notifications_clear(text)"
+        },
+        {
+            "sha256": "df3b91d27be166917a2b8db9c2f779f3d51b3937db431d0e64e0e8ebd0b3310a",
+            "signature": "jl_notifications_feed(text,integer)"
+        },
+        {
+            "sha256": "cddb3805cf1b025d4b843ac8e4b6133d8ed4fc0424a127dacedc70e10c3ec572",
+            "signature": "jl_notifications_mark_read(text,bigint,text,boolean)"
+        },
+        {
+            "sha256": "8abcd932a8405a98a891d9a19ce9fa0a9b79809266e5efea6a1fa227d224c63e",
+            "signature": "jl_notify_deposit_status()"
+        },
+        {
+            "sha256": "63a80d0e6be21a29942bc24ad5ae3ddc7e2bdf8033157a6ad07bd00cdfbc66e3",
+            "signature": "jl_notify_ludo_invite()"
+        },
+        {
+            "sha256": "2737827a1453e48e1da2d1cec5eb68c31edf3ce062c3a7e702d2ebfc7b1fce6f",
+            "signature": "jl_notify_ludo_payout()"
+        },
+        {
+            "sha256": "ccd03ba4244f1355d1dec719a849064642c4627c5365a4781ebaada1f7cadcf7",
+            "signature": "jl_notify_number_win()"
+        },
+        {
+            "sha256": "9ca1dd7c8c5f15fbae5d567f46e7eff4cae43576ae851aa63c7b9d067fc58daa",
+            "signature": "jl_notify_pair_win()"
+        },
+        {
+            "sha256": "2887e2f2782646f5bdb7b29f35a110e60a044c2c28b259f3a8151720ae19bee7",
+            "signature": "jl_notify_support_reply()"
+        },
+        {
+            "sha256": "11dd13b2464533dec0cca60c647ed93f0155b90c3f3fc2d31c62232b557495b8",
+            "signature": "jl_notify_withdrawal_status()"
+        },
+        {
+            "sha256": "00f36ecee81d609bfa5ed52c76a2029ebaf22172a818079bf25fc7159783a98b",
+            "signature": "jl_open_next_game_round(text)"
+        },
+        {
+            "sha256": "18f6f157e6f33c5f3203628d77b6321da5902df98ead0530ef6c103ae697f544",
+            "signature": "jl_open_next_scheduled_round()"
+        },
+        {
+            "sha256": "d721a63fdbbcf1d9c991fb2c1b9db2fe09eae9f0ce678bd269868c227bf6643d",
+            "signature": "jl_persist_ludo_invite()"
+        },
+        {
+            "sha256": "7b3a4fb9a0265d31947d6d4c7f0b9d7b5a30c9e1294a0c481062d651b8a69d6b",
+            "signature": "jl_persist_ludo_room_waiting()"
+        },
+        {
+            "sha256": "6cad72a88947de162c8f3eceff571cff6bde7ce6f5cabd53acec5931278dacf1",
+            "signature": "jl_phone(text)"
+        },
+        {
+            "sha256": "d6881c21ad96640a101e006e165cd18bb5e49688f0633639be80be5a4e72317b",
+            "signature": "jl_place_bet_idempotent(text,integer,numeric,text)"
+        },
+        {
+            "sha256": "d59fed1e1357b33509987244126ace6b7d5bffe0ff7b986add217e9d862a9180",
+            "signature": "jl_place_bet(text,integer,numeric)"
+        },
+        {
+            "sha256": "0890ad315d3727ddf550ae730626299a308b9a4cba344808a4eaf07880115f41",
+            "signature": "jl_place_pair_bet_idempotent(text,integer,integer,numeric,text)"
+        },
+        {
+            "sha256": "b23dced3b83f72450ee0309a2e7075eca8a9a990d47d31899dc05aafbf201d68",
+            "signature": "jl_place_pair_bet(text,integer,integer,numeric)"
+        },
+        {
+            "sha256": "4f17357bdb92ee99ccea205b260fed64776f58a232753310cd737a9a167bcc57",
+            "signature": "jl_player_bet_summary(text)"
+        },
+        {
+            "sha256": "53f8ce2e6923382a65cc8170ca9901512bb880b4b5b370f40aa6dd676cf337e6",
+            "signature": "jl_player_id(text)"
+        },
+        {
+            "sha256": "f52566f9dc35b6398eb80c486bdcaeaf37a043c32162e258626151c71d7ef685",
+            "signature": "jl_player_revoke_all_sessions(text)"
+        },
+        {
+            "sha256": "b582755c0bc1ea1c6ea0d78cc84735e1107adc67c212749a1b94e5186bbc37be",
+            "signature": "jl_player_revoke_other_sessions(text)"
+        },
+        {
+            "sha256": "ac19de25b5c878027bdb506572aef1278150414440a84df31819de23bab5a970",
+            "signature": "jl_player_revoke_session(text,uuid)"
+        },
+        {
+            "sha256": "d8dc6e1dd7bace1a61ab76c47930c6fca5b2ef496256eaa52e317887137dc166",
+            "signature": "jl_player_sessions(text)"
+        },
+        {
+            "sha256": "f8ba459ca881be99ebc5c226041f69749a6d5db0ee8792814c82d4ef9ac3376c",
+            "signature": "jl_player_state(text)"
+        },
+        {
+            "sha256": "b2f4c3785fbb9a02939b5677361efb95ab62d96caf463c00032d2f9dd57da712",
+            "signature": "jl_process_game_engine_tick()"
+        },
+        {
+            "sha256": "9fbbef5ab1e7dd46886ca9dab4024a74ebb7b7958c4a51cbef539a6d3bd98426",
+            "signature": "jl_process_game_engine()"
+        },
+        {
+            "sha256": "b7cc0e06ddb1787ce6b4affbecf75470cf3729d069e3b72e881ba23acdd384ba",
+            "signature": "jl_process_game(text)"
+        },
+        {
+            "sha256": "5b7d85f362d305779f2f38a5de041037faa3350db2664ec0035300a69a7e5a14",
+            "signature": "jl_public_state()"
+        },
+        {
+            "sha256": "2aba4efe11eb8214b0fdf5fad54aae7558d664569d8b3edfecbfef33a9c3d5ff",
+            "signature": "jl_push_after_notification_insert()"
+        },
+        {
+            "sha256": "62ab18f731ff9d8d8770c0ee1632b1e79b5d22b57c3b3595af18c6650aaa85db",
+            "signature": "jl_push_dispatch_secret()"
+        },
+        {
+            "sha256": "11b66da870939b19f0f604e4f70fd8939a4270878abcf7442461673e4e3938d4",
+            "signature": "jl_push_mark_delivery(bigint,integer,text[])"
+        },
+        {
+            "sha256": "2c66890f0e4a03eacb1c8abe7d4c2599215ddae67da9e005fea688a198dedd4e",
+            "signature": "jl_push_service_bundle(bigint)"
+        },
+        {
+            "sha256": "a2f38cff981d60cc08868e737f799d0c3f1d81b2874e6828cb9a3a219b70d412",
+            "signature": "jl_push_subscribe(text,text,text,text,text)"
+        },
+        {
+            "sha256": "55908d2c37343104bf6de8d90310a2b0050167b6e88148adc987ba26bfc17af5",
+            "signature": "jl_push_unsubscribe(text,text)"
+        },
+        {
+            "sha256": "da3de63970d009d832fca1925135fb39a649cd7a85f986ed79f6a2b4df20b0b8",
+            "signature": "jl_random_index(integer)"
+        },
+        {
+            "sha256": "4a0d42a50d76e1772f62c02e5d5101394bb7aaf64713bef4be14b6fa50eb3c3d",
+            "signature": "jl_register_player(text,text,text,text)"
+        },
+        {
+            "sha256": "97fa34b63c3a55171824984c8d46152af4ed9dbb8b3047977154e7e3080707a5",
+            "signature": "jl_register_player(text,text,text)"
+        },
+        {
+            "sha256": "98bb710891535e14be5f4052aeb1f9652665314b8d4081805f743be12d4b7733",
+            "signature": "jl_request_deposit_idempotent(text,numeric,text,text)"
+        },
+        {
+            "sha256": "08176573e245f14d05c9d87e9f6e36bf347fd25f3bc3fdf736b38b66ba425242",
+            "signature": "jl_request_deposit(text,numeric,text)"
+        },
+        {
+            "sha256": "da998802239770c3c85bf6c1852d48f8f8143a7b71cd3d70d1305f0564a1f3b0",
+            "signature": "jl_request_pin_recovery(text,text)"
+        },
+        {
+            "sha256": "9b0635d628ffbb6bce595d80beb4e1fe293bb67994e29dad33bb14e3c42f08a1",
+            "signature": "jl_request_withdrawal_idempotent(text,numeric,text)"
+        },
+        {
+            "sha256": "674ff195941b3e80859c5978b2c2ae9c9631c3a67018e2463a5d4ffde383926c",
+            "signature": "jl_request_withdrawal(text,numeric)"
+        },
+        {
+            "sha256": "4a5246c1ec1cb874d692b5fd5ec61a05d151e803a8b646e4a5714c432cf025ac",
+            "signature": "jl_require_admin_elevated(text)"
+        },
+        {
+            "sha256": "369f51fe74b050cd4847fa79391f1ca22b37902627f5ddff47efa7f1d4c6fd1e",
+            "signature": "jl_require_admin(text)"
+        },
+        {
+            "sha256": "697c5fe5022b85274e9988e4bb839a31f53e9c8a4a9cee548fcbba40ec2bf205",
+            "signature": "jl_require_cash_balance(uuid,numeric)"
+        },
+        {
+            "sha256": "6a82da2bf0e481a5492b34fd53df029a1ce33e751cda0016e68eea402c5e613d",
+            "signature": "jl_require_super_admin(text)"
+        },
+        {
+            "sha256": "a5f70d1b3b73f6767b90ae9b084cb9637780b95181561a77cdb5fecb662a9956",
+            "signature": "jl_reverse_cash_wager(uuid,text,uuid)"
+        },
+        {
+            "sha256": "63d18e604abb13405eb0d1eada3858772dfcf2b137f51fcd4e4f4c6234bbad62",
+            "signature": "jl_rotate_player_session(text)"
+        },
+        {
+            "sha256": "757ae3a0b0a14ec98af50fa5def3340a676a90ee92aafe80daea0c0196cf3513",
+            "signature": "jl_secure_number()"
+        },
+        {
+            "sha256": "0fd59ed9e63ed0265f3d092166e1082b2577948b2e10b14e4bfd5e084c1d98bf",
+            "signature": "jl_secure_number(uuid)"
+        },
+        {
+            "sha256": "bbe0e7529ee936e331377160dd4b08b7b19e40f2b9e752f714b25da7d871f3ca",
+            "signature": "jl_secure_pair(uuid)"
+        },
+        {
+            "sha256": "b98bc1a85bc9d9177c577ffae5492f34d9205f43606c2256b89ba7f90a357409",
+            "signature": "jl_social_find_players(text,text)"
+        },
+        {
+            "sha256": "23d3bb4649f090efa020851888e37e9ced93281459b300968531f230ebdb85f0",
+            "signature": "jl_social_follow(text,uuid,boolean)"
+        },
+        {
+            "sha256": "29ff80d89e2359da28b53adfb6f1b4c8eaae4e81bcf1e188c60cc4a97687f6fb",
+            "signature": "jl_social_list(text)"
+        },
+        {
+            "sha256": "ad31b64cf8d6e21a9b237f9ccec0cc71a76470401cee00c7f949c6de0401a2f8",
+            "signature": "jl_support_send(text,text)"
+        },
+        {
+            "sha256": "8a8b8c99744b58a19909e78dd047a0014f2ca9dcbf135f43b5923533b957962d",
+            "signature": "jl_support_thread(text)"
+        },
+        {
+            "sha256": "47bf217dd7d0f873e5a9fc3f27cd7b3659fba206a0d120a5e3583a6b5ace80f7",
+            "signature": "jl_support_unread_count(text)"
+        },
+        {
+            "sha256": "027f72f77d164c2117d5b272d033c1486d55302f9d6c6debf72bc13f39d7c5da",
+            "signature": "jl_token_hash(text)"
+        },
+        {
+            "sha256": "8d90724d15b5397435a583aa8398f8340b96b29e4c805208089eca7c99f19796",
+            "signature": "jl_validate_invite_code(text)"
+        }
+    ]
+}
