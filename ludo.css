@@ -1170,3 +1170,15 @@ body.ludo-pinned .pin-ludo-button{
   transform:scale(1.04);
   transform-origin:center;
 }
+
+
+/* CORES DOS NOMES DOS JOGADORES 2026-09-29 */
+.player-card.red h3{color:#ff0033}
+.player-card.green h3{color:#00d95f}
+.player-card.yellow h3{color:#ffd400}
+.player-card.blue h3{color:#009dff}
+
+#turnTitle.turn-red{color:#ff0033!important}
+#turnTitle.turn-green{color:#00d95f!important}
+#turnTitle.turn-yellow{color:#ffd400!important}
+#turnTitle.turn-blue{color:#009dff!important}
