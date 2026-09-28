@@ -600,3 +600,36 @@ button.status-metric:hover{border-color:rgba(244,189,66,.5);transform:translateY
     animation: none !important;
   }
 }
+
+
+/* Acessibilidade do Ludo — ponto 21 */
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0,0,0,0) !important;
+  clip-path: inset(50%) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid #fff !important;
+  outline-offset: 3px;
+}
+
+.piece.legal:focus-visible {
+  outline: 3px solid #fff !important;
+  outline-offset: 3px !important;
+  box-shadow:
+    0 0 0 3px #ff1f2d,
+    0 0 0 7px rgba(255,31,45,.3),
+    0 0 18px 8px rgba(255,31,45,.72) !important;
+}
