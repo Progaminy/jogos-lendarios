@@ -33,9 +33,14 @@
       return true;
     }
 
-    function beginMove({ roomId: moveRoomId, playerId, tokenNo, fromSteps, toSteps }) {
+    function invalidateSnapshots() {
       cancelAutoMove();
       state.moveGeneration = (Number(state.moveGeneration) || 0) + 1;
+      return state.moveGeneration;
+    }
+
+    function beginMove({ roomId: moveRoomId, playerId, tokenNo, fromSteps, toSteps }) {
+      invalidateSnapshots();
       activeMove = Object.freeze({
         generation: state.moveGeneration,
         roomId: moveRoomId || roomId(),
@@ -97,6 +102,7 @@
       beginSnapshot,
       canApplySnapshot,
       markSnapshotApplied,
+      invalidateSnapshots,
       beginMove,
       isMoveCurrent,
       finishMove,
