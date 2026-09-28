@@ -18,8 +18,30 @@
     return token;
   }
 
+  function migrateLegacyAdminToken() {
+    let token = sessionStorage.getItem(ADMIN_KEY) || '';
+    const legacy = localStorage.getItem(ADMIN_KEY) || '';
+    if (!token && legacy) {
+      token = legacy;
+      sessionStorage.setItem(ADMIN_KEY, token);
+    }
+    if (legacy) localStorage.removeItem(ADMIN_KEY);
+    return token;
+  }
+
   function getAdminToken() {
-    return localStorage.getItem(ADMIN_KEY) || '';
+    return migrateLegacyAdminToken();
+  }
+
+  function setAdminToken(value) {
+    const token = String(value || '');
+    localStorage.removeItem(ADMIN_KEY);
+    if (token) sessionStorage.setItem(ADMIN_KEY, token);
+    else sessionStorage.removeItem(ADMIN_KEY);
+    window.dispatchEvent(new CustomEvent('jl-admin-session-changed', {
+      detail: { authenticated: Boolean(token) }
+    }));
+    return token;
   }
 
   window.JLSession = Object.freeze({
@@ -27,6 +49,7 @@
     ADMIN_KEY,
     getPlayerToken,
     setPlayerToken,
-    getAdminToken
+    getAdminToken,
+    setAdminToken
   });
 })();
