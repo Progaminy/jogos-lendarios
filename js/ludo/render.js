@@ -60,7 +60,17 @@
 
       path.forEach(([r, c], i) => {
         at(r, c).classList.add('path');
-        if (safe.has(i)) at(r, c).classList.add('safe');
+        if (safe.has(i)) {
+          const cell = at(r, c);
+          cell.classList.add('safe');
+          for (const [color, startIndex] of Object.entries(start)) {
+            const secondSafe = (Number(startIndex) + 8) % path.length;
+            if (i === Number(startIndex) || i === secondSafe) {
+              cell.classList.add(`safe-${color}`);
+              break;
+            }
+          }
+        }
       });
       Object.entries(home).forEach(([color, coords]) => {
         coords.forEach(([r, c]) => at(r, c).classList.add(`home-${color}`));
