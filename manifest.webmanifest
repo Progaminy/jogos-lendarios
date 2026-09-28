@@ -1,0 +1,79 @@
+{
+  "name": "Jogos Lendários",
+  "short_name": "Lendários",
+  "description": "Jogos Lendários — Número Lendário, Dupla Lendária e Ludo Lendário numa plataforma moçambicana.",
+  "id": "/",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0a0d14",
+  "theme_color": "#0a0d14",
+  "lang": "pt-MZ",
+  "dir": "ltr",
+  "categories": [
+    "games",
+    "entertainment"
+  ],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Número Lendário",
+      "short_name": "Número",
+      "description": "Abrir o jogo Número Lendário.",
+      "url": "/#numero-lendario",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Dupla Lendária",
+      "short_name": "Dupla",
+      "description": "Abrir o jogo Dupla Lendária.",
+      "url": "/#dupla-lendaria",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Ludo Lendário",
+      "short_name": "Ludo",
+      "description": "Abrir o tabuleiro do Ludo Lendário.",
+      "url": "/ludo.html",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ]
+}
