@@ -82,7 +82,7 @@
             '<span id="socialFollowingCount" class="jl-social-pill">0 seguindo</span>' +
             '<span id="socialFollowersCount" class="jl-social-pill">0 seguidores</span>' +
           '</div>' +
-          '<button class="button ghost tiny jl-collapse-toggle" type="button" aria-expanded="false">Expandir</button>' +
+          '<button class="button ghost tiny jl-collapse-toggle jl-symbol-toggle" type="button" aria-expanded="false" aria-label="Expandir">⌄</button>' +
         '</div>' +
       '</div>' +
       '<div class="jl-collapse-body">' +
