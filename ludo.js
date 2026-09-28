@@ -789,9 +789,16 @@
     const pinned=document.body.classList.toggle('ludo-pinned');
     els.pinLudo.setAttribute('aria-pressed',pinned?'true':'false');
     els.pinLudo.textContent=pinned?'Desafixar':'Fixar Ludo';
-    if(pinned){
-      requestAnimationFrame(()=>document.querySelector('#gamePanel>.board-panel')?.scrollTo({top:0,behavior:'smooth'}));
-    }
+    requestAnimationFrame(()=>{
+      const panel=document.querySelector('#gamePanel>.board-panel');
+      if(!panel)return;
+      panel.scrollIntoView({behavior:'smooth',block:'start'});
+      if(pinned){
+        const topbar=document.querySelector('.topbar')?.getBoundingClientRect().height||0;
+        const strip=els.ludoStatusStrip?.getBoundingClientRect().height||0;
+        setTimeout(()=>window.scrollBy({top:-(topbar+strip+8),behavior:'smooth'}),180);
+      }
+    });
   });
   els.soundToggle?.addEventListener('click',toggleSound);
   els.micQuickButton?.addEventListener('click',toggleMic);
