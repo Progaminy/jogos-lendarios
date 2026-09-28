@@ -44,16 +44,16 @@ select ok(
   'Ludo: quando o 6 é forçado, o resultado é literalmente 6'
 );
 
-select todo(
-  'JL-LUDO-006 conhecido: a produção atual ainda usa six_extra_turn quando sai 6 sem jogada legal. Ponto 26 só testa; não altera lógica.',
-  1
-);
 select ok(
   position(
     'perform public.jl_ludo_advance_turn(p_room,me,d=6 and (r.rules->>''six_extra_turn'')::boolean);'
     in pg_get_functiondef('public.jl_ludo_roll(text,uuid)'::regprocedure)
-  ) = 0,
-  'Ludo: 6 sem jogada legal termina a vez'
+  ) = 0
+  and position(
+    'perform public.jl_ludo_advance_turn(p_room,me,false);'
+    in pg_get_functiondef('public.jl_ludo_roll(text,uuid)'::regprocedure)
+  ) > 0,
+  'Ludo: 6 sem jogada legal termina a vez, inclusive quando o 6 foi forçado'
 );
 
 select ok(
