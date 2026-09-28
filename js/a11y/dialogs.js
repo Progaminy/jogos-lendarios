@@ -27,9 +27,10 @@
   }
 
   function initialTarget(dialog) {
-    return dialog.querySelector('[data-dialog-initial]:not([disabled])')
-      || dialog.querySelector('[autofocus]:not([disabled])')
-      || focusables(dialog)[0]
+    const items = focusables(dialog);
+    return items.find((el) => el.matches('[data-dialog-initial]'))
+      || items.find((el) => el.matches('[autofocus]'))
+      || items[0]
       || dialog;
   }
 
