@@ -98,3 +98,51 @@ test('Ludo remains isolated from the home bundle', () => {
   assert.equal(homeScripts.some((src) => src.startsWith('js/ludo/')), false);
   assert.match(read('ludo.html'), /src=["']\.\/ludo\.js\?/);
 });
+
+
+test('Ludo optional shared features are not eager', () => {
+  const html = read('ludo.html');
+  const scripts = scriptSources(html).map(stripQuery);
+  const styles = styleSources(html).map(stripQuery);
+
+  for (const optional of [
+    'support-ui.js',
+    'recovery-ui.js',
+    'js/notifications/client.js',
+    'js/auth/player-sessions.js',
+    'social.js'
+  ]) {
+    assert.equal(scripts.includes(optional), false, optional + ' voltou ao carregamento inicial do Ludo');
+  }
+
+  assert.equal(styles.includes('support-ui.css'), false);
+  assert.equal(styles.includes('recovery-ui.css'), false);
+  assert.ok(scripts.includes('js/platform/feature-loader.js'));
+});
+
+test('Ludo initial JavaScript source budget stays below 145 KiB', () => {
+  const html = read('ludo.html');
+  const bytes = localBytes(scriptSources(html));
+  assert.ok(bytes <= 145 * 1024, 'JS inicial do Ludo cresceu para ' + bytes + ' bytes');
+});
+
+test('Ludo initial CSS source budget stays below 50 KiB', () => {
+  const html = read('ludo.html');
+  const bytes = localBytes(styleSources(html));
+  assert.ok(bytes <= 50 * 1024, 'CSS inicial do Ludo cresceu para ' + bytes + ' bytes');
+});
+
+test('only one platform feature loader is eager per page', () => {
+  for (const file of ['index.html', 'ludo.html']) {
+    const scripts = scriptSources(read(file)).map(stripQuery);
+    assert.equal(scripts.includes('js/platform/lazy-loader.js'), false);
+    assert.equal(scripts.filter((src) => src === 'js/platform/feature-loader.js').length, 1);
+  }
+});
+
+test('Service Worker keeps authoritative game and money state online-only', () => {
+  const sw = read('sw.js');
+  assert.equal(sw.includes("addEventListener('fetch'"), false);
+  assert.equal(sw.includes('caches.'), false);
+  assert.equal(/indexedDB/i.test(sw), false);
+});

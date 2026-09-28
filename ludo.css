@@ -635,9 +635,10 @@ textarea:focus-visible {
 }
 
 
-/* Ponto 27 — renderização progressiva
-   Painéis fora da área visível não consomem layout/pintura até se aproximarem. */
-.shell > section:not(.hero):not(#ludoStatusStrip) {
-  content-visibility: auto;
-  contain-intrinsic-size: auto 900px;
+/* Ponto 27 — renderização progressiva do Ludo. */
+@supports (content-visibility: auto) {
+  .shell > section:not(.hero):not(#ludoStatusStrip) {
+    content-visibility: auto;
+    contain-intrinsic-size: 900px;
+  }
 }

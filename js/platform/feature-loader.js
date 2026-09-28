@@ -24,6 +24,9 @@
     },
     playerExtras: {
       js: ['./js/player/ui.js?v=20260928-1']
+    },
+    social: {
+      js: ['./social.js?v=20260928-27']
     }
   });
 
@@ -205,12 +208,21 @@
       load('notifications').catch(() => {});
     };
 
+    const setActive = (value) => {
+      if (!value) {
+        notificationQueue.length = 0;
+        return;
+      }
+      notificationQueue.push(['setActive', [true]]);
+      load('notifications').catch(() => {});
+    };
+
     notificationFacade = Object.freeze({
       push: call('push'),
       markRead: call('markRead'),
       markAllRead: call('markAllRead'),
       clearAll: call('clearAll'),
-      setActive: call('setActive'),
+      setActive,
       refresh: call('refresh'),
       sync: call('sync')
     });
@@ -256,6 +268,7 @@
     };
     document.addEventListener('pointerover', warmAccountFeatures, { passive: true });
     document.addEventListener('focusin', warmAccountFeatures);
+    document.addEventListener('click', warmAccountFeatures);
   }
 
   function installRouteIntentPrefetch() {
@@ -268,8 +281,13 @@
     document.addEventListener('touchstart', warm, { passive: true });
   }
 
+  function isLudoPage() {
+    return Boolean(document.getElementById('ludoBoard') || document.getElementById('ludoLobbyBoard'));
+  }
+
   function scheduleAuthenticatedFeatures() {
     idle('notifications', 900, hasPlayerToken);
+    if (isLudoPage()) idle('social', 1400, hasPlayerToken);
   }
 
   function init() {
