@@ -71,7 +71,7 @@
     els.dice.appendChild(stage);
   }
 
-  function startDiceRollAnimation(maxMs=520){
+  function startDiceRollAnimation(maxMs=380){
     if(!els.dice)return()=>{};
     let stopped=false;
     let settleTimer=null;
@@ -277,6 +277,20 @@
     getRoomId:()=>roomData()?.id||null
   });
 
+  async function recoverAuthoritativeRoom(roomId){
+    if(!roomId)return false;
+    movementGuard.invalidateSnapshots();
+    try{
+      const recovered=await loadRoomSnapshot(roomId,state.room);
+      if(!recovered)return false;
+      rememberDiceBundle(recovered);
+      state.room=recovered;
+      return true;
+    }catch{
+      return false;
+    }
+  }
+
   const ludoRender=window.JLLudoRender.create({
     state,
     els,
@@ -359,6 +373,7 @@
   }
   async function processTimeouts(){
     if(!state.token||!state.room?.room?.id||state.busy||state.animating||state.diceRolling)return;
+    movementGuard.invalidateSnapshots();
     const snapshotTicket=movementGuard.beginSnapshot();
     const roomId=state.room.room.id;
     try{
@@ -793,34 +808,59 @@
     showToast(`Novo valor proposto: ${money(amount)} MZN. Os outros jogadores podem aceitar ou propor outro valor.`,'success');
   }catch(err){showToast(err.message,'error');}finally{if(els.stakeProposalSend)els.stakeProposalSend.disabled=false;syncEntryFlowModals();}}));
   els.stakeModalAccept?.addEventListener('click',()=>withBusy(async()=>{try{els.stakeModalAccept.disabled=true;const amount=Number(roomData()?.bet_amount||0);if(!(await ensureLudoFunds(amount,'confirmar este valor')))return;state.room=await rpc('jl_ludo_commit_stake',{p_token:state.token,p_room:roomData().id});await loadStatus(true);showToast('Valor confirmado.','success');}catch(err){if(!handleLudoMoneyError(err,'confirmar este valor'))showToast(err.message,'error');}finally{els.stakeModalAccept.disabled=false;syncEntryFlowModals();}}));els.rollDice.addEventListener('click',()=>withBusy(async()=>{
-    if(state.animating||state.diceRolling)return;
+    const before=roomData();
+    if(
+      state.animating||
+      state.diceRolling||
+      !before||
+      before.status!=='playing'||
+      before.current_player_id!==me()||
+      before.turn_phase!=='roll'
+    ){
+      els.rollDice.disabled=true;
+      window.JLLudoSync?.kick?.('ludo-state');
+      return;
+    }
+
+    const roomId=before.id;
+    movementGuard.invalidateSnapshots();
     const rollSerial=++state.diceRollSerial;
     const previousDice=state.lastDiceValue;
+    let rollConfirmed=false;
     state.diceRolling=true;
     els.rollDice.disabled=true;
     const stopDiceAnimation=startDiceRollAnimation();
     playRollSound();
+
     try{
-      const nextRoom=await rpc('jl_ludo_roll',{p_token:state.token,p_room:roomData().id});
+      const nextRoom=await rpc('jl_ludo_roll',{p_token:state.token,p_room:roomId});
       if(rollSerial!==state.diceRollSerial)return;
       stopDiceAnimation();
       processGameEffects(nextRoom);
       rememberDiceBundle(nextRoom);
       state.room=nextRoom;
+      rollConfirmed=true;
     }catch(err){
       if(rollSerial===state.diceRollSerial&&previousDice!==null)state.lastDiceValue=previousDice;
-      showToast(err.message,'error');
+      const message=String(err?.message||err||'Erro ao lançar o dado.');
+      const phaseConflict=/Não é hora de lançar o dado|Tempo da jogada expirou/i.test(message);
+      const recovered=await recoverAuthoritativeRoom(roomId);
+      if(phaseConflict&&recovered){
+        showToast('Partida sincronizada. Continue pela jogada atual.');
+      }else{
+        showToast(message,'error');
+      }
     }finally{
       if(rollSerial===state.diceRollSerial){
         state.diceRolling=false;
         stopDiceAnimation();
-        els.dice.classList.remove('rolling','rolling-neutral');
+        els.dice.classList.remove('rolling','rolling-neutral','roll-waiting');
         const finalDice=visibleDiceValue(roomData());
         renderDiceFace(finalDice);
-        if(Number.isInteger(Number(finalDice))){
+        if(rollConfirmed&&Number.isInteger(Number(finalDice))){
           announceLive(els.ludoDiceLive,`Resultado do dado: ${Number(finalDice)}.`,{force:true});
+          playDiceLanding();
         }
-        playDiceLanding();
         renderRoom();
       }
     }
