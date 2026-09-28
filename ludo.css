@@ -642,3 +642,43 @@ textarea:focus-visible {
     contain-intrinsic-size: 900px;
   }
 }
+
+
+/* MOBILE — sala mais compacta 2026-09-28 */
+@media(max-width:600px){
+  .room-header{
+    padding:14px 12px;
+    gap:9px;
+  }
+  .room-header .eyebrow{
+    font-size:.64rem;
+    margin-bottom:3px;
+  }
+  #roomCode{
+    font-size:1.48rem;
+    line-height:1.08;
+    letter-spacing:-.02em;
+    overflow-wrap:anywhere;
+  }
+  #roomMeta{
+    margin-top:6px;
+    font-size:.78rem;
+    line-height:1.35;
+  }
+  .room-actions{
+    width:100%;
+    gap:6px;
+    flex-wrap:nowrap;
+  }
+  .room-actions > button,
+  .room-actions .button{
+    flex:1 1 0;
+    min-width:0;
+    min-height:38px;
+    padding:7px 7px;
+    border-radius:9px;
+    font-size:.74rem;
+    line-height:1.15;
+    white-space:normal;
+  }
+}
