@@ -100,8 +100,13 @@ begin
     raise exception 'mensagem de manutenção incorreta: %',v_close;
   end if;
 
-  if coalesce((v_close->>'draining')::boolean,false) is distinct from true then
-    raise exception 'rodada com aposta ativa deve ficar em drenagem segura: %',v_close;
+  if coalesce((v_close->>'draining')::boolean,false) then
+    raise exception 'OPEN ainda não descolada não deve ficar em drenagem: %',v_close;
+  end if;
+
+  if coalesce((v_close->>'refunded_bets')::integer,0)<>1
+     or coalesce((v_close->>'refunded_total')::numeric,0)<>10 then
+    raise exception 'fecho deveria reembolsar 1 aposta de 10 MZN: %',v_close;
   end if;
 
   select enabled into v_enabled
@@ -116,8 +121,8 @@ begin
   from public.jl_aviator_rounds
   where id=v_round;
 
-  if v_status<>'OPEN' then
-    raise exception 'rodada financiada não deve ser abortada no fecho; status=%',v_status;
+  if v_status<>'CANCELLED' then
+    raise exception 'OPEN deve ser cancelada no fecho antes da descolagem; status=%',v_status;
   end if;
 
   begin
@@ -157,10 +162,13 @@ begin
     select 1
     from public.jl_aviator_bets
     where id=(v_bet->>'bet_id')::bigint
-      and status='ACTIVE'
+      and status='REFUNDED'
       and stake=10
+      and payout=10
+      and refunded_at is not null
+      and refund_transaction_id is not null
   ) then
-    raise exception 'aposta anterior ao fecho deixou de estar protegida';
+    raise exception 'aposta anterior ao fecho não foi reembolsada corretamente';
   end if;
 end
 $close$;
