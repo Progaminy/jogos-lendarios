@@ -22,6 +22,7 @@ begin
   insert into public.jl_aviator_rounds(
     status,
     locked_at,
+    takeoff_at,
     total_staked,
     financial_ceiling,
     visual_target,
@@ -30,7 +31,8 @@ begin
   )
   values(
     'LOCKED',
-    clock_timestamp(),
+    clock_timestamp()-interval '4 seconds',
+    clock_timestamp()-interval '1 second',
     10,
     1.75,
     20,
@@ -41,8 +43,9 @@ begin
 
   v_tick:=public.jl_process_game_engine_tick()->'aviator';
 
-  if v_tick->>'action'<>'RECOVERED_LOCKED' then
-    raise exception 'cron deve recuperar LOCKED: %',v_tick;
+  if v_tick->>'action'<>'STARTED'
+     or v_tick->>'status'<>'FLYING' then
+    raise exception 'cron deve recuperar LOCKED atrasado: %',v_tick;
   end if;
 
   select status,started_at,financial_ceiling,visual_target
@@ -66,8 +69,9 @@ begin
 
   v_tick:=public.jl_process_game_engine_tick()->'aviator';
 
-  if v_tick->>'action'<>'RECOVERED_CRASHED' then
-    raise exception 'cron deve recuperar CRASHED: %',v_tick;
+  if v_tick->>'action'<>'SETTLED'
+     or v_tick->>'status'<>'SETTLED' then
+    raise exception 'cron deve liquidar CRASHED no tick seguinte: %',v_tick;
   end if;
 
   select status
