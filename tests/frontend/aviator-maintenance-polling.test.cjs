@@ -16,7 +16,7 @@ test('manutencao desacelera polling sem afetar voo protegido',()=>{
 test('mudanca de visibilidade volta a usar o calculo central de polling',()=>{
   const js=fs.readFileSync('aviator.js','utf8');
   const block=js.match(/document\.addEventListener\('visibilitychange',[\s\S]*?\n}\);/)?.[0]||'';
-  assert.match(block,/if\(!document\.hidden\)[\s\S]*?state\(\)/);
+  assert.match(block,/if\(!document\.hidden\)[\s\S]*?reconnectState\(\)/);
   assert.match(block,/scheduleState\(\)/);
   assert.doesNotMatch(block,/scheduleState\(5000\)/);
 });
