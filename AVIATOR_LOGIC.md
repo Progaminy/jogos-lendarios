@@ -191,6 +191,21 @@ Esses cenários têm regressões transacionais em `tests/sql/aviator/`.
 - O índice único de `request_key` protege contra duplicação lógica.
 - O admin consulta os movimentos por RPC separada, limitada a 50 linhas; a interface carrega 30 por vez somente ao expandir o histórico.
 
+## Cancelamento administrativo de rodada
+
+O cancelamento administrativo usa `jl_aviator_admin_cancel_round(token, round_id, reason)`.
+
+- O motivo é obrigatório, entre 5 e 240 caracteres.
+- Só pode cancelar rodadas `OPEN`, `LOCKED` ou `FLYING`.
+- `CRASHED`, `SETTLED` e cancelamentos já concluídos não podem ser alterados retroativamente.
+- Todas as apostas `ACTIVE` são reembolsadas automaticamente e atomicamente.
+- Cada reembolso gera uma transação `aviator_refund`, restaura o saldo do jogador e grava `refund_transaction_id`.
+- Cash-outs já pagos permanecem válidos; não são cobrados de volta nem recebem reembolso adicional.
+- O cancelamento é idempotente: repetir a mesma operação não duplica reembolsos.
+- A rodada grava `admin_cancelled_at`, `admin_cancel_reason`, `admin_cancelled_by`, quantidade e total reembolsados.
+- O `audit_log` guarda administrador, sessão, motivo, rodada, reembolsos e cash-outs preservados.
+- O painel só habilita **Cancelar rodada e reembolsar** quando a rodada está em estado cancelável.
+
 ## Indicador financeiro da casa
 
 O painel administrativo recebe no mesmo snapshot `jl_aviator_admin_state(token)` um bloco `house`, recalculado pelo servidor e atualizado automaticamente no painel:
