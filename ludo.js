@@ -6,7 +6,7 @@
   const $ = (id) => document.getElementById(id);
   const state = window.JLLudoState.create();
   const els = Object.fromEntries([
-    'toast','identityBadge','accountButton','accountMenu','accountMenuCode','accountMenuBalance','accountMenuDeposit','accountMenuWithdraw','accountMenuLogout','ludoStatusStrip','onlinePlayerCount','directNotificationMetric','publicNotificationMetric','directListShortcut','publicListShortcut','topDirectInviteCount','topPublicInviteCount','loggedOut','lobby','boardLobby','ludoLobbyBoard','balanceBadge','createRoomForm','createPlayers','createMode','createBet','createPublic',
+    'toast','identityBadge','accountButton','accountMenu','accountMenuCode','accountMenuBalance','accountMenuDeposit','accountMenuWithdraw','accountMenuLogout','ludoStatusStrip','onlinePlayerCount','directNotificationMetric','publicNotificationMetric','directListShortcut','publicListShortcut','topDirectInviteCount','topPublicInviteCount','loggedOut','lobby','boardLobby','ludoLobbyBoard','balanceBadge','createRoomForm','createColor','createPlayers','createMode','createBet','createPublic',
     'joinCodeForm','joinCode','queueForm','queuePlayers','queueMode','queueBet','queueButton','queueStatus','notificationCenter','inviteList','directInviteCount','publicChallengeList','publicChallengeCount','refreshLobby',
     'room','roomCode','roomMeta','roomPot','roomPrize','copyRoomCode','leaveRoom','forfeitRoom','deadlineBar','deadlineLabel','deadlineClock','playersPanel',
     'rulesVersion','rulesSummary','rulesForm','rulesDecision','acceptRules','declineRules','rulesAcceptModal','rulesAcceptTitle','rulesAcceptSummary','rulesModalAccept','rulesModalDecline','rulesModalEdit','stakeAcceptModal','stakeAcceptTitle','stakeAcceptText','stakeBalanceText','stakeModalAccept','stakeProposalAmount','stakeProposalSend','searchPlayerForm','searchPlayer','playerSearchResults','refreshWaiting','waitingPlayers',
@@ -304,6 +304,95 @@
   function syncPlayerCountPicker(selectId){const select=$(selectId);const picker=document.querySelector(`.player-count-picker[data-select-id="${selectId}"]`);if(!select||!picker)return;picker.querySelectorAll('[data-player-count]').forEach(b=>{const active=String(b.dataset.playerCount)===String(select.value);b.classList.toggle('active',active);b.setAttribute('aria-pressed',active?'true':'false');});}
   function setPlayerCount(selectId,value){const select=$(selectId);if(!select)return;select.value=String(value);syncPlayerCountPicker(selectId);select.dispatchEvent(new Event('change',{bubbles:true}));}
   function wirePlayerCountPicker(selectId){const picker=document.querySelector(`.player-count-picker[data-select-id="${selectId}"]`);if(!picker)return;picker.addEventListener('click',e=>{const b=e.target.closest('[data-player-count]');if(!b)return;setPlayerCount(selectId,b.dataset.playerCount);});syncPlayerCountPicker(selectId);}
+
+  const LUDO_COLOR_KEY='jl_ludo_preferred_color';
+  const LUDO_COLORS=new Set(['red','green','yellow','blue']);
+  function preferredLudoColor(){
+    const saved=String(localStorage.getItem(LUDO_COLOR_KEY)||els.createColor?.value||'red').toLowerCase();
+    return LUDO_COLORS.has(saved)?saved:'red';
+  }
+  function syncColorPicker(color=preferredLudoColor()){
+    const safe=LUDO_COLORS.has(color)?color:'red';
+    if(els.createColor)els.createColor.value=safe;
+    document.querySelectorAll('#createColorPicker [data-ludo-color]').forEach(b=>{
+      const active=b.dataset.ludoColor===safe;
+      b.classList.toggle('active',active);
+      b.setAttribute('aria-pressed',active?'true':'false');
+    });
+  }
+  function setPreferredLudoColor(color){
+    const safe=String(color||'').toLowerCase();
+    if(!LUDO_COLORS.has(safe))return;
+    localStorage.setItem(LUDO_COLOR_KEY,safe);
+    syncColorPicker(safe);
+  }
+  function wireColorPicker(){
+    const picker=$('createColorPicker');
+    if(!picker)return;
+    syncColorPicker(preferredLudoColor());
+    picker.addEventListener('click',e=>{
+      const b=e.target.closest('[data-ludo-color]');
+      if(!b)return;
+      setPreferredLudoColor(b.dataset.ludoColor);
+    });
+  }
+  function syncStakePicker(inputId){
+    const input=$(inputId);
+    const picker=document.querySelector(`.ludo-stake-picker[data-stake-input="${inputId}"]`);
+    if(!input||!picker)return;
+    picker.querySelectorAll('[data-ludo-stake]').forEach(b=>{
+      const active=String(b.dataset.ludoStake)===String(input.value);
+      b.classList.toggle('active',active);
+      b.setAttribute('aria-pressed',active?'true':'false');
+    });
+  }
+  function wireStakePicker(inputId){
+    const input=$(inputId);
+    const picker=document.querySelector(`.ludo-stake-picker[data-stake-input="${inputId}"]`);
+    if(!input||!picker)return;
+    picker.addEventListener('click',e=>{
+      const b=e.target.closest('[data-ludo-stake]');
+      if(!b)return;
+      input.value=String(b.dataset.ludoStake);
+      syncStakePicker(inputId);
+      input.dispatchEvent(new Event('change',{bubbles:true}));
+    });
+    syncStakePicker(inputId);
+  }
+  function syncQuickModePicker(){
+    if(!els.createMode)return;
+    document.querySelectorAll('#createModePicker [data-ludo-mode]').forEach(b=>{
+      const active=b.dataset.ludoMode===els.createMode.value;
+      b.classList.toggle('active',active);
+      b.setAttribute('aria-pressed',active?'true':'false');
+    });
+  }
+  function wireQuickModePicker(){
+    const picker=$('createModePicker');
+    if(!picker||!els.createMode)return;
+    picker.addEventListener('click',e=>{
+      const b=e.target.closest('[data-ludo-mode]');
+      if(!b)return;
+      els.createMode.value=b.dataset.ludoMode;
+      els.createMode.dispatchEvent(new Event('change',{bubbles:true}));
+      syncQuickModePicker();
+    });
+    syncQuickModePicker();
+  }
+  async function applyPreferredColor(roomState,{notifyOccupied=true}={}){
+    const room=roomState?.room;
+    if(!room||!['waiting','negotiating'].includes(room.status))return roomState;
+    const color=preferredLudoColor();
+    const mine=(roomState.players||[]).find(p=>p.player_id===roomState?.identity?.player_id);
+    if(mine?.color===color)return roomState;
+    try{
+      return await rpc('jl_ludo_choose_color',{p_token:state.token,p_room:room.id,p_color:color});
+    }catch(err){
+      if(notifyOccupied&&/cor.+ocupad|ocupada/i.test(String(err?.message||'')))showToast('A cor escolhida já está ocupada. Foi mantida uma cor disponível.');
+      else if(notifyOccupied)showToast(err.message,'error');
+      return roomState;
+    }
+  }
   function syncCapturePenaltyAvailability(){const r=roomData();const form=els.rulesForm;if(!form)return;const penalty=form.elements.capture_penalty;const help=$('capturePenaltyHelp');if(!penalty)return;const twoPlayers=Number(r?.player_count)===2;if(twoPlayers){penalty.value='lose_turn';for(const opt of penalty.options)opt.disabled=opt.value!=='lose_turn';if(help)help.textContent='Com 2 jogadores, ignorar captura apenas faz perder a vez; eliminação só existe com 3 ou 4 jogadores.';}else{for(const opt of penalty.options)opt.disabled=false;if(help)help.textContent='Com 3 ou 4 jogadores, o anfitrião pode escolher perder a vez, eliminar ou permitir reentrada.';}}
 
   const movementGuard=window.JLLudoMovementGuard.create({
@@ -847,13 +936,13 @@
   els.registerInviteCode?.addEventListener('blur',()=>{validateInviteCodeInput();});
   els.registerInviteCode?.addEventListener('input',()=>{if(els.registerInviteStatus){els.registerInviteStatus.textContent='';els.registerInviteStatus.style.color='';}});
   els.registerForm.addEventListener('submit',async e=>{e.preventDefault();if(els.registerPin.value!==els.registerPinConfirm.value)return setAuthMessage('Os PINs não coincidem.','error');if(!(await validateInviteCodeInput()))return setAuthMessage('Verifique o código de convite antes de continuar.','error');try{setAuthMessage('Criando conta…');const res=await rpc('jl_register_player',{p_name:els.registerName.value.trim(),p_phone:els.registerPhone.value.trim(),p_pin:els.registerPin.value.trim(),p_invite_code:els.registerInviteCode?.value.trim()||null});saveToken(res.token);closeAuth();await loadStatus();showToast(res.referral?'Conta criada com código de convite validado.':'Conta criada. O seu código Ludo foi atribuído pela casa.','success');}catch(err){setAuthMessage(err.message,'error');}});
-  wirePlayerCountPicker('createPlayers');wirePlayerCountPicker('queuePlayers');
-  els.createBet?.addEventListener('change',()=>{const amount=wholeStake(els.createBet.value);if(amount!==null)ensureLudoFunds(amount,'criar uma sala com este valor').catch(err=>showToast(err.message,'error'));});
+  wirePlayerCountPicker('createPlayers');wirePlayerCountPicker('queuePlayers');wireColorPicker();wireStakePicker('createBet');wireQuickModePicker();
+  els.createBet?.addEventListener('change',()=>{syncStakePicker('createBet');const amount=wholeStake(els.createBet.value);if(amount!==null)ensureLudoFunds(amount,'criar uma sala com este valor').catch(err=>showToast(err.message,'error'));});
   els.queueBet?.addEventListener('change',()=>{const amount=wholeStake(els.queueBet.value);if(amount!==null)ensureLudoFunds(amount,'entrar na fila com este valor').catch(err=>showToast(err.message,'error'));});
   els.rematchBet?.addEventListener('change',()=>{const amount=wholeStake(els.rematchBet.value,'A nova aposta');if(amount!==null)ensureLudoFunds(amount,'repetir o jogo com este valor').catch(err=>showToast(err.message,'error'));});
-  els.createPlayers.addEventListener('change',()=>{syncPlayerCountPicker('createPlayers');if(els.createMode.value==='partners'&&els.createPlayers.value!=='4')els.createMode.value='solo';});els.createMode.addEventListener('change',()=>{if(els.createMode.value==='partners')setPlayerCount('createPlayers',4);});els.queuePlayers.addEventListener('change',()=>{syncPlayerCountPicker('queuePlayers');if(els.queueMode.value==='partners'&&els.queuePlayers.value!=='4')els.queueMode.value='solo';});els.queueMode.addEventListener('change',()=>{if(els.queueMode.value==='partners')setPlayerCount('queuePlayers',4);});
-  els.createRoomForm.addEventListener('submit',e=>{e.preventDefault();const amount=wholeStake(els.createBet.value);if(amount===null)return;withBusy(async()=>{try{if(!(await ensureLudoFunds(amount,'criar esta sala')))return;state.room=await rpc('jl_ludo_create_room',{p_token:state.token,p_player_count:Number(els.createPlayers.value),p_bet_amount:amount,p_mode:els.createMode.value,p_is_public:els.createPublic.checked,p_rules:{}});await loadStatus(true);focusActiveLudoRoom();showToast('Sala criada. Você foi direcionado para o Ludo.','success');}catch(err){if(!handleLudoMoneyError(err,'criar esta sala'))showToast(err.message,'error');}});});
-  els.joinCodeForm.addEventListener('submit',e=>{e.preventDefault();withBusy(async()=>{try{state.room=await rpc('jl_ludo_join_public_room',{p_token:state.token,p_code:els.joinCode.value.trim()});await loadStatus(true);showToast('Entrou na sala.','success');}catch(err){if(!handleLudoMoneyError(err,'entrar nesta sala'))showToast(err.message,'error');}});});
+  els.createPlayers.addEventListener('change',()=>{syncPlayerCountPicker('createPlayers');if(els.createMode.value==='partners'&&els.createPlayers.value!=='4')els.createMode.value='solo';syncQuickModePicker();});els.createMode.addEventListener('change',()=>{if(els.createMode.value==='partners')setPlayerCount('createPlayers',4);syncQuickModePicker();});els.queuePlayers.addEventListener('change',()=>{syncPlayerCountPicker('queuePlayers');if(els.queueMode.value==='partners'&&els.queuePlayers.value!=='4')els.queueMode.value='solo';});els.queueMode.addEventListener('change',()=>{if(els.queueMode.value==='partners')setPlayerCount('queuePlayers',4);});
+  els.createRoomForm.addEventListener('submit',e=>{e.preventDefault();const amount=wholeStake(els.createBet.value);if(amount===null)return;withBusy(async()=>{try{if(!(await ensureLudoFunds(amount,'criar esta sala')))return;state.room=await rpc('jl_ludo_create_room',{p_token:state.token,p_player_count:Number(els.createPlayers.value),p_bet_amount:amount,p_mode:els.createMode.value,p_is_public:els.createPublic.checked,p_rules:{turn_seconds:30}});state.room=await applyPreferredColor(state.room,{notifyOccupied:false});await loadStatus(true);focusActiveLudoRoom();showToast('Sala criada. Cor, valor e jogadores definidos.','success');}catch(err){if(!handleLudoMoneyError(err,'criar esta sala'))showToast(err.message,'error');}});});
+  els.joinCodeForm.addEventListener('submit',e=>{e.preventDefault();withBusy(async()=>{try{state.room=await rpc('jl_ludo_join_public_room',{p_token:state.token,p_code:els.joinCode.value.trim()});state.room=await applyPreferredColor(state.room);await loadStatus(true);showToast('Entrou na sala.','success');}catch(err){if(!handleLudoMoneyError(err,'entrar nesta sala'))showToast(err.message,'error');}});});
   els.queueForm.addEventListener('submit',e=>{e.preventDefault();withBusy(async()=>{try{if(els.queueButton.dataset.queued)await rpc('jl_ludo_leave_queue',{p_token:state.token});else{const amount=wholeStake(els.queueBet.value);if(amount===null)return;if(!(await ensureLudoFunds(amount,'entrar na fila com este valor')))return;await rpc('jl_ludo_enter_queue',{p_token:state.token,p_bet_amount:amount,p_player_count:Number(els.queuePlayers.value),p_mode:els.queueMode.value});}await loadStatus(true);}catch(err){if(!handleLudoMoneyError(err,'entrar na fila'))showToast(err.message,'error');}});});els.refreshLobby.addEventListener('click',()=>loadStatus());
   const openDirectList=()=>{if(!els.inviteList?.childElementCount)return;els.notificationCenter?.scrollIntoView({behavior:'smooth',block:'start'});setTimeout(()=>els.inviteList?.scrollIntoView({behavior:'smooth',block:'center'}),250);};
   const openPublicList=()=>{if(!els.publicChallengeList?.childElementCount)return;els.notificationCenter?.scrollIntoView({behavior:'smooth',block:'start'});setTimeout(()=>els.publicChallengeList?.scrollIntoView({behavior:'smooth',block:'center'}),250);};
@@ -861,8 +950,8 @@
   els.publicNotificationMetric?.addEventListener('click',openPublicList);
   els.directListShortcut?.addEventListener('click',openDirectList);
   els.publicListShortcut?.addEventListener('click',openPublicList);
-  els.inviteList.addEventListener('click',e=>{const a=e.target.closest('[data-invite-accept]'),d=e.target.closest('[data-invite-decline]');if(!a&&!d)return;withBusy(async()=>{try{if(a){const amount=Number(a.dataset.betAmount||0);if(amount>0&&!(await ensureLudoFunds(amount,'aceitar este convite')))return;}await rpc('jl_ludo_accept_invite',{p_token:state.token,p_invitation:(a||d).dataset[a?'inviteAccept':'inviteDecline'],p_accept:Boolean(a)});await loadStatus(true);}catch(err){if(!handleLudoMoneyError(err,'aceitar este convite'))showToast(err.message,'error');}});});
-  els.publicChallengeList.addEventListener('click',e=>{const b=e.target.closest('[data-public-accept]');if(!b)return;withBusy(async()=>{try{const amount=Number(b.dataset.betAmount||0);if(amount>0&&!(await ensureLudoFunds(amount,'entrar neste desafio')))return;state.room=await rpc('jl_ludo_accept_public_challenge',{p_token:state.token,p_code:b.dataset.publicAccept});await loadStatus(true);showToast('Entrou no desafio público.','success');}catch(err){if(!handleLudoMoneyError(err,'entrar neste desafio'))showToast(err.message,'error');}});});
+  els.inviteList.addEventListener('click',e=>{const a=e.target.closest('[data-invite-accept]'),d=e.target.closest('[data-invite-decline]');if(!a&&!d)return;withBusy(async()=>{try{if(a){const amount=Number(a.dataset.betAmount||0);if(amount>0&&!(await ensureLudoFunds(amount,'aceitar este convite')))return;}const joined=await rpc('jl_ludo_accept_invite',{p_token:state.token,p_invitation:(a||d).dataset[a?'inviteAccept':'inviteDecline'],p_accept:Boolean(a)});if(a)state.room=await applyPreferredColor(joined);await loadStatus(true);}catch(err){if(!handleLudoMoneyError(err,'aceitar este convite'))showToast(err.message,'error');}});});
+  els.publicChallengeList.addEventListener('click',e=>{const b=e.target.closest('[data-public-accept]');if(!b)return;withBusy(async()=>{try{const amount=Number(b.dataset.betAmount||0);if(amount>0&&!(await ensureLudoFunds(amount,'entrar neste desafio')))return;state.room=await rpc('jl_ludo_accept_public_challenge',{p_token:state.token,p_code:b.dataset.publicAccept});state.room=await applyPreferredColor(state.room);await loadStatus(true);showToast('Entrou no desafio público.','success');}catch(err){if(!handleLudoMoneyError(err,'entrar neste desafio'))showToast(err.message,'error');}});});
 
   els.copyRoomCode.addEventListener('click',()=>navigator.clipboard.writeText(roomData().code).then(()=>showToast('Código copiado.','success')).catch(()=>showToast(roomData().code)));els.leaveRoom.addEventListener('click',()=>withBusy(async()=>{try{await rpc('jl_ludo_cancel_or_leave',{p_token:state.token,p_room:roomData().id});closeVoice();await loadStatus(true);showToast('Saiu da sala.');}catch(err){showToast(err.message,'error');}}));els.forfeitRoom?.addEventListener('click',()=>{if(!confirm('Desistir desta partida? Esta ação é voluntária e não pode ser anulada.'))return;withBusy(async()=>{try{await rpc('jl_ludo_forfeit',{p_token:state.token,p_room:roomData().id});closeVoice();await loadStatus(true);showToast('Você desistiu da partida.');}catch(err){showToast(err.message,'error');}});});
   els.rulesForm.addEventListener('input',()=>{state.rulesFormDirty=true;});
