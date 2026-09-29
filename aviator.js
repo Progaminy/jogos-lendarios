@@ -14,6 +14,7 @@ let stateBusy=false;
 let stateTimer=0;
 let betting=false;
 let cashingOut=false;
+let openUiTimer=0;
 let recentResults=[];
 let historyBusy=false;
 let historyRemoteLoaded=false;
@@ -94,6 +95,44 @@ function resetCashout(){
 function renderRoundNumber(){
   const el=$('#roundNumber');
   if(el)el.textContent=round?.id?'#'+round.id:'—';
+}
+
+function stopOpenUiTick(){
+  if(openUiTimer){
+    clearInterval(openUiTimer);
+    openUiTimer=0;
+  }
+}
+
+function updateOpenClock(){
+  if(round?.status!=='OPEN'){
+    stopOpenUiTick();
+    return;
+  }
+
+  const seconds=secondsToClose();
+  const display=seconds===null?'—':String(seconds);
+  const closed=seconds===0;
+
+  $('#roundState').textContent=closed?'APOSTAS FECHADAS':'APOSTAS ABERTAS';
+  $('#clockLabel').textContent=closed?'DESCOLAGEM':'FECHA EM';
+  $('#roundCountdown').textContent=closed?'AGUARDE':seconds===null?'—':display+'s';
+  $('#preflightCountdown').textContent=display;
+
+  const betBtn=$('#betBtn');
+  if(betBtn){
+    betBtn.disabled=!enabled||Boolean(myBet)||betting||closed;
+    betBtn.textContent=myBet
+      ?'Aposta confirmada'
+      :closed
+        ?'Apostas fechadas'
+        :'Apostar';
+  }
+}
+
+function startOpenUiTick(){
+  if(openUiTimer)return;
+  openUiTimer=setInterval(updateOpenClock,200);
 }
 
 function renderTicket(multiplierValue=null){
@@ -288,24 +327,12 @@ function renderOpen(){
   stopFlight();
   setStagePhase('open');
   renderRoundNumber();
-
-  const seconds=secondsToClose();
-  const display=seconds===null?'—':String(seconds);
-
-  $('#roundState').textContent='APOSTAS ABERTAS';
-  $('#clockLabel').textContent='FECHA EM';
-  $('#roundCountdown').textContent=seconds===null?'—':display+'s';
-  $('#preflightCountdown').textContent=display;
+  updateOpenClock();
+  startOpenUiTick();
 
   show('#preflight',true);
   show('#multiplierWrap',false);
   show('#crashText',false);
-
-  const betBtn=$('#betBtn');
-  if(betBtn){
-    betBtn.disabled=!enabled||Boolean(myBet)||betting||seconds===0;
-    betBtn.textContent=myBet?'Aposta confirmada':seconds===0?'Apostas fechando':'Apostar';
-  }
 
   resetCashout();
   renderTicket();
@@ -316,6 +343,7 @@ function renderOpen(){
 }
 
 function renderFlying(){
+  stopOpenUiTick();
   setStagePhase('flying');
   renderRoundNumber();
 
@@ -343,6 +371,7 @@ function renderFlying(){
 }
 
 function renderFinished(){
+  stopOpenUiTick();
   stopFlight();
   setStagePhase('crashed');
   renderRoundNumber();
@@ -373,6 +402,7 @@ function renderFinished(){
 }
 
 function renderWaiting(){
+  stopOpenUiTick();
   stopFlight();
   setStagePhase('waiting');
   renderRoundNumber();
@@ -473,6 +503,7 @@ async function state(){
     }
 
     if(renderMaintenanceView()){
+      stopOpenUiTick();
       stopFlight();
       resetCashout();
       return;
