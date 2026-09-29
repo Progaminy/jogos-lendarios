@@ -539,7 +539,10 @@ $('#cashoutBtn').addEventListener('click',async()=>{
   cashingOut=true;
   const id=myBet;
   const button=$('#cashoutBtn');
-  if(button)button.disabled=true;
+  if(button){
+    button.disabled=true;
+    button.textContent='Confirmando cash-out…';
+  }
 
   try{
     const r=await JLApi.rpc('jl_aviator_cashout',{
@@ -556,9 +559,23 @@ $('#cashoutBtn').addEventListener('click',async()=>{
     renderTicket();
     lastRecoveredRoundId=round?.id??null;
   }catch(e){
-    $('#aviatorMessage').textContent=e.message;
-    lastRecoveredRoundId=null;
-    await recover(true);
+    const raw=String(e?.message||'');
+    const roundEnded=/Crash ja atingido|Aposta ja liquidada|Voo nao esta ativo/i.test(raw);
+
+    if(roundEnded){
+      myBet=null;
+      myStake=0;
+      lastRecoveredRoundId=round?.id??null;
+      resetCashout();
+      renderTicket();
+      $('#aviatorMessage').textContent='Fim da rodada. Cash-out não disponível.';
+      clearTimeout(stateTimer);
+      await state();
+    }else{
+      $('#aviatorMessage').textContent=raw||'Não foi possível confirmar o cash-out.';
+      lastRecoveredRoundId=null;
+      await recover(true);
+    }
   }finally{
     cashingOut=false;
     renderMaintenanceView();
