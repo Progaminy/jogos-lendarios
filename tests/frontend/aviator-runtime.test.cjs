@@ -395,3 +395,37 @@ test('mensagens do jogador nunca exibem erro técnico bruto nem quebras \\n',()=
   assert.match(js,/Apostas fechadas\. Aguarde a próxima rodada\./);
   assert.match(js,/Não foi possível confirmar o cash-out\./);
 });
+
+
+test('Aviator fechado mostra somente a mensagem definida',()=>{
+  const html=fs.readFileSync(path.join(__dirname,'../../aviator.html'),'utf8');
+  const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
+  const css=fs.readFileSync(path.join(__dirname,'../../aviator.css'),'utf8');
+
+  assert.match(
+    html,
+    /id="aviatorMaintenanceNotice"[^>]*hidden>Aviator brevemente\.<\/section>/
+  );
+  assert.match(js,/Aviator brevemente\./);
+  assert.match(js,/const maintenanceOnly=!enabled&&!protectedFlight/);
+  assert.match(js,/notice\.hidden=!maintenanceOnly/);
+
+  const hiddenRule=css.match(
+    /\.aviator-maintenance-only \.topbar[\s\S]*?\{display:none!important\}/
+  )?.[0]||'';
+
+  for(const selector of [
+    '.topbar',
+    '.aviator-connection-banner',
+    '.aviator-stage',
+    '.aviator-history',
+    '.aviator-controls'
+  ]){
+    assert.ok(hiddenRule.includes(selector),selector+' deve ficar oculto');
+  }
+
+  assert.match(
+    css,
+    /\.aviator-maintenance-only \.aviator-maintenance-notice\{display:block!important\}/
+  );
+});
