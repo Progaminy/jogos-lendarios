@@ -1,6 +1,11 @@
 -- Regressoes financeiras Aviator. Execute em ambiente de teste/transacao rollback.
 begin;
-do $$
+update public.jl_aviator_settings
+   set enabled=true,
+       one_round_test=false,
+       updated_at=clock_timestamp()
+ where id=true;
+do $
 declare p uuid:=gen_random_uuid(); tok text:='aviator-regression-token'; rid bigint; b jsonb; co jsonb; co2 jsonb; rr public.jl_aviator_rounds; bal numeric;
 begin
  if public.jl_aviator_financial_ceiling(200000,100000,.5)<>2 then raise exception '200k/100k != 2x'; end if;
