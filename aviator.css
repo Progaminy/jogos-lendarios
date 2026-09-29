@@ -52,6 +52,9 @@ body{background:#070a10}
 .aviator-controls form{display:flex;gap:10px;align-items:end}
 .aviator-controls .form-message{grid-column:1/-1;min-height:1.2em;margin:0}
 .aviator-controls .button:disabled{opacity:.46;cursor:not-allowed;transform:none}
+.aviator-bet-confirmation{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border:1px solid rgba(78,213,138,.42);border-radius:14px;background:rgba(78,213,138,.11)}
+.aviator-bet-confirmation strong{font-size:1rem;font-weight:900;letter-spacing:.01em}
+.aviator-bet-confirmation small{font-size:.78rem;font-weight:800;color:#9ee7bd}
 #cashoutBtn:not(:disabled){box-shadow:0 0 0 1px rgba(78,213,138,.25),0 10px 28px rgba(78,213,138,.16)}
 .aviator-ticket{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:12px;border:1px solid rgba(78,213,138,.20);border-radius:14px;background:rgba(78,213,138,.045)}
 .aviator-ticket>div{min-width:0;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.025)}
@@ -85,6 +88,7 @@ body{background:#070a10}
   .aviator-controls{grid-template-columns:1fr}
   .aviator-controls form{display:grid}
   .aviator-controls .form-message{grid-column:auto}
+  .aviator-bet-confirmation{grid-column:auto;display:grid;justify-content:stretch}
   .aviator-ticket{grid-column:auto;grid-template-columns:1fr 1fr}
   .aviator-ticket>div:last-child{grid-column:1/-1}
   @keyframes aviatorFlight{0%{transform:translate3d(0,0,0) rotate(-13deg)}35%{transform:translate3d(22vw,-34px,0) rotate(-16deg)}70%{transform:translate3d(44vw,-86px,0) rotate(-20deg)}100%{transform:translate3d(64vw,-142px,0) rotate(-24deg)}}
