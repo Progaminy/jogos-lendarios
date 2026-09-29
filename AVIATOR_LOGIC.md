@@ -49,6 +49,8 @@ O cron chama `jl_process_game_engine_tick()`. O caminho real possui recuperaçã
 - `LOCKED` persistente => `FLYING`, preservando snapshot, teto e alvo já congelados.
 - `CRASHED` persistente => publica a prova e conclui como `SETTLED`.
 - `FLYING` continua sendo processado normalmente até crash/liquidação.
+- Um índice único parcial impede duas rodadas transitórias coexistirem, incluindo `CRASHED`.
+- Um índice parcial por `id desc` mantém a busca da rodada transitória barata mesmo com histórico grande.
 
 Esses cenários têm regressões transacionais em `tests/sql/aviator/`.
 
@@ -70,4 +72,4 @@ Esses cenários têm regressões transacionais em `tests/sql/aviator/`.
 
 ## Estado de implantação
 
-Código/migrations no `main` e produção são estados diferentes. Uma proteção só deve ser considerada ativa em produção depois de aplicada e verificada no Supabase de produção.
+Em 2026-09-29, o bloco final de manutenção, histórico leve, crash lógico, estado privado limitado, alvo visual pré-comprometido, permissões, reconciliação financeira, reabertura e auto-heal foi aplicado e verificado em produção com o Aviator fechado. Novas migrations posteriores continuam exigindo aplicação e verificação explícitas.
