@@ -9,10 +9,12 @@ test('Aviator aceita valor minimo de 0,50 MZN no cliente',()=>{
   const js=fs.readFileSync('aviator.js','utf8');
 
   assert.match(html,/id="aviatorAmount"[^>]*min="0\.5"/);
+  assert.match(html,/id="aviatorAmount"[^>]*max="500"/);
   assert.match(html,/id="aviatorAmount"[^>]*step="0\.01"/);
   assert.match(html,/inputmode="decimal"/);
   assert.match(js,/amount<0\.5/);
-  assert.match(js,/a partir de 0,50 MZN/);
+  assert.match(js,/amount>500/);
+  assert.match(js,/entre 0,50 e 500 MZN/);
 });
 
 test('Aviator nao volta silenciosamente ao minimo antigo de 1 MZN',()=>{
