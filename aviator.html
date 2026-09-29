@@ -1,5 +1,86 @@
-<!doctype html><html lang="pt-MZ"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0a0d14"><title>Aviator Lendário — Jogos Lendários</title><link rel="stylesheet" href="./styles.css?v=20260929"><link rel="stylesheet" href="./aviator.css?v=20260929-3"></head><body>
-<header class="topbar"><a class="brand" href="./index.html">Jogos <strong>Lendários</strong></a><nav class="game-nav"><a href="./index.html">Jogos</a><a class="active" href="./aviator.html">Aviator</a><a href="./ludo.html">Ludo</a></nav></header>
-<main class="aviator-shell"><section id="aviatorMaintenanceNotice" class="aviator-maintenance-notice" hidden>Aviator brevemente</section><section class="aviator-stage card"><div id="roundState" class="aviator-state">A carregar…</div><div class="flight-area"><div id="plane" class="plane" aria-hidden="true">✈</div><strong id="multiplier" class="multiplier">1.00×</strong><div id="crashText" class="crash-text hidden">VOOU!</div></div><details id="proofWrap" class="proof" hidden><summary>Prova da rodada</summary><code id="proof"></code></details></section>
-<section class="card aviator-controls"><form id="aviatorBetForm"><label class="field"><span>Valor da aposta</span><div class="money-input"><span>MZN</span><input id="aviatorAmount" type="number" min="1" step="1" value="10" required></div></label><button id="betBtn" class="button primary large" type="submit">Apostar</button></form><button id="cashoutBtn" class="button success large" type="button" disabled>Cash-out</button><p id="aviatorMessage" class="form-message" aria-live="polite"></p></section></main>
-<script src="./config.js"></script><script src="./js/api/rpc.js"></script><script src="./js/auth/session.js"></script><script src="./aviator.js?v=20260929-3" defer></script></body></html>
+<!doctype html>
+<html lang="pt-MZ">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0a0d14">
+  <title>Aviator Lendário — Jogos Lendários</title>
+  <link rel="stylesheet" href="./styles.css?v=20260929">
+  <link rel="stylesheet" href="./aviator.css?v=20260929-4">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./index.html">Jogos <strong>Lendários</strong></a>
+    <nav class="game-nav">
+      <a href="./index.html">Jogos</a>
+      <a class="active" href="./aviator.html">Aviator</a>
+      <a href="./ludo.html">Ludo</a>
+    </nav>
+  </header>
+
+  <main class="aviator-shell">
+    <section id="aviatorMaintenanceNotice" class="aviator-maintenance-notice" hidden>Aviator brevemente</section>
+
+    <section id="aviatorStage" class="aviator-stage card">
+      <div class="aviator-head">
+        <div class="aviator-round">
+          <span>RODADA</span>
+          <strong id="roundNumber">—</strong>
+        </div>
+        <div id="roundState" class="aviator-state">A carregar…</div>
+        <div class="aviator-clock">
+          <span id="clockLabel">AGUARDANDO</span>
+          <strong id="roundCountdown">—</strong>
+        </div>
+      </div>
+
+      <div id="flightArea" class="flight-area">
+        <div class="flight-grid" aria-hidden="true"></div>
+        <div id="preflight" class="preflight">
+          <span>PRÓXIMA DESCOLAGEM</span>
+          <strong id="preflightCountdown">—</strong>
+          <small>Apostas fecham antes do voo</small>
+        </div>
+
+        <div id="plane" class="plane" aria-hidden="true">✈</div>
+
+        <div id="multiplierWrap" class="multiplier-wrap hidden">
+          <strong id="multiplier" class="multiplier">1.00×</strong>
+          <small id="flightHint">RETIRE ANTES DO CRASH</small>
+        </div>
+
+        <div id="crashText" class="crash-text hidden">
+          <strong>VOOU!</strong>
+          <span id="crashMultiplier">1.00×</span>
+        </div>
+      </div>
+
+      <details id="proofWrap" class="proof" hidden>
+        <summary>Prova da rodada</summary>
+        <code id="proof"></code>
+      </details>
+    </section>
+
+    <section class="card aviator-controls">
+      <form id="aviatorBetForm">
+        <label class="field">
+          <span>Valor da aposta</span>
+          <div class="money-input">
+            <span>MZN</span>
+            <input id="aviatorAmount" type="number" min="1" step="1" value="10" inputmode="numeric" required>
+          </div>
+        </label>
+        <button id="betBtn" class="button primary large" type="submit">Apostar</button>
+      </form>
+
+      <button id="cashoutBtn" class="button success large" type="button" disabled>Cash-out</button>
+      <p id="aviatorMessage" class="form-message" aria-live="polite"></p>
+    </section>
+  </main>
+
+  <script src="./config.js"></script>
+  <script src="./js/api/rpc.js"></script>
+  <script src="./js/auth/session.js"></script>
+  <script src="./aviator.js?v=20260929-4" defer></script>
+</body>
+</html>
