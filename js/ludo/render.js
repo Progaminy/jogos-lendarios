@@ -81,15 +81,18 @@
       return { cells, at };
     }
 
-    function renderStaticBoard(target, colors = ['red', 'green', 'yellow', 'blue']) {
+    function renderStaticBoard(target, pieces = ['red', 'green', 'yellow', 'blue']) {
       if (!target) return;
       const { cells, at } = makeCells();
-      for (const color of colors) {
+      for (const item of pieces) {
+        const color = typeof item === 'string' ? item : item.color;
+        const pawnStyle = ['current','classic','video'].includes(item?.pawn_style) ? item.pawn_style : 'current';
         if (!base[color]) continue;
         base[color].forEach(([r, c], index) => {
           const p = document.createElement('span');
-          p.className = `piece ${color} preview-piece`;
-          p.textContent = index + 1;
+          p.className = `piece ${color} preview-piece pawn-style-${pawnStyle}`;
+          p.textContent = '';
+          p.dataset.tokenNo = String(index + 1);
           p.setAttribute('aria-hidden', 'true');
           at(r, c).appendChild(p);
         });
@@ -102,10 +105,10 @@
     }
 
     function renderPregameBoard() {
-      const colors = roomPlayers()
+      const pieces = roomPlayers()
         .filter((p) => p.status !== 'left' && base[p.color])
-        .map((p) => p.color);
-      renderStaticBoard(els.ludoBoard, colors);
+        .map((p) => ({color:p.color,pawn_style:p.pawn_style||'current'}));
+      renderStaticBoard(els.ludoBoard, pieces);
     }
 
     function renderBoard(legal = []) {
@@ -155,8 +158,9 @@
           b.type = 'button';
           const isMine = it.p.player_id === me();
           const isLegalMine = isMine && legal.includes(Number(it.t.token_no));
-          b.className = `piece ${it.p.color} ${isMine ? 'mine' : ''} ${isLegalMine ? 'legal' : ''}`;
-          b.textContent = it.t.token_no;
+          const pawnStyle=['current','classic','video'].includes(it.p.pawn_style)?it.p.pawn_style:'current';
+          b.className = `piece ${it.p.color} pawn-style-${pawnStyle} ${isMine ? 'mine' : ''} ${isLegalMine ? 'legal' : ''}`;
+          b.textContent = '';
           b.title = `${it.p.code} · peão ${it.t.token_no}`;
           b.dataset.playerId = String(it.p.player_id);
           b.dataset.tokenNo = String(it.t.token_no);
@@ -212,8 +216,9 @@
           const b = document.createElement('button');
           b.type = 'button';
           b.disabled = true;
-          b.className = `piece ${color} finish-piece`;
-          b.textContent = it.t.token_no;
+          const pawnStyle=['current','classic','video'].includes(it.p.pawn_style)?it.p.pawn_style:'current';
+          b.className = `piece ${color} pawn-style-${pawnStyle} finish-piece`;
+          b.textContent = '';
           b.title = `${it.p.code} · peão ${it.t.token_no} · chegou`;
           b.dataset.playerId = String(it.p.player_id);
           b.dataset.tokenNo = String(it.t.token_no);
