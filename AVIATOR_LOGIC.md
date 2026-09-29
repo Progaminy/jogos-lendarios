@@ -76,6 +76,15 @@ Esses cenários têm regressões transacionais em `tests/sql/aviator/`.
 - Toggle manual de manutenção cancela o flag de teste.
 - O botão do admin não inicia automaticamente nesta implantação; exige clique e confirmação do administrador.
 
+## Ledger operacional da banca
+
+- Ajustes administrativos continuam com `request_key` fornecida pelo admin.
+- Lucro pago em cash-out gera `cashout:<bet_id>` com delta negativo.
+- Stakes perdidos creditados no crash geram `lost-round:<round_id>` com delta positivo.
+- O movimento do ledger é gravado na mesma transação do saldo da banca; falha posterior desfaz ambos.
+- Movimentos operacionais de valor zero não criam linha.
+- O índice único de `request_key` protege contra duplicação lógica.
+
 ## Operação da banca
 
 - Ajustes negativos da banca são bloqueados durante `LOCKED` ou `FLYING`.
