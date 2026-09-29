@@ -79,6 +79,11 @@ jobs:
           JL_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
         run: bash tests/aviator-cashout-concurrency.sh
 
+      - name: Run Aviator same-bet double-submit test
+        env:
+          JL_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+        run: bash tests/aviator-cashout-same-bet-concurrency.sh
+
       - name: Run room-entry concurrency test when local reconstruction supports it
         env:
           JL_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
