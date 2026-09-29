@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0a0d14">
   <title>Aviator Lendário — Jogos Lendários</title>
   <link rel="stylesheet" href="./styles.css?v=20260929">
-  <link rel="stylesheet" href="./aviator.css?v=20260929-8">
+  <link rel="stylesheet" href="./aviator.css?v=20260929-9">
 </head>
 <body>
   <header class="topbar">
@@ -95,6 +95,11 @@
 
       <button id="cashoutBtn" class="button success large" type="button" disabled>Cash-out</button>
 
+      <div id="betConfirmation" class="aviator-bet-confirmation hidden" role="status" aria-live="polite">
+        <strong id="betConfirmationText">Aposta confirmada</strong>
+        <small id="betConfirmationAuto" class="hidden"></small>
+      </div>
+
       <div id="activeBetPanel" class="aviator-ticket hidden">
         <div>
           <span>MINHA APOSTA</span>
@@ -123,6 +128,6 @@
   <script src="./js/auth/session.js"></script>
   <script src="./js/aviator/fairness.js?v=20260929-2"></script>
   <script src="./js/aviator/runtime.js?v=20260929-6"></script>
-  <script src="./aviator.js?v=20260929-16" defer></script>
+  <script src="./aviator.js?v=20260929-17" defer></script>
 </body>
 </html>
