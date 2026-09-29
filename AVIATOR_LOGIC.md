@@ -191,6 +191,20 @@ Esses cenários têm regressões transacionais em `tests/sql/aviator/`.
 - O índice único de `request_key` protege contra duplicação lógica.
 - O admin consulta os movimentos por RPC separada, limitada a 50 linhas; a interface carrega 30 por vez somente ao expandir o histórico.
 
+## Exposição administrativa da rodada
+
+O snapshot `jl_aviator_admin_state(token)` entrega um bloco `exposure` calculado no servidor:
+
+- `total_staked`: soma das apostas da rodada.
+- `players`: jogadores distintos que participaram da rodada.
+- `cashouts`: quantidade de apostas já encerradas por cash-out.
+- `cashout_paid`: valor total já pago por cash-outs.
+- `active_bets` e `active_stake`: exposição ainda aberta.
+- `potential_payment`: cash-outs já pagos + máximo ainda pagável às apostas `ACTIVE` pelo limite financeiro/target atual da rodada.
+- `limit_multiplier`: multiplicador limite usado nesse cálculo.
+
+Durante `OPEN`, o limite potencial usa o teto financeiro projetado pela banca/exposição e respeita o target visual quando ele for menor. Depois do lock, usa o target efetivo congelado da rodada. O navegador apenas apresenta estes números; não calcula exposição financeira.
+
 ## Operação da banca
 
 - Ajustes negativos da banca são bloqueados durante `LOCKED` ou `FLYING`.
