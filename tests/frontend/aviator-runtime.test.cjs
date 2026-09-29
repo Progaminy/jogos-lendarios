@@ -207,3 +207,12 @@ test('controlador usa display_seq e cancela estado antigo na reconexão',()=>{
   assert.match(js,/cancelStateRequest\(\)/);
   assert.match(rpc,/signal:\s*options\.signal/);
 });
+
+
+test('UI do Aviator espelha limites 0.50 a 500 MZN sem ser autoridade financeira',()=>{
+  const html=fs.readFileSync(path.join(__dirname,'../../aviator.html'),'utf8');
+  const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
+  assert.match(html,/id="aviatorAmount"[^>]*min="0\.5"[^>]*max="500"/);
+  assert.match(js,/amount<0\.5\|\|amount>500/);
+  assert.match(js,/entre 0,50 e 500 MZN/);
+});
