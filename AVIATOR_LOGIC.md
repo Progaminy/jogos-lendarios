@@ -24,6 +24,19 @@
 - No crash, apostas ainda ativas perdem; stakes perdidos entram na banca uma única vez.
 - O lucro pago num cash-out é debitado da banca; a devolução do stake não é tratada como dinheiro da banca.
 
+## Provably fair e prova da rodada
+
+- Versão atual da prova: `JL-AVIATOR-PF-v2`.
+- Uma seed aleatória de 256 bits é criada quando a rodada `OPEN` nasce, antes das apostas, e permanece apenas na tabela privada de segredos.
+- O navegador recebe apenas `SHA-256(seed)` durante `OPEN`; a seed não é revelada antes do crash.
+- O alvo visual é derivado deterministicamente dos primeiros 52 bits do hash comprometido, permitindo reprodução idêntica no navegador.
+- Em `LOCKED`, um segundo SHA-256 sela: versão, rodada, commit da seed, total apostado, teto financeiro, alvo visual e alvo efetivo congelado.
+- A seed da rodada é imutável; tentativa de substituí-la é rejeitada por trigger.
+- Depois do crash, `jl_aviator_round_proof(round_id)` publica seed, payload do lock, compromissos e resultado para verificação.
+- O navegador recalcula SHA-256 da seed e do payload e compara o multiplicador final sem confiar apenas no campo `proof_valid` devolvido pelo servidor.
+- Qualquer alteração posterior no resultado ou nos inputs congelados quebra a prova.
+- Importante: com apostas ativas, a regra económica existente continua a governar o alvo efetivo pelo teto financeiro congelado. Portanto a v2 prova que o resultado não foi alterado depois do compromisso, mas não transforma essas rodadas em um crash puramente aleatório governado apenas pela seed.
+
 ## Estado lógico do crash
 
 - A escrituração/liquidação continua no cron global de 2 segundos.
