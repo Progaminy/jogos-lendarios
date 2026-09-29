@@ -612,6 +612,10 @@ function renderCurrentRound(){
 }
 
 function nextPollDelay(){
+  const protectedFlight=!enabled&&round?.status==='FLYING'&&Boolean(myBet);
+  if(!enabled&&!protectedFlight){
+    return document.hidden?30000:10000;
+  }
   return runtime.pollDelay(round?.status||'',document.hidden);
 }
 
@@ -822,7 +826,7 @@ document.addEventListener('visibilitychange',()=>{
     state();
   }else{
     stopOpenUiTick();
-    scheduleState(5000);
+    scheduleState();
   }
 });
 
