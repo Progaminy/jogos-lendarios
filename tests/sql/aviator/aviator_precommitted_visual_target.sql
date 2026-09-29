@@ -1,6 +1,11 @@
 begin;
 
-do $$
+update public.jl_aviator_rounds
+   set status='CANCELLED',
+       settled_at=coalesce(settled_at,now())
+ where status in ('OPEN','LOCKED','FLYING');
+
+do $
 declare
   v_round_id bigint;
   v_result numeric;
