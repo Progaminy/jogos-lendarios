@@ -21,6 +21,15 @@ Fase 1 do motor.
 - No crash, apostas ainda activas perdem; os stakes perdidos entram na banca uma única vez.
 - O lucro pago num cash-out é debitado da banca; a devolução do stake não é tratada como dinheiro da banca.
 
+## Estado lógico do crash
+
+- A liquidação financeira pode continuar a ser executada pelo cron global de 2 segundos.
+- O estado público não precisa esperar a próxima execução do cron para parar visualmente o voo.
+- Enquanto a linha ainda está `FLYING`, o servidor compara o relógio atual com o alvo internamente e pode devolver `CRASHED` de forma lógica, sem escrever na rodada.
+- O cliente recebe o multiplicador final somente quando o alvo já foi atingido.
+- `financial_ceiling`, `effective_target`, `visual_target` e totais internos não são expostos no estado público antes do crash.
+- O cash-out continua usando o relógio e as travas do servidor; a indicação visual do navegador nunca autoriza pagamento.
+
 ## Resiliência e concorrência
 
 - A colocação de aposta usa `request_key` persistida no `sessionStorage` por rodada. Retry da mesma ação reutiliza a mesma chave.
