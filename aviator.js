@@ -92,6 +92,16 @@ function renderProof(){
   proof.textContent='Commit: '+round.visual_seed_commit+(round.visual_seed_reveal?' · Seed revelada: '+round.visual_seed_reveal:'');
 }
 
+function renderMaintenanceView(){
+  const protectedFlight=!enabled&&round?.status==='FLYING'&&Boolean(myBet);
+  const maintenanceOnly=!enabled&&!protectedFlight;
+  document.body.classList.toggle('aviator-maintenance',!enabled);
+  document.body.classList.toggle('aviator-maintenance-only',maintenanceOnly);
+  const notice=$('#aviatorMaintenanceNotice');
+  if(notice)notice.hidden=!maintenanceOnly;
+  return maintenanceOnly;
+}
+
 function renderRoundState(){
   const stateEl=$('#roundState');
   if(!stateEl)return;
@@ -115,7 +125,6 @@ async function state(){
     const x=await JLApi.rpc('jl_aviator_public_state');
     offset=new Date(x.server_time).getTime()-Date.now();
     enabled=x.enabled!==false;
-    document.body.classList.toggle('aviator-maintenance',!enabled);
 
     const previousId=round?.id??null;
     round=x.round||null;
@@ -131,6 +140,12 @@ async function state(){
       await recover();
     }
 
+    if(renderMaintenanceView()){
+      stopFlight();
+      resetCashout();
+      return;
+    }
+
     renderRoundState();
     renderProof();
 
@@ -142,7 +157,6 @@ async function state(){
       renderMultiplier(1);
       resetCashout();
       $('#crashText')?.classList.add('hidden');
-      if(!enabled)$('#aviatorMessage').textContent=x.maintenance_message||'Aviator em manutenção. Volte em breve.';
       return;
     }
 
@@ -163,11 +177,8 @@ async function state(){
       }
     }
 
-    if(!enabled){
-      const activeFlight=round.status==='FLYING'&&myBet;
-      $('#aviatorMessage').textContent=activeFlight
-        ?'Manutenção ativada. A sua aposta em voo continua protegida; o cash-out permanece disponível.'
-        :(x.maintenance_message||'Aviator em manutenção. Volte em breve.');
+    if(!enabled&&round.status==='FLYING'&&myBet){
+      $('#aviatorMessage').textContent='Manutenção ativada. A sua aposta em voo continua protegida; o cash-out permanece disponível.';
     }
   }catch(e){
     $('#aviatorMessage').textContent=e.message;
@@ -178,7 +189,7 @@ $('#aviatorBetForm').addEventListener('submit',async e=>{
   e.preventDefault();
   try{
     if(!playerToken())throw new Error('Entre na sua conta primeiro.');
-    if(!enabled)throw new Error('Aviator em manutenção. Volte em breve.');
+    if(!enabled)throw new Error('Aviator brevemente');
     if(!round||round.status!=='OPEN')throw new Error('Apostas fechadas.');
     const r=await JLApi.rpc('jl_aviator_place_bet',{
       p_token:playerToken(),
@@ -203,10 +214,12 @@ $('#cashoutBtn').addEventListener('click',async()=>{
     $('#aviatorMessage').textContent='Cash-out em '+Number(r.multiplier).toFixed(2)+'× · '+Number(r.payout).toFixed(2)+' MZN';
     myBet=null;
     resetCashout();
+    await state();
   }catch(e){
     $('#aviatorMessage').textContent=e.message;
     lastRecoveredRoundId=null;
     await recover(true);
+    renderMaintenanceView();
   }
 });
 
