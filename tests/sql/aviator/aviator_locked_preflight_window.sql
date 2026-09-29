@@ -157,7 +157,50 @@ begin
   if state->'round'->>'phase'<>'FLYING' then
     raise exception 'fase publica deveria ser FLYING: %',state;
   end if;
+
+  -- Forca o alvo a 1x apenas dentro desta transacao de teste para provar
+  -- que CRASHED e SETTLED sao commits/ticks distintos.
+  update public.jl_aviator_rounds
+     set effective_target=1,
+         started_at=clock_timestamp()-interval '1 second'
+   where id=rid;
+
+  tick:=public.jl_aviator_engine_tick();
+
+  if tick->>'status'<>'CRASHED'
+     or tick->>'phase'<>'CRASHED' then
+    raise exception 'primeiro tick do crash deveria permanecer CRASHED: %',tick;
+  end if;
+
+  select * into r
+  from public.jl_aviator_rounds
+  where id=rid;
+
+  if r.status<>'CRASHED' or r.settled_at is not null then
+    raise exception 'CRASHED precisa ficar commitado antes de SETTLED';
+  end if;
+
+  state:=public.jl_aviator_public_state();
+
+  if state->'round'->>'phase'<>'CRASHED' then
+    raise exception 'fase publica deveria expor CRASHED: %',state;
+  end if;
+
+  tick:=public.jl_aviator_engine_tick();
+
+  if tick->>'status'<>'SETTLED'
+     or tick->>'phase'<>'SETTLED' then
+    raise exception 'tick seguinte deveria liquidar SETTLED: %',tick;
+  end if;
+
+  select * into r
+  from public.jl_aviator_rounds
+  where id=rid;
+
+  if r.status<>'SETTLED' or r.settled_at is null then
+    raise exception 'rodada deveria terminar SETTLED';
+  end if;
 end
-$$;
+$;
 
 rollback;
