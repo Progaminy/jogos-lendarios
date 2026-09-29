@@ -11,7 +11,7 @@ update public.jl_aviator_settings
        updated_at=clock_timestamp()
  where id=true;
 
-do $$
+do $oneround$
 declare
   v_round bigint;
   v_tick jsonb;
@@ -19,19 +19,54 @@ declare
   v_test boolean;
   v_status text;
 begin
-  insert into public.jl_aviator_rounds(status,betting_closes_at)
-  values('OPEN',clock_timestamp()-interval '1 second')
+  insert into public.jl_aviator_rounds(
+    status,
+    betting_closes_at,
+    takeoff_at
+  )
+  values(
+    'OPEN',
+    clock_timestamp()-interval '4 seconds',
+    clock_timestamp()+interval '3 seconds'
+  )
   returning id into v_round;
 
   v_tick:=public.jl_process_game_engine_tick()->'aviator';
 
-  if v_tick->>'action'<>'STARTED' then
-    raise exception 'one-round test nao iniciou: %',v_tick;
+  if v_tick->>'action'<>'LOCKED'
+     or v_tick->>'status'<>'LOCKED' then
+    raise exception 'one-round test deveria entrar LOCKED primeiro: %',v_tick;
+  end if;
+
+  update public.jl_aviator_rounds
+     set takeoff_at=clock_timestamp()-interval '1 second'
+   where id=v_round;
+
+  v_tick:=public.jl_process_game_engine_tick()->'aviator';
+
+  if v_tick->>'action'<>'STARTED'
+     or v_tick->>'status'<>'FLYING' then
+    raise exception 'one-round test nao iniciou FLYING: %',v_tick;
   end if;
 
   update public.jl_aviator_rounds
      set started_at=clock_timestamp()-interval '200 seconds'
    where id=v_round;
+
+  v_tick:=public.jl_process_game_engine_tick()->'aviator';
+
+  if v_tick->>'status'<>'CRASHED'
+     or v_tick->>'phase'<>'CRASHED' then
+    raise exception 'one-round test deveria commit CRASHED antes de SETTLED: %',v_tick;
+  end if;
+
+  select status into v_status
+  from public.jl_aviator_rounds
+  where id=v_round;
+
+  if v_status<>'CRASHED' then
+    raise exception 'rodada deveria permanecer CRASHED por um tick: %',v_status;
+  end if;
 
   v_tick:=public.jl_process_game_engine_tick()->'aviator';
 
@@ -63,6 +98,6 @@ begin
     raise exception 'cron abriu segunda rodada depois do one-round test: %',v_tick;
   end if;
 end
-$$;
+$oneround$;
 
 rollback;
