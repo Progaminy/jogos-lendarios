@@ -191,6 +191,21 @@ Esses cenários têm regressões transacionais em `tests/sql/aviator/`.
 - O índice único de `request_key` protege contra duplicação lógica.
 - O admin consulta os movimentos por RPC separada, limitada a 50 linhas; a interface carrega 30 por vez somente ao expandir o histórico.
 
+## Indicador financeiro da casa
+
+O painel administrativo recebe no mesmo snapshot `jl_aviator_admin_state(token)` um bloco `house`, recalculado pelo servidor e atualizado automaticamente no painel:
+
+- `bank_balance`: banca atual do Aviator.
+- `risk_budget`: parcela da banca disponível para exposição, segundo `exposure_ratio`.
+- `active_liability`: lucro máximo ainda comprometido com apostas `ACTIVE`.
+- `available_after_worst_case`: banca restante se toda a responsabilidade ativa for paga no limite atual.
+- `risk_usage_pct`: percentagem do orçamento de risco atualmente consumida.
+- `cashout_profit_paid`: lucro já pago em cash-outs na rodada.
+- `round_realized_result`: resultado realizado da casa na rodada, calculado como stakes perdidos menos lucro pago em cash-outs.
+- `status`: `HEALTHY`, `ATTENTION` ou `CRITICAL`.
+
+Os estados usam limiares conservadores: `ATTENTION` a partir de 70% do orçamento de risco e `CRITICAL` a partir de 90%, banca não positiva ou margem negativa no pior caso. O painel consulta este snapshot automaticamente a cada 3 segundos; não precisa consultar banco ou logs manualmente.
+
 ## Exposição administrativa da rodada
 
 O snapshot `jl_aviator_admin_state(token)` entrega um bloco `exposure` calculado no servidor:
