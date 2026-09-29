@@ -7,9 +7,7 @@ alter table public.jl_aviator_rounds
   add column if not exists visual_seed_reveal text,
   add column if not exists effective_target numeric(18,6);
 
-alter table public.transactions drop constraint if exists transactions_kind_check;
-alter table public.transactions add constraint transactions_kind_check
-check (kind in ('deposit','withdrawal','withdrawal_refund','bet','payout','adjustment','aviator_bet','aviator_payout'));
+-- Tipos Aviator sao adicionados por migration compativel com os tipos financeiros existentes.
 
 create or replace function public.jl_aviator_multiplier(p_started_at timestamptz, p_at timestamptz default now())
 returns numeric language sql immutable
