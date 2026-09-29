@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0a0d14">
   <title>Aviator Lendário — Jogos Lendários</title>
   <link rel="stylesheet" href="./styles.css?v=20260929">
-  <link rel="stylesheet" href="./aviator.css?v=20260929-7">
+  <link rel="stylesheet" href="./aviator.css?v=20260929-8">
 </head>
 <body>
   <header class="topbar">
@@ -83,6 +83,13 @@
             <input id="aviatorAmount" type="number" min="0.5" max="500" step="0.01" value="10" inputmode="decimal" required>
           </div>
         </label>
+        <label class="field">
+          <span>Cash-out automático <small>(opcional)</small></span>
+          <div class="money-input">
+            <span>×</span>
+            <input id="aviatorAutoCashout" type="number" min="1.01" step="0.01" placeholder="1.50" inputmode="decimal">
+          </div>
+        </label>
         <button id="betBtn" class="button primary large" type="submit">Apostar</button>
       </form>
 
@@ -96,6 +103,10 @@
         <div>
           <span>MULTIPLICADOR</span>
           <strong id="activeBetMultiplier">—</strong>
+        </div>
+        <div>
+          <span>AUTO CASH-OUT</span>
+          <strong id="activeBetAuto">Desligado</strong>
         </div>
         <div>
           <span>RETORNO ESTIMADO</span>
@@ -112,6 +123,6 @@
   <script src="./js/auth/session.js"></script>
   <script src="./js/aviator/fairness.js?v=20260929-2"></script>
   <script src="./js/aviator/runtime.js?v=20260929-6"></script>
-  <script src="./aviator.js?v=20260929-15" defer></script>
+  <script src="./aviator.js?v=20260929-16" defer></script>
 </body>
 </html>
