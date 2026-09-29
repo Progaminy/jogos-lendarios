@@ -127,11 +127,13 @@
           :'';
       }
       if(readiness){
-        readiness.textContent=d.enabled
-          ?'ABERTO'
-          :referenceCeiling<1.5
-            ?'BANCA MUITO BAIXA'
-            :'PRONTO PARA TESTE';
+        readiness.textContent=d.one_round_test
+          ?'TESTE 1 RODADA'
+          :d.enabled
+            ?'ABERTO'
+            :referenceCeiling<1.5
+              ?'BANCA MUITO BAIXA'
+              :'PRONTO PARA TESTE';
       }
       const mt=$('aviatorMaintenanceToggle'); if(mt){mt.textContent=d.enabled?'Fechar Aviator · manutenção':'Abrir Aviator';mt.classList.toggle('danger',d.enabled);mt.classList.toggle('success',!d.enabled);}
       const oneRound=$('aviatorOneRoundTest');
