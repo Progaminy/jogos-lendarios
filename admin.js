@@ -246,6 +246,21 @@
         oneRound.disabled=Boolean(d.enabled)||draining;
         oneRound.textContent=d.one_round_test?'Rodada de teste em curso':'Abrir 1 rodada de teste';
       }
+
+      const cancellable=['OPEN','LOCKED','FLYING'].includes(String(r.status||''));
+      const cancelBtn=$('aviatorCancelRound');
+      const cancelReason=$('aviatorCancelReason');
+      if(cancelBtn){
+        cancelBtn.disabled=!cancellable;
+        cancelBtn.dataset.roundId=cancellable&&r.id?String(r.id):'';
+        cancelBtn.textContent=cancellable
+          ?'Cancelar rodada e reembolsar'
+          :'Sem rodada cancelável';
+      }
+      if(cancelReason){
+        cancelReason.disabled=!cancellable;
+      }
+
       if($('aviatorBankLedgerWrap')?.open){
         void refreshAviatorBankLedger(false);
       }
@@ -309,6 +324,60 @@
     if(!button)return;
     event.preventDefault();
     void closeAviatorFromAdmin(button);
+  });
+
+  $('aviatorCancelRound')?.addEventListener('click',async()=>{
+    const button=$('aviatorCancelRound');
+    const reasonInput=$('aviatorCancelReason');
+    const reason=String(reasonInput?.value||'').trim();
+    const roundId=Number(button?.dataset.roundId);
+
+    if(reason.length<5){
+      const message='Informe o motivo do cancelamento com pelo menos 5 caracteres.';
+      $('aviatorAdminMessage').textContent=message;
+      toast(message,'error');
+      reasonInput?.focus();
+      return;
+    }
+
+    if(!Number.isInteger(roundId)||roundId<1){
+      const message='Não há rodada cancelável neste momento.';
+      $('aviatorAdminMessage').textContent=message;
+      toast(message,'error');
+      await refreshAviatorAdmin();
+      return;
+    }
+
+    try{
+      button.disabled=true;
+      button.textContent='Cancelando e reembolsando…';
+      $('aviatorAdminMessage').textContent='Cancelando rodada #'+roundId+'…';
+
+      const result=await rpc('jl_aviator_admin_cancel_round',{
+        p_token:state.token,
+        p_round_id:roundId,
+        p_reason:reason
+      });
+
+      const refunded=Number(result.refunded_bets)||0;
+      const refundedTotal=Number(result.refunded_total)||0;
+      const cashoutsKept=Number(result.cashouts_kept)||0;
+
+      $('aviatorAdminMessage').textContent=
+        'Rodada #'+roundId+' cancelada. '+
+        refunded+' aposta'+(refunded===1?'':'s')+' reembolsada'+(refunded===1?'':'s')+
+        ' ('+money(refundedTotal)+' MZN).'+
+        (cashoutsKept>0?' '+cashoutsKept+' cash-out'+(cashoutsKept===1?' preservado.':'s preservados.'):'');
+      toast('Rodada cancelada e reembolsos concluídos.','success');
+
+      if(reasonInput)reasonInput.value='';
+      await refreshAviatorAdmin();
+    }catch(e){
+      const message='Falha ao cancelar rodada: '+String(e?.message||e||'Erro desconhecido.');
+      $('aviatorAdminMessage').textContent=message;
+      toast(message,'error');
+      await refreshAviatorAdmin();
+    }
   });
 
   $('aviatorMaintenanceReopen')?.addEventListener('click',async()=>{
