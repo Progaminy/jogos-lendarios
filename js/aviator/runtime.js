@@ -38,6 +38,18 @@
     });
   }
 
+  function pickActiveBet(bets,roundId){
+    const target=Number(roundId);
+    if(!Array.isArray(bets)||!Number.isFinite(target))return null;
+
+    let selected=null;
+    for(const bet of bets){
+      if(Number(bet?.round_id)!==target||bet?.status!=='ACTIVE')continue;
+      if(!selected||Number(bet?.id)>Number(selected?.id))selected=bet;
+    }
+    return selected;
+  }
+
   function pollDelay(status,hidden){
     if(hidden)return 5000;
     if(status==='FLYING')return 700;
@@ -52,5 +64,5 @@
     return 'waiting';
   }
 
-  return Object.freeze({multiplier,secondsUntil,clockSample,pollDelay,phase});
+  return Object.freeze({multiplier,secondsUntil,clockSample,pickActiveBet,pollDelay,phase});
 });
