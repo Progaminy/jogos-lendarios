@@ -200,6 +200,14 @@ function stopOpenUiTick(){
   }
 }
 
+function setBetInputsLocked(locked){
+  const value=Boolean(locked);
+  const amount=$('#aviatorAmount');
+  const auto=$('#aviatorAutoCashout');
+  if(amount)amount.disabled=value;
+  if(auto)auto.disabled=value;
+}
+
 function updateOpenClock(){
   if(!connectionOnline){
     stopOpenUiTick();
@@ -222,9 +230,13 @@ function updateOpenClock(){
   $('#roundCountdown').textContent=closed?'AGUARDE':seconds===null?'—':display+'s';
   $('#preflightCountdown').textContent=takeoffDisplay;
 
+  const inputsLocked=
+    !enabled||!connectionOnline||Boolean(myBet)||betting||closed;
+  setBetInputsLocked(inputsLocked);
+
   const betBtn=$('#betBtn');
   if(betBtn){
-    betBtn.disabled=!enabled||!connectionOnline||Boolean(myBet)||betting||closed;
+    betBtn.disabled=inputsLocked;
     betBtn.textContent=myBet
       ?'Aposta confirmada'
       :closed
@@ -645,6 +657,10 @@ function renderLocked(){
   show('#multiplierWrap',false);
   show('#crashText',false);
 
+  setBetInputsLocked(true);
+
+  setBetInputsLocked(true);
+
   const betBtn=$('#betBtn');
   if(betBtn){
     betBtn.disabled=true;
@@ -706,6 +722,10 @@ function renderFinished(){
   show('#preflight',false);
   show('#multiplierWrap',false);
   show('#crashText',true);
+
+  setBetInputsLocked(true);
+
+  setBetInputsLocked(true);
 
   const betBtn=$('#betBtn');
   if(betBtn){
