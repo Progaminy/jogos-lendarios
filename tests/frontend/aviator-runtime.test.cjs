@@ -188,3 +188,22 @@ test('controlador pede prova pública somente para conferir rodada concluída',(
   assert.match(js,/Hash pré-aposta/);
   assert.match(js,/Hash do fecho/);
 });
+
+
+test('snapshots do Aviator nunca podem andar para trás',()=>{
+  assert.equal(runtime.shouldAcceptSnapshot(null,100),true);
+  assert.equal(runtime.shouldAcceptSnapshot(100,100),true);
+  assert.equal(runtime.shouldAcceptSnapshot(100,101),true);
+  assert.equal(runtime.shouldAcceptSnapshot(101,100),false);
+  assert.equal(runtime.shouldAcceptSnapshot(101,undefined),false);
+});
+
+test('controlador usa display_seq e cancela estado antigo na reconexão',()=>{
+  const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
+  const rpc=fs.readFileSync(path.join(__dirname,'../../js/api/rpc.js'),'utf8');
+  assert.match(js,/lastDisplaySeq/);
+  assert.match(js,/shouldAcceptSnapshot\(lastDisplaySeq,x\?\.display_seq\)/);
+  assert.match(js,/new AbortController\(\)/);
+  assert.match(js,/cancelStateRequest\(\)/);
+  assert.match(rpc,/signal: options\.signal/);
+});
