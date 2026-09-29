@@ -4,6 +4,7 @@ const $=s=>document.querySelector(s);
 
 let round=null;
 let myBet=null;
+let myStake=0;
 let raf=0;
 let offset=0;
 let recovering=false;
@@ -13,6 +14,10 @@ let stateBusy=false;
 let stateTimer=0;
 let betting=false;
 let cashingOut=false;
+let recentResults=[];
+let historyBusy=false;
+let historyRemoteLoaded=false;
+let historyRetryAt=0;
 
 const playerToken=()=>JLSession.getPlayerToken();
 const serverNow=()=>Date.now()+offset;
@@ -21,6 +26,14 @@ const runtime=window.JLAviatorRuntime||{
   secondsUntil:(close,now)=>Math.max(0,Math.ceil((close-now)/1000)),
   pollDelay:(status,hidden)=>hidden?5000:status==='FLYING'?700:status==='OPEN'?1000:1400
 };
+
+function money(value){
+  const n=Number(value);
+  return (Number.isFinite(n)?n:0).toLocaleString('pt-MZ',{
+    minimumFractionDigits:2,
+    maximumFractionDigits:2
+  })+' MZN';
+}
 
 function show(selector,visible){
   const el=typeof selector==='string'?$(selector):selector;
@@ -83,12 +96,123 @@ function renderRoundNumber(){
   if(el)el.textContent=round?.id?'#'+round.id:'—';
 }
 
+function renderTicket(multiplierValue=null){
+  const panel=$('#activeBetPanel');
+  if(!panel)return;
+
+  const active=Boolean(myBet)&&myStake>0;
+  panel.classList.toggle('hidden',!active);
+  if(!active)return;
+
+  $('#activeBetStake').textContent=money(myStake);
+
+  if(round?.status==='FLYING'){
+    const m=Number(multiplierValue??mul());
+    const safeMultiplier=Number.isFinite(m)&&m>=1?m:1;
+    $('#activeBetMultiplier').textContent=safeMultiplier.toFixed(2)+'×';
+    $('#activeBetPayout').textContent=money(myStake*safeMultiplier);
+  }else{
+    $('#activeBetMultiplier').textContent='A aguardar';
+    $('#activeBetPayout').textContent=money(myStake);
+  }
+}
+
+function normalizeHistoryItem(item){
+  const id=Number(item?.id);
+  const multiplier=Number(item?.crash_multiplier);
+  if(!Number.isFinite(id)||id<=0||!Number.isFinite(multiplier)||multiplier<1)return null;
+  return {
+    id,
+    crash_multiplier:multiplier,
+    ended_at:item?.ended_at||null
+  };
+}
+
+function renderHistory(){
+  const wrap=$('#aviatorHistory');
+  const status=$('#historyStatus');
+  if(!wrap||!status)return;
+
+  const rows=recentResults
+    .map(normalizeHistoryItem)
+    .filter(Boolean)
+    .sort((a,b)=>b.id-a.id)
+    .slice(0,12);
+
+  if(!rows.length){
+    wrap.innerHTML='<span class="aviator-history-empty">Sem resultados recentes.</span>';
+    status.textContent=historyRemoteLoaded?'Atualizado':'—';
+    return;
+  }
+
+  wrap.innerHTML=rows.map(item=>
+    '<div class="aviator-history-chip" title="Rodada #'+item.id+'">'+
+      '<strong>'+item.crash_multiplier.toFixed(2)+'×</strong>'+
+      '<small>#'+item.id+'</small>'+
+    '</div>'
+  ).join('');
+
+  status.textContent=historyRemoteLoaded?'Atualizado':'Nesta sessão';
+}
+
+function rememberCurrentResult(){
+  if(!round||!['CRASHED','SETTLED'].includes(round.status))return;
+  const item=normalizeHistoryItem({
+    id:round.id,
+    crash_multiplier:round.crash_multiplier,
+    ended_at:round.crashed_at||round.settled_at||null
+  });
+  if(!item)return;
+
+  recentResults=[
+    item,
+    ...recentResults.filter(x=>Number(x?.id)!==item.id)
+  ].slice(0,12);
+
+  renderHistory();
+}
+
+async function loadHistory(force=false){
+  const now=Date.now();
+  if(historyBusy||now<historyRetryAt)return;
+  if(historyRemoteLoaded&&!force)return;
+
+  historyBusy=true;
+  const status=$('#historyStatus');
+  if(status)status.textContent='A atualizar…';
+
+  try{
+    const raw=await JLApi.rpc('jl_aviator_recent_results',{p_limit:12});
+    const rows=Array.isArray(raw)?raw:[];
+    const normalized=rows.map(normalizeHistoryItem).filter(Boolean);
+
+    if(normalized.length){
+      const localOnly=recentResults.filter(local=>
+        !normalized.some(remote=>remote.id===Number(local?.id))
+      );
+      recentResults=[...normalized,...localOnly]
+        .sort((a,b)=>b.id-a.id)
+        .slice(0,12);
+    }
+
+    historyRemoteLoaded=true;
+    historyRetryAt=0;
+  }catch(_){
+    historyRemoteLoaded=false;
+    historyRetryAt=Date.now()+60000;
+  }finally{
+    historyBusy=false;
+    renderHistory();
+  }
+}
+
 function paintFlight(){
   raf=0;
   if(round?.status!=='FLYING')return;
 
   const m=mul();
   renderMultiplier(m);
+  renderTicket(m);
 
   const cashout=$('#cashoutBtn');
   if(cashout){
@@ -111,9 +235,15 @@ async function recover(force=false){
   try{
     const x=await JLApi.rpc('jl_aviator_player_state',{p_token:playerToken()});
     const bets=Array.isArray(x.bets)?x.bets:[];
-    const active=bets.filter(b=>Number(b.round_id)===Number(round.id)&&b.status==='ACTIVE');
-    myBet=active.length?active[active.length-1].id:null;
+    const active=bets.filter(b=>
+      Number(b.round_id)===Number(round.id)&&b.status==='ACTIVE'
+    );
+    const current=active.length?active[active.length-1]:null;
+
+    myBet=current?.id??null;
+    myStake=current?Number(current.stake)||0:0;
     lastRecoveredRoundId=round.id;
+    renderTicket();
 
     if(myBet&&round.status==='FLYING'){
       $('#aviatorMessage').textContent='Aposta ativa recuperada.';
@@ -178,6 +308,7 @@ function renderOpen(){
   }
 
   resetCashout();
+  renderTicket();
 
   if(myBet&&!$('#aviatorMessage').textContent.trim()){
     $('#aviatorMessage').textContent='Aposta confirmada. Aguarde a descolagem.';
@@ -207,6 +338,7 @@ function renderFlying(){
     cashout.disabled=!myBet||cashingOut;
   }
 
+  renderTicket(mul());
   startFlightPaint();
 }
 
@@ -234,7 +366,10 @@ function renderFinished(){
   }
 
   myBet=null;
+  myStake=0;
   resetCashout();
+  renderTicket();
+  rememberCurrentResult();
 }
 
 function renderWaiting(){
@@ -258,6 +393,7 @@ function renderWaiting(){
   }
 
   resetCashout();
+  renderTicket();
 }
 
 function renderCurrentRound(){
@@ -305,19 +441,35 @@ async function state(){
     enabled=x.enabled!==false;
 
     const previousId=round?.id??null;
+    const previousStatus=round?.status??null;
     round=x.round||null;
 
-    if(previousId!==round?.id){
+    const changedRound=previousId!==round?.id;
+    const justFinished=
+      previousStatus!==round?.status&&
+      ['CRASHED','SETTLED'].includes(round?.status);
+
+    if(changedRound){
       myBet=null;
+      myStake=0;
       lastRecoveredRoundId=null;
       stopFlight();
       resetCashout();
+      renderTicket();
       const message=$('#aviatorMessage');
-      if(message&&!/Cash-out em/i.test(message.textContent))message.textContent='';
+      if(message)message.textContent='';
     }
 
-    if(round&&playerToken()&&(previousId!==round.id||lastRecoveredRoundId!==round.id)){
+    if(round&&playerToken()&&(changedRound||lastRecoveredRoundId!==round.id)){
       await recover();
+    }
+
+    if(justFinished)rememberCurrentResult();
+
+    if(changedRound||justFinished){
+      void loadHistory(true);
+    }else if(!historyRemoteLoaded&&!historyBusy){
+      void loadHistory(false);
     }
 
     if(renderMaintenanceView()){
@@ -329,7 +481,8 @@ async function state(){
     renderCurrentRound();
 
     if(!enabled&&round?.status==='FLYING'&&myBet){
-      $('#aviatorMessage').textContent='Manutenção ativada. A sua aposta em voo continua protegida; o cash-out permanece disponível.';
+      $('#aviatorMessage').textContent=
+        'Manutenção ativada. A sua aposta em voo continua protegida; o cash-out permanece disponível.';
     }
   }catch(e){
     const message=$('#aviatorMessage');
@@ -354,7 +507,9 @@ $('#aviatorBetForm').addEventListener('submit',async e=>{
     if(!round||round.status!=='OPEN')throw new Error('Apostas fechadas.');
 
     const amount=Number($('#aviatorAmount').value);
-    if(!Number.isFinite(amount)||amount<1)throw new Error('Informe um valor válido.');
+    if(!Number.isFinite(amount)||amount<1||!Number.isInteger(amount)){
+      throw new Error('A aposta deve ser um valor inteiro a partir de 1 MZN.');
+    }
 
     const r=await JLApi.rpc('jl_aviator_place_bet',{
       p_token:playerToken(),
@@ -363,7 +518,10 @@ $('#aviatorBetForm').addEventListener('submit',async e=>{
     });
 
     myBet=r.bet_id;
+    myStake=Number(r.stake)||amount;
     lastRecoveredRoundId=round.id;
+    renderTicket();
+
     $('#aviatorMessage').textContent=r.already_processed
       ?'Aposta já confirmada. Aguarde a descolagem.'
       :'Aposta confirmada. Aguarde a descolagem.';
@@ -390,10 +548,12 @@ $('#cashoutBtn').addEventListener('click',async()=>{
     });
 
     $('#aviatorMessage').textContent=
-      'Cash-out em '+Number(r.multiplier).toFixed(2)+'× · '+Number(r.payout).toFixed(2)+' MZN';
+      'Cash-out em '+Number(r.multiplier).toFixed(2)+'× · '+money(r.payout);
 
     myBet=null;
+    myStake=0;
     resetCashout();
+    renderTicket();
     lastRecoveredRoundId=round?.id??null;
   }catch(e){
     $('#aviatorMessage').textContent=e.message;
@@ -408,7 +568,10 @@ $('#cashoutBtn').addEventListener('click',async()=>{
 
 window.addEventListener('online',()=>{
   lastRecoveredRoundId=null;
+  historyRetryAt=0;
+  historyRemoteLoaded=false;
   clearTimeout(stateTimer);
+  void loadHistory(true);
   state();
 });
 
@@ -422,5 +585,6 @@ document.addEventListener('visibilitychange',()=>{
   }
 });
 
+renderHistory();
 state();
 })();
