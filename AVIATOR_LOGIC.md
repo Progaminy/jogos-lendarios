@@ -11,3 +11,13 @@ Fase 1 do motor.
 - O snapshot, a reserva e o teto ficam congelados em `LOCKED`; cash-outs posteriores não recalculam o teto.
 - A extensão visual depois de todos os jogadores terem saído será implementada na fase seguinte. O intervalo discutido é 5x–135,7x, mas não é ainda regra executável nesta migration.
 - RPCs de fecho/motor permanecem apenas para `service_role`; o cliente não decide teto, crash ou liquidação.
+
+## Fase 2 — voo e cash-out
+
+- O alvo visual é sorteado **antes do voo**, entre 5x e 135,7x, e fica comprometido por hash.
+- Com apostas activas, o alvo efectivo continua a ser o teto financeiro congelado.
+- O multiplicador é função do tempo do servidor; não exige escrita na base a cada frame.
+- Cash-out usa o relógio do servidor e é transaccional/idempotente por estado da aposta.
+- Quando a última aposta activa sai antes do teto financeiro, a responsabilidade financeira termina e o alvo efectivo passa para o alvo visual já pré-calculado (nunca abaixo do multiplicador já alcançado).
+- No crash, apostas ainda activas perdem; os stakes perdidos entram na banca uma única vez.
+- O lucro pago num cash-out é debitado da banca; a devolução do stake não é tratada como dinheiro da banca.
