@@ -4,6 +4,7 @@ const fs=require('node:fs');
 const path=require('node:path');
 
 const runtime=require('../../js/aviator/runtime.js');
+const fairness=require('../../js/aviator/fairness.js');
 
 test('runtime do navegador não contém motor de multiplicador nem relógio do jogo',()=>{
   assert.equal(runtime.multiplier,undefined);
@@ -47,12 +48,14 @@ test('fases públicas mapeiam para estados visuais estáveis',()=>{
   assert.equal(runtime.phase('CANCELLED'),'waiting');
 });
 
-test('HTML carrega runtime antes do controlador principal',()=>{
+test('HTML carrega fairness e runtime antes do controlador principal',()=>{
   const html=fs.readFileSync(path.join(__dirname,'../../aviator.html'),'utf8');
+  const fairnessAt=html.indexOf('./js/aviator/fairness.js');
   const runtimeAt=html.indexOf('./js/aviator/runtime.js');
   const controllerAt=html.indexOf('./aviator.js');
-  assert.ok(runtimeAt>=0,'runtime do Aviator deve estar incluído');
-  assert.ok(controllerAt>runtimeAt,'runtime deve carregar antes de aviator.js');
+  assert.ok(fairnessAt>=0,'verificador provably fair deve estar incluído');
+  assert.ok(runtimeAt>fairnessAt,'runtime deve carregar depois do verificador');
+  assert.ok(controllerAt>runtimeAt,'controlador deve carregar por último');
 });
 
 test('HTML mantém histórico e bilhete ao vivo com ids estáveis',()=>{
@@ -133,4 +136,55 @@ test('confirmação reconciliada sobrevive à primeira sincronização de rodada
   const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
   assert.match(js,/preserveMessageOnNextRoundSync=true/);
   assert.match(js,/if\(preserveMessageOnNextRoundSync\)preserveMessageOnNextRoundSync=false/);
+});
+
+
+test('provably fair v2 verifica seed, lock e resultado sem confiar no controlador',async()=>{
+  const seed='0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
+  const seedCommit=await fairness.sha256Hex(seed);
+  const visual=fairness.visualTarget(seedCommit);
+  const payload=[
+    fairness.VERSION,
+    '42',
+    seedCommit,
+    '10.00',
+    '2.000000',
+    visual.toFixed(6),
+    '2.000000'
+  ].join('|');
+  const lockCommit=await fairness.sha256Hex(payload);
+
+  const proof={
+    available:true,
+    fairness_version:fairness.VERSION,
+    seed,
+    seed_commit:seedCommit,
+    lock_payload:payload,
+    lock_commit:lockCommit,
+    inputs:{
+      visual_target:visual,
+      locked_effective_target:2,
+      visual_extension:false,
+      zero_exposure_at_multiplier:null
+    },
+    result:{actual_crash_multiplier:2}
+  };
+
+  const ok=await fairness.verify(proof);
+  assert.equal(ok.valid,true);
+
+  const tampered=await fairness.verify({
+    ...proof,
+    result:{actual_crash_multiplier:2.1}
+  });
+  assert.equal(tampered.valid,false);
+  assert.equal(tampered.resultValid,false);
+});
+
+test('controlador pede prova pública somente para conferir rodada concluída',()=>{
+  const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
+  assert.match(js,/jl_aviator_round_proof/);
+  assert.match(js,/fairness\.verify\(data\)/);
+  assert.match(js,/Hash pré-aposta/);
+  assert.match(js,/Hash do fecho/);
 });
