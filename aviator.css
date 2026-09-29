@@ -22,6 +22,7 @@ body{background:#070a10}
 .multiplier.long{font-size:clamp(34px,9vw,76px);letter-spacing:-.04em}
 .multiplier-wrap small{font-size:.66rem;font-weight:950;letter-spacing:.13em;color:#8f9aad}
 .plane{position:absolute;z-index:2;font-size:46px;left:10%;bottom:18%;transform:translate3d(0,0,0) rotate(-13deg);opacity:.55;filter:drop-shadow(0 7px 12px rgba(0,0,0,.36))}
+.plane,.flight-grid,.flight-area::after{pointer-events:none}
 .aviator-stage.is-open .plane{animation:aviatorIdle 1.6s ease-in-out infinite}
 .aviator-stage.is-flying .plane{opacity:1;animation:aviatorFlight 4.4s cubic-bezier(.4,.05,.2,1) infinite}
 .aviator-stage.is-flying .flight-area::after{animation:trailPulse 1.2s ease-in-out infinite}
