@@ -166,8 +166,10 @@ function betKey(){
 function setStagePhase(phase){
   const stage=$('#aviatorStage');
   if(!stage)return;
+  const next='is-'+phase;
+  if(stage.classList.contains(next))return;
   stage.classList.remove('is-open','is-locked','is-flying','is-crashed','is-waiting');
-  stage.classList.add('is-'+phase);
+  stage.classList.add(next);
 }
 
 function stopFlight(){}
@@ -813,6 +815,135 @@ function scheduleState(delay=nextPollDelay()){
   stateTimer=setTimeout(state,delay);
 }
 
+function applyReconnectPlayerState(player){
+  const bets=Array.isArray(player?.bets)?player.bets:[];
+  const roundId=Number(round?.id);
+  const current=Number.isFinite(roundId)
+    ?runtime.pickActiveBet(bets,roundId)
+    :null;
+  const latest=Number.isFinite(roundId)
+    ?bets
+      .filter(b=>Number(b?.round_id)===roundId)
+      .sort((a,b)=>Number(b?.id)-Number(a?.id))[0]||null
+    :null;
+
+  myBet=current?.id??null;
+  myStake=current?Number(current.stake)||0:0;
+  myAutoCashout=current?Number(current.auto_cashout_multiplier)||null:null;
+  lastRecoveredRoundId=round?.id??null;
+
+  if(latest?.status==='CASHED_OUT'){
+    clearPendingCashout();
+    myBet=null;
+    myStake=0;
+    myAutoCashout=null;
+    $('#aviatorMessage').textContent=cashoutMessage(
+      latest.cashout_source,
+      latest.cashout_multiplier,
+      latest.payout
+    );
+    preserveMessageOnNextRoundSync=true;
+  }else if(latest?.status==='LOST'){
+    clearPendingCashout();
+    myBet=null;
+    myStake=0;
+    myAutoCashout=null;
+    $('#aviatorMessage').textContent='Fim da rodada. A aposta foi perdida.';
+    preserveMessageOnNextRoundSync=true;
+  }else if(latest?.status==='REFUNDED'){
+    clearPendingCashout();
+    myBet=null;
+    myStake=0;
+    myAutoCashout=null;
+    $('#aviatorMessage').textContent='A aposta foi reembolsada pelo servidor.';
+    preserveMessageOnNextRoundSync=true;
+  }
+
+  renderTicket();
+  renderBetConfirmation();
+}
+
+async function reconnectState(){
+  if(stateBusy||!connectionOnline)return;
+  if(!playerToken()){
+    return state();
+  }
+
+  const controller=new AbortController();
+  stateController=controller;
+  stateBusy=true;
+
+  try{
+    const x=await JLApi.rpc(
+      'jl_aviator_reconnect',
+      {p_token:playerToken()},
+      {signal:controller.signal}
+    );
+
+    if(!runtime.shouldAcceptSnapshot(lastDisplaySeq,x?.display_seq)){
+      return;
+    }
+
+    lastDisplaySeq=Number(x.display_seq);
+    enabled=x.enabled!==false;
+
+    const previousId=round?.id??null;
+    const previousStatus=round?.status??null;
+    round=x.round||null;
+
+    const changedRound=previousId!==round?.id;
+    const justFinished=
+      previousStatus!==round?.status&&
+      ['CRASHED','SETTLED'].includes(round?.status);
+
+    if(changedRound){
+      fairnessProofRoundId=null;
+      fairnessProofData=null;
+      fairnessProofBusy=false;
+      stopFlight();
+      resetCashout();
+    }
+
+    applyReconnectPlayerState(x?.player);
+
+    if(justFinished)rememberCurrentResult();
+
+    if(changedRound||justFinished){
+      void loadHistory(true);
+    }else if(!historyRemoteLoaded&&!historyBusy){
+      void loadHistory(false);
+    }
+
+    if(renderMaintenanceView()){
+      stopOpenUiTick();
+      stopFlight();
+      resetCashout();
+      return;
+    }
+
+    renderCurrentRound();
+
+    if(round?.status==='FLYING'&&myBet){
+      $('#aviatorMessage').textContent=
+        'Ligação restabelecida. Voo atual: '+mul().toFixed(2)+'× · Aposta ativa.';
+    }else if(round?.status==='LOCKED'&&myBet){
+      $('#aviatorMessage').textContent=
+        'Ligação restabelecida. Aposta confirmada; aguardando descolagem.';
+    }
+  }catch(e){
+    if(e?.name==='AbortError')return;
+    if(navigator.onLine===false)setConnectionState(false);
+    const message=$('#aviatorMessage');
+    if(message)message.textContent=e.message;
+  }finally{
+    if(stateController===controller){
+      stateController=null;
+      stateBusy=false;
+      if(connectionOnline)scheduleState();
+    }
+  }
+}
+
 async function state(){
   if(stateBusy||!connectionOnline)return;
 
@@ -1048,17 +1179,14 @@ window.addEventListener('online',async()=>{
   clearTimeout(stateTimer);
   const message=$('#aviatorMessage');
   if(message)message.textContent='Ligação restabelecida. A sincronizar…';
-  const reconciled=await reconcilePendingCashout();
-  void loadHistory(true);
-  if(!reconciled)state();
-  else scheduleState(0);
+  await reconnectState();
 });
 
 document.addEventListener('visibilitychange',()=>{
   clearTimeout(stateTimer);
   if(!document.hidden){
     lastRecoveredRoundId=null;
-    state();
+    reconnectState();
   }else{
     stopOpenUiTick();
     scheduleState();
@@ -1068,6 +1196,6 @@ document.addEventListener('visibilitychange',()=>{
 renderHistory();
 setConnectionState(connectionOnline);
 if(connectionOnline){
-  reconcilePendingCashout().finally(()=>state());
+  reconnectState();
 }
 })();
