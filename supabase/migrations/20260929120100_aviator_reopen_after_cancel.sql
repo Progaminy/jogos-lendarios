@@ -50,8 +50,7 @@ begin
 
     return jsonb_build_object(
       'opened',true,
-      'round_id',r.id,
-      'after_cancelled',coalesce(r.status='CANCELLED',false)
+      'round_id',r.id
     );
   end if;
 
