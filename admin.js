@@ -194,15 +194,30 @@
               ?'BANCA MUITO BAIXA'
               :'PRONTO PARA TESTE';
       }
+      const draining=
+        !d.enabled&&['OPEN','LOCKED','FLYING','CRASHED'].includes(String(r.status||''));
+
       const closeBtn=$('aviatorMaintenanceClose');
       if(closeBtn){
         closeBtn.disabled=!d.enabled;
         closeBtn.textContent=d.enabled?'Fechar Aviator':'Aviator fechado';
         closeBtn.classList.toggle('danger',d.enabled);
       }
+
+      const reopenBtn=$('aviatorMaintenanceReopen');
+      if(reopenBtn){
+        reopenBtn.disabled=Boolean(d.enabled)||draining;
+        reopenBtn.textContent=d.enabled
+          ?'Aviator aberto'
+          :draining
+            ?'Aguarde a rodada atual'
+            :'Reabrir Aviator';
+        reopenBtn.classList.toggle('success',!d.enabled&&!draining);
+      }
+
       const oneRound=$('aviatorOneRoundTest');
       if(oneRound){
-        oneRound.disabled=Boolean(d.enabled);
+        oneRound.disabled=Boolean(d.enabled)||draining;
         oneRound.textContent=d.one_round_test?'Rodada de teste em curso':'Abrir 1 rodada de teste';
       }
       if($('aviatorBankLedgerWrap')?.open){
@@ -252,6 +267,55 @@
       await refreshAviatorAdmin();
     }
   });
+  $('aviatorMaintenanceReopen')?.addEventListener('click',async()=>{
+    const button=$('aviatorMaintenanceReopen');
+    try{
+      const d=await rpc('jl_aviator_admin_state',{p_token:state.token});
+      const r=d.round||{};
+      const draining=
+        !d.enabled&&['OPEN','LOCKED','FLYING','CRASHED'].includes(String(r.status||''));
+
+      if(d.enabled){
+        $('aviatorAdminMessage').textContent='Aviator já está aberto.';
+        await refreshAviatorAdmin();
+        return;
+      }
+
+      if(draining){
+        $('aviatorAdminMessage').textContent=
+          'Aguarde a rodada atual terminar antes de reabrir o Aviator.';
+        await refreshAviatorAdmin();
+        return;
+      }
+
+      const bankBalance=Number(d.bank?.balance)||0;
+      const exposure=Number(d.bank?.exposure_ratio)||0.5;
+      const referenceCeiling=1+(bankBalance*exposure/10);
+      const lowBankWarning=referenceCeiling<1.5
+        ?' Atenção: a banca atual está baixa e o teto estimado para 10 MZN é '+
+          referenceCeiling.toFixed(2)+'×.'
+        :'';
+
+      const ok=window.confirm(
+        'Reabrir Aviator agora? Novas rodadas e novas apostas voltarão a ser permitidas.'+
+        lowBankWarning
+      );
+      if(!ok)return;
+
+      if(button){
+        button.disabled=true;
+        button.textContent='Reabrindo…';
+      }
+
+      await rpc('jl_aviator_admin_reopen',{p_token:state.token});
+      $('aviatorAdminMessage').textContent='Aviator reaberto.';
+      await refreshAviatorAdmin();
+    }catch(e){
+      $('aviatorAdminMessage').textContent=e.message;
+      await refreshAviatorAdmin();
+    }
+  });
+
   $('aviatorOneRoundTest')?.addEventListener('click',async()=>{
     try{
       const d=await rpc('jl_aviator_admin_state',{p_token:state.token});
