@@ -5,7 +5,7 @@ update public.jl_aviator_settings
        one_round_test=false,
        updated_at=clock_timestamp()
  where id=true;
-do $
+do $concurrency$
 declare p uuid:=gen_random_uuid(); tok text:='aviator-regression-token'; rid bigint; b jsonb; co jsonb; co2 jsonb; rr public.jl_aviator_rounds; bal numeric;
 begin
  if public.jl_aviator_financial_ceiling(200000,100000,.5)<>2 then raise exception '200k/100k != 2x'; end if;
@@ -29,5 +29,5 @@ begin
  if bal<0 then raise exception 'bank became negative'; end if;
  select * into rr from public.jl_aviator_rounds where id=rid;
  if not rr.visual_extension or rr.effective_target<5 or rr.effective_target>135.7 then raise exception 'visual extension invalid'; end if;
-end $$;
+end $concurrency$;
 rollback;
