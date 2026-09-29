@@ -414,6 +414,13 @@ function cashoutMessage(source,multiplier,payout){
   return label+' em '+Number(multiplier).toFixed(2)+'× · '+money(payout);
 }
 
+function requestFinancialCashout(betId){
+  return JLApi.rpc('jl_aviator_cashout',{
+    p_token:playerToken(),
+    p_bet_id:Number(betId)
+  });
+}
+
 async function reconcilePendingCashout(){
   const pending=readPendingCashout();
   if(!pending||!connectionOnline||!playerToken())return false;
@@ -1114,10 +1121,7 @@ $('#cashoutBtn').addEventListener('click',async()=>{
   }
 
   try{
-    const r=await JLApi.rpc('jl_aviator_cashout',{
-      p_token:playerToken(),
-      p_bet_id:id
-    });
+    const r=await requestFinancialCashout(id);
 
     clearPendingCashout();
     $('#aviatorMessage').textContent=cashoutMessage(
