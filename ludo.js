@@ -300,9 +300,62 @@
   function ludoWinSeen(){try{return new Set(JSON.parse(localStorage.getItem(LUDO_WIN_SEEN_KEY)||'[]'));}catch{return new Set();}}
   function saveLudoWinSeen(seen){try{localStorage.setItem(LUDO_WIN_SEEN_KEY,JSON.stringify([...seen].slice(-100)));}catch{}}
   function ludoRoundTime(r){const raw=r?.finished_at||r?.ended_at||r?.updated_at||r?.created_at;if(!raw)return'hora não disponível';const d=new Date(raw);return Number.isNaN(d.getTime())?'hora não disponível':d.toLocaleTimeString('pt-MZ',{hour:'2-digit',minute:'2-digit'});}
-  function showLudoWinNotice(key,amount,roundLabel,roundTime){if(!els.winModal)return;els.winModalTitle.textContent='Parabéns!';const message=`Você venceu a partida de Ludo e ganhou ${money(amount)} MZN. Partida ${roundLabel} · hora ${roundTime}. O valor foi creditado no seu saldo.`;els.winModalMessage.textContent=message;announceLive(els.ludoVictoryLive,message,{force:true});els.winModal.dataset.winKey=key;els.winModal.classList.remove('hidden');document.body.classList.add('modal-open');}
+  function setLudoEndModalMode(winner){
+    if(!els.winModal)return;
+    const icon=els.winModal.querySelector('.win-modal-icon');
+    const eyebrow=els.winModal.querySelector('.eyebrow');
+    if(icon){
+      icon.textContent='🏆';
+      icon.classList.toggle('hidden',!winner);
+    }
+    if(eyebrow){
+      eyebrow.textContent=winner?'VITÓRIA':'';
+      eyebrow.classList.toggle('hidden',!winner);
+    }
+    els.winModalMessage?.classList.toggle('hidden',!winner);
+  }
+  function showLudoWinNotice(key,amount,roundLabel,roundTime){
+    if(!els.winModal)return;
+    setLudoEndModalMode(true);
+    els.winModalTitle.textContent='Parabéns!';
+    const message=`Você venceu a partida de Ludo e ganhou ${money(amount)} MZN. Partida ${roundLabel} · hora ${roundTime}. O valor foi creditado no seu saldo.`;
+    els.winModalMessage.textContent=message;
+    announceLive(els.ludoVictoryLive,message,{force:true});
+    els.winModal.dataset.winKey=key;
+    els.winModal.classList.remove('hidden');
+    document.body.classList.add('modal-open');
+  }
+  function showLudoLossNotice(key){
+    if(!els.winModal)return;
+    setLudoEndModalMode(false);
+    els.winModalTitle.textContent='Fim do Jogo';
+    els.winModalMessage.textContent='';
+    announceLive(els.ludoVictoryLive,'Fim do Jogo',{force:true});
+    els.winModal.dataset.winKey=key;
+    els.winModal.classList.remove('hidden');
+    document.body.classList.add('modal-open');
+  }
   function closeLudoWinNotice(){if(!els.winModal)return;const key=els.winModal.dataset.winKey;if(key){const seen=ludoWinSeen();seen.add(key);saveLudoWinSeen(seen);}els.winModal.classList.add('hidden');document.body.classList.remove('modal-open');delete els.winModal.dataset.winKey;}
-  function checkLudoWinNotice(){const r=roomData();if(!r||r.status!=='finished'||!els.winModal?.classList.contains('hidden'))return;const payout=(state.room?.payouts||[]).find(p=>p.player_id===me()&&Number(p.net||0)>0);if(!payout)return;const key=`${r.id||r.code||'room'}:${me()}:${payout.net}`;if(ludoWinSeen().has(key))return;window.JLNotifications?.push({id:`ludo-win:${key}`,title:'Vitória no Ludo',message:`Você ganhou ${money(payout.net)} MZN na partida ${r.code||r.id||'—'}.`,type:'win',href:'./ludo.html#resultPanel',createdAt:r.finished_at||r.ended_at||r.updated_at||new Date().toISOString()});showLudoWinNotice(key,payout.net,r.code||r.id||'—',ludoRoundTime(r));}
+  function checkLudoWinNotice(){
+    const r=roomData();
+    if(!r||r.status!=='finished'||!els.winModal?.classList.contains('hidden'))return;
+    const mine=myRoomPlayer();
+    const won=r.mode==='partners'
+      ? Boolean(mine)&&String(mine.team??'')===String(r.winner_team??'')
+      : String(r.winner_player_id??'')===String(me()??'');
+    if(!won){
+      const lossKey=`${r.id||r.code||'room'}:${me()}:loss`;
+      if(ludoWinSeen().has(lossKey))return;
+      showLudoLossNotice(lossKey);
+      return;
+    }
+    const payout=(state.room?.payouts||[]).find(p=>p.player_id===me()&&Number(p.net||0)>0);
+    if(!payout)return;
+    const key=`${r.id||r.code||'room'}:${me()}:${payout.net}`;
+    if(ludoWinSeen().has(key))return;
+    window.JLNotifications?.push({id:`ludo-win:${key}`,title:'Vitória no Ludo',message:`Você ganhou ${money(payout.net)} MZN na partida ${r.code||r.id||'—'}.`,type:'win',href:'./ludo.html#resultPanel',createdAt:r.finished_at||r.ended_at||r.updated_at||new Date().toISOString()});
+    showLudoWinNotice(key,payout.net,r.code||r.id||'—',ludoRoundTime(r));
+  }
   const rpc=(name,args={})=>window.JLApi.rpc(name,args);
 
   const ludoRoomState=window.JLLudoRoomState.create(()=>state.token);
