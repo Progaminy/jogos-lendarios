@@ -25,7 +25,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="stylesheet" href="./ludo.css?v=20260929-11">
+  <link rel="stylesheet" href="./ludo.css?v=20260929-12">
   <link rel="stylesheet" href="./site-nav.css?v=20260928-20">
   <style id="ludo-critical-mobile-fix">
     @media (max-width:600px){
@@ -156,11 +156,13 @@
             <div class="quick-start-step" aria-label="Escolha o valor por jogador">
               <span class="quick-step-icon quick-money-icon" aria-hidden="true">MZN</span>
               <div class="ludo-stake-stepper" data-stake-input="createBet" role="group" aria-label="Valor por jogador">
-                <button type="button" data-ludo-stake-delta="-1" aria-label="Diminuir valor">−</button>
-                <output id="createBetDisplay" class="ludo-stake-display" for="createBet" aria-live="polite"><strong>10</strong><small>MZN</small></output>
-                <button type="button" data-ludo-stake-delta="1" aria-label="Aumentar valor">+</button>
+                <button type="button" data-ludo-stake-delta="-1" aria-label="Diminuir 1 MZN">−</button>
+                <label class="ludo-stake-edit" for="createBet">
+                  <input id="createBet" type="number" min="10" step="1" value="10" inputmode="numeric" aria-label="Valor por jogador em MZN">
+                  <span>MZN</span>
+                </label>
+                <button type="button" data-ludo-stake-delta="1" aria-label="Aumentar 1 MZN">+</button>
               </div>
-              <input id="createBet" type="hidden" value="10">
             </div>
 
             <div class="quick-mini-options">
@@ -363,7 +365,7 @@
   <script src="./js/platform/feature-loader.js?v=20260929-1" defer></script>
   <script src="./logout-confirm.js?v=20260924-2" defer></script>
   <script src="./ludo-sync.js?v=20260928-1" defer></script>
-  <script src="./ludo.js?v=20260929-8" defer></script>
+  <script src="./ludo.js?v=20260929-9" defer></script>
   <script src="./js/ui/collapse.js?v=20260928-2" defer></script>
   <script src="./js/ludo/policy.js?v=20260928-2" defer></script>
 </body>
