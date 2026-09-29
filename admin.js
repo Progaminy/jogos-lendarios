@@ -194,7 +194,12 @@
               ?'BANCA MUITO BAIXA'
               :'PRONTO PARA TESTE';
       }
-      const mt=$('aviatorMaintenanceToggle'); if(mt){mt.textContent=d.enabled?'Fechar Aviator · manutenção':'Abrir Aviator';mt.classList.toggle('danger',d.enabled);mt.classList.toggle('success',!d.enabled);}
+      const closeBtn=$('aviatorMaintenanceClose');
+      if(closeBtn){
+        closeBtn.disabled=!d.enabled;
+        closeBtn.textContent=d.enabled?'Fechar Aviator':'Aviator fechado';
+        closeBtn.classList.toggle('danger',d.enabled);
+      }
       const oneRound=$('aviatorOneRoundTest');
       if(oneRound){
         oneRound.disabled=Boolean(d.enabled);
@@ -216,26 +221,36 @@
     }
   });
 
-  $('aviatorMaintenanceToggle')?.addEventListener('click',async()=>{
+  $('aviatorMaintenanceClose')?.addEventListener('click',async()=>{
+    const button=$('aviatorMaintenanceClose');
     try{
       const d=await rpc('jl_aviator_admin_state',{p_token:state.token});
-      const enabled=!d.enabled;
-      if(enabled){
-        const bankBalance=Number(d.bank?.balance)||0;
-        const exposure=Number(d.bank?.exposure_ratio)||0.5;
-        const referenceCeiling=1+(bankBalance*exposure/10);
-        if(referenceCeiling<1.5){
-          const ok=window.confirm(
-            'A banca está muito baixa. Com 10 MZN apostados, o teto estimado é '+
-            referenceCeiling.toFixed(2)+'×. Abrir o Aviator mesmo assim?'
-          );
-          if(!ok)return;
-        }
+      if(!d.enabled){
+        $('aviatorAdminMessage').textContent='Aviator já está fechado.';
+        await refreshAviatorAdmin();
+        return;
       }
-      await rpc('jl_aviator_admin_set_enabled',{p_token:state.token,p_enabled:enabled});
-      $('aviatorAdminMessage').textContent=enabled?'Aviator aberto.':'Aviator fechado para manutenção.';
+
+      const ok=window.confirm(
+        'Fechar Aviator agora? Novas apostas e novas rodadas serão bloqueadas imediatamente. '+
+        'Se houver uma rodada com dinheiro em curso, ela terminará com segurança.'
+      );
+      if(!ok)return;
+
+      if(button){
+        button.disabled=true;
+        button.textContent='Fechando…';
+      }
+
+      const result=await rpc('jl_aviator_admin_close',{p_token:state.token});
+      $('aviatorAdminMessage').textContent=result.draining
+        ?'Aviator fechado. A rodada atual terminará com segurança.'
+        :'Aviator fechado para manutenção.';
       await refreshAviatorAdmin();
-    }catch(e){$('aviatorAdminMessage').textContent=e.message}
+    }catch(e){
+      $('aviatorAdminMessage').textContent=e.message;
+      await refreshAviatorAdmin();
+    }
   });
   $('aviatorOneRoundTest')?.addEventListener('click',async()=>{
     try{
