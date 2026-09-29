@@ -11,7 +11,7 @@ update public.jl_aviator_settings
        updated_at=clock_timestamp()
  where id=true;
 
-do $$
+do $locktest$
 declare
   p1 uuid;
   p2 uuid;
@@ -201,6 +201,6 @@ begin
     raise exception 'rodada deveria terminar SETTLED';
   end if;
 end
-$;
+$locktest$;
 
 rollback;
