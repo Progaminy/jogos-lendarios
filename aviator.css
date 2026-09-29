@@ -29,22 +29,45 @@ body{background:#070a10}
 .proof{margin-top:12px;font-size:12px;opacity:.72}
 .proof summary{cursor:pointer;font-weight:800;color:#cbd5e1;user-select:none}
 .proof code{display:block;margin-top:8px;white-space:normal;overflow-wrap:anywhere;line-height:1.45;color:#9eabc0}
+
+.aviator-history{padding:16px 18px;overflow:hidden}
+.aviator-section-head{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-bottom:12px}
+.aviator-section-head>div{display:grid;gap:2px}
+.aviator-section-head span{font-size:.66rem;font-weight:950;letter-spacing:.13em;color:#f4bd42}
+.aviator-section-head strong{font-size:1.05rem}
+.aviator-section-head small{font-size:.72rem;color:#7f8aa0}
+.aviator-history-strip{display:flex;gap:8px;overflow-x:auto;overscroll-behavior-inline:contain;scroll-snap-type:x proximity;padding-bottom:3px;scrollbar-width:none}
+.aviator-history-strip::-webkit-scrollbar{display:none}
+.aviator-history-chip{flex:0 0 auto;min-width:72px;padding:9px 11px;border:1px solid rgba(255,255,255,.08);border-radius:12px;background:rgba(255,255,255,.035);display:grid;gap:2px;scroll-snap-align:start}
+.aviator-history-chip strong{font-size:.98rem;font-variant-numeric:tabular-nums;color:#f4bd42}
+.aviator-history-chip small{font-size:.62rem;color:#7f8aa0}
+.aviator-history-empty{font-size:.8rem;color:#7f8aa0;padding:4px 0}
+
 .aviator-controls{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .aviator-controls form{display:flex;gap:10px;align-items:end}
 .aviator-controls .form-message{grid-column:1/-1;min-height:1.2em;margin:0}
 .aviator-controls .button:disabled{opacity:.46;cursor:not-allowed;transform:none}
 #cashoutBtn:not(:disabled){box-shadow:0 0 0 1px rgba(78,213,138,.25),0 10px 28px rgba(78,213,138,.16)}
+.aviator-ticket{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:12px;border:1px solid rgba(78,213,138,.20);border-radius:14px;background:rgba(78,213,138,.045)}
+.aviator-ticket>div{min-width:0;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.025)}
+.aviator-ticket span,.aviator-ticket strong{display:block}
+.aviator-ticket span{font-size:.61rem;font-weight:900;letter-spacing:.09em;color:#7f8aa0}
+.aviator-ticket strong{margin-top:4px;font-size:.95rem;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.aviator-ticket>div:last-child strong{color:#61db99}
+
 .aviator-maintenance .aviator-stage{border-color:rgba(244,181,31,.35)}
 .aviator-maintenance #betBtn{filter:grayscale(.35);opacity:.46}
 .aviator-maintenance-notice{font-size:clamp(2rem,8vw,4.8rem);font-weight:950;letter-spacing:-.045em;text-align:center}
 .aviator-maintenance-only{min-height:100vh;display:grid;place-items:center}
-.aviator-maintenance-only .topbar,.aviator-maintenance-only .aviator-stage,.aviator-maintenance-only .aviator-controls{display:none!important}
+.aviator-maintenance-only .topbar,.aviator-maintenance-only .aviator-stage,.aviator-maintenance-only .aviator-history,.aviator-maintenance-only .aviator-controls{display:none!important}
 .aviator-maintenance-only .aviator-shell{width:min(100%,980px);padding:24px}
 .aviator-maintenance-only .aviator-maintenance-notice{display:block!important}
 .aviator-maintenance-notice[hidden]{display:none}
+
 @keyframes aviatorIdle{0%,100%{transform:translate3d(0,0,0) rotate(-13deg)}50%{transform:translate3d(0,-8px,0) rotate(-11deg)}}
 @keyframes aviatorFlight{0%{transform:translate3d(0,0,0) rotate(-13deg)}35%{transform:translate3d(18vw,-36px,0) rotate(-16deg)}70%{transform:translate3d(38vw,-104px,0) rotate(-20deg)}100%{transform:translate3d(58vw,-178px,0) rotate(-24deg)}}
 @keyframes trailPulse{0%,100%{opacity:.3;transform:scaleX(.45)}50%{opacity:.75;transform:scaleX(1)}}
+
 @media(max-width:650px){
   .aviator-shell{padding:12px}
   .aviator-stage{padding:14px;min-height:390px}
@@ -53,11 +76,15 @@ body{background:#070a10}
   .aviator-state{grid-area:state;justify-self:end}
   .aviator-clock{grid-area:clock;display:flex;justify-content:space-between;align-items:center;padding-top:4px;text-align:left}
   .flight-area{height:300px}
+  .aviator-history{padding:14px}
   .aviator-controls{grid-template-columns:1fr}
   .aviator-controls form{display:grid}
   .aviator-controls .form-message{grid-column:auto}
+  .aviator-ticket{grid-column:auto;grid-template-columns:1fr 1fr}
+  .aviator-ticket>div:last-child{grid-column:1/-1}
   @keyframes aviatorFlight{0%{transform:translate3d(0,0,0) rotate(-13deg)}35%{transform:translate3d(22vw,-34px,0) rotate(-16deg)}70%{transform:translate3d(44vw,-86px,0) rotate(-20deg)}100%{transform:translate3d(64vw,-142px,0) rotate(-24deg)}}
 }
+
 @media(prefers-reduced-motion:reduce){
   .plane,.aviator-stage.is-open .plane,.aviator-stage.is-flying .plane,.aviator-stage.is-flying .flight-area::after{animation:none!important}
 }
