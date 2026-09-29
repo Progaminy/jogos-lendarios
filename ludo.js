@@ -336,26 +336,40 @@
       setPreferredLudoColor(b.dataset.ludoColor);
     });
   }
+  const LUDO_STAKE_STEPS=[10,20,50,100,200,500,1000,2000,5000];
+  function stakeStepIndex(value){
+    const n=Number(value);
+    const exact=LUDO_STAKE_STEPS.indexOf(n);
+    if(exact>=0)return exact;
+    let best=0;
+    for(let i=1;i<LUDO_STAKE_STEPS.length;i++){
+      if(Math.abs(LUDO_STAKE_STEPS[i]-n)<Math.abs(LUDO_STAKE_STEPS[best]-n))best=i;
+    }
+    return best;
+  }
   function syncStakePicker(inputId){
     const input=$(inputId);
-    const picker=document.querySelector(`.ludo-stake-picker[data-stake-input="${inputId}"]`);
+    const picker=document.querySelector(`.ludo-stake-stepper[data-stake-input="${inputId}"]`);
     if(!input||!picker)return;
-    picker.querySelectorAll('[data-ludo-stake]').forEach(b=>{
-      const active=String(b.dataset.ludoStake)===String(input.value);
-      b.classList.toggle('active',active);
-      b.setAttribute('aria-pressed',active?'true':'false');
-    });
+    const index=stakeStepIndex(input.value);
+    input.value=String(LUDO_STAKE_STEPS[index]);
+    const display=picker.querySelector('.ludo-stake-display strong');
+    if(display)display.textContent=Number(input.value).toLocaleString('pt-MZ');
+    picker.querySelector('[data-ludo-stake-delta="-1"]')?.toggleAttribute('disabled',index===0);
+    picker.querySelector('[data-ludo-stake-delta="1"]')?.toggleAttribute('disabled',index===LUDO_STAKE_STEPS.length-1);
   }
   function wireStakePicker(inputId){
     const input=$(inputId);
-    const picker=document.querySelector(`.ludo-stake-picker[data-stake-input="${inputId}"]`);
+    const picker=document.querySelector(`.ludo-stake-stepper[data-stake-input="${inputId}"]`);
     if(!input||!picker)return;
     picker.addEventListener('click',e=>{
-      const b=e.target.closest('[data-ludo-stake]');
+      const b=e.target.closest('[data-ludo-stake-delta]');
       if(!b)return;
-      input.value=String(b.dataset.ludoStake);
+      const current=stakeStepIndex(input.value);
+      const next=Math.max(0,Math.min(LUDO_STAKE_STEPS.length-1,current+Number(b.dataset.ludoStakeDelta||0)));
+      if(next===current)return;
+      input.value=String(LUDO_STAKE_STEPS[next]);
       syncStakePicker(inputId);
-      input.dispatchEvent(new Event('change',{bubbles:true}));
     });
     syncStakePicker(inputId);
   }
@@ -937,7 +951,7 @@
   els.registerInviteCode?.addEventListener('input',()=>{if(els.registerInviteStatus){els.registerInviteStatus.textContent='';els.registerInviteStatus.style.color='';}});
   els.registerForm.addEventListener('submit',async e=>{e.preventDefault();if(els.registerPin.value!==els.registerPinConfirm.value)return setAuthMessage('Os PINs não coincidem.','error');if(!(await validateInviteCodeInput()))return setAuthMessage('Verifique o código de convite antes de continuar.','error');try{setAuthMessage('Criando conta…');const res=await rpc('jl_register_player',{p_name:els.registerName.value.trim(),p_phone:els.registerPhone.value.trim(),p_pin:els.registerPin.value.trim(),p_invite_code:els.registerInviteCode?.value.trim()||null});saveToken(res.token);closeAuth();await loadStatus();showToast(res.referral?'Conta criada com código de convite validado.':'Conta criada. O seu código Ludo foi atribuído pela casa.','success');}catch(err){setAuthMessage(err.message,'error');}});
   wirePlayerCountPicker('createPlayers');wirePlayerCountPicker('queuePlayers');wireColorPicker();wireStakePicker('createBet');wireQuickModePicker();
-  els.createBet?.addEventListener('change',()=>{syncStakePicker('createBet');const amount=wholeStake(els.createBet.value);if(amount!==null)ensureLudoFunds(amount,'criar uma sala com este valor').catch(err=>showToast(err.message,'error'));});
+  els.createBet?.addEventListener('change',()=>syncStakePicker('createBet'));
   els.queueBet?.addEventListener('change',()=>{const amount=wholeStake(els.queueBet.value);if(amount!==null)ensureLudoFunds(amount,'entrar na fila com este valor').catch(err=>showToast(err.message,'error'));});
   els.rematchBet?.addEventListener('change',()=>{const amount=wholeStake(els.rematchBet.value,'A nova aposta');if(amount!==null)ensureLudoFunds(amount,'repetir o jogo com este valor').catch(err=>showToast(err.message,'error'));});
   els.createPlayers.addEventListener('change',()=>{syncPlayerCountPicker('createPlayers');if(els.createMode.value==='partners'&&els.createPlayers.value!=='4')els.createMode.value='solo';syncQuickModePicker();});els.createMode.addEventListener('change',()=>{if(els.createMode.value==='partners')setPlayerCount('createPlayers',4);syncQuickModePicker();});els.queuePlayers.addEventListener('change',()=>{syncPlayerCountPicker('queuePlayers');if(els.queueMode.value==='partners'&&els.queuePlayers.value!=='4')els.queueMode.value='solo';});els.queueMode.addEventListener('change',()=>{if(els.queueMode.value==='partners')setPlayerCount('queuePlayers',4);});
