@@ -32,6 +32,8 @@ body{background:#070a10}
 .proof{margin-top:12px;font-size:12px;opacity:.72}
 .proof summary{cursor:pointer;font-weight:800;color:#cbd5e1;user-select:none}
 .proof code{display:block;margin-top:8px;white-space:normal;overflow-wrap:anywhere;line-height:1.45;color:#9eabc0}
+.proof code[data-valid="true"]{color:#61db99}
+.proof code[data-valid="false"]{color:#ff8585}
 
 .aviator-history{padding:16px 18px;overflow:hidden}
 .aviator-section-head{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-bottom:12px}
