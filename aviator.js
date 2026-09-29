@@ -332,7 +332,7 @@ function renderHistory(){
 
   wrap.innerHTML=rows.map((item,index)=>
     '<span class="aviator-history-value" title="Rodada #'+item.id+'">'+
-      item.crash_multiplier.toFixed(2)+'×'+
+      item.crash_multiplier.toFixed(2)+'x'+
     '</span>'+
     (index<rows.length-1
       ?'<span class="aviator-history-separator" aria-hidden="true">·</span>'
