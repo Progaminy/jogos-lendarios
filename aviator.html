@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0a0d14">
   <title>Aviator Lendário — Jogos Lendários</title>
   <link rel="stylesheet" href="./styles.css?v=20260929">
-  <link rel="stylesheet" href="./aviator.css?v=20260929-4">
+  <link rel="stylesheet" href="./aviator.css?v=20260929-5">
 </head>
 <body>
   <header class="topbar">
@@ -36,6 +36,7 @@
 
       <div id="flightArea" class="flight-area">
         <div class="flight-grid" aria-hidden="true"></div>
+
         <div id="preflight" class="preflight">
           <span>PRÓXIMA DESCOLAGEM</span>
           <strong id="preflightCountdown">—</strong>
@@ -61,6 +62,17 @@
       </details>
     </section>
 
+    <section id="aviatorHistoryCard" class="card aviator-history">
+      <div class="aviator-section-head">
+        <div>
+          <span>ÚLTIMAS RODADAS</span>
+          <strong>Histórico</strong>
+        </div>
+        <small id="historyStatus">A carregar…</small>
+      </div>
+      <div id="aviatorHistory" class="aviator-history-strip" aria-live="polite"></div>
+    </section>
+
     <section class="card aviator-controls">
       <form id="aviatorBetForm">
         <label class="field">
@@ -74,6 +86,22 @@
       </form>
 
       <button id="cashoutBtn" class="button success large" type="button" disabled>Cash-out</button>
+
+      <div id="activeBetPanel" class="aviator-ticket hidden">
+        <div>
+          <span>MINHA APOSTA</span>
+          <strong id="activeBetStake">0,00 MZN</strong>
+        </div>
+        <div>
+          <span>MULTIPLICADOR</span>
+          <strong id="activeBetMultiplier">—</strong>
+        </div>
+        <div>
+          <span>RETORNO ESTIMADO</span>
+          <strong id="activeBetPayout">0,00 MZN</strong>
+        </div>
+      </div>
+
       <p id="aviatorMessage" class="form-message" aria-live="polite"></p>
     </section>
   </main>
@@ -82,6 +110,6 @@
   <script src="./js/api/rpc.js"></script>
   <script src="./js/auth/session.js"></script>
   <script src="./js/aviator/runtime.js?v=20260929-1"></script>
-  <script src="./aviator.js?v=20260929-5" defer></script>
+  <script src="./aviator.js?v=20260929-6" defer></script>
 </body>
 </html>
