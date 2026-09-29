@@ -142,3 +142,10 @@ test('cash-out ambíguo é persistido e reconciliado sem retry automático',()=>
   const reconcileBlock=js.match(/async function reconcilePendingCashout\(\)[\s\S]*?\n}\n\nasync function recover/)?.[0]||'';
   assert.doesNotMatch(reconcileBlock,/jl_aviator_cashout/);
 });
+
+
+test('confirmação reconciliada sobrevive à primeira sincronização de rodada',()=>{
+  const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
+  assert.match(js,/preserveMessageOnNextRoundSync=true/);
+  assert.match(js,/if\(preserveMessageOnNextRoundSync\)preserveMessageOnNextRoundSync=false/);
+});

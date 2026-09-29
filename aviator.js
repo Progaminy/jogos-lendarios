@@ -17,6 +17,7 @@ let cashingOut=false;
 let openUiTimer=0;
 let connectionOnline=navigator.onLine!==false;
 let clockSamples=[];
+let preserveMessageOnNextRoundSync=false;
 let recentResults=[];
 let historyBusy=false;
 let historyRemoteLoaded=false;
@@ -377,6 +378,7 @@ async function reconcilePendingCashout(){
       renderTicket();
       $('#aviatorMessage').textContent=
         'Cash-out confirmado em '+Number(bet.cashout_multiplier).toFixed(2)+'× · '+money(bet.payout);
+      preserveMessageOnNextRoundSync=true;
       return true;
     }
 
@@ -399,6 +401,7 @@ async function reconcilePendingCashout(){
       resetCashout();
       renderTicket();
       $('#aviatorMessage').textContent='Fim da rodada. Cash-out não disponível.';
+      preserveMessageOnNextRoundSync=true;
       return true;
     }
 
@@ -409,6 +412,7 @@ async function reconcilePendingCashout(){
       resetCashout();
       renderTicket();
       $('#aviatorMessage').textContent='A aposta foi reembolsada pelo servidor.';
+      preserveMessageOnNextRoundSync=true;
       return true;
     }
 
@@ -645,7 +649,10 @@ async function state(){
       resetCashout();
       renderTicket();
       const message=$('#aviatorMessage');
-      if(message)message.textContent='';
+      if(message){
+        if(preserveMessageOnNextRoundSync)preserveMessageOnNextRoundSync=false;
+        else message.textContent='';
+      }
     }
 
     if(round&&playerToken()&&(changedRound||lastRecoveredRoundId!==round.id)){
