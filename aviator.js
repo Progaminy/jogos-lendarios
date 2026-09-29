@@ -330,14 +330,22 @@ function renderHistory(){
     return;
   }
 
-  wrap.innerHTML=rows.map(item=>
-    '<div class="aviator-history-chip" title="Rodada #'+item.id+'">'+
-      '<strong>'+item.crash_multiplier.toFixed(2)+'×</strong>'+
-      '<small>#'+item.id+'</small>'+
-    '</div>'
+  wrap.innerHTML=rows.map((item,index)=>
+    '<span class="aviator-history-value" title="Rodada #'+item.id+'">'+
+      item.crash_multiplier.toFixed(2)+'×'+
+    '</span>'+
+    (index<rows.length-1
+      ?'<span class="aviator-history-separator" aria-hidden="true">·</span>'
+      :'')
   ).join('');
 
-  status.textContent=historyRemoteLoaded?'Atualizado':'Nesta sessão';
+  wrap.setAttribute(
+    'aria-label',
+    'Multiplicadores recentes: '+
+      rows.map(item=>item.crash_multiplier.toFixed(2)+' vezes').join(', ')
+  );
+
+  status.textContent=rows.length+' recentes';
 }
 
 function rememberCurrentResult(){
