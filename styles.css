@@ -1007,3 +1007,77 @@ h2 { margin: 0; font-size: clamp(1.25rem, 2.5vw, 1.75rem); letter-spacing: -.025
   .aviator-bank-ledger-row { grid-template-columns: minmax(0,1fr) auto; }
   .aviator-bank-ledger-row time { grid-column: 1/-1; text-align: left; margin-top: 0; }
 }
+
+
+.aviator-house-indicator{
+  display:grid;
+  grid-template-columns:minmax(170px,.8fr) 2.2fr;
+  gap:14px;
+  margin:14px 0 22px;
+  padding:16px;
+  border:1px solid var(--line);
+  border-radius:16px;
+  background:rgba(255,255,255,.025);
+}
+.aviator-house-status{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  min-height:112px;
+  padding:16px;
+  border-radius:13px;
+  border:1px solid rgba(78,213,138,.28);
+  background:rgba(78,213,138,.07);
+}
+.aviator-house-status span,
+.aviator-house-metrics span{
+  color:var(--muted);
+  font-size:.72rem;
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+}
+.aviator-house-status strong{
+  margin-top:6px;
+  font-size:1.65rem;
+}
+.aviator-house-status small{
+  margin-top:7px;
+  color:var(--muted);
+}
+.aviator-house-metrics{
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:10px;
+}
+.aviator-house-metrics>div{
+  min-width:0;
+  padding:14px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:rgba(255,255,255,.02);
+}
+.aviator-house-metrics strong{
+  display:block;
+  margin-top:7px;
+  font-size:1.05rem;
+  overflow-wrap:anywhere;
+}
+.aviator-house-indicator[data-state="ATTENTION"] .aviator-house-status{
+  border-color:rgba(255,190,72,.35);
+  background:rgba(255,190,72,.08);
+  color:#ffd27a;
+}
+.aviator-house-indicator[data-state="CRITICAL"] .aviator-house-status{
+  border-color:rgba(255,116,116,.4);
+  background:rgba(255,116,116,.09);
+  color:#ff9c9c;
+}
+@media(max-width:860px){
+  .aviator-house-indicator{grid-template-columns:1fr}
+  .aviator-house-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:520px){
+  .aviator-house-metrics{grid-template-columns:1fr 1fr}
+  .aviator-house-metrics>div:last-child{grid-column:1/-1}
+}
