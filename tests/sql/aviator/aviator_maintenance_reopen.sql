@@ -37,7 +37,7 @@ begin
          updated_at=now()
    where id=true;
 
-  v_tick:=public.jl_aviator_engine_tick();
+  v_tick:=public.jl_process_game_engine_tick()->'aviator';
 
   if coalesce((v_tick->>'opened')::boolean,false) is distinct from true then
     raise exception 'reabrir apos CANCELLED deve criar nova rodada: %',v_tick;
