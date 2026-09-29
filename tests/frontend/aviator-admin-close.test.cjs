@@ -22,12 +22,11 @@ test('admin usa botão dedicado Fechar Aviator e não toggle genérico',()=>{
   assert.match(js,/closeBtn\.disabled=!d\.enabled/);
   assert.match(js,/d\.enabled\?'Fechar Aviator':'Aviator fechado'/);
 
-  const closeBlock=js.match(
-    /\$\('aviatorMaintenanceClose'\)\?\.addEventListener\('click',[\s\S]*?\n  \}\);/
-  )?.[0]||'';
-
-  assert.match(closeBlock,/jl_aviator_admin_close/);
-  assert.doesNotMatch(closeBlock,/window\.confirm/);
-  assert.doesNotMatch(closeBlock,/p_enabled:true/);
-  assert.doesNotMatch(closeBlock,/jl_aviator_admin_set_enabled/);
+  assert.match(js,/async function closeAviatorFromAdmin/);
+  assert.match(js,/window\.JLCloseAviator=closeAviatorFromAdmin/);
+  assert.match(js,/document\.addEventListener\('click'/);
+  assert.match(js,/jl_aviator_admin_close/);
+  assert.match(js,/Falha ao fechar Aviator:/);
+  assert.doesNotMatch(js,/Fechar Aviator agora\?/);
+  assert.doesNotMatch(js,/jl_aviator_admin_set_enabled\(.*true/);
 });
