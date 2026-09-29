@@ -258,9 +258,15 @@
       }
 
       const result=await rpc('jl_aviator_admin_close',{p_token:state.token});
-      $('aviatorAdminMessage').textContent=result.draining
-        ?'Aviator fechado. A rodada atual terminará com segurança.'
-        :'Aviator fechado para manutenção.';
+      const refunded=Number(result.refunded_bets)||0;
+      const refundedTotal=Number(result.refunded_total)||0;
+      $('aviatorAdminMessage').textContent=refunded>0
+        ?'Aviator fechado. '+refunded+' aposta'+(refunded===1?'':'s')+
+          ' reembolsada'+(refunded===1?'':'s')+
+          ' automaticamente ('+money(refundedTotal)+' MZN).'
+        :result.draining
+          ?'Aviator fechado. A rodada atual terminará com segurança.'
+          :'Aviator fechado para manutenção.';
       await refreshAviatorAdmin();
     }catch(e){
       $('aviatorAdminMessage').textContent=e.message;
