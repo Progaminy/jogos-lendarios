@@ -930,7 +930,7 @@ $('#aviatorBetForm').addEventListener('submit',async e=>{
     });
 
     myBet=r.bet_id;
-    myStake=Number(r.stake)||amount;
+    myStake=Number(r.stake);
     myAutoCashout=Number(r.auto_cashout_multiplier)||null;
     lastRecoveredRoundId=round.id;
     renderTicket();
