@@ -2,6 +2,7 @@
 
 ## Núcleo financeiro
 
+- A aposta mínima é **0,50 MZN**; valores monetários são tratados com 2 casas decimais.
 - Todas as apostas válidas são aceites; o teto não é usado para rejeitar uma aposta.
 - A banca do Aviator é separada do dinheiro apostado pelos jogadores.
 - A reserva financeira da rodada é 50% do saldo da banca no instante do fecho.
