@@ -100,6 +100,8 @@
 
   let aviatorBankLedgerBusy=false;
   let aviatorBankLedgerLastLoad=0;
+  let aviatorAuditBusy=false;
+  let aviatorAuditLastLoad=0;
 
   function aviatorBankMovementLabel(type){
     if(type==='cashout')return 'Lucro pago no cash-out';
@@ -154,6 +156,98 @@
       if(status)status.textContent='Erro';
     }finally{
       aviatorBankLedgerBusy=false;
+    }
+  }
+
+  function aviatorAdminActionLabel(action){
+    const labels={
+      'aviator.admin.closed':'Fechou o Aviator',
+      'aviator.admin.reopened':'Reabriu o Aviator',
+      'aviator.admin.bank_adjusted':'Ajustou a banca',
+      'aviator.admin.one_round_test_started':'Iniciou rodada de teste',
+      'aviator.round_admin_cancelled':'Cancelou rodada e reembolsou',
+      'aviator.maintenance_changed':'Alterou manutenção',
+      'aviator.bank_adjusted':'Ajustou a banca',
+      'aviator.one_round_test_started':'Iniciou rodada de teste',
+      'aviator.maintenance':'Alterou manutenção',
+      'aviator.maintenance_preflight_refunded':'Resolveu manutenção/reembolso'
+    };
+    return labels[action]||String(action||'Ação administrativa');
+  }
+
+  function aviatorAuditStateText(stateObj){
+    const data=stateObj&&typeof stateObj==='object'?stateObj:{};
+    const parts=[];
+    if(Object.hasOwn(data,'enabled'))parts.push(data.enabled?'Aviator aberto':'Aviator fechado');
+    if(Object.hasOwn(data,'one_round_test'))parts.push(data.one_round_test?'teste ativo':'teste desligado');
+    if(Object.hasOwn(data,'balance'))parts.push('banca '+money(data.balance)+' MZN');
+    if(data.status)parts.push('estado '+String(data.status));
+    if(Object.hasOwn(data,'refundedBets'))parts.push(String(data.refundedBets)+' reembolso(s)');
+    return parts.join(' · ')||'—';
+  }
+
+  function aviatorAuditDetailText(item){
+    const d=item.details||{};
+    const parts=[];
+    if(d.reason)parts.push('Motivo: '+d.reason);
+    if(d.delta!==undefined)parts.push('Ajuste: '+money(d.delta)+' MZN');
+    if(d.refundedBets!==undefined)parts.push('Reembolsos: '+String(d.refundedBets));
+    if(d.refundedTotal!==undefined)parts.push('Total devolvido: '+money(d.refundedTotal)+' MZN');
+    if(d.cashoutsKept!==undefined)parts.push('Cash-outs preservados: '+String(d.cashoutsKept));
+    return parts.join(' · ');
+  }
+
+  async function refreshAviatorAudit(force=false){
+    const wrap=$('aviatorAuditWrap');
+    const host=$('aviatorAuditList');
+    const status=$('aviatorAuditStatus');
+    if(!wrap||!host||!state.token)return;
+    if(!wrap.open&&!force)return;
+    if(aviatorAuditBusy)return;
+    if(!force&&Date.now()-aviatorAuditLastLoad<5000)return;
+
+    aviatorAuditBusy=true;
+    if(status)status.textContent='A carregar…';
+
+    try{
+      const rows=await rpc('jl_aviator_admin_audit_history',{
+        p_token:state.token,
+        p_limit:40
+      });
+      const items=Array.isArray(rows)?rows:[];
+      if(!items.length){
+        host.innerHTML='<p class="muted">Ainda não há ações administrativas registadas.</p>';
+      }else{
+        host.innerHTML=items.map(item=>{
+          const actor=escapeHtml(item.actor_name||'Administrador');
+          const role=escapeHtml(item.actor_role||'admin');
+          const target=item.target_type==='aviator_round'&&item.target_id
+            ?'Rodada #'+escapeHtml(item.target_id)
+            :item.target_type==='aviator_bank'
+              ?'Banca do Aviator'
+              :item.target_type==='aviator_settings'
+                ?'Configuração do Aviator'
+                :escapeHtml(item.target_type||'Aviator');
+          const detail=aviatorAuditDetailText(item);
+          return '<details class="aviator-audit-item">'+
+            '<summary><span>'+escapeHtml(aviatorAdminActionLabel(item.action))+'</span>'+
+            '<small>'+actor+' · '+role+' · '+dateTime(item.created_at)+'</small></summary>'+
+            '<div class="aviator-audit-body">'+
+              '<p><strong>Alvo:</strong> '+target+'</p>'+
+              '<p><strong>Antes:</strong> '+escapeHtml(aviatorAuditStateText(item.before_state))+'</p>'+
+              '<p><strong>Depois:</strong> '+escapeHtml(aviatorAuditStateText(item.after_state))+'</p>'+
+              (detail?'<p>'+escapeHtml(detail)+'</p>':'')+
+            '</div>'+
+          '</details>';
+        }).join('');
+      }
+      aviatorAuditLastLoad=Date.now();
+      if(status)status.textContent='Atualizado';
+    }catch(e){
+      host.innerHTML='<p class="form-message">'+escapeHtml(e.message)+'</p>';
+      if(status)status.textContent='Erro';
+    }finally{
+      aviatorAuditBusy=false;
     }
   }
 
@@ -264,6 +358,9 @@
       if($('aviatorBankLedgerWrap')?.open){
         void refreshAviatorBankLedger(false);
       }
+      if($('aviatorAuditWrap')?.open){
+        void refreshAviatorAudit(false);
+      }
     }catch(e){$('aviatorAdminMessage').textContent=e.message}
   }
   $('aviatorBankLedgerWrap')?.addEventListener('toggle',()=>{
@@ -272,6 +369,17 @@
     if(!wrap)return;
     if(wrap.open){
       void refreshAviatorBankLedger(true);
+    }else if(status){
+      status.textContent='Abrir';
+    }
+  });
+
+  $('aviatorAuditWrap')?.addEventListener('toggle',()=>{
+    const wrap=$('aviatorAuditWrap');
+    const status=$('aviatorAuditStatus');
+    if(!wrap)return;
+    if(wrap.open){
+      void refreshAviatorAudit(true);
     }else if(status){
       status.textContent='Abrir';
     }
