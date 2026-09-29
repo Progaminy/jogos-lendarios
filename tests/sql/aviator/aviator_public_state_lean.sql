@@ -44,6 +44,14 @@ begin
     if v_round ? 'active_bets' then
       raise exception 'active_bets removido do contrato publico enxuto';
     end if;
+
+    if v_round ? 'current_multiplier' is distinct from true then
+      raise exception 'current_multiplier calculado pelo servidor ausente';
+    end if;
+
+    if v_round ? 'seconds_to_close' is distinct from true then
+      raise exception 'seconds_to_close calculado pelo servidor ausente';
+    end if;
   end if;
 end
 $$;
