@@ -25,7 +25,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="stylesheet" href="./ludo.css?v=20260929-10">
+  <link rel="stylesheet" href="./ludo.css?v=20260929-11">
   <link rel="stylesheet" href="./site-nav.css?v=20260928-20">
   <style id="ludo-critical-mobile-fix">
     @media (max-width:600px){
@@ -141,18 +141,6 @@
               </div>
             </div>
 
-            <div class="quick-start-step" aria-label="Escolha o valor por jogador">
-              <span class="quick-step-icon quick-money-icon" aria-hidden="true">MZN</span>
-              <div class="ludo-stake-picker" data-stake-input="createBet" role="group" aria-label="Valor por jogador">
-                <button class="active" type="button" data-ludo-stake="10" aria-pressed="true"><strong>10</strong></button>
-                <button type="button" data-ludo-stake="20" aria-pressed="false"><strong>20</strong></button>
-                <button type="button" data-ludo-stake="50" aria-pressed="false"><strong>50</strong></button>
-                <button type="button" data-ludo-stake="100" aria-pressed="false"><strong>100</strong></button>
-                <button type="button" data-ludo-stake="500" aria-pressed="false"><strong>500</strong></button>
-              </div>
-              <input id="createBet" type="hidden" value="10">
-            </div>
-
             <div class="quick-start-step" aria-label="Escolha a quantidade de jogadores">
               <span class="quick-step-icon" aria-hidden="true">👥</span>
               <div class="player-count-field quick-player-count">
@@ -163,6 +151,16 @@
                 </div>
                 <select id="createPlayers" class="player-count-select" aria-hidden="true" tabindex="-1"><option value="2">2 jogadores</option><option value="3">3 jogadores</option><option value="4" selected>4 jogadores</option></select>
               </div>
+            </div>
+
+            <div class="quick-start-step" aria-label="Escolha o valor por jogador">
+              <span class="quick-step-icon quick-money-icon" aria-hidden="true">MZN</span>
+              <div class="ludo-stake-stepper" data-stake-input="createBet" role="group" aria-label="Valor por jogador">
+                <button type="button" data-ludo-stake-delta="-1" aria-label="Diminuir valor">−</button>
+                <output id="createBetDisplay" class="ludo-stake-display" for="createBet" aria-live="polite"><strong>10</strong><small>MZN</small></output>
+                <button type="button" data-ludo-stake-delta="1" aria-label="Aumentar valor">+</button>
+              </div>
+              <input id="createBet" type="hidden" value="10">
             </div>
 
             <div class="quick-mini-options">
@@ -365,7 +363,7 @@
   <script src="./js/platform/feature-loader.js?v=20260929-1" defer></script>
   <script src="./logout-confirm.js?v=20260924-2" defer></script>
   <script src="./ludo-sync.js?v=20260928-1" defer></script>
-  <script src="./ludo.js?v=20260929-7" defer></script>
+  <script src="./ludo.js?v=20260929-8" defer></script>
   <script src="./js/ui/collapse.js?v=20260928-2" defer></script>
   <script src="./js/ludo/policy.js?v=20260928-2" defer></script>
 </body>
