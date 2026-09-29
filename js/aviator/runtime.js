@@ -23,6 +23,21 @@
     return Math.max(0,Math.ceil((close-now)/1000));
   }
 
+  function clockSample(serverTimeMs,requestStartedMs,responseReceivedMs){
+    const server=Number(serverTimeMs);
+    const started=Number(requestStartedMs);
+    const received=Number(responseReceivedMs);
+    if(!Number.isFinite(server)||!Number.isFinite(started)||!Number.isFinite(received)||received<started){
+      return null;
+    }
+    const rtt=received-started;
+    const midpoint=started+(rtt/2);
+    return Object.freeze({
+      offset:server-midpoint,
+      rtt
+    });
+  }
+
   function pollDelay(status,hidden){
     if(hidden)return 5000;
     if(status==='FLYING')return 700;
@@ -37,5 +52,5 @@
     return 'waiting';
   }
 
-  return Object.freeze({multiplier,secondsUntil,pollDelay,phase});
+  return Object.freeze({multiplier,secondsUntil,clockSample,pollDelay,phase});
 });
