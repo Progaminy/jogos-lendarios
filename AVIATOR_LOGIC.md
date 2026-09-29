@@ -2,7 +2,7 @@
 
 ## Núcleo financeiro
 
-- A aposta mínima é **0,50 MZN**; valores monetários são tratados com 2 casas decimais. A RPC rejeita valores abaixo de 0,50 e a própria tabela `jl_aviator_bets` possui `CHECK (stake >= 0.50)` como segunda barreira.
+- A aposta por jogador fica entre **0,50 MZN e 500 MZN por rodada**. Não existe teto máximo total da rodada; vários jogadores podem apostar 500 MZN cada. A RPC valida os dois limites e a tabela `jl_aviator_bets` reforça com `CHECK (stake >= 0.50 AND stake <= 500.00)`.
 - Todas as apostas válidas são aceites; o teto não é usado para rejeitar uma aposta.
 - A banca do Aviator é separada do dinheiro apostado pelos jogadores.
 - A reserva financeira da rodada é 50% do saldo da banca no instante do fecho.
