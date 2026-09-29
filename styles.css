@@ -1081,3 +1081,28 @@ h2 { margin: 0; font-size: clamp(1.25rem, 2.5vw, 1.75rem); letter-spacing: -.025
   .aviator-house-metrics{grid-template-columns:1fr 1fr}
   .aviator-house-metrics>div:last-child{grid-column:1/-1}
 }
+
+
+.aviator-cancel-panel{
+  display:grid;
+  grid-template-columns:minmax(220px,1fr) auto;
+  align-items:end;
+  gap:12px;
+  margin:18px 0;
+  padding:16px;
+  border:1px solid rgba(255,116,116,.22);
+  border-radius:14px;
+  background:rgba(255,116,116,.045);
+}
+.aviator-cancel-panel .eyebrow,
+.aviator-cancel-panel>small{
+  grid-column:1/-1;
+}
+.aviator-cancel-panel>small{
+  color:var(--muted);
+  line-height:1.45;
+}
+@media(max-width:620px){
+  .aviator-cancel-panel{grid-template-columns:1fr}
+  .aviator-cancel-panel .button{width:100%}
+}
