@@ -112,8 +112,10 @@
   $('aviatorBankAdjust')?.addEventListener('click',async()=>{
     try{
       const delta=Number($('aviatorBankDelta').value),reason=$('aviatorBankReason').value.trim();
-      const r=await rpc('jl_aviator_admin_adjust_bank',{p_token:state.token,p_delta:delta,p_reason:reason});
-      $('aviatorAdminMessage').textContent='Banca atualizada: '+money(r.balance)+' MZN';
+      const requestKey=adminFinancialRequestKey('aviator-bank',{delta,reason});
+      const r=await rpc('jl_aviator_admin_adjust_bank',{p_token:state.token,p_delta:delta,p_reason:reason,p_request_key:requestKey});
+      clearAdminFinancialRequestKey('aviator-bank',requestKey);
+      $('aviatorAdminMessage').textContent=(r.already_processed?'Ajuste já confirmado. Banca: ':'Banca atualizada: ')+money(r.balance)+' MZN';
       $('aviatorBankDelta').value=''; $('aviatorBankReason').value=''; await refreshAviatorAdmin();
     }catch(e){$('aviatorAdminMessage').textContent=e.message}
   });
