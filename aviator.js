@@ -32,7 +32,7 @@ const runtime=window.JLAviatorRuntime||{
     if(!Array.isArray(bets))return null;
     return bets.find(b=>Number(b?.id)===Number(betId))||null;
   },
-  pollDelay:(status,hidden)=>hidden?5000:status==='FLYING'?700:status==='OPEN'?1000:1400
+  pollDelay:(status,hidden)=>hidden?5000:status==='FLYING'?500:status==='OPEN'?1000:1400
 };
 
 function readPendingCashout(){
