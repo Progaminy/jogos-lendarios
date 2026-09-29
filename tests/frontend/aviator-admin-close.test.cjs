@@ -17,6 +17,9 @@ test('admin usa botão dedicado Fechar Aviator e não toggle genérico',()=>{
   assert.match(js,/jl_aviator_admin_close/);
   assert.match(js,/Novas apostas e novas rodadas serão bloqueadas imediatamente/);
   assert.match(js,/A rodada atual terminará com segurança/);
+  assert.match(js,/refunded_bets/);
+  assert.match(js,/reembolsada/);
+  assert.match(js,/refunded_total/);
   assert.match(js,/closeBtn\.disabled=!d\.enabled/);
   assert.match(js,/d\.enabled\?'Fechar Aviator':'Aviator fechado'/);
 
