@@ -15,6 +15,8 @@ let stateTimer=0;
 let betting=false;
 let cashingOut=false;
 let openUiTimer=0;
+let connectionOnline=navigator.onLine!==false;
+let clockSamples=[];
 let recentResults=[];
 let historyBusy=false;
 let historyRemoteLoaded=false;
@@ -25,8 +27,54 @@ const serverNow=()=>Date.now()+offset;
 const runtime=window.JLAviatorRuntime||{
   multiplier:(start,now)=>Math.pow(1.06,Math.max(0,(now-start)/1000)),
   secondsUntil:(close,now)=>Math.max(0,Math.ceil((close-now)/1000)),
+  clockSample:(server,start,end)=>{
+    if(![server,start,end].every(Number.isFinite)||end<start)return null;
+    const rtt=end-start;
+    return {offset:server-(start+rtt/2),rtt};
+  },
   pollDelay:(status,hidden)=>hidden?5000:status==='FLYING'?700:status==='OPEN'?1000:1400
 };
+
+function applyClockSample(serverTime,requestStarted,responseReceived){
+  const serverMs=new Date(serverTime).getTime();
+  const sample=runtime.clockSample(serverMs,requestStarted,responseReceived);
+  if(!sample)return;
+
+  clockSamples.push(sample);
+  if(clockSamples.length>8)clockSamples.shift();
+
+  const best=clockSamples.reduce((a,b)=>b.rtt<a.rtt?b:a,clockSamples[0]);
+  offset=best.offset;
+}
+
+function setConnectionState(online){
+  connectionOnline=Boolean(online);
+  document.body.classList.toggle('aviator-offline',!connectionOnline);
+
+  const banner=$('#aviatorConnectionBanner');
+  if(banner)banner.classList.toggle('hidden',connectionOnline);
+
+  if(connectionOnline)return;
+
+  clearTimeout(stateTimer);
+  stopOpenUiTick();
+  stopFlight();
+
+  const betBtn=$('#betBtn');
+  if(betBtn)betBtn.disabled=true;
+
+  const cashout=$('#cashoutBtn');
+  if(cashout){
+    cashout.disabled=true;
+    cashout.textContent=myBet?'Cash-out indisponível':'Cash-out';
+  }
+
+  if(round?.status==='FLYING'){
+    $('#roundState').textContent='SEM LIGAÇÃO';
+    $('#clockLabel').textContent='RECONEXÃO';
+    $('#roundCountdown').textContent='AGUARDE';
+  }
+}
 
 function money(value){
   const n=Number(value);
@@ -105,6 +153,11 @@ function stopOpenUiTick(){
 }
 
 function updateOpenClock(){
+  if(!connectionOnline){
+    stopOpenUiTick();
+    return;
+  }
+
   if(round?.status!=='OPEN'){
     stopOpenUiTick();
     return;
@@ -121,7 +174,7 @@ function updateOpenClock(){
 
   const betBtn=$('#betBtn');
   if(betBtn){
-    betBtn.disabled=!enabled||Boolean(myBet)||betting||closed;
+    betBtn.disabled=!enabled||!connectionOnline||Boolean(myBet)||betting||closed;
     betBtn.textContent=myBet
       ?'Aposta confirmada'
       :closed
@@ -247,7 +300,7 @@ async function loadHistory(force=false){
 
 function paintFlight(){
   raf=0;
-  if(round?.status!=='FLYING')return;
+  if(!connectionOnline||round?.status!=='FLYING')return;
 
   const m=mul();
   renderMultiplier(m);
@@ -256,14 +309,14 @@ function paintFlight(){
   const cashout=$('#cashoutBtn');
   if(cashout){
     cashout.textContent=myBet?'Cash-out · '+m.toFixed(2)+'×':'Cash-out';
-    cashout.disabled=!myBet||cashingOut;
+    cashout.disabled=!connectionOnline||!myBet||cashingOut;
   }
 
   raf=requestAnimationFrame(paintFlight);
 }
 
 function startFlightPaint(){
-  if(!raf)raf=requestAnimationFrame(paintFlight);
+  if(connectionOnline&&!raf)raf=requestAnimationFrame(paintFlight);
 }
 
 async function recover(force=false){
@@ -363,7 +416,7 @@ function renderFlying(){
 
   const cashout=$('#cashoutBtn');
   if(cashout){
-    cashout.disabled=!myBet||cashingOut;
+    cashout.disabled=!connectionOnline||!myBet||cashingOut;
   }
 
   renderTicket(mul());
@@ -458,16 +511,19 @@ function nextPollDelay(){
 
 function scheduleState(delay=nextPollDelay()){
   clearTimeout(stateTimer);
+  if(!connectionOnline)return;
   stateTimer=setTimeout(state,delay);
 }
 
 async function state(){
-  if(stateBusy)return;
+  if(stateBusy||!connectionOnline)return;
   stateBusy=true;
 
   try{
+    const requestStarted=Date.now();
     const x=await JLApi.rpc('jl_aviator_public_state');
-    offset=new Date(x.server_time).getTime()-Date.now();
+    const responseReceived=Date.now();
+    applyClockSample(x.server_time,requestStarted,responseReceived);
     enabled=x.enabled!==false;
 
     const previousId=round?.id??null;
@@ -516,11 +572,12 @@ async function state(){
         'Manutenção ativada. A sua aposta em voo continua protegida; o cash-out permanece disponível.';
     }
   }catch(e){
+    if(navigator.onLine===false)setConnectionState(false);
     const message=$('#aviatorMessage');
     if(message)message.textContent=e.message;
   }finally{
     stateBusy=false;
-    scheduleState();
+    if(connectionOnline)scheduleState();
   }
 }
 
@@ -533,6 +590,7 @@ $('#aviatorBetForm').addEventListener('submit',async e=>{
   if(button)button.disabled=true;
 
   try{
+    if(!connectionOnline)throw new Error('Sem ligação. Aguarde a reconexão.');
     if(!playerToken())throw new Error('Entre na sua conta primeiro.');
     if(!enabled)throw new Error('Aviator brevemente');
     if(!round||round.status!=='OPEN')throw new Error('Apostas fechadas.');
@@ -565,6 +623,10 @@ $('#aviatorBetForm').addEventListener('submit',async e=>{
 });
 
 $('#cashoutBtn').addEventListener('click',async()=>{
+  if(!connectionOnline){
+    $('#aviatorMessage').textContent='Sem ligação. Cash-out indisponível até reconectar.';
+    return;
+  }
   if(cashingOut||!myBet||round?.status!=='FLYING')return;
 
   cashingOut=true;
@@ -614,11 +676,19 @@ $('#cashoutBtn').addEventListener('click',async()=>{
   }
 });
 
+window.addEventListener('offline',()=>{
+  setConnectionState(false);
+});
+
 window.addEventListener('online',()=>{
+  setConnectionState(true);
   lastRecoveredRoundId=null;
   historyRetryAt=0;
   historyRemoteLoaded=false;
+  clockSamples=[];
   clearTimeout(stateTimer);
+  const message=$('#aviatorMessage');
+  if(message)message.textContent='Ligação restabelecida. A sincronizar…';
   void loadHistory(true);
   state();
 });
@@ -635,5 +705,6 @@ document.addEventListener('visibilitychange',()=>{
 });
 
 renderHistory();
-state();
+setConnectionState(connectionOnline);
+if(connectionOnline)state();
 })();
