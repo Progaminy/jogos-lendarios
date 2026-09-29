@@ -243,3 +243,18 @@ test('auto cash-out e opcional na UI mas executado pelo servidor',()=>{
   assert.equal((js.match(/jl_aviator_cashout'/g)||[]).length,1,
     'auto cash-out nao deve disparar jl_aviator_cashout pelo navegador');
 });
+
+
+test('confirmação visual usa o valor confirmado pelo servidor antes do voo',()=>{
+  const html=fs.readFileSync(path.join(__dirname,'../../aviator.html'),'utf8');
+  const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
+
+  assert.match(html,/id="betConfirmation"/);
+  assert.match(html,/id="betConfirmationText"/);
+  assert.match(html,/role="status"[^>]*aria-live="polite"/);
+  assert.match(js,/function moneyCompact\(value\)/);
+  assert.match(js,/Aposta confirmada: '\+moneyCompact\(myStake\)/);
+  assert.match(js,/myStake=Number\(r\.stake\);/);
+  assert.doesNotMatch(js,/myStake=Number\(r\.stake\)\|\|amount/);
+  assert.match(js,/\['OPEN','LOCKED'\]\.includes\(round\?\.status\)/);
+});
