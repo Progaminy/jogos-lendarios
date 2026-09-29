@@ -124,6 +124,14 @@ function money(value){
   })+' MZN';
 }
 
+function moneyCompact(value){
+  const n=Number(value);
+  return (Number.isFinite(n)?n:0).toLocaleString('pt-MZ',{
+    minimumFractionDigits:0,
+    maximumFractionDigits:2
+  })+' MZN';
+}
+
 function show(selector,visible){
   const el=typeof selector==='string'?$(selector):selector;
   if(el)el.classList.toggle('hidden',!visible);
@@ -252,6 +260,31 @@ function renderTicket(multiplierValue=null){
   }else{
     $('#activeBetMultiplier').textContent='A aguardar';
     $('#activeBetPayout').textContent=money(myStake);
+  }
+}
+
+function renderBetConfirmation(){
+  const box=$('#betConfirmation');
+  const text=$('#betConfirmationText');
+  const auto=$('#betConfirmationAuto');
+  if(!box||!text)return;
+
+  const visible=
+    Boolean(myBet)&&
+    myStake>0&&
+    ['OPEN','LOCKED'].includes(round?.status);
+
+  box.classList.toggle('hidden',!visible);
+  if(!visible)return;
+
+  text.textContent='Aposta confirmada: '+moneyCompact(myStake);
+
+  if(auto){
+    const hasAuto=Number.isFinite(Number(myAutoCashout))&&Number(myAutoCashout)>=1.01;
+    auto.classList.toggle('hidden',!hasAuto);
+    auto.textContent=hasAuto
+      ?'Auto cash-out: '+Number(myAutoCashout).toFixed(2)+'×'
+      :'';
   }
 }
 
@@ -462,6 +495,7 @@ async function recover(force=false){
     myAutoCashout=current?Number(current.auto_cashout_multiplier)||null:null;
     lastRecoveredRoundId=requestedRoundId;
     renderTicket();
+    renderBetConfirmation();
 
     if(myBet&&round.status==='FLYING'){
       $('#aviatorMessage').textContent='Aposta ativa recuperada.';
@@ -586,6 +620,7 @@ function renderOpen(){
 
   resetCashout();
   renderTicket();
+  renderBetConfirmation();
 
   if(myBet&&!$('#aviatorMessage').textContent.trim()){
     $('#aviatorMessage').textContent='Aposta confirmada. Aguarde a descolagem.';
@@ -618,6 +653,7 @@ function renderLocked(){
 
   resetCashout();
   renderTicket();
+  renderBetConfirmation();
 
   if(myBet){
     $('#aviatorMessage').textContent='Aposta confirmada. Aguardando descolagem.';
@@ -649,6 +685,7 @@ function renderFlying(){
   }
 
   renderTicket(mul());
+  renderBetConfirmation();
   startFlightPaint();
 }
 
@@ -681,6 +718,7 @@ function renderFinished(){
   myAutoCashout=null;
   resetCashout();
   renderTicket();
+  renderBetConfirmation();
   rememberCurrentResult();
 }
 
@@ -707,6 +745,7 @@ function renderWaiting(){
 
   resetCashout();
   renderTicket();
+  renderBetConfirmation();
 }
 
 function renderCurrentRound(){
@@ -795,6 +834,7 @@ async function state(){
       stopFlight();
       resetCashout();
       renderTicket();
+      renderBetConfirmation();
       const message=$('#aviatorMessage');
       if(message){
         if(preserveMessageOnNextRoundSync)preserveMessageOnNextRoundSync=false;
@@ -894,10 +934,9 @@ $('#aviatorBetForm').addEventListener('submit',async e=>{
     myAutoCashout=Number(r.auto_cashout_multiplier)||null;
     lastRecoveredRoundId=round.id;
     renderTicket();
+    renderBetConfirmation();
 
-    $('#aviatorMessage').textContent=
-      'Aposta confirmada: '+money(myStake)+
-      (myAutoCashout?' · Auto '+myAutoCashout.toFixed(2)+'×':'');
+    $('#aviatorMessage').textContent='Aposta confirmada. Aguarde a descolagem.';
   }catch(e){
     $('#aviatorMessage').textContent=e.message;
   }finally{
