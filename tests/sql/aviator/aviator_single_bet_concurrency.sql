@@ -22,6 +22,7 @@ declare
   v_bets int;
   v_tx int;
   v_def text;
+  v_wrapper text;
 begin
   insert into public.players(name,phone,pin_hash,balance)
   values(
@@ -91,16 +92,32 @@ begin
   end if;
 
   select pg_get_functiondef(
-    'public.jl_aviator_place_bet(text,numeric,text)'::regprocedure
+    'public.jl_aviator_place_bet(text,numeric,text,numeric)'::regprocedure
   )
   into v_def;
 
+  select pg_get_functiondef(
+    'public.jl_aviator_place_bet(text,numeric,text)'::regprocedure
+  )
+  into v_wrapper;
+
   if position('pg_advisory_xact_lock_shared' in v_def)=0 then
-    raise exception 'aposta deve usar lock compartilhado de manutencao';
+    raise exception 'aposta canonica deve usar lock compartilhado de manutencao';
   end if;
 
   if position('for share' in lower(v_def))=0 then
     raise exception 'rodada deve ser protegida com FOR SHARE';
+  end if;
+
+  if position(
+    'public.jl_aviator_place_bet'
+    in lower(v_wrapper)
+  )=0
+  or position(
+    'null::numeric'
+    in lower(v_wrapper)
+  )=0 then
+    raise exception 'RPC de 3 argumentos deve delegar para a versao canonica de 4 argumentos';
   end if;
 
   if not exists(
