@@ -46,6 +46,17 @@
 - `financial_ceiling`, `effective_target`, `visual_target` e totais internos não são expostos no estado público antes do crash.
 - O cash-out continua usando o relógio e as travas do servidor; a indicação visual nunca autoriza pagamento.
 
+## Reconexão autoritativa
+
+- Ao recuperar a ligação, o cliente chama `jl_aviator_reconnect(token)`, que devolve no mesmo snapshot o estado público da rodada e o estado financeiro do jogador.
+- O RPC usa lock compartilhado do engine enquanto lê o snapshot, impedindo que o motor mude de fase no meio da reconexão.
+- O cliente aceita apenas snapshots com `display_seq` canónico do servidor; snapshots mais antigos continuam descartados.
+- Se a rodada ainda estiver `FLYING`, o jogador retoma no multiplicador atual calculado pelo servidor. Não existe reinício em 1,00x nem reconstrução local do tempo perdido.
+- Se um auto cash-out ocorreu enquanto o jogador estava offline, a reconexão retorna a aposta `CASHED_OUT`, a origem `AUTO`, o multiplicador e o payout reais.
+- Se o crash ocorreu enquanto o jogador estava offline, a reconexão retorna `CRASHED/SETTLED` e a aposta já liquidada como `LOST` ou `CASHED_OUT`; o cliente não mantém um voo antigo.
+- A classe visual da fase não é removida/reaplicada quando a fase não mudou, evitando reinício artificial da animação do avião em cada polling/reconexão.
+- O mesmo fluxo de ressincronização é usado ao voltar de offline e ao regressar à aba depois de ela ficar oculta.
+
 ## Imutabilidade da aposta confirmada
 
 - Depois que o servidor confirma uma aposta, os termos principais ficam imutáveis no banco: `round_id`, `player_id`, `stake`, `request_key`, `auto_cashout_multiplier` e `created_at`.
