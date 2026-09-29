@@ -353,3 +353,26 @@ test('histórico recente usa linha pequena de multiplicadores separados por pont
   assert.match(css,/\.aviator-history-value\{[^}]*font-size:\.84rem/);
   assert.match(css,/\.aviator-history-strip\{[^}]*white-space:nowrap/);
 });
+
+
+test('multiplicadores baixos medios e altos usam tiers visuais sem animação extra',()=>{
+  const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
+  const css=fs.readFileSync(path.join(__dirname,'../../aviator.css'),'utf8');
+
+  assert.match(js,/function multiplierTier\(value\)/);
+  assert.match(js,/if\(!Number\.isFinite\(n\)\|\|n<2\)return 'low'/);
+  assert.match(js,/if\(n<10\)return 'medium'/);
+  assert.match(js,/return 'high'/);
+  assert.match(js,/tier-'\+multiplierTier\(item\.crash_multiplier\)/);
+  assert.match(js,/applyMultiplierTier\(\$\('#crashMultiplier'\),result\)/);
+
+  assert.match(css,/\.multiplier\.tier-low/);
+  assert.match(css,/\.multiplier\.tier-medium/);
+  assert.match(css,/\.multiplier\.tier-high/);
+  assert.match(css,/\.aviator-history-value\.tier-low/);
+  assert.match(css,/\.aviator-history-value\.tier-medium/);
+  assert.match(css,/\.aviator-history-value\.tier-high/);
+
+  const tierCss=css.match(/\.multiplier,\.crash-text span,\.aviator-history-value[\s\S]*?\.multiplier-wrap small/)?.[0]||'';
+  assert.doesNotMatch(tierCss,/animation:/);
+});
