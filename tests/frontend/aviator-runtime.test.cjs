@@ -205,5 +205,5 @@ test('controlador usa display_seq e cancela estado antigo na reconexão',()=>{
   assert.match(js,/shouldAcceptSnapshot\(lastDisplaySeq,x\?\.display_seq\)/);
   assert.match(js,/new AbortController\(\)/);
   assert.match(js,/cancelStateRequest\(\)/);
-  assert.match(rpc,/signal: options\.signal/);
+  assert.match(rpc,/signal:\s*options\.signal/);
 });
