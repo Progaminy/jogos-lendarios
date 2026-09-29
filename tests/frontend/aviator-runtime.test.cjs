@@ -338,3 +338,18 @@ test('tela do Aviator mantém voo como foco e secundários recolhidos',()=>{
   assert.match(js,/Auto '\+Number\(myAutoCashout\)\.toFixed\(2\)\+'×'/);
   assert.match(js,/'Auto desligado'/);
 });
+
+
+test('histórico recente usa linha pequena de multiplicadores separados por ponto',()=>{
+  const html=fs.readFileSync(path.join(__dirname,'../../aviator.html'),'utf8');
+  const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
+  const css=fs.readFileSync(path.join(__dirname,'../../aviator.css'),'utf8');
+
+  assert.match(html,/<details id="aviatorHistoryCard" class="aviator-history">/);
+  assert.match(js,/class="aviator-history-value"/);
+  assert.match(js,/class="aviator-history-separator"[^>]*>·<\/span>/);
+  assert.match(js,/crash_multiplier\.toFixed\(2\)\+'x'/);
+  assert.doesNotMatch(js,/aviator-history-chip/);
+  assert.match(css,/\.aviator-history-value\{[^}]*font-size:\.84rem/);
+  assert.match(css,/\.aviator-history-strip\{[^}]*white-space:nowrap/);
+});
