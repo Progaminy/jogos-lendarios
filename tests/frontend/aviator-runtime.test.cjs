@@ -311,3 +311,26 @@ test('animação do Aviator é somente visual e não decide dinheiro',()=>{
   assert.doesNotMatch(js,/Math\.exp/);
   assert.doesNotMatch(js,/started_at\s*[-+]/);
 });
+
+
+test('tela do Aviator mantém voo como foco e secundários recolhidos',()=>{
+  const html=fs.readFileSync(path.join(__dirname,'../../aviator.html'),'utf8');
+  const css=fs.readFileSync(path.join(__dirname,'../../aviator.css'),'utf8');
+  const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
+
+  assert.match(html,/id="aviatorStage" class="aviator-stage card aviator-focus"/);
+  assert.match(html,/<details id="aviatorHistoryCard" class="aviator-history">/);
+  assert.doesNotMatch(html,/<details id="aviatorHistoryCard"[^>]*\sopen(?:\s|>)/);
+  assert.match(html,/class="aviator-controls"/);
+  assert.doesNotMatch(html,/class="card aviator-controls"/);
+  assert.match(html,/class="aviator-ticket-main aviator-ticket-return"/);
+  assert.match(html,/class="aviator-ticket-meta"/);
+
+  assert.match(css,/\.flight-area\{height:405px/);
+  assert.match(css,/\.multiplier\{font-size:clamp\(72px,16vw,145px\)/);
+  assert.match(css,/\.aviator-history-summary/);
+  assert.match(css,/@media\(max-width:650px\)[\s\S]*?\.flight-area\{height:360px/);
+
+  assert.match(js,/Auto '\+Number\(myAutoCashout\)\.toFixed\(2\)\+'×'/);
+  assert.match(js,/'Auto desligado'/);
+});
