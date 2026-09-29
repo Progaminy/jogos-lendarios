@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0a0d14">
   <title>Aviator Lendário — Jogos Lendários</title>
   <link rel="stylesheet" href="./styles.css?v=20260929">
-  <link rel="stylesheet" href="./aviator.css?v=20260929-10">
+  <link rel="stylesheet" href="./aviator.css?v=20260929-11">
 </head>
 <body>
   <header class="topbar">
@@ -22,7 +22,7 @@
     <section id="aviatorMaintenanceNotice" class="aviator-maintenance-notice" hidden>Aviator brevemente</section>
     <div id="aviatorConnectionBanner" class="aviator-connection-banner hidden" role="status" aria-live="polite">Sem ligação. Cash-out indisponível até reconectar.</div>
 
-    <section id="aviatorStage" class="aviator-stage card">
+    <section id="aviatorStage" class="aviator-stage card aviator-focus">
       <div class="aviator-head">
         <div class="aviator-round">
           <span>RODADA</span>
@@ -63,18 +63,15 @@
       </details>
     </section>
 
-    <section id="aviatorHistoryCard" class="card aviator-history">
-      <div class="aviator-section-head">
-        <div>
-          <span>ÚLTIMAS RODADAS</span>
-          <strong>Histórico</strong>
-        </div>
+    <details id="aviatorHistoryCard" class="aviator-history">
+      <summary class="aviator-history-summary">
+        <span>Resultados recentes</span>
         <small id="historyStatus">A carregar…</small>
-      </div>
+      </summary>
       <div id="aviatorHistory" class="aviator-history-strip" aria-live="polite"></div>
-    </section>
+    </details>
 
-    <section class="card aviator-controls">
+    <section class="aviator-controls">
       <form id="aviatorBetForm">
         <label class="field">
           <span>Valor da aposta</span>
@@ -101,21 +98,17 @@
       </div>
 
       <div id="activeBetPanel" class="aviator-ticket hidden">
-        <div>
-          <span>MINHA APOSTA</span>
+        <div class="aviator-ticket-main">
+          <span>APOSTA</span>
           <strong id="activeBetStake">0,00 MZN</strong>
         </div>
-        <div>
-          <span>MULTIPLICADOR</span>
-          <strong id="activeBetMultiplier">—</strong>
-        </div>
-        <div>
-          <span>AUTO CASH-OUT</span>
-          <strong id="activeBetAuto">Desligado</strong>
-        </div>
-        <div>
-          <span>RETORNO ESTIMADO</span>
+        <div class="aviator-ticket-main aviator-ticket-return">
+          <span>RETORNO</span>
           <strong id="activeBetPayout">0,00 MZN</strong>
+        </div>
+        <div class="aviator-ticket-meta">
+          <span id="activeBetMultiplier">—</span>
+          <span id="activeBetAuto">Auto desligado</span>
         </div>
       </div>
 
@@ -128,6 +121,6 @@
   <script src="./js/auth/session.js"></script>
   <script src="./js/aviator/fairness.js?v=20260929-2"></script>
   <script src="./js/aviator/runtime.js?v=20260929-6"></script>
-  <script src="./aviator.js?v=20260929-19" defer></script>
+  <script src="./aviator.js?v=20260929-20" defer></script>
 </body>
 </html>
