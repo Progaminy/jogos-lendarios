@@ -21,6 +21,10 @@ body{background:#070a10}
 .multiplier-wrap{position:relative;z-index:3;display:grid;justify-items:center;gap:8px}
 .multiplier{font-size:clamp(72px,16vw,145px);font-variant-numeric:tabular-nums;z-index:2;white-space:nowrap;max-width:calc(100% - 20px);text-align:center;line-height:.92;letter-spacing:-.045em;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;text-shadow:0 10px 34px rgba(0,0,0,.42)}
 .multiplier.long{font-size:clamp(48px,11vw,96px);letter-spacing:-.045em}
+.multiplier,.crash-text span,.aviator-history-value{transition:color .18s ease,text-shadow .18s ease}
+.multiplier.tier-low,.crash-text span.tier-low{color:#d8dee9;text-shadow:0 8px 28px rgba(0,0,0,.38)}
+.multiplier.tier-medium,.crash-text span.tier-medium{color:#e4b94f;text-shadow:0 8px 30px rgba(228,185,79,.10)}
+.multiplier.tier-high,.crash-text span.tier-high{color:#66d99a;text-shadow:0 8px 30px rgba(102,217,154,.12)}
 .multiplier-wrap small{font-size:.58rem;font-weight:850;letter-spacing:.12em;color:#68758a}
 .plane{position:absolute;z-index:2;font-size:56px;left:9%;bottom:17%;transform:translate3d(0,0,0) rotate(-13deg);opacity:.58;filter:drop-shadow(0 8px 14px rgba(0,0,0,.4))}
 .plane,.flight-grid,.flight-area::after{pointer-events:none}
@@ -46,6 +50,9 @@ body{background:#070a10}
 .aviator-history-strip{display:flex;align-items:center;gap:5px;overflow-x:auto;overscroll-behavior-inline:contain;padding:9px 12px 10px;scrollbar-width:none;white-space:nowrap}
 .aviator-history-strip::-webkit-scrollbar{display:none}
 .aviator-history-value{flex:0 0 auto;font-size:.84rem;line-height:1;font-weight:850;font-variant-numeric:tabular-nums;color:#d8dee9}
+.aviator-history-value.tier-low{color:#aeb8c8}
+.aviator-history-value.tier-medium{color:#d7ad48}
+.aviator-history-value.tier-high{color:#58c98b;font-weight:900}
 .aviator-history-separator{flex:0 0 auto;font-size:.8rem;line-height:1;color:#596579}
 .aviator-history-empty{font-size:.76rem;color:#7f8aa0;padding:2px 0}
 
