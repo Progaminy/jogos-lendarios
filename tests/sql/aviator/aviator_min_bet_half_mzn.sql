@@ -14,18 +14,26 @@ update public.jl_aviator_settings
 do $$
 declare
   p_ok uuid;
+  p_ok_51 uuid;
   p_bad uuid;
   t_ok text:='aviator-min-ok-'||gen_random_uuid()::text;
+  t_ok_51 text:='aviator-min-ok51-'||gen_random_uuid()::text;
   t_bad text:='aviator-min-bad-'||gen_random_uuid()::text;
   rid bigint;
   bet jsonb;
   blocked boolean:=false;
   bal_ok numeric;
+  bal_ok_51 numeric;
   bal_bad numeric;
+  db_constraint_blocked boolean:=false;
 begin
   insert into public.players(name,phone,pin_hash,balance)
   values('AVIATOR MIN OK','min-ok-'||gen_random_uuid()::text,'x',10)
   returning id into p_ok;
+
+  insert into public.players(name,phone,pin_hash,balance)
+  values('AVIATOR MIN OK51','min-ok51-'||gen_random_uuid()::text,'x',10)
+  returning id into p_ok_51;
 
   insert into public.players(name,phone,pin_hash,balance)
   values('AVIATOR MIN BAD','min-bad-'||gen_random_uuid()::text,'x',10)
@@ -34,6 +42,7 @@ begin
   insert into public.player_sessions(player_id,token_hash,expires_at)
   values
     (p_ok,public.jl_token_hash(t_ok),now()+interval '1 hour'),
+    (p_ok_51,public.jl_token_hash(t_ok_51),now()+interval '1 hour'),
     (p_bad,public.jl_token_hash(t_bad),now()+interval '1 hour');
 
   insert into public.jl_aviator_rounds(status,betting_closes_at)
@@ -46,6 +55,14 @@ begin
 
   if (bet->>'stake')::numeric<>0.50 then
     raise exception '0.50 MZN deveria ser aceite: %',bet;
+  end if;
+
+  bet:=public.jl_aviator_place_bet(
+    t_ok_51,0.51,'min-ok51-request-'||rid::text
+  );
+
+  if (bet->>'stake')::numeric<>0.51 then
+    raise exception '0.51 MZN deveria ser aceite: %',bet;
   end if;
 
   begin
@@ -62,14 +79,35 @@ begin
   end;
 
   if not blocked then
-    raise exception '0.49 MZN deveria ser rejeitado';
+    raise exception '0.49 MZN deveria ser rejeitado pela RPC';
+  end if;
+
+  begin
+    insert into public.jl_aviator_bets(
+      round_id,player_id,stake,request_key
+    )
+    values(
+      rid,p_bad,0.49,'direct-min-bad-'||rid::text
+    );
+  exception
+    when check_violation then
+      db_constraint_blocked:=true;
+  end;
+
+  if not db_constraint_blocked then
+    raise exception 'constraint do banco permitiu stake 0.49 MZN';
   end if;
 
   select balance into bal_ok from public.players where id=p_ok;
+  select balance into bal_ok_51 from public.players where id=p_ok_51;
   select balance into bal_bad from public.players where id=p_bad;
 
   if bal_ok<>9.50 then
     raise exception 'saldo apos 0.50 incorreto: %',bal_ok;
+  end if;
+
+  if bal_ok_51<>9.49 then
+    raise exception 'saldo apos 0.51 incorreto: %',bal_ok_51;
   end if;
 
   if bal_bad<>10 then
