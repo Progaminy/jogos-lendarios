@@ -27,13 +27,15 @@ begin
   end if;
 
   if position(
-    'v_cashout_at:=clock_timestamp()' in replace(v_def,' ','')
+    'v_cashout_at:=clock_timestamp()'
+    in regexp_replace(v_def,'\\s','','g')
   )=0 then
     raise exception 'cash-out deve congelar o instante do servidor';
   end if;
 
   if position(
-    'andbalance>=v_profit' in replace(lower(v_def),' ','')
+    'andbalance>=v_profit'
+    in regexp_replace(lower(v_def),'\\s','','g')
   )=0 then
     raise exception 'debito da banca deve validar reserva atomicamente';
   end if;
