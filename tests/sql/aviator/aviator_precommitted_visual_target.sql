@@ -5,7 +5,7 @@ update public.jl_aviator_rounds
        settled_at=coalesce(settled_at,now())
  where status in ('OPEN','LOCKED','FLYING');
 
-do $
+do $$
 declare
   v_round_id bigint;
   v_result numeric;
