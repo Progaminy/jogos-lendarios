@@ -258,3 +258,14 @@ test('confirmação visual usa o valor confirmado pelo servidor antes do voo',()
   assert.doesNotMatch(js,/myStake=Number\(r\.stake\)\|\|amount/);
   assert.match(js,/\['OPEN','LOCKED'\]\.includes\(round\?\.status\)/);
 });
+
+
+test('termos da aposta ficam bloqueados visualmente depois da confirmação/LOCKED',()=>{
+  const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
+  assert.match(js,/function setBetInputsLocked\(locked\)/);
+  assert.match(js,/Boolean\(myBet\)\|\|betting\|\|closed/);
+  assert.match(js,/if\(amount\)amount\.disabled=value/);
+  assert.match(js,/if\(auto\)auto\.disabled=value/);
+  assert.match(js,/function renderLocked\(\)[\s\S]*?setBetInputsLocked\(true\)/);
+  assert.match(js,/function renderFlying\(\)[\s\S]*?setBetInputsLocked\(true\)/);
+});
