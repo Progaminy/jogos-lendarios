@@ -141,7 +141,7 @@ function playerMessage(error,fallback='Não foi possível concluir. Tente novame
   const rules=[
     [/saldo insuficiente/i,'Saldo insuficiente.'],
     [/jogador bloqueado/i,'A sua conta está bloqueada.'],
-    [/aviator em manutencao|aviator brevemente/i,'Aviator brevemente'],
+    [/aviator em manutencao|aviator brevemente/i,'Aviator brevemente.'],
     [/nao ha rodada aviator aberta|apostas fechadas/i,'Apostas fechadas. Aguarde a próxima rodada.'],
     [/valor de aposta invalido|informe um valor/i,'Informe um valor de aposta válido.'],
     [/cash-out automatico deve ser/i,'Verifique o valor do cash-out automático.'],
@@ -1101,7 +1101,7 @@ $('#aviatorBetForm').addEventListener('submit',async e=>{
   try{
     if(!connectionOnline)throw new Error('Sem ligação. Aguarde a reconexão.');
     if(!playerToken())throw new Error('Entre na sua conta primeiro.');
-    if(!enabled)throw new Error('Aviator brevemente');
+    if(!enabled)throw new Error('Aviator brevemente.');
     if(!round||round.status!=='OPEN')throw new Error('Apostas fechadas.');
 
     const amount=Number($('#aviatorAmount').value);
