@@ -102,11 +102,20 @@
     if(!state.token||!$('aviatorAdmin')) return;
     try{
       const d=await rpc('jl_aviator_admin_state',{p_token:state.token}),r=d.round||{};
-      $('aviatorBankBalance').textContent=money(d.bank?.balance);
+      const bankBalance=Number(d.bank?.balance)||0,exposure=Number(d.bank?.exposure_ratio)||0.5;
+      $('aviatorBankBalance').textContent=money(bankBalance);
       $('aviatorRound').textContent=r.id?'#'+r.id:'—'; $('aviatorStatus').textContent=r.status||'—';
       $('aviatorCeiling').textContent=r.financial_ceiling?Number(r.financial_ceiling).toFixed(2)+'×':'—';
       $('aviatorReserve').textContent=money(r.risk_reserve); $('aviatorStaked').textContent=money(d.stake_sum);
       $('aviatorPaid').textContent=money(d.paid_sum); $('aviatorCrash').textContent=r.crash_multiplier?Number(r.crash_multiplier).toFixed(2)+'×':'—';
+      const referenceStake=10,referenceCeiling=1+(bankBalance*exposure/referenceStake),bankWarning=$('aviatorBankWarning');
+      if(bankWarning){
+        const showWarning=Number.isFinite(referenceCeiling)&&referenceCeiling<1.5;
+        bankWarning.classList.toggle('hidden',!showWarning);
+        bankWarning.textContent=showWarning
+          ?'Atenção: com banca de '+money(bankBalance)+' MZN e 10 MZN apostados, o teto financeiro estimado seria '+referenceCeiling.toFixed(2)+'×. A banca baixa faz o crash financeiro ocorrer muito cedo.'
+          :'';
+      }
       const mt=$('aviatorMaintenanceToggle'); if(mt){mt.textContent=d.enabled?'Fechar Aviator · manutenção':'Abrir Aviator';mt.classList.toggle('danger',d.enabled);mt.classList.toggle('success',!d.enabled);}
     }catch(e){$('aviatorAdminMessage').textContent=e.message}
   }

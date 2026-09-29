@@ -276,6 +276,7 @@ h2 { margin: 0; font-size: clamp(1.25rem, 2.5vw, 1.75rem); letter-spacing: -.025
 .form-message { min-height: 20px; margin: 13px 0 0; color: var(--muted); font-size: .88rem; line-height: 1.45; }
 .form-message.success { color: var(--green); }
 .form-message.error { color: var(--red); }
+.aviator-bank-warning { margin: 12px 0; padding: 12px 14px; border: 1px solid rgba(255,190,72,.32); border-radius: 12px; background: rgba(255,190,72,.07); color: #ffd27a; font-size: .86rem; line-height: 1.45; font-weight: 750; }
 
 .history-list { margin-top: 20px; display: grid; gap: 10px; }
 .history-item {
