@@ -21,3 +21,15 @@ Fase 1 do motor.
 - Quando a última aposta activa sai antes do teto financeiro, a responsabilidade financeira termina e o alvo efectivo passa para o alvo visual já pré-calculado (nunca abaixo do multiplicador já alcançado).
 - No crash, apostas ainda activas perdem; os stakes perdidos entram na banca uma única vez.
 - O lucro pago num cash-out é debitado da banca; a devolução do stake não é tratada como dinheiro da banca.
+
+
+## Resiliência e concorrência
+- A colocação de aposta usa `request_key` persistida no `sessionStorage` por rodada. Retry da mesma ação reutiliza a mesma chave.
+- `jl_aviator_player_state` recupera a aposta ativa depois de refresh, reconexão ou retorno da aplicação.
+- Cash-out e crash são serializados por rodada; a decisão final pertence ao servidor.
+- A seed do alvo visual fica em `jl_aviator_round_secrets`, sem acesso de navegador, e só é publicada após crash/liquidação.
+- Ao chegar a zero apostas ativas, termina a responsabilidade financeira e o alvo passa para a extensão visual comprometida.
+- O executor respeita a pausa pós-liquidação antes de abrir a rodada seguinte.
+
+## Estado de implantação
+As migrations e o código do motor estão versionados no repositório. Isso não significa, por si só, que as migrations/Edge Function já tenham sido aplicadas no projeto Supabase de produção.
