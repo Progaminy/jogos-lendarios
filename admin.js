@@ -162,6 +162,7 @@
     try{
       const d=await rpc('jl_aviator_admin_state',{p_token:state.token}),r=d.round||{};
       const roundExposure=d.exposure||{};
+      const house=d.house||{};
       const bankBalance=Number(d.bank?.balance)||0,exposure=Number(d.bank?.exposure_ratio)||0.5;
       $('aviatorBankBalance').textContent=money(bankBalance);
       $('aviatorRound').textContent=r.id?'#'+r.id:'—'; $('aviatorStatus').textContent=r.status||'—';
@@ -173,6 +174,25 @@
       $('aviatorCashouts').textContent=String(Number(roundExposure.cashouts)||0);
       $('aviatorCashoutsPaid').textContent=money(roundExposure.cashout_paid)+' MZN pagos';
       $('aviatorCrash').textContent=r.crash_multiplier?Number(r.crash_multiplier).toFixed(2)+'×':'—';
+
+      const houseIndicator=$('aviatorHouseIndicator');
+      const houseState=String(house.status||'HEALTHY').toUpperCase();
+      const houseLabels={
+        HEALTHY:'Saudável',
+        ATTENTION:'Atenção',
+        CRITICAL:'Crítico'
+      };
+      if(houseIndicator)houseIndicator.dataset.state=houseState;
+      $('aviatorHouseStatus').textContent=houseLabels[houseState]||houseState;
+      $('aviatorHouseBank').textContent=money(house.bank_balance)+' MZN';
+      $('aviatorHouseLiability').textContent=money(house.active_liability)+' MZN';
+      $('aviatorHouseAvailable').textContent=money(house.available_after_worst_case)+' MZN';
+      $('aviatorHouseRiskUsage').textContent=(Number(house.risk_usage_pct)||0).toFixed(2)+'%';
+      $('aviatorHouseRoundResult').textContent=
+        (Number(house.round_realized_result)||0)>=0
+          ?'+'+money(house.round_realized_result)+' MZN'
+          :money(house.round_realized_result)+' MZN';
+      $('aviatorHouseUpdated').textContent='Atualizado agora';
       const referenceStake=10,referenceCeiling=1+(bankBalance*exposure/referenceStake),bankWarning=$('aviatorBankWarning');
       const readiness=$('aviatorReadiness'),referenceCeilings=$('aviatorReferenceCeilings');
       const refs=[1,5,10,50].map(stake=>({
