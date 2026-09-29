@@ -12,13 +12,13 @@ set status='CANCELLED',
     settled_at=coalesce(settled_at,clock_timestamp())
 where status in ('OPEN','LOCKED','FLYING','CRASHED');
 
-delete from public.transactions
+delete from public.jl_aviator_bets
 where player_id in (
   select id from public.players
   where phone in ('25899061201','25899061202')
 );
 
-delete from public.jl_aviator_bets
+delete from public.transactions
 where player_id in (
   select id from public.players
   where phone in ('25899061201','25899061202')
