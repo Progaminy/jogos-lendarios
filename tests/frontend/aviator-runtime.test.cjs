@@ -323,6 +323,10 @@ test('tela do Aviator mantém voo como foco e secundários recolhidos',()=>{
   assert.doesNotMatch(html,/<details id="aviatorHistoryCard"[^>]*\sopen(?:\s|>)/);
   assert.match(html,/class="aviator-controls"/);
   assert.doesNotMatch(html,/class="card aviator-controls"/);
+  assert.ok(
+    html.indexOf('class="aviator-controls"')<html.indexOf('id="aviatorHistoryCard"'),
+    'controles principais devem aparecer antes do histórico secundário'
+  );
   assert.match(html,/class="aviator-ticket-main aviator-ticket-return"/);
   assert.match(html,/class="aviator-ticket-meta"/);
 
