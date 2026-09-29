@@ -32,6 +32,11 @@ const runtime=window.JLAviatorRuntime||{
     const rtt=end-start;
     return {offset:server-(start+rtt/2),rtt};
   },
+  pickActiveBet:(bets,roundId)=>{
+    if(!Array.isArray(bets))return null;
+    return bets.filter(b=>Number(b?.round_id)===Number(roundId)&&b?.status==='ACTIVE')
+      .sort((a,b)=>Number(b?.id)-Number(a?.id))[0]||null;
+  },
   pollDelay:(status,hidden)=>hidden?5000:status==='FLYING'?700:status==='OPEN'?1000:1400
 };
 
@@ -323,18 +328,21 @@ async function recover(force=false){
   if(recovering||!playerToken()||!round)return;
   if(!force&&lastRecoveredRoundId===round.id)return;
 
+  const requestedRoundId=Number(round.id);
   recovering=true;
+
   try{
     const x=await JLApi.rpc('jl_aviator_player_state',{p_token:playerToken()});
-    const bets=Array.isArray(x.bets)?x.bets:[];
-    const active=bets.filter(b=>
-      Number(b.round_id)===Number(round.id)&&b.status==='ACTIVE'
-    );
-    const current=active.length?active[active.length-1]:null;
+
+    if(Number(round?.id)!==requestedRoundId){
+      return;
+    }
+
+    const current=runtime.pickActiveBet(x?.bets,requestedRoundId);
 
     myBet=current?.id??null;
     myStake=current?Number(current.stake)||0:0;
-    lastRecoveredRoundId=round.id;
+    lastRecoveredRoundId=requestedRoundId;
     renderTicket();
 
     if(myBet&&round.status==='FLYING'){
