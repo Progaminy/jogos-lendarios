@@ -252,16 +252,12 @@
         return;
       }
 
-      const ok=window.confirm(
-        'Fechar Aviator agora? Novas apostas e novas rodadas serão bloqueadas imediatamente. '+
-        'Se houver uma rodada com dinheiro em curso, ela terminará com segurança.'
-      );
-      if(!ok)return;
-
       if(button){
         button.disabled=true;
         button.textContent='Fechando…';
       }
+
+      $('aviatorAdminMessage').textContent='Fechando Aviator…';
 
       const result=await rpc('jl_aviator_admin_close',{p_token:state.token});
       const refunded=Number(result.refunded_bets)||0;
