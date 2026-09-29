@@ -21,7 +21,7 @@
       },
       body: JSON.stringify(args),
       keepalive: Boolean(options.keepalive),
-      signal: options.signal
+      signal:options.signal
     });
 
     const raw = await response.text();
