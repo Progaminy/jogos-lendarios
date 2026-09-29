@@ -13,9 +13,9 @@ begin
  update public.jl_aviator_bank set balance=100000 where id=true;
  update public.jl_aviator_rounds set status='CANCELLED' where status in ('OPEN','LOCKED','FLYING');
  insert into public.jl_aviator_rounds(status,betting_closes_at) values('OPEN',now()+interval '1 minute') returning id into rid;
- b:=public.jl_aviator_place_bet(tok,200000,'aviator-regression-request');
+ b:=public.jl_aviator_place_bet(tok,500,'aviator-regression-request');
  rr:=public.jl_aviator_lock_round(rid);
- if rr.risk_reserve<>50000 or rr.financial_ceiling<>1.25 then raise exception 'frozen reserve/ceiling wrong'; end if;
+ if rr.risk_reserve<>50000 or rr.financial_ceiling<>101 then raise exception 'frozen reserve/ceiling wrong'; end if;
  update public.jl_aviator_rounds set status='FLYING',started_at=clock_timestamp()-interval '.5 second' where id=rid;
  co:=public.jl_aviator_cashout(tok,(b->>'bet_id')::bigint);
  co2:=public.jl_aviator_cashout(tok,(b->>'bet_id')::bigint);
