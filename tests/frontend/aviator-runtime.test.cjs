@@ -216,3 +216,16 @@ test('UI do Aviator espelha limites 0.50 a 500 MZN sem ser autoridade financeira
   assert.match(js,/amount<0\.5\|\|amount>500/);
   assert.match(js,/entre 0,50 e 500 MZN/);
 });
+
+
+test('Aviator mostra LOCKED separado do voo e bloqueia nova aposta',()=>{
+  const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
+  assert.match(js,/function secondsToTakeoff\(\)/);
+  assert.match(js,/function renderLocked\(\)/);
+  assert.match(js,/round\.status==='LOCKED'/);
+  assert.match(js,/APOSTAS FECHADAS/);
+  assert.match(js,/DESCOLAGEM EM/);
+  assert.match(js,/betBtn\.disabled=true/);
+  assert.equal(runtime.pollDelay('LOCKED',false),500);
+  assert.equal(runtime.phase('LOCKED'),'locked');
+});
