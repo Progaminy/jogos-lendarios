@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0a0d14">
   <title>Administração — Jogos Lendários</title>
   <link rel="icon" href="./favicon.ico" sizes="any">
-  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./styles.css?v=20260930-1">
   <link rel="stylesheet" href="./admin-bonus.css?v=20260922-14">
   <link rel="stylesheet" href="./admin-recovery.css?v=20260922-13">
 </head>
@@ -43,6 +43,22 @@
           <div class="card metric"><span>Estado</span><strong id="aviatorStatus">—</strong></div>
           <div class="card metric"><span>Teto financeiro</span><strong id="aviatorCeiling">—</strong></div>
         </div>
+        <p class="eyebrow">FINANCEIRO DA CASA · TEMPO REAL</p>
+        <div id="aviatorHouseIndicator" class="aviator-house-indicator" data-state="HEALTHY" aria-live="polite">
+          <div class="aviator-house-status">
+            <span>Estado da casa</span>
+            <strong id="aviatorHouseStatus">Saudável</strong>
+            <small id="aviatorHouseUpdated">Atualizando…</small>
+          </div>
+          <div class="aviator-house-metrics">
+            <div><span>Banca</span><strong id="aviatorHouseBank">0,00 MZN</strong></div>
+            <div><span>Risco ativo</span><strong id="aviatorHouseLiability">0,00 MZN</strong></div>
+            <div><span>Margem após pior caso</span><strong id="aviatorHouseAvailable">0,00 MZN</strong></div>
+            <div><span>Uso do limite</span><strong id="aviatorHouseRiskUsage">0,00%</strong></div>
+            <div><span>Resultado da rodada</span><strong id="aviatorHouseRoundResult">0,00 MZN</strong></div>
+          </div>
+        </div>
+
         <p class="eyebrow">EXPOSIÇÃO DA RODADA</p>
         <div class="admin-grid">
           <div class="card metric"><span>Total apostado</span><strong id="aviatorStaked">0,00</strong><small>MZN</small></div>
@@ -332,7 +348,7 @@
   <script src="./config.js"></script>
   <script src="./js/auth/session.js?v=20260928-2"></script>
   <script src="./js/a11y/dialogs.js?v=20260928-2"></script>
-  <script src="./admin.js?v=20260930-2" defer></script>
+  <script src="./admin.js?v=20260930-3" defer></script>
   <script src="./admin-auth-security.js?v=20260928-1" defer></script>
   <script src="./admin-influencers.js?v=20260927-1" defer></script>
   <script src="./admin-ludo-emergency.js?v=20260928-1" defer></script>
