@@ -46,6 +46,18 @@
 - `financial_ceiling`, `effective_target`, `visual_target` e totais internos não são expostos no estado público antes do crash.
 - O cash-out continua usando o relógio e as travas do servidor; a indicação visual nunca autoriza pagamento.
 
+## Ciclo da rodada e janela de bloqueio
+
+- O ciclo público é **BETTING → LOCKED → FLYING → CRASHED → SETTLED**.
+- Internamente, o status legado `OPEN` continua representando `BETTING` para compatibilidade com RPCs e migrations antigas; o estado público expõe `phase: BETTING`.
+- Cada nova rodada abre com 12 segundos até a descolagem.
+- As apostas fecham **3 segundos antes da descolagem**: 9 segundos em BETTING e 3 segundos em LOCKED.
+- `betting_closes_at` e `takeoff_at` são definidos pelo servidor. O relógio do navegador nunca decide se uma aposta entrou.
+- Durante LOCKED, nenhuma nova aposta é aceita e o saldo não é debitado por tentativas tardias.
+- O motor não pode iniciar FLYING antes de `takeoff_at`.
+- CRASHED fica realmente gravado/observável por um ciclo do motor; apenas o tick seguinte move a rodada para SETTLED.
+- A interface mostra “APOSTAS FECHADAS” e contagem para a descolagem durante LOCKED.
+
 ## Fonte única do multiplicador visível
 
 - O multiplicador público usa frames canónicos de **250 ms** do relógio do servidor.
