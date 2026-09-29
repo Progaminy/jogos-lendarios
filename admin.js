@@ -164,6 +164,7 @@
       'aviator.admin.closed':'Fechou o Aviator',
       'aviator.admin.reopened':'Reabriu o Aviator',
       'aviator.admin.bank_adjusted':'Ajustou a banca',
+      'aviator.admin.risk_limit_changed':'Alterou limite de risco',
       'aviator.admin.one_round_test_started':'Iniciou rodada de teste',
       'aviator.round_admin_cancelled':'Cancelou rodada e reembolsou',
       'aviator.maintenance_changed':'Alterou manutenção',
@@ -191,6 +192,12 @@
     const parts=[];
     if(d.reason)parts.push('Motivo: '+d.reason);
     if(d.delta!==undefined)parts.push('Ajuste: '+money(d.delta)+' MZN');
+    if(d.field==='exposure_ratio'&&d.previous!==undefined&&d.current!==undefined){
+      parts.push(
+        'Limite de risco: '+(Number(d.previous)*100).toFixed(0)+'% → '+
+        (Number(d.current)*100).toFixed(0)+'%'
+      );
+    }
     if(d.refundedBets!==undefined)parts.push('Reembolsos: '+String(d.refundedBets));
     if(d.refundedTotal!==undefined)parts.push('Total devolvido: '+money(d.refundedTotal)+' MZN');
     if(d.cashoutsKept!==undefined)parts.push('Cash-outs preservados: '+String(d.cashoutsKept));
