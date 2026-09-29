@@ -27,6 +27,7 @@ jobs:
         run: |
           node --check ludo.js
           node --check aviator.js
+          node --check js/aviator/runtime.js
           node --check app.js
           node --check js/ludo/movement-guard.js
           node --check js/ludo/room-state.js
