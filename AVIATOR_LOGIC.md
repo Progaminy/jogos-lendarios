@@ -17,6 +17,7 @@
 - O alvo visual é sorteado **antes do voo**, entre 5x e 135,7x, em todas as rodadas, e fica comprometido por hash.
 - Com apostas ativas, o alvo efetivo continua a ser o teto financeiro congelado; o alvo visual pré-comprometido não governa a exposição.
 - O multiplicador é função do tempo do servidor; não exige escrita na base a cada frame.
+- O estado público devolve `current_multiplier` e `seconds_to_close` calculados no servidor; o navegador não possui fórmula de voo nem relógio autoritativo e limita-se a desenhar snapshots recebidos.
 - Cash-out usa o relógio do servidor e é transacional/idempotente por estado da aposta.
 - Quando a última aposta ativa sai antes do teto financeiro, a responsabilidade financeira termina e o alvo efetivo passa para `greatest(alvo_visual_precomprometido, multiplicador_ja_alcancado)`.
 - O último cash-out **não sorteia outro alvo**.
