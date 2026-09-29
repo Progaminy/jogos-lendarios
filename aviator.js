@@ -507,8 +507,8 @@ $('#aviatorBetForm').addEventListener('submit',async e=>{
     if(!round||round.status!=='OPEN')throw new Error('Apostas fechadas.');
 
     const amount=Number($('#aviatorAmount').value);
-    if(!Number.isFinite(amount)||amount<1||!Number.isInteger(amount)){
-      throw new Error('A aposta deve ser um valor inteiro a partir de 1 MZN.');
+    if(!Number.isFinite(amount)||amount<1){
+      throw new Error('Informe um valor válido a partir de 1 MZN.');
     }
 
     const r=await JLApi.rpc('jl_aviator_place_bet',{
