@@ -9,6 +9,8 @@ let recovering=false;
 let lastRecoveredRoundId=null;
 let enabled=true;
 let stateBusy=false;
+let stateController=null;
+let lastDisplaySeq=null;
 let stateTimer=0;
 let betting=false;
 let cashingOut=false;
@@ -36,7 +38,13 @@ const runtime=window.JLAviatorRuntime||{
     if(!Array.isArray(bets))return null;
     return bets.find(b=>Number(b?.id)===Number(betId))||null;
   },
-  pollDelay:(status,hidden)=>hidden?5000:status==='FLYING'?500:status==='OPEN'?1000:1400
+  pollDelay:(status,hidden)=>hidden?5000:status==='FLYING'?500:status==='OPEN'?1000:1400,
+  shouldAcceptSnapshot:(previousSeq,nextSeq)=>{
+    const next=Number(nextSeq);
+    if(!Number.isFinite(next))return false;
+    const previous=Number(previousSeq);
+    return !Number.isFinite(previous)||next>=previous;
+  }
 };
 
 function readPendingCashout(){
@@ -68,6 +76,15 @@ function clearPendingCashout(){
   try{sessionStorage.removeItem(pendingCashoutKey)}catch(_){}
 }
 
+function cancelStateRequest(){
+  const controller=stateController;
+  stateController=null;
+  stateBusy=false;
+  if(controller){
+    try{controller.abort()}catch(_){}
+  }
+}
+
 function setConnectionState(online){
   connectionOnline=Boolean(online);
   document.body.classList.toggle('aviator-offline',!connectionOnline);
@@ -78,6 +95,7 @@ function setConnectionState(online){
   if(connectionOnline)return;
 
   clearTimeout(stateTimer);
+  cancelStateRequest();
   stopOpenUiTick();
   stopFlight();
 
@@ -662,10 +680,23 @@ function scheduleState(delay=nextPollDelay()){
 
 async function state(){
   if(stateBusy||!connectionOnline)return;
+
+  const controller=new AbortController();
+  stateController=controller;
   stateBusy=true;
 
   try{
-    const x=await JLApi.rpc('jl_aviator_public_state');
+    const x=await JLApi.rpc(
+      'jl_aviator_public_state',
+      {},
+      {signal:controller.signal}
+    );
+
+    if(!runtime.shouldAcceptSnapshot(lastDisplaySeq,x?.display_seq)){
+      return;
+    }
+
+    lastDisplaySeq=Number(x.display_seq);
     enabled=x.enabled!==false;
 
     const previousId=round?.id??null;
@@ -720,12 +751,16 @@ async function state(){
         'Manutenção ativada. A sua aposta em voo continua protegida; o cash-out permanece disponível.';
     }
   }catch(e){
+    if(e?.name==='AbortError')return;
     if(navigator.onLine===false)setConnectionState(false);
     const message=$('#aviatorMessage');
     if(message)message.textContent=e.message;
   }finally{
-    stateBusy=false;
-    if(connectionOnline)scheduleState();
+    if(stateController===controller){
+      stateController=null;
+      stateBusy=false;
+      if(connectionOnline)scheduleState();
+    }
   }
 }
 
@@ -840,6 +875,7 @@ window.addEventListener('offline',()=>{
 });
 
 window.addEventListener('online',async()=>{
+  cancelStateRequest();
   setConnectionState(true);
   lastRecoveredRoundId=null;
   historyRetryAt=0;
