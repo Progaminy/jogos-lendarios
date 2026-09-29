@@ -15,8 +15,11 @@ as $$
 declare
   v_live integer;
   v_bank numeric;
+  v_admin uuid:=public.jl_admin_account_id(p_token);
 begin
-  perform public.jl_require_admin(p_token);
+  if v_admin is null then
+    raise exception 'Sessão administrativa inválida ou expirada.';
+  end if;
   perform pg_advisory_xact_lock(hashtext('jl_aviator_engine_tick'));
   perform pg_advisory_xact_lock(hashtext('jl_aviator_maintenance'));
 
@@ -46,7 +49,11 @@ begin
     'aviator.one_round_test_started',
     jsonb_build_object(
       'bankBalance',v_bank,
-      'startedAt',clock_timestamp()
+      'startedAt',clock_timestamp(),
+      'admin_id',v_admin,
+      'admin_session_id',nullif(current_setting('jl.admin_session_id',true),''),
+      'admin_name',nullif(current_setting('jl.admin_name',true),''),
+      'admin_role',nullif(current_setting('jl.admin_role',true),'')
     )
   );
 
@@ -78,8 +85,11 @@ as $$
 declare
   s public.jl_aviator_settings;
   v_cancelled bigint:=0;
+  v_admin uuid:=public.jl_admin_account_id(p_token);
 begin
-  perform public.jl_require_admin(p_token);
+  if v_admin is null then
+    raise exception 'Sessão administrativa inválida ou expirada.';
+  end if;
 
   if p_enabled is null then
     raise exception 'Estado de manutencao invalido.';
@@ -117,7 +127,11 @@ begin
       'enabled',s.enabled,
       'updatedAt',s.updated_at,
       'emptyOpenRoundsCancelled',v_cancelled,
-      'oneRoundTest',false
+      'oneRoundTest',false,
+      'admin_id',v_admin,
+      'admin_session_id',nullif(current_setting('jl.admin_session_id',true),''),
+      'admin_name',nullif(current_setting('jl.admin_name',true),''),
+      'admin_role',nullif(current_setting('jl.admin_role',true),'')
     )
   );
 
@@ -319,7 +333,9 @@ begin
       end if;
     end if;
 
-    return result || jsonb_build_object('maintenance',not v_enabled);
+    return result || jsonb_build_object(
+      'maintenance',v_one_round_test or not v_enabled
+    );
   end if;
 
   if r.status='CRASHED' then
