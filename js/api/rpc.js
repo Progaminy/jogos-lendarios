@@ -20,7 +20,8 @@
         Accept: 'application/json'
       },
       body: JSON.stringify(args),
-      keepalive: Boolean(options.keepalive)
+      keepalive: Boolean(options.keepalive),
+      signal: options.signal
     });
 
     const raw = await response.text();
