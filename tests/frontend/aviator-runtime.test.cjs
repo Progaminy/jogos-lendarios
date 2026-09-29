@@ -21,6 +21,13 @@ test('contagem de pré-voo arredonda para cima e nunca fica negativa',()=>{
   assert.equal(runtime.secondsUntil(Number.NaN,1000),null);
 });
 
+test('relógio do servidor compensa metade da latência de ida e volta',()=>{
+  const sample=runtime.clockSample(2000,1000,1400);
+  assert.deepEqual(sample,{offset:800,rtt:400});
+  assert.equal(runtime.clockSample(2000,1400,1000),null);
+  assert.equal(runtime.clockSample(Number.NaN,1000,1400),null);
+});
+
 test('polling reduz carga fora da aba e acelera apenas durante voo',()=>{
   assert.equal(runtime.pollDelay('FLYING',false),700);
   assert.equal(runtime.pollDelay('OPEN',false),1000);
@@ -73,4 +80,22 @@ test('cash-out na fronteira do crash não mostra erro técnico cru',()=>{
   assert.match(js,/Confirmando cash-out/);
   assert.match(js,/Fim da rodada\. Cash-out não disponível\./);
   assert.match(js,/Crash ja atingido\|Aposta ja liquidada\|Voo nao esta ativo/);
+});
+
+
+test('modo offline bloqueia aposta e cash-out até reconectar',()=>{
+  const html=fs.readFileSync(path.join(__dirname,'../../aviator.html'),'utf8');
+  const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
+  assert.match(html,/id="aviatorConnectionBanner"/);
+  assert.match(js,/addEventListener\('offline'/);
+  assert.match(js,/addEventListener\('online'/);
+  assert.match(js,/Cash-out indisponível até reconectar/);
+  assert.match(js,/if\(!connectionOnline\)throw new Error\('Sem ligação/);
+});
+
+test('estado público mede RTT para sincronizar o relógio do voo',()=>{
+  const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
+  assert.match(js,/const requestStarted=Date\.now\(\)/);
+  assert.match(js,/const responseReceived=Date\.now\(\)/);
+  assert.match(js,/applyClockSample\(x\.server_time,requestStarted,responseReceived\)/);
 });
