@@ -19,9 +19,13 @@ let recentResults=[];
 let historyBusy=false;
 let historyRemoteLoaded=false;
 let historyRetryAt=0;
+let fairnessProofBusy=false;
+let fairnessProofRoundId=null;
+let fairnessProofData=null;
 
 const playerToken=()=>JLSession.getPlayerToken();
 const pendingCashoutKey='jl_aviator_pending_cashout_v1';
+const fairness=window.JLAviatorFairness||null;
 const runtime=window.JLAviatorRuntime||{
   pickActiveBet:(bets,roundId)=>{
     if(!Array.isArray(bets))return null;
@@ -422,20 +426,82 @@ async function recover(force=false){
   }
 }
 
+async function loadFairnessProof(roundId){
+  if(!fairness||fairnessProofBusy)return;
+  if(fairnessProofRoundId===Number(roundId)&&fairnessProofData)return;
+
+  fairnessProofBusy=true;
+  try{
+    const data=await JLApi.rpc('jl_aviator_round_proof',{p_round_id:Number(roundId)});
+    if(Number(round?.id)!==Number(roundId))return;
+    const check=await fairness.verify(data);
+    if(Number(round?.id)!==Number(roundId))return;
+    fairnessProofRoundId=Number(roundId);
+    fairnessProofData={data,check};
+    renderProof();
+  }catch(_){
+    if(Number(round?.id)===Number(roundId)){
+      fairnessProofRoundId=Number(roundId);
+      fairnessProofData={error:true};
+      renderProof();
+    }
+  }finally{
+    fairnessProofBusy=false;
+  }
+}
+
 function renderProof(){
   const wrap=$('#proofWrap');
   const proof=$('#proof');
   if(!wrap||!proof)return;
 
-  if(!round?.visual_seed_commit){
+  const commit=round?.round_seed_commit||round?.visual_seed_commit;
+  if(!commit){
     wrap.hidden=true;
     proof.textContent='';
+    proof.removeAttribute('data-valid');
     return;
   }
 
   wrap.hidden=false;
-  proof.textContent='Commit: '+round.visual_seed_commit+
-    (round.visual_seed_reveal?' · Seed revelada: '+round.visual_seed_reveal:'');
+  proof.removeAttribute('data-valid');
+
+  const lockCommit=round?.lock_proof_commit||null;
+  const reveal=round?.round_seed_reveal||round?.visual_seed_reveal||null;
+  const finished=['CRASHED','SETTLED'].includes(round?.status);
+
+  let text='Hash pré-aposta: '+commit;
+  if(lockCommit)text+=' · Hash do fecho: '+lockCommit;
+
+  if(!finished||!reveal){
+    text+=lockCommit
+      ?' · Inputs da rodada selados antes do voo.'
+      :' · Seed comprometida antes das apostas.';
+    proof.textContent=text;
+    return;
+  }
+
+  if(fairnessProofRoundId===Number(round.id)&&fairnessProofData?.check){
+    const {data,check}=fairnessProofData;
+    const valid=Boolean(check.valid);
+    proof.dataset.valid=valid?'true':'false';
+    proof.textContent=(valid?'Prova criptográfica válida ✓':'Prova criptográfica inválida ✕')+
+      ' · Hash pré-aposta: '+commit+
+      (lockCommit?' · Hash do fecho: '+lockCommit:'')+
+      ' · Seed: '+reveal+
+      (data?.result?.actual_crash_multiplier!=null
+        ?' · Resultado: '+Number(data.result.actual_crash_multiplier).toFixed(6)+'×'
+        :'');
+    return;
+  }
+
+  if(fairnessProofRoundId===Number(round.id)&&fairnessProofData?.error){
+    proof.textContent=text+' · Seed: '+reveal+' · Não foi possível verificar agora.';
+    return;
+  }
+
+  proof.textContent=text+' · Seed: '+reveal+' · A verificar…';
+  void loadFairnessProof(round.id);
 }
 
 function renderMaintenanceView(){
@@ -612,6 +678,9 @@ async function state(){
       ['CRASHED','SETTLED'].includes(round?.status);
 
     if(changedRound){
+      fairnessProofRoundId=null;
+      fairnessProofData=null;
+      fairnessProofBusy=false;
       myBet=null;
       myStake=0;
       lastRecoveredRoundId=null;
