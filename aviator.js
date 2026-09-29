@@ -5,6 +5,7 @@ const $=s=>document.querySelector(s);
 let round=null;
 let myBet=null;
 let myStake=0;
+let myAutoCashout=null;
 let recovering=false;
 let lastRecoveredRoundId=null;
 let enabled=true;
@@ -238,6 +239,10 @@ function renderTicket(multiplierValue=null){
   if(!active)return;
 
   $('#activeBetStake').textContent=money(myStake);
+  const auto=$('#activeBetAuto');
+  if(auto)auto.textContent=myAutoCashout
+    ?Number(myAutoCashout).toFixed(2)+'×'
+    :'Desligado';
 
   if(round?.status==='FLYING'){
     const m=Number(multiplierValue??mul());
@@ -357,6 +362,11 @@ function startFlightPaint(){
   paintFlight();
 }
 
+function cashoutMessage(source,multiplier,payout){
+  const label=source==='AUTO'?'Cash-out automático':'Cash-out';
+  return label+' em '+Number(multiplier).toFixed(2)+'× · '+money(payout);
+}
+
 async function reconcilePendingCashout(){
   const pending=readPendingCashout();
   if(!pending||!connectionOnline||!playerToken())return false;
@@ -371,11 +381,15 @@ async function reconcilePendingCashout(){
       clearPendingCashout();
       myBet=null;
       myStake=0;
+      myAutoCashout=null;
       lastRecoveredRoundId=pending.round_id;
       resetCashout();
       renderTicket();
-      $('#aviatorMessage').textContent=
-        'Cash-out confirmado em '+Number(bet.cashout_multiplier).toFixed(2)+'× · '+money(bet.payout);
+      $('#aviatorMessage').textContent=cashoutMessage(
+        bet.cashout_source,
+        bet.cashout_multiplier,
+        bet.payout
+      );
       preserveMessageOnNextRoundSync=true;
       return true;
     }
@@ -385,6 +399,7 @@ async function reconcilePendingCashout(){
       if(Number(round?.id)===pending.round_id){
         myBet=bet.id;
         myStake=Number(bet.stake)||0;
+        myAutoCashout=Number(bet.auto_cashout_multiplier)||null;
         lastRecoveredRoundId=pending.round_id;
         renderTicket();
       }
@@ -396,6 +411,7 @@ async function reconcilePendingCashout(){
       clearPendingCashout();
       myBet=null;
       myStake=0;
+      myAutoCashout=null;
       resetCashout();
       renderTicket();
       $('#aviatorMessage').textContent='Fim da rodada. Cash-out não disponível.';
@@ -407,6 +423,7 @@ async function reconcilePendingCashout(){
       clearPendingCashout();
       myBet=null;
       myStake=0;
+      myAutoCashout=null;
       resetCashout();
       renderTicket();
       $('#aviatorMessage').textContent='A aposta foi reembolsada pelo servidor.';
@@ -434,15 +451,28 @@ async function recover(force=false){
       return;
     }
 
-    const current=runtime.pickActiveBet(x?.bets,requestedRoundId);
+    const bets=Array.isArray(x?.bets)?x.bets:[];
+    const current=runtime.pickActiveBet(bets,requestedRoundId);
+    const latest=bets
+      .filter(b=>Number(b?.round_id)===requestedRoundId)
+      .sort((a,b)=>Number(b?.id)-Number(a?.id))[0]||null;
 
     myBet=current?.id??null;
     myStake=current?Number(current.stake)||0:0;
+    myAutoCashout=current?Number(current.auto_cashout_multiplier)||null:null;
     lastRecoveredRoundId=requestedRoundId;
     renderTicket();
 
     if(myBet&&round.status==='FLYING'){
       $('#aviatorMessage').textContent='Aposta ativa recuperada.';
+    }else if(latest?.status==='CASHED_OUT'){
+      myAutoCashout=null;
+      resetCashout();
+      $('#aviatorMessage').textContent=cashoutMessage(
+        latest.cashout_source,
+        latest.cashout_multiplier,
+        latest.payout
+      );
     }
   }catch(_){
     lastRecoveredRoundId=null;
@@ -648,6 +678,7 @@ function renderFinished(){
 
   myBet=null;
   myStake=0;
+  myAutoCashout=null;
   resetCashout();
   renderTicket();
   rememberCurrentResult();
@@ -759,6 +790,7 @@ async function state(){
       fairnessProofBusy=false;
       myBet=null;
       myStake=0;
+      myAutoCashout=null;
       lastRecoveredRoundId=null;
       stopFlight();
       resetCashout();
@@ -790,6 +822,16 @@ async function state(){
     }
 
     renderCurrentRound();
+
+    if(
+      round?.status==='FLYING'&&
+      myBet&&
+      myAutoCashout&&
+      mul()>=myAutoCashout
+    ){
+      await recover(true);
+      renderCurrentRound();
+    }
 
     if(!enabled&&round?.status==='FLYING'&&myBet){
       $('#aviatorMessage').textContent=
@@ -828,20 +870,34 @@ $('#aviatorBetForm').addEventListener('submit',async e=>{
       throw new Error('Informe um valor entre 0,50 e 500 MZN.');
     }
 
+    const autoRaw=$('#aviatorAutoCashout').value.trim();
+    const auto=autoRaw===''?null:Number(autoRaw);
+    if(
+      auto!==null&&(
+        !Number.isFinite(auto)||
+        auto<1.01||
+        Math.abs(auto*100-Math.round(auto*100))>1e-8
+      )
+    ){
+      throw new Error('Cash-out automático deve ser 1,01x ou maior, com até 2 casas decimais.');
+    }
+
     const r=await JLApi.rpc('jl_aviator_place_bet',{
       p_token:playerToken(),
       p_amount:amount,
-      p_request_key:betKey()
+      p_request_key:betKey(),
+      p_auto_cashout_multiplier:auto
     });
 
     myBet=r.bet_id;
     myStake=Number(r.stake)||amount;
+    myAutoCashout=Number(r.auto_cashout_multiplier)||null;
     lastRecoveredRoundId=round.id;
     renderTicket();
 
-    $('#aviatorMessage').textContent=r.already_processed
-      ?'Aposta já confirmada. Aguarde a descolagem.'
-      :'Aposta confirmada. Aguarde a descolagem.';
+    $('#aviatorMessage').textContent=
+      'Aposta confirmada: '+money(myStake)+
+      (myAutoCashout?' · Auto '+myAutoCashout.toFixed(2)+'×':'');
   }catch(e){
     $('#aviatorMessage').textContent=e.message;
   }finally{
@@ -874,11 +930,15 @@ $('#cashoutBtn').addEventListener('click',async()=>{
     });
 
     clearPendingCashout();
-    $('#aviatorMessage').textContent=
-      'Cash-out em '+Number(r.multiplier).toFixed(2)+'× · '+money(r.payout);
+    $('#aviatorMessage').textContent=cashoutMessage(
+      r.source,
+      r.multiplier,
+      r.payout
+    );
 
     myBet=null;
     myStake=0;
+    myAutoCashout=null;
     resetCashout();
     renderTicket();
     lastRecoveredRoundId=round?.id??null;
@@ -893,6 +953,7 @@ $('#cashoutBtn').addEventListener('click',async()=>{
       clearPendingCashout();
       myBet=null;
       myStake=0;
+      myAutoCashout=null;
       lastRecoveredRoundId=round?.id??null;
       resetCashout();
       renderTicket();
