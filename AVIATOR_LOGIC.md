@@ -46,6 +46,14 @@
 - `financial_ceiling`, `effective_target`, `visual_target` e totais internos não são expostos no estado público antes do crash.
 - O cash-out continua usando o relógio e as travas do servidor; a indicação visual nunca autoriza pagamento.
 
+## Imutabilidade da aposta confirmada
+
+- Depois que o servidor confirma uma aposta, os termos principais ficam imutáveis no banco: `round_id`, `player_id`, `stake`, `request_key`, `auto_cashout_multiplier` e `created_at`.
+- A proteção é mais forte que o mínimo exigido pelo estado LOCKED: mesmo durante BETTING uma aposta já confirmada não pode ter o valor ou o auto cash-out reescritos. Para mudar a intenção, seria necessário um fluxo explícito de cancelamento/reaposta, que não existe hoje.
+- Quando a rodada entra em **LOCKED**, qualquer tentativa de alterar esses termos continua bloqueada inclusive por UPDATE direto ou caminho privilegiado.
+- O trigger não impede o motor de atualizar campos de liquidação, como `status`, `payout`, `cashout_multiplier`, `cashout_source` e `payout_transaction_id`.
+- Na interface, os campos de valor e auto cash-out ficam desativados assim que a aposta é confirmada e permanecem bloqueados em LOCKED/FLYING.
+
 ## Cash-out automático opcional
 
 - O jogador pode deixar o campo vazio ou indicar um alvo como **1,50x**, **2,00x** ou outro valor com até 2 casas decimais.
