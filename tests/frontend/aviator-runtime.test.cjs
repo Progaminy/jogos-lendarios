@@ -43,3 +43,26 @@ test('HTML carrega runtime antes do controlador principal',()=>{
   assert.ok(runtimeAt>=0,'runtime do Aviator deve estar incluído');
   assert.ok(controllerAt>runtimeAt,'runtime deve carregar antes de aviator.js');
 });
+
+test('HTML mantém histórico e bilhete ao vivo com ids estáveis',()=>{
+  const html=fs.readFileSync(path.join(__dirname,'../../aviator.html'),'utf8');
+  for(const id of [
+    'aviatorHistory',
+    'historyStatus',
+    'activeBetPanel',
+    'activeBetStake',
+    'activeBetMultiplier',
+    'activeBetPayout'
+  ]){
+    assert.match(html,new RegExp('id="'+id+'"'));
+  }
+});
+
+test('controlador busca histórico em RPC separado do estado de voo',()=>{
+  const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
+  assert.match(js,/jl_aviator_recent_results/);
+  const publicStateCalls=(js.match(/jl_aviator_public_state/g)||[]).length;
+  const historyCalls=(js.match(/jl_aviator_recent_results/g)||[]).length;
+  assert.equal(publicStateCalls,1);
+  assert.equal(historyCalls,1);
+});
