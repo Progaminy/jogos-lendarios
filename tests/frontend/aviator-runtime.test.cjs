@@ -269,3 +269,21 @@ test('termos da aposta ficam bloqueados visualmente depois da confirmação/LOCK
   assert.match(js,/function renderLocked\(\)[\s\S]*?setBetInputsLocked\(true\)/);
   assert.match(js,/function renderFlying\(\)[\s\S]*?setBetInputsLocked\(true\)/);
 });
+
+
+test('reconexão usa snapshot autoritativo e não reinicia a fase visual',()=>{
+  const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
+
+  assert.match(js,/jl_aviator_reconnect/);
+  assert.match(js,/async function reconnectState\(\)/);
+  assert.match(js,/applyReconnectPlayerState\(x\?\.player\)/);
+  assert.match(js,/Ligação restabelecida\. Voo atual:/);
+  assert.match(js,/if\(stage\.classList\.contains\(next\)\)return/);
+
+  const onlineBlock=js.match(/window\.addEventListener\('online',[\s\S]*?\n\}\);/)?.[0]||'';
+  assert.match(onlineBlock,/await reconnectState\(\)/);
+  assert.doesNotMatch(onlineBlock,/jl_aviator_public_state/);
+
+  const visibilityBlock=js.match(/document\.addEventListener\('visibilitychange',[\s\S]*?\n\}\);/)?.[0]||'';
+  assert.match(visibilityBlock,/reconnectState\(\)/);
+});
