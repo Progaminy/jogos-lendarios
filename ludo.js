@@ -336,27 +336,18 @@
       setPreferredLudoColor(b.dataset.ludoColor);
     });
   }
-  const LUDO_STAKE_STEPS=[10,20,50,100,200,500,1000,2000,5000];
-  function stakeStepIndex(value){
-    const n=Number(value);
-    const exact=LUDO_STAKE_STEPS.indexOf(n);
-    if(exact>=0)return exact;
-    let best=0;
-    for(let i=1;i<LUDO_STAKE_STEPS.length;i++){
-      if(Math.abs(LUDO_STAKE_STEPS[i]-n)<Math.abs(LUDO_STAKE_STEPS[best]-n))best=i;
-    }
-    return best;
-  }
-  function syncStakePicker(inputId){
+  function syncStakePicker(inputId,{normalize=false}={}){
     const input=$(inputId);
     const picker=document.querySelector(`.ludo-stake-stepper[data-stake-input="${inputId}"]`);
     if(!input||!picker)return;
-    const index=stakeStepIndex(input.value);
-    input.value=String(LUDO_STAKE_STEPS[index]);
-    const display=picker.querySelector('.ludo-stake-display strong');
-    if(display)display.textContent=Number(input.value).toLocaleString('pt-MZ');
-    picker.querySelector('[data-ludo-stake-delta="-1"]')?.toggleAttribute('disabled',index===0);
-    picker.querySelector('[data-ludo-stake-delta="1"]')?.toggleAttribute('disabled',index===LUDO_STAKE_STEPS.length-1);
+    let value=Number(input.value);
+    if(normalize){
+      if(!Number.isFinite(value))value=10;
+      value=Math.max(10,Math.round(value));
+      input.value=String(value);
+    }
+    const valid=Number.isFinite(value);
+    picker.querySelector('[data-ludo-stake-delta="-1"]')?.toggleAttribute('disabled',valid&&value<=10);
   }
   function wireStakePicker(inputId){
     const input=$(inputId);
@@ -365,13 +356,18 @@
     picker.addEventListener('click',e=>{
       const b=e.target.closest('[data-ludo-stake-delta]');
       if(!b)return;
-      const current=stakeStepIndex(input.value);
-      const next=Math.max(0,Math.min(LUDO_STAKE_STEPS.length-1,current+Number(b.dataset.ludoStakeDelta||0)));
-      if(next===current)return;
-      input.value=String(LUDO_STAKE_STEPS[next]);
+      const delta=Number(b.dataset.ludoStakeDelta||0);
+      let current=Number(input.value);
+      if(!Number.isFinite(current))current=10;
+      const next=Math.max(10,Math.round(current)+delta);
+      input.value=String(next);
       syncStakePicker(inputId);
+      input.dispatchEvent(new Event('input',{bubbles:true}));
     });
-    syncStakePicker(inputId);
+    input.addEventListener('input',()=>syncStakePicker(inputId));
+    input.addEventListener('change',()=>syncStakePicker(inputId,{normalize:true}));
+    input.addEventListener('blur',()=>syncStakePicker(inputId,{normalize:true}));
+    syncStakePicker(inputId,{normalize:true});
   }
   function syncQuickModePicker(){
     if(!els.createMode)return;
