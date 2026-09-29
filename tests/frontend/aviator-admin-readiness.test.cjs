@@ -15,20 +15,14 @@ test('admin mostra prontidão e tetos de referência do Aviator',()=>{
   assert.match(js,/PRONTO PARA TESTE/);
 });
 
-test('botão Fechar Aviator é dedicado e não contém lógica de reabertura',()=>{
+test('botão Fechar Aviator é dedicado, direto e não contém lógica de reabertura',()=>{
   const js=fs.readFileSync('admin.js','utf8');
+  assert.match(js,/async function closeAviatorFromAdmin/);
   assert.match(js,/jl_aviator_admin_close/);
-  assert.match(js,/Fechar Aviator agora\?/);
-  assert.match(js,/Novas apostas e novas rodadas serão bloqueadas imediatamente/);
-
-  const closeBlock=js.match(
-    /\$\('aviatorMaintenanceClose'\)\?\.addEventListener\('click',[\s\S]*?\n  \}\);/
-  )?.[0]||'';
-
-  assert.match(closeBlock,/jl_aviator_admin_close/);
-  assert.doesNotMatch(closeBlock,/Abrir o Aviator/);
-  assert.doesNotMatch(closeBlock,/jl_aviator_admin_set_enabled/);
-  assert.doesNotMatch(closeBlock,/p_enabled:true/);
+  assert.match(js,/window\.JLCloseAviator=closeAviatorFromAdmin/);
+  assert.match(js,/document\.addEventListener\('click'/);
+  assert.doesNotMatch(js,/Fechar Aviator agora\?/);
+  assert.doesNotMatch(js,/jl_aviator_admin_set_enabled/);
 
   assert.match(js,/1\+\(bankBalance\*exposure\/10\)/);
   assert.doesNotMatch(js,/bankBalance\s*=\s*bankBalance\s*\+/);
