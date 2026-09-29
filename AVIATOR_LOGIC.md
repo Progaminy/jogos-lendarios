@@ -46,6 +46,15 @@
 - `financial_ceiling`, `effective_target`, `visual_target` e totais internos não são expostos no estado público antes do crash.
 - O cash-out continua usando o relógio e as travas do servidor; a indicação visual nunca autoriza pagamento.
 
+## Mensagens limpas para o jogador
+
+- Nenhuma exceção bruta do backend é mostrada diretamente na interface.
+- Erros conhecidos são traduzidos para mensagens curtas e compreensíveis, como saldo insuficiente, apostas fechadas, fim da rodada ou falta de ligação.
+- Erros desconhecidos usam mensagens genéricas seguras; nomes de RPC, SQL, stack trace e detalhes internos não são exibidos.
+- Quebras reais e literais `\\n` são normalizadas antes de qualquer mensagem chegar ao jogador.
+- A verificação provably fair continua funcionando, mas a interface mostra apenas estados simples: rodada protegida, rodada verificada ou verificação indisponível.
+- Hashes, seeds e payloads técnicos permanecem fora da interface normal do jogador.
+
 ## Separação entre animação e resultado financeiro
 
 - O avião, a grelha, o rastro e a animação CSS são estritamente visuais. A área de voo está marcada como `data-visual-only="true"` e os elementos animados não recebem eventos de ponteiro.
