@@ -107,8 +107,12 @@
       $('aviatorCeiling').textContent=r.financial_ceiling?Number(r.financial_ceiling).toFixed(2)+'×':'—';
       $('aviatorReserve').textContent=money(r.risk_reserve); $('aviatorStaked').textContent=money(d.stake_sum);
       $('aviatorPaid').textContent=money(d.paid_sum); $('aviatorCrash').textContent=r.crash_multiplier?Number(r.crash_multiplier).toFixed(2)+'×':'—';
+      const mt=$('aviatorMaintenanceToggle'); if(mt){mt.textContent=d.enabled?'Fechar Aviator · manutenção':'Abrir Aviator';mt.classList.toggle('danger',d.enabled);mt.classList.toggle('success',!d.enabled);}
     }catch(e){$('aviatorAdminMessage').textContent=e.message}
   }
+  $('aviatorMaintenanceToggle')?.addEventListener('click',async()=>{
+    try{const d=await rpc('jl_aviator_admin_state',{p_token:state.token});const enabled=!d.enabled;await rpc('jl_aviator_admin_set_enabled',{p_token:state.token,p_enabled:enabled});$('aviatorAdminMessage').textContent=enabled?'Aviator aberto.':'Aviator fechado para manutenção.';await refreshAviatorAdmin()}catch(e){$('aviatorAdminMessage').textContent=e.message}
+  });
   $('aviatorBankAdjust')?.addEventListener('click',async()=>{
     try{
       const delta=Number($('aviatorBankDelta').value),reason=$('aviatorBankReason').value.trim();
