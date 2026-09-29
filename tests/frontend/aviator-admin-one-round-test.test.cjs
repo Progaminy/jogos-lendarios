@@ -17,4 +17,5 @@ test('botao de one-round test fica indisponivel quando Aviator ja esta aberto',(
   const js=fs.readFileSync('admin.js','utf8');
   assert.match(js,/oneRound\.disabled=Boolean\(d\.enabled\)/);
   assert.match(js,/Feche o Aviator antes de iniciar uma rodada de teste/);
+  assert.match(js,/TESTE 1 RODADA/);
 });
