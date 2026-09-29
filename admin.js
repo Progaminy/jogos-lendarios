@@ -242,16 +242,14 @@
     }
   });
 
-  $('aviatorMaintenanceClose')?.addEventListener('click',async()=>{
-    const button=$('aviatorMaintenanceClose');
-    try{
-      const d=await rpc('jl_aviator_admin_state',{p_token:state.token});
-      if(!d.enabled){
-        $('aviatorAdminMessage').textContent='Aviator já está fechado.';
-        await refreshAviatorAdmin();
-        return;
-      }
+  async function closeAviatorFromAdmin(button=$('aviatorMaintenanceClose')){
+    if(!state.token){
+      $('aviatorAdminMessage').textContent='Sessão administrativa expirada. Entre novamente.';
+      toast('Sessão administrativa expirada. Entre novamente.','error');
+      return;
+    }
 
+    try{
       if(button){
         button.disabled=true;
         button.textContent='Fechando…';
@@ -262,6 +260,7 @@
       const result=await rpc('jl_aviator_admin_close',{p_token:state.token});
       const refunded=Number(result.refunded_bets)||0;
       const refundedTotal=Number(result.refunded_total)||0;
+
       $('aviatorAdminMessage').textContent=refunded>0
         ?'Aviator fechado. '+refunded+' aposta'+(refunded===1?'':'s')+
           ' reembolsada'+(refunded===1?'':'s')+
@@ -269,12 +268,29 @@
         :result.draining
           ?'Aviator fechado. A rodada atual terminará com segurança.'
           :'Aviator fechado para manutenção.';
+
+      toast('Aviator fechado.','success');
       await refreshAviatorAdmin();
     }catch(e){
-      $('aviatorAdminMessage').textContent=e.message;
-      await refreshAviatorAdmin();
+      const message='Falha ao fechar Aviator: '+String(e?.message||e||'Erro desconhecido.');
+      $('aviatorAdminMessage').textContent=message;
+      toast(message,'error');
+      if(button){
+        button.disabled=false;
+        button.textContent='Fechar Aviator';
+      }
     }
+  }
+
+  window.JLCloseAviator=closeAviatorFromAdmin;
+
+  document.addEventListener('click',(event)=>{
+    const button=event.target?.closest?.('#aviatorMaintenanceClose');
+    if(!button)return;
+    event.preventDefault();
+    void closeAviatorFromAdmin(button);
   });
+
   $('aviatorMaintenanceReopen')?.addEventListener('click',async()=>{
     const button=$('aviatorMaintenanceReopen');
     try{
