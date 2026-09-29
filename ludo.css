@@ -1460,3 +1460,86 @@ body.ludo-pinned .pin-ludo-button{
   .ludo-stake-edit input{font-size:1.02rem}
   .ludo-stake-edit span{font-size:.5rem}
 }
+
+
+/* TIPOS DE PEOES + NUMEROS INTERNOS SEM EXIBICAO 2026-09-29 */
+.ludo-pawn-style-picker{
+  --preview-color:#ef2737;
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px;
+}
+.ludo-pawn-style-picker[data-color="red"]{--preview-color:#ef2737}
+.ludo-pawn-style-picker[data-color="green"]{--preview-color:#079a54}
+.ludo-pawn-style-picker[data-color="yellow"]{--preview-color:#d7aa00}
+.ludo-pawn-style-picker[data-color="blue"]{--preview-color:#28a9e8}
+.pawn-style-choice{
+  position:relative;
+  min-height:78px;
+  display:grid;
+  grid-template-rows:52px auto;
+  place-items:center;
+  gap:2px;
+  padding:6px 7px;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:14px;
+  background:#0b1727;
+  color:#dfe7f3;
+  cursor:pointer;
+}
+.pawn-style-choice.active{
+  border-color:var(--preview-color);
+  box-shadow:0 0 0 2px color-mix(in srgb,var(--preview-color) 30%,transparent),0 8px 24px rgba(0,0,0,.22);
+}
+.pawn-style-choice small{font-size:.68rem;font-weight:850;line-height:1}
+.pawn-style-choice .choice-check{display:none}
+.pawn-style-choice.active .choice-check{display:grid}
+.pawn-type-preview{
+  position:relative;
+  display:block;
+  width:46px;
+  height:52px;
+}
+.pawn-type-preview:before,.pawn-type-preview:after{
+  content:"";
+  position:absolute;
+  background:var(--preview-color);
+  border:1.5px solid rgba(255,255,255,.9);
+  box-shadow:0 2px 4px rgba(0,0,0,.4),inset 0 0 0 2px rgba(255,255,255,.1);
+}
+.pawn-type-current:before{left:29%;top:2%;width:42%;aspect-ratio:1;border-radius:50%}
+.pawn-type-current:after{left:12%;top:34%;width:76%;height:62%;border-radius:42% 42% 18% 18%/28% 28% 16% 16%;clip-path:polygon(31% 0,69% 0,76% 23%,68% 43%,86% 69%,100% 78%,96% 100%,4% 100%,0 78%,14% 69%,32% 43%,24% 23%)}
+.pawn-type-classic:before{left:30%;top:1%;width:40%;aspect-ratio:1;border-radius:50%}
+.pawn-type-classic:after{left:9%;top:31%;width:82%;height:66%;border-radius:45% 45% 17% 17%;clip-path:polygon(39% 0,61% 0,66% 18%,61% 36%,75% 56%,82% 73%,100% 84%,96% 100%,4% 100%,0 84%,18% 73%,25% 56%,39% 36%,34% 18%)}
+.pawn-type-video:before{left:34%;top:3%;width:32%;aspect-ratio:1;border-radius:50%}
+.pawn-type-video:after{left:20%;top:29%;width:60%;height:67%;border-radius:38% 38% 22% 22%;clip-path:polygon(36% 0,64% 0,72% 18%,66% 44%,78% 67%,94% 86%,100% 100%,0 100%,6% 86%,22% 67%,34% 44%,28% 18%)}
+
+/* token_no continua em data/ARIA, mas nunca é desenhado no tabuleiro. */
+.piece{
+  color:transparent!important;
+  text-shadow:none!important;
+  font-size:0!important;
+  padding-top:0!important;
+}
+.piece.pawn-style-classic:before{
+  left:30%!important;top:2%!important;width:40%!important;
+}
+.piece.pawn-style-classic:after{
+  left:9%!important;top:32%!important;width:82%!important;height:64%!important;
+  border-radius:45% 45% 17% 17%!important;
+  clip-path:polygon(39% 0,61% 0,66% 18%,61% 36%,75% 56%,82% 73%,100% 84%,96% 100%,4% 100%,0 84%,18% 73%,25% 56%,39% 36%,34% 18%)!important;
+}
+.piece.pawn-style-video:before{
+  left:34%!important;top:4%!important;width:32%!important;
+}
+.piece.pawn-style-video:after{
+  left:20%!important;top:30%!important;width:60%!important;height:64%!important;
+  border-radius:38% 38% 22% 22%!important;
+  clip-path:polygon(36% 0,64% 0,72% 18%,66% 44%,78% 67%,94% 86%,100% 100%,0 100%,6% 86%,22% 67%,34% 44%,28% 18%)!important;
+}
+@media(max-width:600px){
+  .ludo-pawn-style-picker{gap:5px}
+  .pawn-style-choice{min-height:66px;grid-template-rows:43px auto;padding:4px;border-radius:10px}
+  .pawn-type-preview{width:38px;height:43px}
+  .pawn-style-choice small{font-size:.58rem}
+}
