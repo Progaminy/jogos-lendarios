@@ -132,6 +132,35 @@ function moneyCompact(value){
   })+' MZN';
 }
 
+function playerMessage(error,fallback='Não foi possível concluir. Tente novamente.'){
+  const raw=String(error?.message||error||'')
+    .replace(/\\n|\r|\n/g,' ')
+    .replace(/\s+/g,' ')
+    .trim();
+
+  const rules=[
+    [/saldo insuficiente/i,'Saldo insuficiente.'],
+    [/jogador bloqueado/i,'A sua conta está bloqueada.'],
+    [/aviator em manutencao|aviator brevemente/i,'Aviator brevemente'],
+    [/nao ha rodada aviator aberta|apostas fechadas/i,'Apostas fechadas. Aguarde a próxima rodada.'],
+    [/valor de aposta invalido|informe um valor/i,'Informe um valor de aposta válido.'],
+    [/cash-out automatico deve ser/i,'Verifique o valor do cash-out automático.'],
+    [/ja existe uma aposta nesta rodada/i,'A sua aposta desta rodada já foi confirmada.'],
+    [/aposta nao encontrada/i,'Aposta não encontrada. Atualize o jogo.'],
+    [/aposta ja liquidada/i,'Esta aposta já terminou.'],
+    [/voo nao esta ativo/i,'O voo já terminou.'],
+    [/crash ja atingido/i,'Fim da rodada. Cash-out não disponível.'],
+    [/sem liga[cç][aã]o|failed to fetch|network/i,'Sem ligação. Verifique a internet.'],
+    [/reserva da banca inconsistente/i,'Não foi possível concluir agora. Tente novamente.']
+  ];
+
+  for(const [pattern,message] of rules){
+    if(pattern.test(raw))return message;
+  }
+
+  return fallback;
+}
+
 function show(selector,visible){
   const el=typeof selector==='string'?$(selector):selector;
   if(el)el.classList.toggle('hidden',!visible);
@@ -599,41 +628,29 @@ function renderProof(){
   wrap.hidden=false;
   proof.removeAttribute('data-valid');
 
-  const lockCommit=round?.lock_proof_commit||null;
   const reveal=round?.round_seed_reveal||round?.visual_seed_reveal||null;
   const finished=['CRASHED','SETTLED'].includes(round?.status);
 
-  let text='Hash pré-aposta: '+commit;
-  if(lockCommit)text+=' · Hash do fecho: '+lockCommit;
-
   if(!finished||!reveal){
-    text+=lockCommit
-      ?' · Inputs da rodada selados antes do voo.'
-      :' · Seed comprometida antes das apostas.';
-    proof.textContent=text;
+    proof.textContent='Rodada protegida antes do voo.';
     return;
   }
 
   if(fairnessProofRoundId===Number(round.id)&&fairnessProofData?.check){
-    const {data,check}=fairnessProofData;
-    const valid=Boolean(check.valid);
+    const valid=Boolean(fairnessProofData.check.valid);
     proof.dataset.valid=valid?'true':'false';
-    proof.textContent=(valid?'Prova criptográfica válida ✓':'Prova criptográfica inválida ✕')+
-      ' · Hash pré-aposta: '+commit+
-      (lockCommit?' · Hash do fecho: '+lockCommit:'')+
-      ' · Seed: '+reveal+
-      (data?.result?.actual_crash_multiplier!=null
-        ?' · Resultado: '+Number(data.result.actual_crash_multiplier).toFixed(6)+'×'
-        :'');
+    proof.textContent=valid
+      ?'Rodada verificada ✓'
+      :'Não foi possível validar esta rodada.';
     return;
   }
 
   if(fairnessProofRoundId===Number(round.id)&&fairnessProofData?.error){
-    proof.textContent=text+' · Seed: '+reveal+' · Não foi possível verificar agora.';
+    proof.textContent='Verificação indisponível neste momento.';
     return;
   }
 
-  proof.textContent=text+' · Seed: '+reveal+' · A verificar…';
+  proof.textContent='A verificar rodada…';
   void loadFairnessProof(round.id);
 }
 
@@ -965,7 +982,7 @@ async function reconnectState(){
     if(e?.name==='AbortError')return;
     if(navigator.onLine===false)setConnectionState(false);
     const message=$('#aviatorMessage');
-    if(message)message.textContent=e.message;
+    if(message)message.textContent=playerMessage(e,'Não foi possível sincronizar o jogo.');
   }finally{
     if(stateController===controller){
       stateController=null;
@@ -1063,7 +1080,7 @@ async function state(){
     if(e?.name==='AbortError')return;
     if(navigator.onLine===false)setConnectionState(false);
     const message=$('#aviatorMessage');
-    if(message)message.textContent=e.message;
+    if(message)message.textContent=playerMessage(e,'Não foi possível atualizar o jogo.');
   }finally{
     if(stateController===controller){
       stateController=null;
@@ -1120,7 +1137,7 @@ $('#aviatorBetForm').addEventListener('submit',async e=>{
 
     $('#aviatorMessage').textContent='Aposta confirmada. Aguarde a descolagem.';
   }catch(e){
-    $('#aviatorMessage').textContent=e.message;
+    $('#aviatorMessage').textContent=playerMessage(e,'Não foi possível confirmar a aposta.');
   }finally{
     betting=false;
     renderCurrentRound();
@@ -1183,7 +1200,10 @@ $('#cashoutBtn').addEventListener('click',async()=>{
       $('#aviatorMessage').textContent='Sem ligação. A confirmar o cash-out quando reconectar.';
     }else{
       clearPendingCashout();
-      $('#aviatorMessage').textContent=raw||'Não foi possível confirmar o cash-out.';
+      $('#aviatorMessage').textContent=playerMessage(
+        raw,
+        'Não foi possível confirmar o cash-out.'
+      );
       lastRecoveredRoundId=null;
       await recover(true);
     }
