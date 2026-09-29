@@ -68,7 +68,8 @@ begin
   perform public.jl_aviator_lock_round(r1);
 
   update public.jl_aviator_rounds
-     set takeoff_at=clock_timestamp()-interval '1 second'
+     set betting_closes_at=clock_timestamp()-interval '4 seconds',
+         takeoff_at=clock_timestamp()-interval '1 second'
    where id=r1;
 
   perform public.jl_aviator_start_round(r1);
@@ -166,7 +167,8 @@ begin
   perform public.jl_aviator_lock_round(r2);
 
   update public.jl_aviator_rounds
-     set takeoff_at=clock_timestamp()-interval '1 second'
+     set betting_closes_at=clock_timestamp()-interval '4 seconds',
+         takeoff_at=clock_timestamp()-interval '1 second'
    where id=r2;
 
   perform public.jl_aviator_start_round(r2);
