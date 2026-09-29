@@ -181,12 +181,17 @@ test('provably fair v2 verifica seed, lock e resultado sem confiar no controlado
   assert.equal(tampered.resultValid,false);
 });
 
-test('controlador pede prova pública somente para conferir rodada concluída',()=>{
+test('controlador verifica a rodada sem expor detalhes técnicos ao jogador',()=>{
+  const html=fs.readFileSync(path.join(__dirname,'../../aviator.html'),'utf8');
   const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
   assert.match(js,/jl_aviator_round_proof/);
   assert.match(js,/fairness\.verify\(data\)/);
-  assert.match(js,/Hash pré-aposta/);
-  assert.match(js,/Hash do fecho/);
+  assert.match(html,/Verificação da rodada/);
+  assert.match(html,/class="proof-status"/);
+  assert.match(js,/Rodada protegida antes do voo\./);
+  assert.match(js,/Rodada verificada ✓/);
+  assert.doesNotMatch(js,/Hash pré-aposta|Hash do fecho|Seed:/);
+  assert.doesNotMatch(html,/<code id="proof"/);
 });
 
 
@@ -375,4 +380,18 @@ test('multiplicadores baixos medios e altos usam tiers visuais sem animação ex
 
   const tierCss=css.match(/\.multiplier,\.crash-text span,\.aviator-history-value[\s\S]*?\.multiplier-wrap small/)?.[0]||'';
   assert.doesNotMatch(tierCss,/animation:/);
+});
+
+
+test('mensagens do jogador nunca exibem erro técnico bruto nem quebras \\n',()=>{
+  const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
+
+  assert.match(js,/function playerMessage\(error,fallback=/);
+  assert.match(js,/replace\(\/\\\\n\|\\r\|\\n\/g,' '\)/);
+  assert.doesNotMatch(js,/message\.textContent=e\.message/);
+  assert.doesNotMatch(js,/aviatorMessage'\)\.textContent=e\.message/);
+  assert.doesNotMatch(js,/textContent=raw\|\|/);
+  assert.match(js,/Saldo insuficiente\./);
+  assert.match(js,/Apostas fechadas\. Aguarde a próxima rodada\./);
+  assert.match(js,/Não foi possível confirmar o cash-out\./);
 });
