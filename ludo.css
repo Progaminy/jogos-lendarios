@@ -1186,3 +1186,208 @@ body.ludo-pinned .pin-ludo-button{
 #turnTitle .turn-player-name.green{color:#00d95f}
 #turnTitle .turn-player-name.yellow{color:#ffd400}
 #turnTitle .turn-player-name.blue{color:#009dff}
+
+
+/* INICIO VISUAL DO LUDO — cor -> valor -> jogadores 2026-09-29 */
+.lobby-grid>.quick-start-panel{
+  grid-column:1/-1;
+  padding:20px;
+  border-color:rgba(244,189,66,.32);
+}
+.lobby-grid>.quick-start-panel + .panel{grid-column:1/-1}
+.quick-start-head{margin-bottom:12px}
+.ludo-quick-start{
+  width:min(860px,100%);
+  margin:0 auto;
+  display:grid;
+  gap:12px;
+}
+.quick-start-step{
+  display:grid;
+  grid-template-columns:58px minmax(0,1fr);
+  align-items:center;
+  gap:10px;
+  min-width:0;
+}
+.quick-step-icon{
+  width:50px;
+  height:50px;
+  display:grid;
+  place-items:center;
+  border:1px solid rgba(255,255,255,.11);
+  border-radius:15px;
+  background:rgba(255,255,255,.045);
+  font-size:1.35rem;
+  font-weight:950;
+}
+.quick-money-icon{font-size:.63rem;letter-spacing:.06em;color:#ffd15a}
+.ludo-color-picker,
+.ludo-stake-picker,
+.quick-player-count .player-count-picker{
+  display:grid;
+  gap:8px;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+}
+.ludo-color-choice,
+.ludo-stake-picker button,
+.quick-player-count .player-count-picker button,
+.quick-mode-picker button{
+  position:relative;
+  min-width:0;
+  min-height:58px;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:14px;
+  background:#0b1727;
+  color:#f7f9fc;
+  font-weight:950;
+  cursor:pointer;
+  transition:transform .14s ease,border-color .14s ease,box-shadow .14s ease,background .14s ease;
+}
+.ludo-color-choice:hover,
+.ludo-stake-picker button:hover,
+.quick-player-count .player-count-picker button:hover,
+.quick-mode-picker button:hover{transform:translateY(-1px)}
+.ludo-color-choice.active,
+.ludo-stake-picker button.active,
+.quick-player-count .player-count-picker button.active,
+.quick-mode-picker button.active{
+  border-color:#f4bd42;
+  box-shadow:0 0 0 2px rgba(244,189,66,.18),0 8px 24px rgba(0,0,0,.2);
+  background:linear-gradient(180deg,rgba(244,189,66,.13),rgba(11,23,39,.98));
+}
+.ludo-color-choice{display:grid;place-items:center}
+.ludo-color-choice.red{--piece-color:#ff0033}
+.ludo-color-choice.green{--piece-color:#00d95f}
+.ludo-color-choice.yellow{--piece-color:#ffd400}
+.ludo-color-choice.blue{--piece-color:#009dff}
+.ludo-color-choice.active{border-color:var(--piece-color);box-shadow:0 0 0 2px color-mix(in srgb,var(--piece-color) 30%,transparent),0 8px 24px rgba(0,0,0,.22)}
+.pawn-shape{
+  position:relative;
+  display:block;
+  width:36px;
+  height:44px;
+}
+.pawn-shape:before{
+  content:"";
+  position:absolute;
+  left:50%;
+  top:1px;
+  width:19px;
+  height:19px;
+  transform:translateX(-50%);
+  border-radius:50%;
+  background:var(--piece-color);
+  box-shadow:inset 0 2px 2px rgba(255,255,255,.28),0 2px 4px rgba(0,0,0,.35);
+}
+.pawn-shape:after{
+  content:"";
+  position:absolute;
+  left:50%;
+  bottom:1px;
+  width:34px;
+  height:27px;
+  transform:translateX(-50%);
+  background:var(--piece-color);
+  clip-path:polygon(34% 0,66% 0,73% 48%,92% 74%,92% 100%,8% 100%,8% 74%,27% 48%);
+  border-radius:7px 7px 9px 9px;
+  box-shadow:inset 0 2px 2px rgba(255,255,255,.2);
+}
+.choice-check{
+  position:absolute;
+  right:7px;
+  top:6px;
+  width:19px;
+  height:19px;
+  display:none;
+  place-items:center;
+  border-radius:50%;
+  background:#fff;
+  color:#07101d;
+  font-size:.72rem;
+  font-weight:1000;
+}
+.ludo-color-choice.active .choice-check{display:grid}
+.ludo-stake-picker{grid-template-columns:repeat(5,minmax(58px,1fr))}
+.ludo-stake-picker button{min-height:54px;font-variant-numeric:tabular-nums}
+.ludo-stake-picker button strong{font-size:1rem}
+.quick-player-count .player-count-picker{grid-template-columns:repeat(3,minmax(0,1fr))}
+.quick-player-count .player-count-picker button{
+  display:grid;
+  grid-template-columns:1fr auto;
+  align-items:center;
+  gap:7px;
+  padding:8px 12px;
+}
+.players-symbol{
+  min-width:0;
+  overflow:hidden;
+  color:#dfe7f3;
+  font-size:.95rem;
+  letter-spacing:-.18em;
+  white-space:nowrap;
+}
+.quick-player-count .player-count-picker button strong{font-size:1.05rem;color:#ffd15a}
+.quick-mini-options{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:9px;
+  margin-top:1px;
+}
+.quick-hidden-control{display:none!important}
+.quick-mode-picker{display:grid;grid-template-columns:repeat(2,54px);gap:7px}
+.quick-mode-picker button{min-height:48px;font-size:1.18rem}
+.quick-public-control{
+  display:grid;
+  width:54px;
+  height:48px;
+  place-items:center;
+  margin:0;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:14px;
+  background:#0b1727;
+  cursor:pointer;
+}
+.quick-public-control input{position:absolute;opacity:0;pointer-events:none}
+.quick-public-control span{font-size:1.18rem;filter:grayscale(1);opacity:.55}
+.quick-public-control:has(input:checked){
+  border-color:#4d9cff;
+  background:rgba(30,96,190,.15);
+  box-shadow:0 0 0 2px rgba(77,156,255,.13);
+}
+.quick-public-control:has(input:checked) span{filter:none;opacity:1}
+.quick-play-button{
+  min-height:56px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:9px;
+  font-size:1.02rem;
+  letter-spacing:.05em;
+}
+.quick-play-button span{font-size:1.25rem}
+
+@media(max-width:600px){
+  .lobby-grid>.quick-start-panel{padding:12px 10px}
+  .quick-start-head{margin-bottom:8px}
+  .ludo-quick-start{gap:9px}
+  .quick-start-step{grid-template-columns:44px minmax(0,1fr);gap:7px}
+  .quick-step-icon{width:40px;height:40px;border-radius:11px;font-size:1rem}
+  .quick-money-icon{font-size:.48rem}
+  .ludo-color-picker{gap:5px}
+  .ludo-color-choice{min-height:52px;border-radius:11px}
+  .pawn-shape{width:30px;height:37px}
+  .pawn-shape:before{width:16px;height:16px}
+  .pawn-shape:after{width:29px;height:23px}
+  .choice-check{right:4px;top:4px;width:16px;height:16px;font-size:.6rem}
+  .ludo-stake-picker{grid-template-columns:repeat(5,minmax(45px,1fr));gap:4px}
+  .ludo-stake-picker button{min-height:46px;padding:5px 2px;border-radius:10px}
+  .ludo-stake-picker button strong{font-size:.79rem}
+  .quick-player-count .player-count-picker{gap:5px}
+  .quick-player-count .player-count-picker button{min-height:48px;padding:6px 8px;border-radius:10px}
+  .players-symbol{font-size:.72rem}
+  .quick-player-count .player-count-picker button strong{font-size:.9rem}
+  .quick-mode-picker{grid-template-columns:repeat(2,48px)}
+  .quick-mode-picker button,.quick-public-control{width:48px;height:44px;min-height:44px;border-radius:11px}
+  .quick-play-button{min-height:52px;border-radius:12px}
+}
