@@ -114,7 +114,7 @@ test('resposta de recuperação antiga é descartada se a rodada mudou',()=>{
   const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
   assert.match(js,/const requestedRoundId=Number\(round\.id\)/);
   assert.match(js,/if\(Number\(round\?\.id\)!==requestedRoundId\)/);
-  assert.match(js,/runtime\.pickActiveBet\(x\?\.bets,requestedRoundId\)/);
+  assert.match(js,/runtime\.pickActiveBet\(bets,requestedRoundId\)/);
 });
 
 
@@ -124,7 +124,7 @@ test('cash-out ambíguo é persistido e reconciliado sem retry automático',()=>
   assert.match(js,/savePendingCashout\(id,cashoutRoundId\)/);
   assert.match(js,/reconcilePendingCashout\(\)/);
   assert.match(js,/bet\.status==='CASHED_OUT'/);
-  assert.match(js,/Cash-out confirmado em/);
+  assert.match(js,/cashoutMessage\(/);
   assert.match(js,/bet\.status==='ACTIVE'/);
   assert.match(js,/A aposta continua ativa/);
   const reconcileBlock=js.match(/async function reconcilePendingCashout\(\)[\s\S]*?\n}\n\nasync function recover/)?.[0]||'';
