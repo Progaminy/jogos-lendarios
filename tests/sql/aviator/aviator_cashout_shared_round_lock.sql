@@ -33,7 +33,7 @@ begin
   end if;
 
   if position(
-    'and balance>=v_profit' in replace(lower(v_def),' ','')
+    'andbalance>=v_profit' in replace(lower(v_def),' ','')
   )=0 then
     raise exception 'debito da banca deve validar reserva atomicamente';
   end if;
