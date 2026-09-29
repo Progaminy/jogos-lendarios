@@ -161,12 +161,18 @@
     if(!state.token||!$('aviatorAdmin')) return;
     try{
       const d=await rpc('jl_aviator_admin_state',{p_token:state.token}),r=d.round||{};
+      const roundExposure=d.exposure||{};
       const bankBalance=Number(d.bank?.balance)||0,exposure=Number(d.bank?.exposure_ratio)||0.5;
       $('aviatorBankBalance').textContent=money(bankBalance);
       $('aviatorRound').textContent=r.id?'#'+r.id:'—'; $('aviatorStatus').textContent=r.status||'—';
       $('aviatorCeiling').textContent=r.financial_ceiling?Number(r.financial_ceiling).toFixed(2)+'×':'—';
-      $('aviatorReserve').textContent=money(r.risk_reserve); $('aviatorStaked').textContent=money(d.stake_sum);
-      $('aviatorPaid').textContent=money(d.paid_sum); $('aviatorCrash').textContent=r.crash_multiplier?Number(r.crash_multiplier).toFixed(2)+'×':'—';
+      $('aviatorReserve').textContent=money(r.risk_reserve);
+      $('aviatorStaked').textContent=money(roundExposure.total_staked??d.stake_sum);
+      $('aviatorPotentialPayout').textContent=money(roundExposure.potential_payment);
+      $('aviatorPlayers').textContent=String(Number(roundExposure.players)||0);
+      $('aviatorCashouts').textContent=String(Number(roundExposure.cashouts)||0);
+      $('aviatorCashoutsPaid').textContent=money(roundExposure.cashout_paid)+' MZN pagos';
+      $('aviatorCrash').textContent=r.crash_multiplier?Number(r.crash_multiplier).toFixed(2)+'×':'—';
       const referenceStake=10,referenceCeiling=1+(bankBalance*exposure/referenceStake),bankWarning=$('aviatorBankWarning');
       const readiness=$('aviatorReadiness'),referenceCeilings=$('aviatorReferenceCeilings');
       const refs=[1,5,10,50].map(stake=>({
