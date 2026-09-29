@@ -74,6 +74,11 @@ jobs:
             echo "::endgroup::"
           done
 
+      - name: Run Aviator concurrent cash-out test
+        env:
+          JL_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+        run: bash tests/aviator-cashout-concurrency.sh
+
       - name: Run room-entry concurrency test when local reconstruction supports it
         env:
           JL_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
