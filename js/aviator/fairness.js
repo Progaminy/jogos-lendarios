@@ -21,9 +21,15 @@
   function visualTarget(seedCommit){
     const commit=String(seedCommit||'').toLowerCase();
     if(!/^[0-9a-f]{64}$/.test(commit))return null;
-    const n=Number.parseInt(commit.slice(0,13),16);
-    const u=n/4503599627370495;
-    return Math.round((5+130.7*u)*1e6)/1e6;
+
+    // Replica exatamente round(5 + 130.7*u, 6) do PostgreSQL usando
+    // apenas inteiros. Como tudo e positivo, +den/2 implementa o
+    // arredondamento decimal para 6 casas sem erro de ponto flutuante.
+    const n=BigInt('0x'+commit.slice(0,13));
+    const den=4503599627370495n;
+    const variableScaled=(130700000n*n + den/2n)/den;
+    const targetScaled=5000000n+variableScaled;
+    return Number(targetScaled)/1e6;
   }
 
   function nearlyEqual(a,b,places=6){
