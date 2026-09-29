@@ -25,7 +25,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="stylesheet" href="./ludo.css?v=20260929-9">
+  <link rel="stylesheet" href="./ludo.css?v=20260929-10">
   <link rel="stylesheet" href="./site-nav.css?v=20260928-20">
   <style id="ludo-critical-mobile-fix">
     @media (max-width:600px){
@@ -122,18 +122,62 @@
     </section>
 
     <section id="lobby" class="lobby-grid hidden">
-      <div class="panel jl-collapsible" data-collapse-default="closed">
-        <div class="section-head">
-          <div><p class="eyebrow">CRIAR SALA</p><h2>Nova partida</h2></div>
-          <div class="jl-collapse-actions"><span id="balanceBadge" class="balance-pill">0,00 MZN</span><button class="button ghost tiny jl-collapse-toggle" type="button" aria-expanded="false">Expandir</button></div>
+      <div class="panel jl-collapsible quick-start-panel" data-collapse-default="open">
+        <div class="section-head quick-start-head">
+          <div><p class="eyebrow">JOGAR</p><h2>Nova partida</h2></div>
+          <div class="jl-collapse-actions"><span id="balanceBadge" class="balance-pill">0,00 MZN</span><button class="button ghost tiny jl-collapse-toggle jl-symbol-toggle" type="button" aria-expanded="true" aria-label="Recolher">⌃</button></div>
         </div>
         <div class="jl-collapse-body">
-          <form id="createRoomForm" class="form-grid">
-            <div class="player-count-field"><span>Jogadores</span><div class="player-count-picker" data-select-id="createPlayers" role="group" aria-label="Quantidade de jogadores"><button type="button" data-player-count="2">2</button><button type="button" data-player-count="3">3</button><button type="button" data-player-count="4" class="active">4</button></div><select id="createPlayers" class="player-count-select" aria-hidden="true" tabindex="-1"><option value="2">2 jogadores</option><option value="3">3 jogadores</option><option value="4" selected>4 jogadores</option></select></div>
-            <label><span>Modo</span><select id="createMode"><option value="solo">Cada um por si</option><option value="partners">Parceiros 2 × 2</option></select></label>
-            <label><span>Aposta por jogador</span><div class="money"><span>MZN</span><input id="createBet" type="number" min="10" step="1" value="10" required></div></label>
-            <label class="check-row"><input id="createPublic" type="checkbox"><span>Sala pública · pode entrar pelo código</span></label>
-            <button class="button primary wide" type="submit">Criar sala de Ludo</button>
+          <form id="createRoomForm" class="ludo-quick-start">
+            <input id="createColor" type="hidden" value="red">
+
+            <div class="quick-start-step" aria-label="Escolha a cor dos peões">
+              <span class="quick-step-icon" aria-hidden="true">🎨</span>
+              <div id="createColorPicker" class="ludo-color-picker" role="group" aria-label="Cor dos peões">
+                <button class="ludo-color-choice red active" type="button" data-ludo-color="red" aria-label="Vermelho" aria-pressed="true"><span class="pawn-shape" aria-hidden="true"></span><span class="choice-check" aria-hidden="true">✓</span></button>
+                <button class="ludo-color-choice green" type="button" data-ludo-color="green" aria-label="Verde" aria-pressed="false"><span class="pawn-shape" aria-hidden="true"></span><span class="choice-check" aria-hidden="true">✓</span></button>
+                <button class="ludo-color-choice yellow" type="button" data-ludo-color="yellow" aria-label="Amarelo" aria-pressed="false"><span class="pawn-shape" aria-hidden="true"></span><span class="choice-check" aria-hidden="true">✓</span></button>
+                <button class="ludo-color-choice blue" type="button" data-ludo-color="blue" aria-label="Azul" aria-pressed="false"><span class="pawn-shape" aria-hidden="true"></span><span class="choice-check" aria-hidden="true">✓</span></button>
+              </div>
+            </div>
+
+            <div class="quick-start-step" aria-label="Escolha o valor por jogador">
+              <span class="quick-step-icon quick-money-icon" aria-hidden="true">MZN</span>
+              <div class="ludo-stake-picker" data-stake-input="createBet" role="group" aria-label="Valor por jogador">
+                <button class="active" type="button" data-ludo-stake="10" aria-pressed="true"><strong>10</strong></button>
+                <button type="button" data-ludo-stake="20" aria-pressed="false"><strong>20</strong></button>
+                <button type="button" data-ludo-stake="50" aria-pressed="false"><strong>50</strong></button>
+                <button type="button" data-ludo-stake="100" aria-pressed="false"><strong>100</strong></button>
+                <button type="button" data-ludo-stake="500" aria-pressed="false"><strong>500</strong></button>
+              </div>
+              <input id="createBet" type="hidden" value="10">
+            </div>
+
+            <div class="quick-start-step" aria-label="Escolha a quantidade de jogadores">
+              <span class="quick-step-icon" aria-hidden="true">👥</span>
+              <div class="player-count-field quick-player-count">
+                <div class="player-count-picker" data-select-id="createPlayers" role="group" aria-label="Quantidade de jogadores">
+                  <button type="button" data-player-count="2" aria-pressed="false"><span class="players-symbol" aria-hidden="true">♟♟</span><strong>2</strong></button>
+                  <button type="button" data-player-count="3" aria-pressed="false"><span class="players-symbol" aria-hidden="true">♟♟♟</span><strong>3</strong></button>
+                  <button type="button" data-player-count="4" class="active" aria-pressed="true"><span class="players-symbol" aria-hidden="true">♟♟♟♟</span><strong>4</strong></button>
+                </div>
+                <select id="createPlayers" class="player-count-select" aria-hidden="true" tabindex="-1"><option value="2">2 jogadores</option><option value="3">3 jogadores</option><option value="4" selected>4 jogadores</option></select>
+              </div>
+            </div>
+
+            <div class="quick-mini-options">
+              <select id="createMode" class="quick-hidden-control" aria-hidden="true" tabindex="-1"><option value="solo" selected>Cada um por si</option><option value="partners">Parceiros 2 × 2</option></select>
+              <div id="createModePicker" class="quick-mode-picker" role="group" aria-label="Modo da partida">
+                <button class="active" type="button" data-ludo-mode="solo" aria-label="Cada um por si" aria-pressed="true">👤</button>
+                <button type="button" data-ludo-mode="partners" aria-label="Parceiros" aria-pressed="false">🤝</button>
+              </div>
+              <label class="quick-public-control" aria-label="Sala pública">
+                <input id="createPublic" type="checkbox" checked aria-label="Sala pública">
+                <span aria-hidden="true">🌐</span>
+              </label>
+            </div>
+
+            <button class="button primary wide quick-play-button" type="submit"><span aria-hidden="true">🎲</span><strong>JOGAR</strong></button>
           </form>
         </div>
       </div>
@@ -189,7 +233,7 @@
           <div id="rulesSummary" class="rules-summary"></div>
           <p class="muted rules-no-deadline">As regras podem ser aceites a qualquer momento. Se o anfitrião não propuser alterações, valem automaticamente as regras padrão da sala.</p>
           <form id="rulesForm" class="rules-form hidden">
-            <label><span>Tempo para jogar</span><select name="turn_seconds"><option value="30">30 s</option><option value="60">60 s</option><option value="90">90 s</option><option value="120" selected>120 s</option></select></label>
+            <label><span>Tempo para jogar</span><select name="turn_seconds"><option value="30" selected>30 s</option><option value="60">60 s</option><option value="90">90 s</option><option value="120">120 s</option></select></label>
             <label><span>Escolher peça após o dado</span><select name="move_seconds"><option value="15">15 s</option><option value="30" selected>30 s</option><option value="45">45 s</option><option value="60">60 s</option></select></label>
             <p class="muted-text">Saída da base: somente com 6.</p>
             <label class="toggle"><input name="capture_required" type="checkbox"><span>Captura obrigatória quando existir</span></label>
@@ -321,7 +365,7 @@
   <script src="./js/platform/feature-loader.js?v=20260929-1" defer></script>
   <script src="./logout-confirm.js?v=20260924-2" defer></script>
   <script src="./ludo-sync.js?v=20260928-1" defer></script>
-  <script src="./ludo.js?v=20260929-6" defer></script>
+  <script src="./ludo.js?v=20260929-7" defer></script>
   <script src="./js/ui/collapse.js?v=20260928-2" defer></script>
   <script src="./js/ludo/policy.js?v=20260928-2" defer></script>
 </body>
