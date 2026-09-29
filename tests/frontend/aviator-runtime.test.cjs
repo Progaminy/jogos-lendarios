@@ -351,7 +351,7 @@ test('histórico recente usa linha pequena de multiplicadores separados por pont
   const css=fs.readFileSync(path.join(__dirname,'../../aviator.css'),'utf8');
 
   assert.match(html,/<details id="aviatorHistoryCard" class="aviator-history">/);
-  assert.match(js,/class="aviator-history-value"/);
+  assert.match(js,/class="aviator-history-value tier-/);
   assert.match(js,/class="aviator-history-separator"[^>]*>·<\/span>/);
   assert.match(js,/crash_multiplier\.toFixed\(2\)\+'x'/);
   assert.doesNotMatch(js,/aviator-history-chip/);
