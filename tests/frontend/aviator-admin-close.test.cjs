@@ -15,7 +15,6 @@ test('admin usa botão dedicado Fechar Aviator e não toggle genérico',()=>{
   assert.doesNotMatch(html,/id="aviatorMaintenanceToggle"/);
 
   assert.match(js,/jl_aviator_admin_close/);
-  assert.match(js,/Novas apostas e novas rodadas serão bloqueadas imediatamente/);
   assert.match(js,/A rodada atual terminará com segurança/);
   assert.match(js,/refunded_bets/);
   assert.match(js,/reembolsada/);
@@ -28,6 +27,7 @@ test('admin usa botão dedicado Fechar Aviator e não toggle genérico',()=>{
   )?.[0]||'';
 
   assert.match(closeBlock,/jl_aviator_admin_close/);
+  assert.doesNotMatch(closeBlock,/window\.confirm/);
   assert.doesNotMatch(closeBlock,/p_enabled:true/);
   assert.doesNotMatch(closeBlock,/jl_aviator_admin_set_enabled/);
 });
