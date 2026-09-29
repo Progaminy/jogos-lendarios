@@ -6,7 +6,6 @@
   const $ = (id) => document.getElementById(id);
   const state = window.JLLudoState.create();
 
-  // Estilos secundários ficam fora do caminho crítico para manter o Ludo leve.
   function loadDeferredLudoStyles(){
     if(document.getElementById('ludoDeferredStyles'))return;
     const link=document.createElement('link');
