@@ -48,6 +48,10 @@ begin
     raise exception 'rodada de teste nao terminou SETTLED: %',v_status;
   end if;
 
+  if coalesce((v_tick->>'maintenance')::boolean,false) is distinct from true then
+    raise exception 'tick final deve reportar maintenance=true: %',v_tick;
+  end if;
+
   if v_enabled or v_test then
     raise exception 'one-round test nao voltou para manutencao: enabled %, flag %',
       v_enabled,v_test;
