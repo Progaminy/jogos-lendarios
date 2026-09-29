@@ -191,6 +191,24 @@ Esses cenários têm regressões transacionais em `tests/sql/aviator/`.
 - O índice único de `request_key` protege contra duplicação lógica.
 - O admin consulta os movimentos por RPC separada, limitada a 50 linhas; a interface carrega 30 por vez somente ao expandir o histórico.
 
+## Auditoria administrativa completa
+
+Todas as ações administrativas do Aviator ficam no `audit_log` com identidade e contexto suficientes para reconstruir quem fez o quê:
+
+- `actor_admin_id`, `actor_session_id`, nome e função do administrador.
+- `target_type` e `target_id` para identificar configuração, banca ou rodada.
+- `before_state` e `after_state` para mudanças de estado/configuração.
+- `details` para motivo, valores, resolução financeira e metadados específicos da ação.
+- Fechar e reabrir usam eventos distintos: `aviator.admin.closed` e `aviator.admin.reopened`.
+- Ajuste de banca usa `aviator.admin.bank_adjusted` e exige motivo.
+- Rodada de teste usa `aviator.admin.one_round_test_started`.
+- Cancelamento de rodada usa `aviator.round_admin_cancelled`, com motivo e reembolsos.
+- Mudança administrativa de `exposure_ratio` é capturada automaticamente como `aviator.admin.risk_limit_changed`, com valor anterior e novo.
+- `jl_aviator_admin_audit_history(token, limit)` devolve até 100 ações administrativas recentes e valida a sessão de admin antes de expor a trilha.
+- O painel possui a secção **Auditoria administrativa**, atualizada automaticamente enquanto estiver aberta.
+
+Eventos do motor/jogadores continuam separados dos eventos administrativos; a visão administrativa filtra eventos do Aviator que possuem `actor_admin_id`.
+
 ## Cancelamento administrativo de rodada
 
 O cancelamento administrativo usa `jl_aviator_admin_cancel_round(token, round_id, reason)`.
