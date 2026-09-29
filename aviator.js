@@ -16,6 +16,11 @@ let cashingOut=false;
 
 const playerToken=()=>JLSession.getPlayerToken();
 const serverNow=()=>Date.now()+offset;
+const runtime=window.JLAviatorRuntime||{
+  multiplier:(start,now)=>Math.pow(1.06,Math.max(0,(now-start)/1000)),
+  secondsUntil:(close,now)=>Math.max(0,Math.ceil((close-now)/1000)),
+  pollDelay:(status,hidden)=>hidden?5000:status==='FLYING'?700:status==='OPEN'?1000:1400
+};
 
 function show(selector,visible){
   const el=typeof selector==='string'?$(selector):selector;
@@ -24,14 +29,12 @@ function show(selector,visible){
 
 function mul(){
   if(!round?.started_at)return 1;
-  const elapsed=Math.max(0,(serverNow()-new Date(round.started_at).getTime())/1000);
-  return Math.pow(1.06,elapsed);
+  return runtime.multiplier(new Date(round.started_at).getTime(),serverNow());
 }
 
 function secondsToClose(){
   if(!round?.betting_closes_at)return null;
-  const ms=new Date(round.betting_closes_at).getTime()-serverNow();
-  return Math.max(0,Math.ceil(ms/1000));
+  return runtime.secondsUntil(new Date(round.betting_closes_at).getTime(),serverNow());
 }
 
 function betKey(){
@@ -284,10 +287,7 @@ function renderCurrentRound(){
 }
 
 function nextPollDelay(){
-  if(document.hidden)return 5000;
-  if(round?.status==='FLYING')return 700;
-  if(round?.status==='OPEN')return 1000;
-  return 1400;
+  return runtime.pollDelay(round?.status||'',document.hidden);
 }
 
 function scheduleState(delay=nextPollDelay()){
