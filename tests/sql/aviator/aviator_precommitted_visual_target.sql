@@ -16,8 +16,9 @@ begin
   select pg_get_functiondef('public.jl_aviator_lock_round(bigint)'::regprocedure)
     into v_def;
 
-  if position('visual_target=v_target' in replace(lower(v_def),' ',''))=0 then
-    raise exception 'lock_round deve gravar o alvo visual precomprometido em todas as rodadas';
+  if position('visual_target=' in replace(lower(v_def),' ',''))=0
+     or position('jl_aviator_fairness_visual_target' in lower(v_def))=0 then
+    raise exception 'lock_round deve derivar e gravar o alvo visual precomprometido';
   end if;
 
   insert into public.jl_aviator_rounds(
