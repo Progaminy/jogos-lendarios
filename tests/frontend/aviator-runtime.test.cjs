@@ -40,6 +40,15 @@ test('recuperação escolhe apenas aposta ACTIVE da rodada pedida',()=>{
   assert.equal(runtime.pickActiveBet(bets,12),null);
 });
 
+test('reconciliação encontra uma aposta específica pelo bet_id',()=>{
+  const bets=[
+    {id:11,round_id:3,status:'ACTIVE'},
+    {id:12,round_id:3,status:'CASHED_OUT',cashout_multiplier:2.4,payout:24}
+  ];
+  assert.equal(runtime.findBetById(bets,12).status,'CASHED_OUT');
+  assert.equal(runtime.findBetById(bets,99),null);
+});
+
 test('polling reduz carga fora da aba e acelera apenas durante voo',()=>{
   assert.equal(runtime.pollDelay('FLYING',false),700);
   assert.equal(runtime.pollDelay('OPEN',false),1000);
@@ -118,4 +127,18 @@ test('resposta de recuperação antiga é descartada se a rodada mudou',()=>{
   assert.match(js,/const requestedRoundId=Number\(round\.id\)/);
   assert.match(js,/if\(Number\(round\?\.id\)!==requestedRoundId\)/);
   assert.match(js,/runtime\.pickActiveBet\(x\?\.bets,requestedRoundId\)/);
+});
+
+
+test('cash-out ambíguo é persistido e reconciliado sem retry automático',()=>{
+  const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
+  assert.match(js,/jl_aviator_pending_cashout_v1/);
+  assert.match(js,/savePendingCashout\(id,cashoutRoundId\)/);
+  assert.match(js,/reconcilePendingCashout\(\)/);
+  assert.match(js,/bet\.status==='CASHED_OUT'/);
+  assert.match(js,/Cash-out confirmado em/);
+  assert.match(js,/bet\.status==='ACTIVE'/);
+  assert.match(js,/A aposta continua ativa/);
+  const reconcileBlock=js.match(/async function reconcilePendingCashout\(\)[\s\S]*?\n}\n\nasync function recover/)?.[0]||'';
+  assert.doesNotMatch(reconcileBlock,/jl_aviator_cashout/);
 });

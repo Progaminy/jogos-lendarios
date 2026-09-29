@@ -50,6 +50,12 @@
     return selected;
   }
 
+  function findBetById(bets,betId){
+    const target=Number(betId);
+    if(!Array.isArray(bets)||!Number.isFinite(target))return null;
+    return bets.find((bet)=>Number(bet?.id)===target)||null;
+  }
+
   function pollDelay(status,hidden){
     if(hidden)return 5000;
     if(status==='FLYING')return 700;
@@ -64,5 +70,5 @@
     return 'waiting';
   }
 
-  return Object.freeze({multiplier,secondsUntil,clockSample,pickActiveBet,pollDelay,phase});
+  return Object.freeze({multiplier,secondsUntil,clockSample,pickActiveBet,findBetById,pollDelay,phase});
 });

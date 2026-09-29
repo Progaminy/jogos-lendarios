@@ -24,6 +24,7 @@ let historyRetryAt=0;
 
 const playerToken=()=>JLSession.getPlayerToken();
 const serverNow=()=>Date.now()+offset;
+const pendingCashoutKey='jl_aviator_pending_cashout_v1';
 const runtime=window.JLAviatorRuntime||{
   multiplier:(start,now)=>Math.pow(1.06,Math.max(0,(now-start)/1000)),
   secondsUntil:(close,now)=>Math.max(0,Math.ceil((close-now)/1000)),
@@ -37,8 +38,41 @@ const runtime=window.JLAviatorRuntime||{
     return bets.filter(b=>Number(b?.round_id)===Number(roundId)&&b?.status==='ACTIVE')
       .sort((a,b)=>Number(b?.id)-Number(a?.id))[0]||null;
   },
+  findBetById:(bets,betId)=>{
+    if(!Array.isArray(bets))return null;
+    return bets.find(b=>Number(b?.id)===Number(betId))||null;
+  },
   pollDelay:(status,hidden)=>hidden?5000:status==='FLYING'?700:status==='OPEN'?1000:1400
 };
+
+function readPendingCashout(){
+  try{
+    const value=JSON.parse(sessionStorage.getItem(pendingCashoutKey)||'null');
+    const betId=Number(value?.bet_id),roundId=Number(value?.round_id),createdAt=Number(value?.created_at);
+    if(!Number.isFinite(betId)||!Number.isFinite(roundId)||!Number.isFinite(createdAt))return null;
+    if(Date.now()-createdAt>6*60*60*1000){
+      sessionStorage.removeItem(pendingCashoutKey);
+      return null;
+    }
+    return {bet_id:betId,round_id:roundId,created_at:createdAt};
+  }catch(_){
+    return null;
+  }
+}
+
+function savePendingCashout(betId,roundId){
+  try{
+    sessionStorage.setItem(pendingCashoutKey,JSON.stringify({
+      bet_id:Number(betId),
+      round_id:Number(roundId),
+      created_at:Date.now()
+    }));
+  }catch(_){}
+}
+
+function clearPendingCashout(){
+  try{sessionStorage.removeItem(pendingCashoutKey)}catch(_){}
+}
 
 function applyClockSample(serverTime,requestStarted,responseReceived){
   const serverMs=new Date(serverTime).getTime();
@@ -322,6 +356,66 @@ function paintFlight(){
 
 function startFlightPaint(){
   if(connectionOnline&&!raf)raf=requestAnimationFrame(paintFlight);
+}
+
+async function reconcilePendingCashout(){
+  const pending=readPendingCashout();
+  if(!pending||!connectionOnline||!playerToken())return false;
+
+  try{
+    const x=await JLApi.rpc('jl_aviator_player_state',{p_token:playerToken()});
+    const bet=runtime.findBetById(x?.bets,pending.bet_id);
+
+    if(!bet)return false;
+
+    if(bet.status==='CASHED_OUT'){
+      clearPendingCashout();
+      myBet=null;
+      myStake=0;
+      lastRecoveredRoundId=pending.round_id;
+      resetCashout();
+      renderTicket();
+      $('#aviatorMessage').textContent=
+        'Cash-out confirmado em '+Number(bet.cashout_multiplier).toFixed(2)+'× · '+money(bet.payout);
+      return true;
+    }
+
+    if(bet.status==='ACTIVE'){
+      clearPendingCashout();
+      if(Number(round?.id)===pending.round_id){
+        myBet=bet.id;
+        myStake=Number(bet.stake)||0;
+        lastRecoveredRoundId=pending.round_id;
+        renderTicket();
+      }
+      $('#aviatorMessage').textContent='Cash-out não foi confirmado. A aposta continua ativa.';
+      return true;
+    }
+
+    if(bet.status==='LOST'){
+      clearPendingCashout();
+      myBet=null;
+      myStake=0;
+      resetCashout();
+      renderTicket();
+      $('#aviatorMessage').textContent='Fim da rodada. Cash-out não disponível.';
+      return true;
+    }
+
+    if(bet.status==='REFUNDED'){
+      clearPendingCashout();
+      myBet=null;
+      myStake=0;
+      resetCashout();
+      renderTicket();
+      $('#aviatorMessage').textContent='A aposta foi reembolsada pelo servidor.';
+      return true;
+    }
+
+    return false;
+  }catch(_){
+    return false;
+  }
 }
 
 async function recover(force=false){
@@ -639,6 +733,8 @@ $('#cashoutBtn').addEventListener('click',async()=>{
 
   cashingOut=true;
   const id=myBet;
+  const cashoutRoundId=Number(round.id);
+  savePendingCashout(id,cashoutRoundId);
   const button=$('#cashoutBtn');
   if(button){
     button.disabled=true;
@@ -651,6 +747,7 @@ $('#cashoutBtn').addEventListener('click',async()=>{
       p_bet_id:id
     });
 
+    clearPendingCashout();
     $('#aviatorMessage').textContent=
       'Cash-out em '+Number(r.multiplier).toFixed(2)+'× · '+money(r.payout);
 
@@ -661,9 +758,13 @@ $('#cashoutBtn').addEventListener('click',async()=>{
     lastRecoveredRoundId=round?.id??null;
   }catch(e){
     const raw=String(e?.message||'');
+    const reconciled=await reconcilePendingCashout();
+    if(reconciled)return;
+
     const roundEnded=/Crash ja atingido|Aposta ja liquidada|Voo nao esta ativo/i.test(raw);
 
     if(roundEnded){
+      clearPendingCashout();
       myBet=null;
       myStake=0;
       lastRecoveredRoundId=round?.id??null;
@@ -672,7 +773,11 @@ $('#cashoutBtn').addEventListener('click',async()=>{
       $('#aviatorMessage').textContent='Fim da rodada. Cash-out não disponível.';
       clearTimeout(stateTimer);
       await state();
+    }else if(!connectionOnline||navigator.onLine===false){
+      setConnectionState(false);
+      $('#aviatorMessage').textContent='Sem ligação. A confirmar o cash-out quando reconectar.';
     }else{
+      clearPendingCashout();
       $('#aviatorMessage').textContent=raw||'Não foi possível confirmar o cash-out.';
       lastRecoveredRoundId=null;
       await recover(true);
@@ -688,7 +793,7 @@ window.addEventListener('offline',()=>{
   setConnectionState(false);
 });
 
-window.addEventListener('online',()=>{
+window.addEventListener('online',async()=>{
   setConnectionState(true);
   lastRecoveredRoundId=null;
   historyRetryAt=0;
@@ -697,8 +802,10 @@ window.addEventListener('online',()=>{
   clearTimeout(stateTimer);
   const message=$('#aviatorMessage');
   if(message)message.textContent='Ligação restabelecida. A sincronizar…';
+  const reconciled=await reconcilePendingCashout();
   void loadHistory(true);
-  state();
+  if(!reconciled)state();
+  else scheduleState(0);
 });
 
 document.addEventListener('visibilitychange',()=>{
@@ -714,5 +821,7 @@ document.addEventListener('visibilitychange',()=>{
 
 renderHistory();
 setConnectionState(connectionOnline);
-if(connectionOnline)state();
+if(connectionOnline){
+  reconcilePendingCashout().finally(()=>state());
+}
 })();
