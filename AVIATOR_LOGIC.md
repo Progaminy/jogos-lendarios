@@ -84,6 +84,7 @@ Esses cenários têm regressões transacionais em `tests/sql/aviator/`.
 - O movimento do ledger é gravado na mesma transação do saldo da banca; falha posterior desfaz ambos.
 - Movimentos operacionais de valor zero não criam linha.
 - O índice único de `request_key` protege contra duplicação lógica.
+- O admin consulta os movimentos por RPC separada, limitada a 50 linhas; a interface carrega 30 por vez somente ao expandir o histórico.
 
 ## Operação da banca
 

@@ -60,6 +60,16 @@
         <label class="field"><span>Motivo</span><input id="aviatorBankReason" maxlength="160" placeholder="Ex.: capital inicial"></label>
         <button id="aviatorBankAdjust" class="button primary" type="button">Aplicar ajuste</button></div>
         <p id="aviatorAdminMessage" class="form-message"></p>
+
+        <details id="aviatorBankLedgerWrap" class="aviator-bank-ledger">
+          <summary>
+            <span>Movimentos da banca</span>
+            <small id="aviatorBankLedgerStatus">Abrir</small>
+          </summary>
+          <div id="aviatorBankLedger" class="aviator-bank-ledger-list">
+            <p class="muted">Abra para carregar os movimentos recentes.</p>
+          </div>
+        </details>
       </section>
 
       <section class="card admin-card">

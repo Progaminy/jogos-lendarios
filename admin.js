@@ -98,6 +98,65 @@
   };
 
 
+  let aviatorBankLedgerBusy=false;
+  let aviatorBankLedgerLastLoad=0;
+
+  function aviatorBankMovementLabel(type){
+    if(type==='cashout')return 'Lucro pago no cash-out';
+    if(type==='lost_stake')return 'Stake perdido creditado';
+    return 'Ajuste manual';
+  }
+
+  async function refreshAviatorBankLedger(force=false){
+    const wrap=$('aviatorBankLedgerWrap');
+    const host=$('aviatorBankLedger');
+    const status=$('aviatorBankLedgerStatus');
+    if(!wrap||!host||!state.token)return;
+    if(!wrap.open&&!force)return;
+    if(aviatorBankLedgerBusy)return;
+    if(!force&&Date.now()-aviatorBankLedgerLastLoad<10000)return;
+
+    aviatorBankLedgerBusy=true;
+    if(status)status.textContent='A carregar…';
+
+    try{
+      const rows=await rpc('jl_aviator_admin_bank_ledger',{
+        p_token:state.token,
+        p_limit:30
+      });
+
+      const items=Array.isArray(rows)?rows:[];
+      if(!items.length){
+        host.innerHTML='<p class="muted">Ainda não há movimentos registados.</p>';
+      }else{
+        host.innerHTML=items.map(item=>{
+          const delta=Number(item.delta)||0;
+          const deltaClass=delta>0?'positive':delta<0?'negative':'neutral';
+          const sign=delta>0?'+':'';
+          return '<div class="aviator-bank-ledger-row">'+
+            '<div class="aviator-bank-ledger-main">'+
+              '<strong>'+escapeHtml(aviatorBankMovementLabel(item.type))+'</strong>'+
+              '<small>'+escapeHtml(item.reason||'—')+'</small>'+
+            '</div>'+
+            '<div class="aviator-bank-ledger-value '+deltaClass+'">'+
+              '<strong>'+sign+money(delta)+' MZN</strong>'+
+              '<small>Saldo: '+money(item.balance_after)+' MZN</small>'+
+            '</div>'+
+            '<time>'+escapeHtml(dateTime(item.created_at))+'</time>'+
+          '</div>';
+        }).join('');
+      }
+
+      aviatorBankLedgerLastLoad=Date.now();
+      if(status)status.textContent='Atualizado';
+    }catch(e){
+      host.innerHTML='<p class="form-message">'+escapeHtml(e.message)+'</p>';
+      if(status)status.textContent='Erro';
+    }finally{
+      aviatorBankLedgerBusy=false;
+    }
+  }
+
   async function refreshAviatorAdmin(){
     if(!state.token||!$('aviatorAdmin')) return;
     try{
@@ -141,8 +200,22 @@
         oneRound.disabled=Boolean(d.enabled);
         oneRound.textContent=d.one_round_test?'Rodada de teste em curso':'Abrir 1 rodada de teste';
       }
+      if($('aviatorBankLedgerWrap')?.open){
+        void refreshAviatorBankLedger(false);
+      }
     }catch(e){$('aviatorAdminMessage').textContent=e.message}
   }
+  $('aviatorBankLedgerWrap')?.addEventListener('toggle',()=>{
+    const wrap=$('aviatorBankLedgerWrap');
+    const status=$('aviatorBankLedgerStatus');
+    if(!wrap)return;
+    if(wrap.open){
+      void refreshAviatorBankLedger(true);
+    }else if(status){
+      status.textContent='Abrir';
+    }
+  });
+
   $('aviatorMaintenanceToggle')?.addEventListener('click',async()=>{
     try{
       const d=await rpc('jl_aviator_admin_state',{p_token:state.token});
@@ -191,7 +264,12 @@
       const r=await rpc('jl_aviator_admin_adjust_bank',{p_token:state.token,p_delta:delta,p_reason:reason,p_request_key:requestKey});
       clearAdminFinancialRequestKey('aviator-bank',requestKey);
       $('aviatorAdminMessage').textContent=(r.already_processed?'Ajuste já confirmado. Banca: ':'Banca atualizada: ')+money(r.balance)+' MZN';
-      $('aviatorBankDelta').value=''; $('aviatorBankReason').value=''; await refreshAviatorAdmin();
+      $('aviatorBankDelta').value='';
+      $('aviatorBankReason').value='';
+      await refreshAviatorAdmin();
+      if($('aviatorBankLedgerWrap')?.open){
+        await refreshAviatorBankLedger(true);
+      }
     }catch(e){$('aviatorAdminMessage').textContent=e.message}
   });
   setInterval(()=>{if(state.token)refreshAviatorAdmin()},3000);
