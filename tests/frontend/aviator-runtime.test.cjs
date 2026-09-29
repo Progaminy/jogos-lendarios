@@ -28,6 +28,18 @@ test('relógio do servidor compensa metade da latência de ida e volta',()=>{
   assert.equal(runtime.clockSample(Number.NaN,1000,1400),null);
 });
 
+test('recuperação escolhe apenas aposta ACTIVE da rodada pedida',()=>{
+  const bets=[
+    {id:4,round_id:10,status:'ACTIVE',stake:20},
+    {id:7,round_id:11,status:'ACTIVE',stake:30},
+    {id:8,round_id:11,status:'CASHED_OUT',stake:40},
+    {id:9,round_id:11,status:'ACTIVE',stake:50}
+  ];
+  assert.equal(runtime.pickActiveBet(bets,10).id,4);
+  assert.equal(runtime.pickActiveBet(bets,11).id,9);
+  assert.equal(runtime.pickActiveBet(bets,12),null);
+});
+
 test('polling reduz carga fora da aba e acelera apenas durante voo',()=>{
   assert.equal(runtime.pollDelay('FLYING',false),700);
   assert.equal(runtime.pollDelay('OPEN',false),1000);
@@ -98,4 +110,12 @@ test('estado público mede RTT para sincronizar o relógio do voo',()=>{
   assert.match(js,/const requestStarted=Date\.now\(\)/);
   assert.match(js,/const responseReceived=Date\.now\(\)/);
   assert.match(js,/applyClockSample\(x\.server_time,requestStarted,responseReceived\)/);
+});
+
+
+test('resposta de recuperação antiga é descartada se a rodada mudou',()=>{
+  const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
+  assert.match(js,/const requestedRoundId=Number\(round\.id\)/);
+  assert.match(js,/if\(Number\(round\?\.id\)!==requestedRoundId\)/);
+  assert.match(js,/runtime\.pickActiveBet\(x\?\.bets,requestedRoundId\)/);
 });
