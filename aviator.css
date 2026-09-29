@@ -37,9 +37,9 @@ body{background:#070a10}
 .crash-text span{font-size:clamp(1.3rem,5vw,2.3rem);font-weight:950;color:#f4bd42;font-variant-numeric:tabular-nums}
 .proof{margin:8px 2px 0;font-size:11px;opacity:.58}
 .proof summary{cursor:pointer;font-weight:800;color:#cbd5e1;user-select:none}
-.proof code{display:block;margin-top:8px;white-space:normal;overflow-wrap:anywhere;line-height:1.45;color:#9eabc0}
-.proof code[data-valid="true"]{color:#61db99}
-.proof code[data-valid="false"]{color:#ff8585}
+.proof-status{display:block;margin-top:7px;line-height:1.35;color:#9eabc0}
+.proof-status[data-valid="true"]{color:#61db99}
+.proof-status[data-valid="false"]{color:#ff8585}
 
 .aviator-history{overflow:hidden;border:1px solid rgba(255,255,255,.055);border-radius:14px;background:rgba(255,255,255,.022)}
 .aviator-history-summary{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 12px;cursor:pointer;list-style:none;color:#9aa7bc}
