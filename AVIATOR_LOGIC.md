@@ -34,6 +34,8 @@
 ## Resiliência, reconexão e concorrência
 
 - A colocação de aposta usa `request_key` persistida no `sessionStorage` por rodada.
+- Existe no máximo uma aposta por jogador/rodada, garantida por índice único no banco.
+- Apostas de jogadores diferentes usam lock compartilhado de manutenção e `FOR SHARE` na rodada, evitando serialização global sem abrir corrida com manutenção/fecho.
 - `jl_aviator_player_state` recupera a aposta ativa após refresh, reconexão ou retorno à aplicação.
 - Respostas de recuperação antigas são descartadas quando a rodada mudou.
 - Cash-out e crash são serializados pela mesma rodada.
