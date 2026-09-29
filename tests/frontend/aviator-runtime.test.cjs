@@ -287,3 +287,27 @@ test('reconexão usa snapshot autoritativo e não reinicia a fase visual',()=>{
   const visibilityBlock=js.match(/document\.addEventListener\('visibilitychange',[\s\S]*?\n\}\);/)?.[0]||'';
   assert.match(visibilityBlock,/reconnectState\(\)/);
 });
+
+
+test('animação do Aviator é somente visual e não decide dinheiro',()=>{
+  const html=fs.readFileSync(path.join(__dirname,'../../aviator.html'),'utf8');
+  const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
+  const css=fs.readFileSync(path.join(__dirname,'../../aviator.css'),'utf8');
+
+  assert.match(html,/id="flightArea"[^>]*data-visual-only="true"/);
+  assert.match(html,/id="plane"[^>]*aria-hidden="true"/);
+  assert.match(css,/\.plane,\.flight-grid,\.flight-area::after\{pointer-events:none\}/);
+
+  const paint=js.match(/function paintFlight\(\)[\s\S]*?\n\}/)?.[0]||'';
+  assert.match(paint,/const m=mul\(\)/);
+  assert.doesNotMatch(paint,/JLApi\.rpc|jl_aviator_cashout|jl_aviator_tick|payout/);
+
+  const financial=js.match(/function requestFinancialCashout\(betId\)[\s\S]*?\n\}/)?.[0]||'';
+  assert.match(financial,/jl_aviator_cashout/);
+  assert.match(financial,/p_bet_id:Number\(betId\)/);
+  assert.doesNotMatch(financial,/multiplier|payout|current_multiplier|started_at/);
+
+  assert.doesNotMatch(js,/requestAnimationFrame/);
+  assert.doesNotMatch(js,/Math\.exp/);
+  assert.doesNotMatch(js,/started_at\s*[-+]/);
+});
