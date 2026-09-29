@@ -5,27 +5,10 @@ const path=require('node:path');
 
 const runtime=require('../../js/aviator/runtime.js');
 
-test('multiplicador começa em 1x e usa crescimento determinístico',()=>{
-  assert.equal(runtime.multiplier(1000,1000),1);
-  assert.equal(runtime.multiplier(2000,1000),1);
-  const tenSeconds=runtime.multiplier(1000,11000);
-  assert.ok(Math.abs(tenSeconds-Math.pow(1.06,10))<1e-12);
-});
-
-test('contagem de pré-voo arredonda para cima e nunca fica negativa',()=>{
-  assert.equal(runtime.secondsUntil(11000,1000),10);
-  assert.equal(runtime.secondsUntil(10999,1000),10);
-  assert.equal(runtime.secondsUntil(1001,1000),1);
-  assert.equal(runtime.secondsUntil(1000,1000),0);
-  assert.equal(runtime.secondsUntil(500,1000),0);
-  assert.equal(runtime.secondsUntil(Number.NaN,1000),null);
-});
-
-test('relógio do servidor compensa metade da latência de ida e volta',()=>{
-  const sample=runtime.clockSample(2000,1000,1400);
-  assert.deepEqual(sample,{offset:800,rtt:400});
-  assert.equal(runtime.clockSample(2000,1400,1000),null);
-  assert.equal(runtime.clockSample(Number.NaN,1000,1400),null);
+test('runtime do navegador não contém motor de multiplicador nem relógio do jogo',()=>{
+  assert.equal(runtime.multiplier,undefined);
+  assert.equal(runtime.secondsUntil,undefined);
+  assert.equal(runtime.clockSample,undefined);
 });
 
 test('recuperação escolhe apenas aposta ACTIVE da rodada pedida',()=>{
@@ -50,7 +33,7 @@ test('reconciliação encontra uma aposta específica pelo bet_id',()=>{
 });
 
 test('polling reduz carga fora da aba e acelera apenas durante voo',()=>{
-  assert.equal(runtime.pollDelay('FLYING',false),700);
+  assert.equal(runtime.pollDelay('FLYING',false),500);
   assert.equal(runtime.pollDelay('OPEN',false),1000);
   assert.equal(runtime.pollDelay('SETTLED',false),1400);
   assert.equal(runtime.pollDelay('FLYING',true),5000);
@@ -114,11 +97,13 @@ test('modo offline bloqueia aposta e cash-out até reconectar',()=>{
   assert.match(js,/if\(!connectionOnline\)throw new Error\('Sem ligação/);
 });
 
-test('estado público mede RTT para sincronizar o relógio do voo',()=>{
+test('controlador usa somente snapshots de voo calculados pelo servidor',()=>{
   const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
-  assert.match(js,/const requestStarted=Date\.now\(\)/);
-  assert.match(js,/const responseReceived=Date\.now\(\)/);
-  assert.match(js,/applyClockSample\(x\.server_time,requestStarted,responseReceived\)/);
+  assert.match(js,/round\?\.current_multiplier/);
+  assert.match(js,/round\?\.seconds_to_close/);
+  assert.doesNotMatch(js,/Math\.pow\(1\.06/);
+  assert.doesNotMatch(js,/clockSample/);
+  assert.doesNotMatch(js,/serverNow/);
 });
 
 
