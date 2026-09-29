@@ -32,8 +32,12 @@ begin
     raise exception 'OPEN vazia deve ser cancelada em manutencao, status=%',v_status;
   end if;
 
-  if v_tick->>'action'<>'CANCELLED_EMPTY_OPEN' then
-    raise exception 'engine deve informar cancelamento da OPEN vazia: %',v_tick;
+  if v_tick->>'action'<>'CANCELLED_REFUNDED' then
+    raise exception 'engine deve informar cancelamento/reembolso da OPEN vazia: %',v_tick;
+  end if;
+
+  if coalesce((v_tick->>'refunded_bets')::integer,-1)<>0 then
+    raise exception 'OPEN vazia não pode reportar reembolso de aposta: %',v_tick;
   end if;
 
   if exists(
