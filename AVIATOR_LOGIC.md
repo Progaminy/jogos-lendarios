@@ -46,6 +46,17 @@
 - `financial_ceiling`, `effective_target`, `visual_target` e totais internos não são expostos no estado público antes do crash.
 - O cash-out continua usando o relógio e as travas do servidor; a indicação visual nunca autoriza pagamento.
 
+## Fonte única do multiplicador visível
+
+- O multiplicador público usa frames canónicos de **250 ms** do relógio do servidor.
+- Cada resposta traz `display_seq`, `display_at` e `display_frame_ms`.
+- O mesmo `display_seq` produz exatamente o mesmo `current_multiplier` para todos os jogadores.
+- O crash financeiro/lógico continua a usar o instante exato do servidor; a quantização existe apenas para o número apresentado.
+- O navegador nunca recalcula o multiplicador e nunca aceita um snapshot com `display_seq` menor do que o último já apresentado.
+- Uma reconexão cancela a requisição de estado anterior antes de pedir o snapshot atual, impedindo resposta antiga de sobrescrever estado novo.
+- Polling continua moderado; consistência não depende de aumentar agressivamente a frequência de chamadas.
+- Latência de rede ainda pode fazer um jogador receber um frame novo alguns milissegundos antes de outro, mas dois clientes nunca têm valores contraditórios para o mesmo frame autoritativo.
+
 ## Resiliência, reconexão e concorrência
 
 - A colocação de aposta usa `request_key` persistida no `sessionStorage` por rodada.
