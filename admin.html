@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0a0d14">
   <title>Administração — Jogos Lendários</title>
   <link rel="icon" href="./favicon.ico" sizes="any">
-  <link rel="stylesheet" href="./styles.css?v=20260930-2">
+  <link rel="stylesheet" href="./styles.css?v=20260930-3">
   <link rel="stylesheet" href="./admin-bonus.css?v=20260922-14">
   <link rel="stylesheet" href="./admin-recovery.css?v=20260922-13">
 </head>
@@ -103,6 +103,17 @@
           </summary>
           <div id="aviatorBankLedger" class="aviator-bank-ledger-list">
             <p class="muted">Abra para carregar os movimentos recentes.</p>
+          </div>
+        </details>
+
+        <details id="aviatorAuditWrap" class="aviator-admin-audit">
+          <summary>
+            <span>Auditoria administrativa</span>
+            <small id="aviatorAuditStatus">Abrir</small>
+          </summary>
+          <p class="muted aviator-audit-help">Quem fez, quando fez, o alvo e o estado antes/depois de cada ação administrativa.</p>
+          <div id="aviatorAuditList" class="aviator-audit-list">
+            <p class="muted">Abra para carregar as ações administrativas recentes.</p>
           </div>
         </details>
       </section>
@@ -361,7 +372,7 @@
   <script src="./config.js"></script>
   <script src="./js/auth/session.js?v=20260928-2"></script>
   <script src="./js/a11y/dialogs.js?v=20260928-2"></script>
-  <script src="./admin.js?v=20260930-4" defer></script>
+  <script src="./admin.js?v=20260930-5" defer></script>
   <script src="./admin-auth-security.js?v=20260928-1" defer></script>
   <script src="./admin-influencers.js?v=20260927-1" defer></script>
   <script src="./admin-ludo-emergency.js?v=20260928-1" defer></script>
