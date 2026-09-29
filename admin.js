@@ -461,7 +461,17 @@
         </div>`).join('')
       : '<div class="empty">Nenhum saque pendente.</div>';
 
-    const allPlayers = (state.data?.players || []).filter((p)=>!String(p.phone||'').startsWith('deleted-'));
+    const playerNameCollator = new Intl.Collator('pt',{sensitivity:'base',numeric:true,ignorePunctuation:true});
+    const allPlayers = (state.data?.players || [])
+      .filter((p)=>!String(p.phone||'').startsWith('deleted-'))
+      .sort((a,b)=>{
+        const an=String(a.name||'').trim();
+        const bn=String(b.name||'').trim();
+        if(!an&&bn)return 1;
+        if(an&&!bn)return -1;
+        return playerNameCollator.compare(an,bn)
+          || String(a.phone||'').localeCompare(String(b.phone||''),'pt',{numeric:true});
+      });
     const playerQuery = String(state.playerSearch || '').trim().toLowerCase();
     const players = playerQuery
       ? allPlayers.filter((p) => String(p.name||'').toLowerCase().includes(playerQuery) || String(p.phone||'').toLowerCase().includes(playerQuery))
