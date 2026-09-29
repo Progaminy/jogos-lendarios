@@ -5,8 +5,6 @@ const $=s=>document.querySelector(s);
 let round=null;
 let myBet=null;
 let myStake=0;
-let raf=0;
-let offset=0;
 let recovering=false;
 let lastRecoveredRoundId=null;
 let enabled=true;
@@ -16,7 +14,6 @@ let betting=false;
 let cashingOut=false;
 let openUiTimer=0;
 let connectionOnline=navigator.onLine!==false;
-let clockSamples=[];
 let preserveMessageOnNextRoundSync=false;
 let recentResults=[];
 let historyBusy=false;
@@ -24,16 +21,8 @@ let historyRemoteLoaded=false;
 let historyRetryAt=0;
 
 const playerToken=()=>JLSession.getPlayerToken();
-const serverNow=()=>Date.now()+offset;
 const pendingCashoutKey='jl_aviator_pending_cashout_v1';
 const runtime=window.JLAviatorRuntime||{
-  multiplier:(start,now)=>Math.pow(1.06,Math.max(0,(now-start)/1000)),
-  secondsUntil:(close,now)=>Math.max(0,Math.ceil((close-now)/1000)),
-  clockSample:(server,start,end)=>{
-    if(![server,start,end].every(Number.isFinite)||end<start)return null;
-    const rtt=end-start;
-    return {offset:server-(start+rtt/2),rtt};
-  },
   pickActiveBet:(bets,roundId)=>{
     if(!Array.isArray(bets))return null;
     return bets.filter(b=>Number(b?.round_id)===Number(roundId)&&b?.status==='ACTIVE')
@@ -73,18 +62,6 @@ function savePendingCashout(betId,roundId){
 
 function clearPendingCashout(){
   try{sessionStorage.removeItem(pendingCashoutKey)}catch(_){}
-}
-
-function applyClockSample(serverTime,requestStarted,responseReceived){
-  const serverMs=new Date(serverTime).getTime();
-  const sample=runtime.clockSample(serverMs,requestStarted,responseReceived);
-  if(!sample)return;
-
-  clockSamples.push(sample);
-  if(clockSamples.length>8)clockSamples.shift();
-
-  const best=clockSamples.reduce((a,b)=>b.rtt<a.rtt?b:a,clockSamples[0]);
-  offset=best.offset;
 }
 
 function setConnectionState(online){
@@ -130,13 +107,13 @@ function show(selector,visible){
 }
 
 function mul(){
-  if(!round?.started_at)return 1;
-  return runtime.multiplier(new Date(round.started_at).getTime(),serverNow());
+  const value=Number(round?.current_multiplier);
+  return Number.isFinite(value)&&value>=1?value:1;
 }
 
 function secondsToClose(){
-  if(!round?.betting_closes_at)return null;
-  return runtime.secondsUntil(new Date(round.betting_closes_at).getTime(),serverNow());
+  const value=Number(round?.seconds_to_close);
+  return Number.isFinite(value)&&value>=0?Math.floor(value):null;
 }
 
 function betKey(){
@@ -157,12 +134,7 @@ function setStagePhase(phase){
   stage.classList.add('is-'+phase);
 }
 
-function stopFlight(){
-  if(raf){
-    cancelAnimationFrame(raf);
-    raf=0;
-  }
-}
+function stopFlight(){}
 
 function renderMultiplier(value){
   const el=$('#multiplier');
@@ -339,7 +311,6 @@ async function loadHistory(force=false){
 }
 
 function paintFlight(){
-  raf=0;
   if(!connectionOnline||round?.status!=='FLYING')return;
 
   const m=mul();
@@ -351,12 +322,10 @@ function paintFlight(){
     cashout.textContent=myBet?'Cash-out · '+m.toFixed(2)+'×':'Cash-out';
     cashout.disabled=!connectionOnline||!myBet||cashingOut;
   }
-
-  raf=requestAnimationFrame(paintFlight);
 }
 
 function startFlightPaint(){
-  if(connectionOnline&&!raf)raf=requestAnimationFrame(paintFlight);
+  paintFlight();
 }
 
 async function reconcilePendingCashout(){
@@ -630,10 +599,7 @@ async function state(){
   stateBusy=true;
 
   try{
-    const requestStarted=Date.now();
     const x=await JLApi.rpc('jl_aviator_public_state');
-    const responseReceived=Date.now();
-    applyClockSample(x.server_time,requestStarted,responseReceived);
     enabled=x.enabled!==false;
 
     const previousId=round?.id??null;
@@ -809,7 +775,6 @@ window.addEventListener('online',async()=>{
   lastRecoveredRoundId=null;
   historyRetryAt=0;
   historyRemoteLoaded=false;
-  clockSamples=[];
   clearTimeout(stateTimer);
   const message=$('#aviatorMessage');
   if(message)message.textContent='Ligação restabelecida. A sincronizar…';
