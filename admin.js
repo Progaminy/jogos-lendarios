@@ -97,6 +97,28 @@
     }
   };
 
+
+  async function refreshAviatorAdmin(){
+    if(!state.token||!$('aviatorAdmin')) return;
+    try{
+      const d=await rpc('jl_aviator_admin_state',{p_token:state.token}),r=d.round||{};
+      $('aviatorBankBalance').textContent=money(d.bank?.balance);
+      $('aviatorRound').textContent=r.id?'#'+r.id:'—'; $('aviatorStatus').textContent=r.status||'—';
+      $('aviatorCeiling').textContent=r.financial_ceiling?Number(r.financial_ceiling).toFixed(2)+'×':'—';
+      $('aviatorReserve').textContent=money(r.risk_reserve); $('aviatorStaked').textContent=money(d.stake_sum);
+      $('aviatorPaid').textContent=money(d.paid_sum); $('aviatorCrash').textContent=r.crash_multiplier?Number(r.crash_multiplier).toFixed(2)+'×':'—';
+    }catch(e){$('aviatorAdminMessage').textContent=e.message}
+  }
+  $('aviatorBankAdjust')?.addEventListener('click',async()=>{
+    try{
+      const delta=Number($('aviatorBankDelta').value),reason=$('aviatorBankReason').value.trim();
+      const r=await rpc('jl_aviator_admin_adjust_bank',{p_token:state.token,p_delta:delta,p_reason:reason});
+      $('aviatorAdminMessage').textContent='Banca atualizada: '+money(r.balance)+' MZN';
+      $('aviatorBankDelta').value=''; $('aviatorBankReason').value=''; await refreshAviatorAdmin();
+    }catch(e){$('aviatorAdminMessage').textContent=e.message}
+  });
+  setInterval(()=>{if(state.token)refreshAviatorAdmin()},3000);
+
   function money(value) {
     return Number(value || 0).toLocaleString('pt-MZ', {
       minimumFractionDigits: 2,
