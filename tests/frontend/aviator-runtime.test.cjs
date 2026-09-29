@@ -229,3 +229,17 @@ test('Aviator mostra LOCKED separado do voo e bloqueia nova aposta',()=>{
   assert.equal(runtime.pollDelay('LOCKED',false),500);
   assert.equal(runtime.phase('LOCKED'),'locked');
 });
+
+
+test('auto cash-out e opcional na UI mas executado pelo servidor',()=>{
+  const html=fs.readFileSync(path.join(__dirname,'../../aviator.html'),'utf8');
+  const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
+  assert.match(html,/id="aviatorAutoCashout"[^>]*min="1\.01"[^>]*step="0\.01"/);
+  assert.match(html,/id="activeBetAuto"/);
+  assert.match(js,/p_auto_cashout_multiplier:auto/);
+  assert.match(js,/myAutoCashout=Number\(r\.auto_cashout_multiplier\)\|\|null/);
+  assert.match(js,/Cash-out automático/);
+  assert.match(js,/auto<1\.01/);
+  assert.equal((js.match(/jl_aviator_cashout'/g)||[]).length,1,
+    'auto cash-out nao deve disparar jl_aviator_cashout pelo navegador');
+});
