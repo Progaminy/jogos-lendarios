@@ -46,6 +46,16 @@
 - `financial_ceiling`, `effective_target`, `visual_target` e totais internos não são expostos no estado público antes do crash.
 - O cash-out continua usando o relógio e as travas do servidor; a indicação visual nunca autoriza pagamento.
 
+## Separação entre animação e resultado financeiro
+
+- O avião, a grelha, o rastro e a animação CSS são estritamente visuais. A área de voo está marcada como `data-visual-only="true"` e os elementos animados não recebem eventos de ponteiro.
+- O navegador não calcula crash, payout nem multiplicador financeiro a partir de `started_at`, relógio local, `requestAnimationFrame` ou fórmula própria.
+- O multiplicador mostrado vem de `round.current_multiplier`, produzido pelo servidor no snapshot canónico.
+- O cash-out manual envia somente `token + bet_id`; não existe parâmetro de multiplicador ou payout vindo do cliente.
+- O servidor calcula o instante/multiplicador de cash-out, grava `cashout_multiplier`, `payout`, transação, saldo e banca na mesma transação.
+- O crash é decidido pelo motor do servidor, persistido em `jl_aviator_rounds.crash_multiplier` e só depois refletido pela interface.
+- Desativar CSS, reduzir animação, trocar o emoji do avião ou manipular o DOM não altera resultado financeiro.
+
 ## Reconexão autoritativa
 
 - Ao recuperar a ligação, o cliente chama `jl_aviator_reconnect(token)`, que devolve no mesmo snapshot o estado público da rodada e o estado financeiro do jogador.
