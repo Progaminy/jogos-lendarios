@@ -38,7 +38,7 @@ const runtime=window.JLAviatorRuntime||{
     if(!Array.isArray(bets))return null;
     return bets.find(b=>Number(b?.id)===Number(betId))||null;
   },
-  pollDelay:(status,hidden)=>hidden?5000:status==='FLYING'?500:status==='OPEN'?1000:1400,
+  pollDelay:(status,hidden)=>hidden?5000:(status==='FLYING'||status==='LOCKED')?500:status==='OPEN'?1000:1400,
   shouldAcceptSnapshot:(previousSeq,nextSeq)=>{
     const next=Number(nextSeq);
     if(!Number.isFinite(next))return false;
@@ -138,6 +138,11 @@ function secondsToClose(){
   return Number.isFinite(value)&&value>=0?Math.floor(value):null;
 }
 
+function secondsToTakeoff(){
+  const value=Number(round?.seconds_to_takeoff);
+  return Number.isFinite(value)&&value>=0?Math.floor(value):null;
+}
+
 function betKey(){
   if(!round?.id)return null;
   const key='jl_aviator_bet_key_'+round.id;
@@ -152,7 +157,7 @@ function betKey(){
 function setStagePhase(phase){
   const stage=$('#aviatorStage');
   if(!stage)return;
-  stage.classList.remove('is-open','is-flying','is-crashed','is-waiting');
+  stage.classList.remove('is-open','is-locked','is-flying','is-crashed','is-waiting');
   stage.classList.add('is-'+phase);
 }
 
@@ -198,13 +203,15 @@ function updateOpenClock(){
   }
 
   const seconds=secondsToClose();
+  const takeoffSeconds=secondsToTakeoff();
   const display=seconds===null?'—':String(seconds);
+  const takeoffDisplay=takeoffSeconds===null?'—':String(takeoffSeconds);
   const closed=seconds===0;
 
   $('#roundState').textContent=closed?'APOSTAS FECHADAS':'APOSTAS ABERTAS';
   $('#clockLabel').textContent=closed?'DESCOLAGEM':'FECHA EM';
   $('#roundCountdown').textContent=closed?'AGUARDE':seconds===null?'—':display+'s';
-  $('#preflightCountdown').textContent=display;
+  $('#preflightCountdown').textContent=takeoffDisplay;
 
   const betBtn=$('#betBtn');
   if(betBtn){
@@ -523,7 +530,8 @@ function renderProof(){
 }
 
 function renderMaintenanceView(){
-  const protectedFlight=!enabled&&round?.status==='FLYING'&&Boolean(myBet);
+  const protectedFlight=
+    !enabled&&['LOCKED','FLYING'].includes(round?.status)&&Boolean(myBet);
   const maintenanceOnly=!enabled&&!protectedFlight;
 
   document.body.classList.toggle('aviator-maintenance',!enabled);
@@ -551,6 +559,38 @@ function renderOpen(){
 
   if(myBet&&!$('#aviatorMessage').textContent.trim()){
     $('#aviatorMessage').textContent='Aposta confirmada. Aguarde a descolagem.';
+  }
+}
+
+function renderLocked(){
+  stopOpenUiTick();
+  stopFlight();
+  setStagePhase('locked');
+  renderRoundNumber();
+
+  const seconds=secondsToTakeoff();
+  const display=seconds===null?'—':String(seconds);
+
+  $('#roundState').textContent='APOSTAS FECHADAS';
+  $('#clockLabel').textContent='DESCOLAGEM EM';
+  $('#roundCountdown').textContent=seconds===null?'—':display+'s';
+  $('#preflightCountdown').textContent=display;
+
+  show('#preflight',true);
+  show('#multiplierWrap',false);
+  show('#crashText',false);
+
+  const betBtn=$('#betBtn');
+  if(betBtn){
+    betBtn.disabled=true;
+    betBtn.textContent='Apostas fechadas';
+  }
+
+  resetCashout();
+  renderTicket();
+
+  if(myBet){
+    $('#aviatorMessage').textContent='Aposta confirmada. Aguardando descolagem.';
   }
 }
 
@@ -648,6 +688,11 @@ function renderCurrentRound(){
 
   if(round.status==='OPEN'){
     renderOpen();
+    return;
+  }
+
+  if(round.status==='LOCKED'){
+    renderLocked();
     return;
   }
 
