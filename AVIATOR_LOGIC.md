@@ -9,7 +9,6 @@ Fase 1 do motor.
 - Ex.: banca 200.000 MZN, reserva 100.000 MZN e apostas 100.000 MZN => teto 2x.
 - Ex.: banca 100.000 MZN, reserva 50.000 MZN e apostas 100.000 MZN => teto 1,5x.
 - O snapshot, a reserva e o teto ficam congelados em `LOCKED`; cash-outs posteriores não recalculam o teto.
-- A extensão visual depois de todos os jogadores terem saído será implementada na fase seguinte. O intervalo discutido é 5x–135,7x, mas não é ainda regra executável nesta migration.
 - RPCs de fecho/motor permanecem apenas para `service_role`; o cliente não decide teto, crash ou liquidação.
 
 ## Fase 2 — voo e cash-out
@@ -22,8 +21,8 @@ Fase 1 do motor.
 - No crash, apostas ainda activas perdem; os stakes perdidos entram na banca uma única vez.
 - O lucro pago num cash-out é debitado da banca; a devolução do stake não é tratada como dinheiro da banca.
 
-
 ## Resiliência e concorrência
+
 - A colocação de aposta usa `request_key` persistida no `sessionStorage` por rodada. Retry da mesma ação reutiliza a mesma chave.
 - `jl_aviator_player_state` recupera a aposta ativa depois de refresh, reconexão ou retorno da aplicação.
 - Cash-out e crash são serializados por rodada; a decisão final pertence ao servidor.
@@ -31,5 +30,15 @@ Fase 1 do motor.
 - Ao chegar a zero apostas ativas, termina a responsabilidade financeira e o alvo passa para a extensão visual comprometida.
 - O executor respeita a pausa pós-liquidação antes de abrir a rodada seguinte.
 
+## Manutenção
+
+- `enabled=false` bloqueia novas apostas e impede a abertura de novas rodadas.
+- Uma rodada `OPEN` sem apostas é cancelada ao entrar em manutenção.
+- Uma rodada `OPEN` que já tenha aposta aceite não é apagada: fecha normalmente e segue para voo/liquidação.
+- Uma rodada `FLYING` nunca é interrompida por manutenção; jogadores com aposta ativa mantêm o cash-out até a liquidação.
+- Para quem não possui aposta protegida em voo, a interface fechada mostra apenas **“Aviator brevemente”**.
+- O toggle administrativo, a entrada de aposta e o motor usam trava de manutenção para evitar corrida entre fechar o jogo e aceitar nova aposta.
+
 ## Estado de implantação
-As migrations e o código do motor estão versionados no repositório. Isso não significa, por si só, que as migrations/Edge Function já tenham sido aplicadas no projeto Supabase de produção.
+
+As migrations e o código do motor ficam versionados no repositório. Uma migration só deve ser considerada ativa em produção depois de constar no histórico do Supabase de produção.
