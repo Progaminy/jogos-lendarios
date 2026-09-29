@@ -1106,3 +1106,51 @@ h2 { margin: 0; font-size: clamp(1.25rem, 2.5vw, 1.75rem); letter-spacing: -.025
   .aviator-cancel-panel{grid-template-columns:1fr}
   .aviator-cancel-panel .button{width:100%}
 }
+
+
+.aviator-admin-audit{
+  margin-top:14px;
+  border:1px solid var(--line);
+  border-radius:14px;
+  overflow:hidden;
+  background:rgba(255,255,255,.018);
+}
+.aviator-admin-audit>summary{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:15px 16px;
+  cursor:pointer;
+  font-weight:850;
+}
+.aviator-admin-audit>summary small{color:var(--muted);font-weight:700}
+.aviator-audit-help{padding:0 16px 12px;margin:0}
+.aviator-audit-list{padding:0 12px 12px}
+.aviator-audit-item{
+  border-top:1px solid var(--line);
+  padding:0;
+}
+.aviator-audit-item:first-child{border-top:0}
+.aviator-audit-item>summary{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  gap:12px;
+  padding:12px 4px;
+  cursor:pointer;
+}
+.aviator-audit-item>summary span{font-weight:800}
+.aviator-audit-item>summary small{color:var(--muted);text-align:right}
+.aviator-audit-body{
+  padding:0 4px 12px;
+  color:var(--muted);
+  font-size:.86rem;
+  line-height:1.5;
+}
+.aviator-audit-body p{margin:4px 0}
+.aviator-audit-body strong{color:var(--text)}
+@media(max-width:620px){
+  .aviator-audit-item>summary{grid-template-columns:1fr}
+  .aviator-audit-item>summary small{text-align:left}
+}
