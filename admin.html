@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0a0d14">
   <title>Administração — Jogos Lendários</title>
   <link rel="icon" href="./favicon.ico" sizes="any">
-  <link rel="stylesheet" href="./styles.css?v=20260930-1">
+  <link rel="stylesheet" href="./styles.css?v=20260930-2">
   <link rel="stylesheet" href="./admin-bonus.css?v=20260922-14">
   <link rel="stylesheet" href="./admin-recovery.css?v=20260922-13">
 </head>
@@ -77,6 +77,19 @@
           <button id="aviatorMaintenanceClose" class="button danger" type="button">Fechar Aviator</button>
           <button id="aviatorMaintenanceReopen" class="button success" type="button" disabled>Reabrir Aviator</button>
           <button id="aviatorOneRoundTest" class="button" type="button">Abrir 1 rodada de teste</button>
+        </div>
+
+        <div class="aviator-cancel-panel">
+          <p class="eyebrow">CANCELAMENTO DA RODADA</p>
+          <label class="field">
+            <span>Motivo obrigatório</span>
+            <input id="aviatorCancelReason" type="text" minlength="5" maxlength="240"
+              placeholder="Ex.: falha técnica durante a rodada">
+          </label>
+          <button id="aviatorCancelRound" class="button danger" type="button" disabled>
+            Cancelar rodada e reembolsar
+          </button>
+          <small>Disponível apenas em OPEN, LOCKED ou FLYING. Apostas ainda ativas são devolvidas automaticamente.</small>
         </div>
         <div class="admin-actions"><label class="field"><span>Ajuste da banca (+/- MZN)</span><input id="aviatorBankDelta" type="number" step="0.01"></label>
         <label class="field"><span>Motivo</span><input id="aviatorBankReason" maxlength="160" placeholder="Ex.: capital inicial"></label>
@@ -348,7 +361,7 @@
   <script src="./config.js"></script>
   <script src="./js/auth/session.js?v=20260928-2"></script>
   <script src="./js/a11y/dialogs.js?v=20260928-2"></script>
-  <script src="./admin.js?v=20260930-3" defer></script>
+  <script src="./admin.js?v=20260930-4" defer></script>
   <script src="./admin-auth-security.js?v=20260928-1" defer></script>
   <script src="./admin-influencers.js?v=20260927-1" defer></script>
   <script src="./admin-ludo-emergency.js?v=20260928-1" defer></script>
