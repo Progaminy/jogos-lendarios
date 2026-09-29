@@ -40,5 +40,19 @@
     return 'waiting';
   }
 
-  return Object.freeze({pickActiveBet,findBetById,pollDelay,phase});
+  function shouldAcceptSnapshot(previousSeq,nextSeq){
+    const next=Number(nextSeq);
+    if(!Number.isFinite(next))return false;
+    const previous=Number(previousSeq);
+    if(!Number.isFinite(previous))return true;
+    return next>=previous;
+  }
+
+  return Object.freeze({
+    pickActiveBet,
+    findBetById,
+    pollDelay,
+    phase,
+    shouldAcceptSnapshot
+  });
 });
