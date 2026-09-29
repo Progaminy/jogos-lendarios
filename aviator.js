@@ -174,13 +174,28 @@ function setStagePhase(phase){
 
 function stopFlight(){}
 
+function multiplierTier(value){
+  const n=Number(value);
+  if(!Number.isFinite(n)||n<2)return 'low';
+  if(n<10)return 'medium';
+  return 'high';
+}
+
+function applyMultiplierTier(el,value){
+  if(!el)return;
+  el.classList.remove('tier-low','tier-medium','tier-high');
+  el.classList.add('tier-'+multiplierTier(value));
+}
+
 function renderMultiplier(value){
   const el=$('#multiplier');
   if(!el)return;
   const n=Number(value);
-  const text=(Number.isFinite(n)&&n>=1?n:1).toFixed(2)+'×';
+  const safe=Number.isFinite(n)&&n>=1?n:1;
+  const text=safe.toFixed(2)+'×';
   el.textContent=text;
   el.classList.toggle('long',text.length>=8);
+  applyMultiplierTier(el,safe);
 }
 
 function resetCashout(){
@@ -331,7 +346,7 @@ function renderHistory(){
   }
 
   wrap.innerHTML=rows.map((item,index)=>
-    '<span class="aviator-history-value" title="Rodada #'+item.id+'">'+
+    '<span class="aviator-history-value tier-'+multiplierTier(item.crash_multiplier)+'" title="Rodada #'+item.id+'">'+
       item.crash_multiplier.toFixed(2)+'x'+
     '</span>'+
     (index<rows.length-1
@@ -735,6 +750,7 @@ function renderFinished(){
   $('#clockLabel').textContent='PRÓXIMA RODADA';
   $('#roundCountdown').textContent='A AGUARDAR';
   $('#crashMultiplier').textContent=resultText;
+  applyMultiplierTier($('#crashMultiplier'),result);
 
   show('#preflight',false);
   show('#multiplierWrap',false);
