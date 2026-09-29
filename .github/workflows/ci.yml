@@ -26,6 +26,7 @@ jobs:
       - name: JavaScript syntax
         run: |
           node --check ludo.js
+          node --check aviator.js
           node --check app.js
           node --check js/ludo/movement-guard.js
           node --check js/ludo/room-state.js
