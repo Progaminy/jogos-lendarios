@@ -26,6 +26,7 @@
 
 - A escrituração/liquidação continua no cron global de 2 segundos.
 - O estado público pode devolver `CRASHED` logicamente assim que o relógio do servidor alcança o alvo, sem esperar a próxima escrita do cron.
+- O estado público de alta frequência não faz `count(*)` das apostas e lê apenas as colunas necessárias da rodada.
 - O cliente recebe o multiplicador final somente quando o alvo já foi atingido.
 - `financial_ceiling`, `effective_target`, `visual_target` e totais internos não são expostos no estado público antes do crash.
 - O cash-out continua usando o relógio e as travas do servidor; a indicação visual nunca autoriza pagamento.
