@@ -5,6 +5,18 @@
   const SOUND_KEY = 'jl_ludo_sound_enabled';
   const $ = (id) => document.getElementById(id);
   const state = window.JLLudoState.create();
+
+  // Estilos secundários ficam fora do caminho crítico para manter o Ludo leve.
+  function loadDeferredLudoStyles(){
+    if(document.getElementById('ludoDeferredStyles'))return;
+    const link=document.createElement('link');
+    link.id='ludoDeferredStyles';
+    link.rel='stylesheet';
+    link.href='./ludo-deferred.css?v=20260929-1';
+    document.head.appendChild(link);
+  }
+  if('requestIdleCallback' in window)requestIdleCallback(loadDeferredLudoStyles,{timeout:700});
+  else setTimeout(loadDeferredLudoStyles,120);
   const els = Object.fromEntries([
     'toast','identityBadge','accountButton','accountMenu','accountMenuCode','accountMenuBalance','accountMenuDeposit','accountMenuWithdraw','accountMenuLogout','ludoStatusStrip','onlinePlayerCount','directNotificationMetric','publicNotificationMetric','directListShortcut','publicListShortcut','topDirectInviteCount','topPublicInviteCount','loggedOut','lobby','boardLobby','ludoLobbyBoard','balanceBadge','createRoomForm','createColor','createPawnStyle','createPlayers','createMode','createBet','createPublic',
     'joinCodeForm','joinCode','queueForm','queuePlayers','queueMode','queueBet','queueButton','queueStatus','notificationCenter','inviteList','directInviteCount','publicChallengeList','publicChallengeCount','refreshLobby',
