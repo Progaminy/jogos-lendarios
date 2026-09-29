@@ -63,6 +63,15 @@ Esses cenários têm regressões transacionais em `tests/sql/aviator/`.
 - Para quem não possui aposta protegida em voo, a interface mostra apenas **“Aviator brevemente”**.
 - Toggle administrativo, aposta e motor usam trava de manutenção para evitar corrida.
 
+## Teste operacional de uma rodada
+
+- O admin pode armar exatamente **1 rodada real de teste**.
+- O modo só pode ser iniciado sem rodada transitória existente.
+- A rodada usa o mesmo motor, apostas, cash-out, teto, prova e ledger da operação normal.
+- Após `SETTLED`, o backend define `enabled=false` e limpa o flag one-shot antes do próximo cron.
+- Toggle manual de manutenção cancela o flag de teste.
+- O botão do admin não inicia automaticamente nesta implantação; exige clique e confirmação do administrador.
+
 ## Operação da banca
 
 - Ajustes negativos da banca são bloqueados durante `LOCKED` ou `FLYING`.

@@ -134,6 +134,11 @@
             :'PRONTO PARA TESTE';
       }
       const mt=$('aviatorMaintenanceToggle'); if(mt){mt.textContent=d.enabled?'Fechar Aviator · manutenção':'Abrir Aviator';mt.classList.toggle('danger',d.enabled);mt.classList.toggle('success',!d.enabled);}
+      const oneRound=$('aviatorOneRoundTest');
+      if(oneRound){
+        oneRound.disabled=Boolean(d.enabled);
+        oneRound.textContent=d.one_round_test?'Rodada de teste em curso':'Abrir 1 rodada de teste';
+      }
     }catch(e){$('aviatorAdminMessage').textContent=e.message}
   }
   $('aviatorMaintenanceToggle')?.addEventListener('click',async()=>{
@@ -157,6 +162,26 @@
       await refreshAviatorAdmin();
     }catch(e){$('aviatorAdminMessage').textContent=e.message}
   });
+  $('aviatorOneRoundTest')?.addEventListener('click',async()=>{
+    try{
+      const d=await rpc('jl_aviator_admin_state',{p_token:state.token});
+      if(d.enabled){
+        throw new Error('Feche o Aviator antes de iniciar uma rodada de teste.');
+      }
+      const bankBalance=Number(d.bank?.balance)||0;
+      const exposure=Number(d.bank?.exposure_ratio)||0.5;
+      const ceiling10=1+(bankBalance*exposure/10);
+      const ok=window.confirm(
+        'Abrir exatamente 1 rodada real de teste? Ao terminar, o Aviator volta sozinho para manutenção. '+
+        'Com 10 MZN apostados, o teto estimado atual é '+ceiling10.toFixed(2)+'×.'
+      );
+      if(!ok)return;
+      await rpc('jl_aviator_admin_start_one_round_test',{p_token:state.token});
+      $('aviatorAdminMessage').textContent='Rodada de teste armada. O Aviator voltará à manutenção após liquidá-la.';
+      await refreshAviatorAdmin();
+    }catch(e){$('aviatorAdminMessage').textContent=e.message}
+  });
+
   $('aviatorBankAdjust')?.addEventListener('click',async()=>{
     try{
       const delta=Number($('aviatorBankDelta').value),reason=$('aviatorBankReason').value.trim();
