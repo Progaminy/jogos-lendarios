@@ -43,12 +43,11 @@ body{background:#070a10}
 .aviator-history-summary span{font-size:.72rem;font-weight:850}
 .aviator-history-summary small{font-size:.65rem;color:#6f7b90}
 .aviator-history[open] .aviator-history-summary{border-bottom:1px solid rgba(255,255,255,.045)}
-.aviator-history-strip{display:flex;gap:7px;overflow-x:auto;overscroll-behavior-inline:contain;scroll-snap-type:x proximity;padding:9px 10px 10px;scrollbar-width:none}
+.aviator-history-strip{display:flex;align-items:center;gap:5px;overflow-x:auto;overscroll-behavior-inline:contain;padding:9px 12px 10px;scrollbar-width:none;white-space:nowrap}
 .aviator-history-strip::-webkit-scrollbar{display:none}
-.aviator-history-chip{flex:0 0 auto;min-width:62px;padding:7px 9px;border:1px solid rgba(255,255,255,.06);border-radius:10px;background:rgba(255,255,255,.025);display:grid;gap:1px;scroll-snap-align:start}
-.aviator-history-chip strong{font-size:.86rem;font-variant-numeric:tabular-nums;color:#e2b744}
-.aviator-history-chip small{font-size:.56rem;color:#68758a}
-.aviator-history-empty{font-size:.8rem;color:#7f8aa0;padding:4px 0}
+.aviator-history-value{flex:0 0 auto;font-size:.84rem;line-height:1;font-weight:850;font-variant-numeric:tabular-nums;color:#d8dee9}
+.aviator-history-separator{flex:0 0 auto;font-size:.8rem;line-height:1;color:#596579}
+.aviator-history-empty{font-size:.76rem;color:#7f8aa0;padding:2px 0}
 
 .aviator-controls{display:grid;grid-template-columns:minmax(0,1fr) minmax(180px,.42fr);gap:10px;padding-top:2px}
 .aviator-controls form{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.72fr) minmax(150px,.55fr);gap:8px;align-items:end}
