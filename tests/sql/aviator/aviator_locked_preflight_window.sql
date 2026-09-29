@@ -11,6 +11,12 @@ update public.jl_aviator_settings
        updated_at=clock_timestamp()
  where id=true;
 
+update public.jl_aviator_bank
+   set balance=100000,
+       exposure_ratio=.5,
+       updated_at=clock_timestamp()
+ where id=true;
+
 do $locktest$
 declare
   p1 uuid;
