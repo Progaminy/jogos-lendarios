@@ -46,6 +46,17 @@
 - `financial_ceiling`, `effective_target`, `visual_target` e totais internos não são expostos no estado público antes do crash.
 - O cash-out continua usando o relógio e as travas do servidor; a indicação visual nunca autoriza pagamento.
 
+## Cash-out atómico e idempotente
+
+- Cada cash-out usa um lock específico da aposta antes do lock compartilhado da rodada.
+- Duas requisições simultâneas da mesma aposta não podem pagar duas vezes: a primeira processa; a segunda relê o estado e devolve o mesmo resultado com `already_processed=true`.
+- O instante financeiro do cash-out é congelado com `clock_timestamp()` no servidor antes de qualquer espera posterior pela banca.
+- A banca, a transação de payout, a aposta e o saldo do jogador fazem parte da mesma transação PostgreSQL; qualquer falha provoca rollback completo.
+- `payout_transaction_id` possui FK para `transactions(id)` e índice único.
+- Uma aposta `CASHED_OUT` só é válida com multiplicador, payout, horário e transaction id preenchidos.
+- Depois de paga, a parte financeira da aposta fica imutável por trigger.
+- Retry após timeout/resposta perdida retorna o mesmo `transaction_id`, multiplicador e payout; não cria novo crédito, ledger ou auditoria.
+
 ## Ciclo da rodada e janela de bloqueio
 
 - O ciclo público é **BETTING → LOCKED → FLYING → CRASHED → SETTLED**.
