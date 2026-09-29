@@ -15,6 +15,8 @@ as $$
 declare
   v_live integer;
   v_bank numeric;
+  v_enabled boolean;
+  v_test boolean;
   v_admin uuid:=public.jl_admin_account_id(p_token);
 begin
   if v_admin is null then
@@ -22,6 +24,16 @@ begin
   end if;
   perform pg_advisory_xact_lock(hashtext('jl_aviator_engine_tick'));
   perform pg_advisory_xact_lock(hashtext('jl_aviator_maintenance'));
+
+  select enabled,one_round_test
+    into v_enabled,v_test
+  from public.jl_aviator_settings
+  where id=true
+  for update;
+
+  if coalesce(v_enabled,false) or coalesce(v_test,false) then
+    raise exception 'Feche o Aviator antes de iniciar uma rodada de teste.';
+  end if;
 
   select count(*)
     into v_live
