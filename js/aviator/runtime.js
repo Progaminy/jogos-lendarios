@@ -28,13 +28,14 @@
 
   function pollDelay(status,hidden){
     if(hidden)return 5000;
-    if(status==='FLYING')return 500;
+    if(status==='FLYING'||status==='LOCKED')return 500;
     if(status==='OPEN')return 1000;
     return 1400;
   }
 
   function phase(status){
     if(status==='OPEN')return 'open';
+    if(status==='LOCKED')return 'locked';
     if(status==='FLYING')return 'flying';
     if(status==='CRASHED'||status==='SETTLED')return 'crashed';
     return 'waiting';
