@@ -46,6 +46,18 @@
 - `financial_ceiling`, `effective_target`, `visual_target` e totais internos não são expostos no estado público antes do crash.
 - O cash-out continua usando o relógio e as travas do servidor; a indicação visual nunca autoriza pagamento.
 
+## Cash-out automático opcional
+
+- O jogador pode deixar o campo vazio ou indicar um alvo como **1,50x**, **2,00x** ou outro valor com até 2 casas decimais.
+- A preferência é gravada na aposta como `auto_cashout_multiplier` antes do bloqueio da rodada.
+- O navegador **não executa** o auto cash-out. O motor do servidor verifica os alvos em cada tick e liquida a aposta mesmo com o jogador offline.
+- O pagamento usa exatamente o alvo definido pelo jogador. Se o motor observar 1,57x e o alvo era 1,50x, o payout é calculado em **1,50x**.
+- A ordem matemática dos eventos prevalece sobre a frequência do tick: se auto=1,50x e crash=1,60x, o auto cash-out é pago mesmo que um tick chegue depois de 1,60x.
+- Se o auto cash-out for **igual ou superior ao crash**, ele não é pago; o crash vence na igualdade.
+- O auto cash-out reutiliza a mesma transação financeira atómica do cash-out manual, com uma única transação, débito da banca, auditoria e proteção idempotente.
+- `cashout_source` registra `AUTO` ou `MANUAL`; retries de uma aposta já paga apenas devolvem o resultado existente.
+- O processador interno de auto cash-out não é executável por `anon` nem `authenticated`.
+
 ## Cash-out atómico e idempotente
 
 - Cada cash-out usa um lock específico da aposta antes do lock compartilhado da rodada.
