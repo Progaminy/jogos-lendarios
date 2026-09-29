@@ -25,7 +25,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="stylesheet" href="./ludo.css?v=20260929-12">
+  <link rel="stylesheet" href="./ludo.css?v=20260929-13">
   <link rel="stylesheet" href="./site-nav.css?v=20260928-20">
   <style id="ludo-critical-mobile-fix">
     @media (max-width:600px){
@@ -138,6 +138,16 @@
                 <button class="ludo-color-choice green" type="button" data-ludo-color="green" aria-label="Verde" aria-pressed="false"><span class="pawn-shape" aria-hidden="true"></span><span class="choice-check" aria-hidden="true">✓</span></button>
                 <button class="ludo-color-choice yellow" type="button" data-ludo-color="yellow" aria-label="Amarelo" aria-pressed="false"><span class="pawn-shape" aria-hidden="true"></span><span class="choice-check" aria-hidden="true">✓</span></button>
                 <button class="ludo-color-choice blue" type="button" data-ludo-color="blue" aria-label="Azul" aria-pressed="false"><span class="pawn-shape" aria-hidden="true"></span><span class="choice-check" aria-hidden="true">✓</span></button>
+              </div>
+            </div>
+
+            <input id="createPawnStyle" type="hidden" value="current">
+            <div class="quick-start-step" aria-label="Escolha o tipo de peão">
+              <span class="quick-step-icon" aria-hidden="true">♟</span>
+              <div id="createPawnStylePicker" class="ludo-pawn-style-picker" data-color="red" role="group" aria-label="Tipo de peão">
+                <button class="pawn-style-choice active" type="button" data-pawn-style="current" aria-label="Peão atual" aria-pressed="true"><span class="pawn-type-preview pawn-type-current" aria-hidden="true"></span><small>Atual</small><span class="choice-check" aria-hidden="true">✓</span></button>
+                <button class="pawn-style-choice" type="button" data-pawn-style="classic" aria-label="Peão clássico" aria-pressed="false"><span class="pawn-type-preview pawn-type-classic" aria-hidden="true"></span><small>Clássico</small><span class="choice-check" aria-hidden="true">✓</span></button>
+                <button class="pawn-style-choice" type="button" data-pawn-style="video" aria-label="Peão modelo do vídeo" aria-pressed="false"><span class="pawn-type-preview pawn-type-video" aria-hidden="true"></span><small>Vídeo</small><span class="choice-check" aria-hidden="true">✓</span></button>
               </div>
             </div>
 
@@ -360,12 +370,12 @@
   <script src="./js/ludo/movement-guard.js?v=20260928-2"></script>
   <script src="./js/ludo/sound.js?v=20260928-1"></script>
   <script src="./js/ludo/animation.js?v=20260928-2"></script>
-  <script src="./js/ludo/render.js?v=20260929-1"></script>
+  <script src="./js/ludo/render.js?v=20260929-2"></script>
   <script src="./js/ludo/voice.js?v=20260928-2"></script>
   <script src="./js/platform/feature-loader.js?v=20260929-1" defer></script>
   <script src="./logout-confirm.js?v=20260924-2" defer></script>
   <script src="./ludo-sync.js?v=20260928-1" defer></script>
-  <script src="./ludo.js?v=20260929-9" defer></script>
+  <script src="./ludo.js?v=20260929-10" defer></script>
   <script src="./js/ui/collapse.js?v=20260928-2" defer></script>
   <script src="./js/ludo/policy.js?v=20260928-2" defer></script>
 </body>
