@@ -77,7 +77,8 @@ select (public.jl_aviator_place_bet(
 "${PSQL[@]}" -c "select public.jl_aviator_lock_round('$round_id');" >/dev/null
 "${PSQL[@]}" -c "
 update public.jl_aviator_rounds
-set takeoff_at=clock_timestamp()-interval '1 second'
+set betting_closes_at=clock_timestamp()-interval '4 seconds',
+    takeoff_at=clock_timestamp()-interval '1 second'
 where id='$round_id';
 select public.jl_aviator_start_round('$round_id');
 update public.jl_aviator_rounds
