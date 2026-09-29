@@ -629,6 +629,7 @@ document.addEventListener('visibilitychange',()=>{
     lastRecoveredRoundId=null;
     state();
   }else{
+    stopOpenUiTick();
     scheduleState(5000);
   }
 });
