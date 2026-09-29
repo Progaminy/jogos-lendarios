@@ -158,12 +158,14 @@ Esses cenários têm regressões transacionais em `tests/sql/aviator/`.
 
 ## Manutenção
 
-- `enabled=false` bloqueia novas apostas e impede novas rodadas.
-- Uma `OPEN` sem apostas é cancelada ao entrar em manutenção.
-- Uma `OPEN` com aposta aceite não é apagada: fecha e segue para voo/liquidação.
-- Uma `FLYING` nunca é interrompida por manutenção; jogador com aposta ativa mantém cash-out.
-- Para quem não possui aposta protegida em voo, a interface mostra apenas **“Aviator brevemente”**.
-- Toggle administrativo, aposta e motor usam trava de manutenção para evitar corrida.
+- O painel possui uma ação dedicada **Fechar Aviator**, implementada por `jl_aviator_admin_close(token)`; ela só fecha e nunca reabre o jogo.
+- O fecho define `enabled=false` dentro da trava de manutenção. Novas apostas usam a mesma trava em modo compartilhado, por isso nenhuma aposta nova passa depois do commit do fecho.
+- `enabled=false` também impede a abertura de qualquer nova rodada pelo motor.
+- Uma `OPEN` vazia é cancelada ao entrar em manutenção.
+- Uma `OPEN` com aposta já aceite não é apagada; fica em drenagem segura e segue pelo ciclo normal até liquidação.
+- Uma `LOCKED` ou `FLYING` nunca é abortada por manutenção; dinheiro já comprometido continua protegido e cash-out permanece servidor-autoritativo.
+- O fecho é auditado pelo mesmo registo administrativo da mudança de manutenção.
+- Para quem não possui aposta protegida em voo, a interface mostra apenas **“Aviator brevemente.”**.
 
 ## Teste operacional de uma rodada
 
