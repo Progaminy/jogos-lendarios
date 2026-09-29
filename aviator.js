@@ -263,8 +263,8 @@ function renderTicket(multiplierValue=null){
   $('#activeBetStake').textContent=money(myStake);
   const auto=$('#activeBetAuto');
   if(auto)auto.textContent=myAutoCashout
-    ?Number(myAutoCashout).toFixed(2)+'×'
-    :'Desligado';
+    ?'Auto '+Number(myAutoCashout).toFixed(2)+'×'
+    :'Auto desligado';
 
   if(round?.status==='FLYING'){
     const m=Number(multiplierValue??mul());
