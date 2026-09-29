@@ -159,15 +159,17 @@ Esses cenários têm regressões transacionais em `tests/sql/aviator/`.
 ## Manutenção
 
 - O painel possui uma ação dedicada **Fechar Aviator**, implementada por `jl_aviator_admin_close(token)`; ela só fecha e nunca reabre o jogo.
-- Existe uma ação separada **Reabrir Aviator**, implementada por `jl_aviator_admin_reopen(token)`; ela nunca fecha o jogo.
-- A reabertura exige confirmação no painel antes da chamada ao servidor.
-- O servidor rejeita a reabertura se ainda existir rodada `OPEN`, `LOCKED`, `FLYING` ou `CRASHED` em drenagem.
-- O fecho define `enabled=false` dentro da trava de manutenção. Novas apostas usam a mesma trava em modo compartilhado, por isso nenhuma aposta nova passa depois do commit do fecho.
-- `enabled=false` também impede a abertura de qualquer nova rodada pelo motor.
-- Uma `OPEN` vazia é cancelada ao entrar em manutenção.
-- Uma `OPEN` com aposta já aceite não é apagada; fica em drenagem segura e segue pelo ciclo normal até liquidação.
-- Uma `LOCKED` ou `FLYING` nunca é abortada por manutenção; dinheiro já comprometido continua protegido e cash-out permanece servidor-autoritativo.
-- Fecho e reabertura ficam cobertos pelo registo administrativo da mudança de manutenção.
+- Existe uma ação separada **Reabrir Aviator**, implementada por `jl_aviator_admin_reopen(token)`; ela nunca fecha o jogo e exige confirmação explícita.
+- O fecho e o motor usam a mesma ordem de locks `engine -> maintenance`, evitando corrida/deadlock entre aposta, motor e manutenção.
+- Assim que o fecho é confirmado, `enabled=false` bloqueia novas apostas e novas rodadas.
+- Se a rodada ainda estiver `OPEN` ou `LOCKED`, ela é cancelada antes da descolagem e todas as apostas `ACTIVE` são reembolsadas atomicamente.
+- Cada reembolso restaura o saldo do jogador, marca a aposta como `REFUNDED`, grava `refunded_at`, liga `refund_transaction_id` e cria uma transação `aviator_refund`.
+- Repetir o fecho é idempotente: um reembolso já concluído não é pago novamente.
+- Se a rodada já estiver `FLYING`, ela não é cancelada nem reembolsada arbitrariamente; continua pelo motor normal até `CRASHED` e depois `SETTLED`.
+- Se já estiver `CRASHED`, o motor conclui a liquidação; não fica rodada financeira presa.
+- O cron considera qualquer rodada transitória durante manutenção como trabalho pendente, garantindo drenagem mesmo após reinício/reentrada do worker.
+- O painel informa quantas apostas e quanto valor foram reembolsados quando o fecho ocorre antes do voo.
+- A reabertura é bloqueada enquanto ainda houver `OPEN`, `LOCKED`, `FLYING` ou `CRASHED` pendente.
 - Para quem não possui aposta protegida em voo, a interface mostra apenas **“Aviator brevemente.”**.
 
 ## Teste operacional de uma rodada
