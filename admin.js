@@ -109,6 +109,16 @@
       $('aviatorReserve').textContent=money(r.risk_reserve); $('aviatorStaked').textContent=money(d.stake_sum);
       $('aviatorPaid').textContent=money(d.paid_sum); $('aviatorCrash').textContent=r.crash_multiplier?Number(r.crash_multiplier).toFixed(2)+'×':'—';
       const referenceStake=10,referenceCeiling=1+(bankBalance*exposure/referenceStake),bankWarning=$('aviatorBankWarning');
+      const readiness=$('aviatorReadiness'),referenceCeilings=$('aviatorReferenceCeilings');
+      const refs=[1,5,10,50].map(stake=>({
+        stake,
+        ceiling:1+(bankBalance*exposure/stake)
+      }));
+      if(referenceCeilings){
+        referenceCeilings.innerHTML=refs.map(item=>
+          '<span><strong>'+item.stake+' MZN</strong> → '+item.ceiling.toFixed(2)+'×</span>'
+        ).join('');
+      }
       if(bankWarning){
         const showWarning=Number.isFinite(referenceCeiling)&&referenceCeiling<1.5;
         bankWarning.classList.toggle('hidden',!showWarning);
@@ -116,11 +126,36 @@
           ?'Atenção: com banca de '+money(bankBalance)+' MZN e 10 MZN apostados, o teto financeiro estimado seria '+referenceCeiling.toFixed(2)+'×. A banca baixa faz o crash financeiro ocorrer muito cedo.'
           :'';
       }
+      if(readiness){
+        readiness.textContent=d.enabled
+          ?'ABERTO'
+          :referenceCeiling<1.5
+            ?'BANCA MUITO BAIXA'
+            :'PRONTO PARA TESTE';
+      }
       const mt=$('aviatorMaintenanceToggle'); if(mt){mt.textContent=d.enabled?'Fechar Aviator · manutenção':'Abrir Aviator';mt.classList.toggle('danger',d.enabled);mt.classList.toggle('success',!d.enabled);}
     }catch(e){$('aviatorAdminMessage').textContent=e.message}
   }
   $('aviatorMaintenanceToggle')?.addEventListener('click',async()=>{
-    try{const d=await rpc('jl_aviator_admin_state',{p_token:state.token});const enabled=!d.enabled;await rpc('jl_aviator_admin_set_enabled',{p_token:state.token,p_enabled:enabled});$('aviatorAdminMessage').textContent=enabled?'Aviator aberto.':'Aviator fechado para manutenção.';await refreshAviatorAdmin()}catch(e){$('aviatorAdminMessage').textContent=e.message}
+    try{
+      const d=await rpc('jl_aviator_admin_state',{p_token:state.token});
+      const enabled=!d.enabled;
+      if(enabled){
+        const bankBalance=Number(d.bank?.balance)||0;
+        const exposure=Number(d.bank?.exposure_ratio)||0.5;
+        const referenceCeiling=1+(bankBalance*exposure/10);
+        if(referenceCeiling<1.5){
+          const ok=window.confirm(
+            'A banca está muito baixa. Com 10 MZN apostados, o teto estimado é '+
+            referenceCeiling.toFixed(2)+'×. Abrir o Aviator mesmo assim?'
+          );
+          if(!ok)return;
+        }
+      }
+      await rpc('jl_aviator_admin_set_enabled',{p_token:state.token,p_enabled:enabled});
+      $('aviatorAdminMessage').textContent=enabled?'Aviator aberto.':'Aviator fechado para manutenção.';
+      await refreshAviatorAdmin();
+    }catch(e){$('aviatorAdminMessage').textContent=e.message}
   });
   $('aviatorBankAdjust')?.addEventListener('click',async()=>{
     try{

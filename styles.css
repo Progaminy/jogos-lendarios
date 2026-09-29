@@ -277,6 +277,10 @@ h2 { margin: 0; font-size: clamp(1.25rem, 2.5vw, 1.75rem); letter-spacing: -.025
 .form-message.success { color: var(--green); }
 .form-message.error { color: var(--red); }
 .aviator-bank-warning { margin: 12px 0; padding: 12px 14px; border: 1px solid rgba(255,190,72,.32); border-radius: 12px; background: rgba(255,190,72,.07); color: #ffd27a; font-size: .86rem; line-height: 1.45; font-weight: 750; }
+.aviator-reference-ceilings { display:flex; flex-wrap:wrap; gap:8px; margin:10px 0 0; }
+.aviator-reference-ceilings span { padding:7px 10px; border:1px solid rgba(255,255,255,.08); border-radius:999px; background:rgba(255,255,255,.035); font-size:.76rem; color:#aeb8c9; }
+.aviator-reference-ceilings strong { color:#f4bd42; }
+
 
 .history-list { margin-top: 20px; display: grid; gap: 10px; }
 .history-item {
