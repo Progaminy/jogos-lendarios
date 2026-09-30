@@ -6,7 +6,7 @@ const fs=require('node:fs');
 
 test('historico da banca do Aviator fica recolhido e sob demanda',()=>{
   const html=fs.readFileSync('admin.html','utf8');
-  const js=fs.readFileSync('admin.js','utf8');
+  const js=fs.readFileSync('js/aviator/admin.js','utf8');
 
   assert.match(html,/<details id="aviatorBankLedgerWrap"/);
   assert.match(html,/id="aviatorBankLedger"/);
@@ -17,7 +17,7 @@ test('historico da banca do Aviator fica recolhido e sob demanda',()=>{
 });
 
 test('historico distingue movimentos e escapa texto do banco',()=>{
-  const js=fs.readFileSync('admin.js','utf8');
+  const js=fs.readFileSync('js/aviator/admin.js','utf8');
 
   assert.match(js,/Lucro pago no cash-out/);
   assert.match(js,/Stake perdido creditado/);
