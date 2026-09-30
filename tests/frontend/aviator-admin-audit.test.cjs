@@ -6,7 +6,7 @@ const fs=require('node:fs');
 
 test('painel mostra auditoria administrativa do Aviator',()=>{
   const html=fs.readFileSync('admin.html','utf8');
-  const js=fs.readFileSync('admin.js','utf8');
+  const js=fs.readFileSync('js/aviator/admin.js','utf8');
 
   assert.match(html,/id="aviatorAuditWrap"/);
   assert.match(html,/Auditoria administrativa/);
@@ -24,7 +24,7 @@ test('painel mostra auditoria administrativa do Aviator',()=>{
 });
 
 test('ações administrativas críticas têm rótulos legíveis e fallback para ações futuras',()=>{
-  const js=fs.readFileSync('admin.js','utf8');
+  const js=fs.readFileSync('js/aviator/admin.js','utf8');
 
   for(const action of [
     'aviator.admin.closed',
@@ -40,7 +40,7 @@ test('ações administrativas críticas têm rótulos legíveis e fallback para 
 });
 
 test('histórico administrativo atualiza sozinho enquanto estiver aberto',()=>{
-  const js=fs.readFileSync('admin.js','utf8');
+  const js=fs.readFileSync('js/aviator/admin.js','utf8');
 
   assert.match(js,/Date\.now\(\)-aviatorAuditLastLoad<5000/);
   assert.match(js,/if\(\$\('aviatorAuditWrap'\)\?\.open\)/);
