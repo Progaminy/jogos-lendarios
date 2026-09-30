@@ -38,6 +38,7 @@
         "./js/aviator/ui.js",
         "./js/aviator/financial.js",
         "./js/aviator/history.js",
+        "./js/aviator/sound.js",
         "./js/realtime/aviator.js",
         "./aviator.js",
         "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.min.js"
