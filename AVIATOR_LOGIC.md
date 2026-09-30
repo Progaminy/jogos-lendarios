@@ -208,6 +208,18 @@ Esses cenários têm regressões transacionais em `tests/sql/aviator/`.
 - Migrations: `20260930001648_immutable_player_financial_ledger`, `20260930001729_ledger_initial_balance_posting` e `20260930001919_ledger_restrict_direct_writes`.
 - Regressão permanente: `tests/sql/aviator/aviator_immutable_financial_ledger.sql`.
 
+## Cash-out grande e prioritário
+
+- Durante `FLYING` com aposta ativa, o cash-out torna-se a ação visual prioritária.
+- O botão ocupa um slot próprio e fixo; no desktop reserva 64 px de altura e no mobile 72 px, sem empurrar o botão Apostar.
+- Quando disponível, recebe destaque verde forte, tipografia maior e sombra de foco visual.
+- O texto mostra o multiplicador atual, por exemplo `Cash-out · 1.42×`.
+- A linha fixa abaixo mostra o retorno estimado, por exemplo `Recebe agora 14,20 MZN`.
+- Durante confirmação, o mesmo slot mostra `Confirmando cash-out…` e `A confirmar no servidor`, sem mudar de posição.
+- Fora do voo ou sem aposta ativa, o botão permanece no mesmo lugar, desativado e visualmente discreto.
+- O valor exibido é apenas apresentação; o payout autoritativo continua sendo calculado no servidor.
+- Regressão permanente: `tests/frontend/aviator-priority-cashout.test.cjs`.
+
 ## Botão Apostar grande e estável
 
 - O botão principal mantém sempre o texto `Apostar`; mudanças de rodada não trocam o rótulo para frases maiores como “Apostas fechadas”, “Aposta confirmada” ou “Aguarde”.
