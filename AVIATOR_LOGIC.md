@@ -208,6 +208,20 @@ Esses cenários têm regressões transacionais em `tests/sql/aviator/`.
 - Migrations: `20260930001648_immutable_player_financial_ledger`, `20260930001729_ledger_initial_balance_posting` e `20260930001919_ledger_restrict_direct_writes`.
 - Regressão permanente: `tests/sql/aviator/aviator_immutable_financial_ledger.sql`.
 
+## Identificadores únicos de rodada e aposta
+
+- Cada rodada do Aviator possui `round_no` explícito, único e imutável.
+- `round_no` é uma coluna `GENERATED ALWAYS` derivada do ID interno da rodada. Isso evita uma segunda sequência que possa divergir e mantém todos os números históricos.
+- Existe índice único `jl_aviator_rounds_round_no_uidx`.
+- Cada aposta do Aviator possui `bet_uid UUID NOT NULL DEFAULT gen_random_uuid()`, independente do bigint interno usado nos joins.
+- Existe índice único `jl_aviator_bets_bet_uid_uidx`.
+- O trigger `jl_aviator_bet_uid_immutable` impede alterar o UUID de uma aposta depois de criado.
+- Estado público, histórico de resultados, estado privado do jogador, colocação de aposta, cash-out e prova da rodada expõem os identificadores canónicos sem remover os IDs internos legados.
+- A interface mostra `round_no` como o número da rodada; o ID interno permanece apenas para compatibilidade operacional.
+- Número e Dupla já usavam UUID como PK de cada aposta e `game_rounds.global_round_no` único, portanto não precisaram de uma segunda estrutura.
+- Migration: `20260930051747_aviator_unique_round_and_bet_identifiers`.
+- Regressão permanente: `tests/sql/aviator/aviator_unique_round_and_bet_identifiers.sql`.
+
 ## Bloqueio de apostas concorrentes
 
 - Existe um mutex financeiro transacional global por jogador: `jl_lock_player_wallet(player_id)`.
