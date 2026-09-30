@@ -6,6 +6,7 @@ let round=null;
 let myBet=null;
 let myStake=0;
 let myAutoCashout=null;
+let lastBetResult=null;
 let recovering=false;
 let lastRecoveredRoundId=null;
 let enabled=true;
@@ -265,6 +266,27 @@ function startOpenUiTick(){
 function renderTicket(multiplierValue=null){return ui.renderTicket(multiplierValue);}
 
 function renderBetConfirmation(){return ui.renderBetConfirmation();}
+function setBetResult(result=null){
+  lastBetResult=result||null;
+  ui.renderBetResult(lastBetResult);
+}
+function setBetResultFromBet(bet){
+  if(!bet){
+    setBetResult(null);
+    return;
+  }
+  const status=String(bet.status||'').toUpperCase();
+  if(!['CASHED_OUT','LOST','REFUNDED'].includes(status)){
+    if(status==='ACTIVE')setBetResult(null);
+    return;
+  }
+  setBetResult({
+    status,
+    stake:Number(bet.stake),
+    payout:Number(bet.payout),
+    cashout_multiplier:Number(bet.cashout_multiplier)
+  });
+}
 
 function normalizeHistoryItem(item){return history.normalize(item);}
 
@@ -355,6 +377,7 @@ async function refreshCurrentBetLight(){
     renderBetConfirmation();
 
     if(bet.status==='CASHED_OUT'){
+      setBetResultFromBet(bet);
       $('#aviatorMessage').textContent=cashoutMessage(
         bet.cashout_source,
         bet.cashout_multiplier,
@@ -365,12 +388,14 @@ async function refreshCurrentBetLight(){
     }
 
     if(bet.status==='LOST'){
+      setBetResultFromBet(bet);
       $('#aviatorMessage').textContent='Fim da rodada. Cash-out não disponível.';
       preserveMessageOnNextRoundSync=true;
       return true;
     }
 
     if(bet.status==='REFUNDED'){
+      setBetResultFromBet(bet);
       $('#aviatorMessage').textContent='A aposta foi reembolsada pelo servidor.';
       preserveMessageOnNextRoundSync=true;
       return true;
@@ -393,6 +418,7 @@ async function reconcilePendingCashout(){
 
     if(bet.status==='CASHED_OUT'){
       clearPendingCashout();
+      setBetResultFromBet(bet);
       myBet=null;
       myStake=0;
       myAutoCashout=null;
@@ -423,6 +449,7 @@ async function reconcilePendingCashout(){
 
     if(bet.status==='LOST'){
       clearPendingCashout();
+      setBetResultFromBet(bet);
       myBet=null;
       myStake=0;
       myAutoCashout=null;
@@ -435,6 +462,7 @@ async function reconcilePendingCashout(){
 
     if(bet.status==='REFUNDED'){
       clearPendingCashout();
+      setBetResultFromBet(bet);
       myBet=null;
       myStake=0;
       myAutoCashout=null;
@@ -479,8 +507,10 @@ async function recover(force=false){
     renderBetConfirmation();
 
     if(myBet&&round.status==='FLYING'){
+      setBetResult(null);
       $('#aviatorMessage').textContent='Aposta ativa recuperada.';
     }else if(latest?.status==='CASHED_OUT'){
+      setBetResultFromBet(latest);
       myAutoCashout=null;
       resetCashout();
       $('#aviatorMessage').textContent=cashoutMessage(
@@ -488,6 +518,12 @@ async function recover(force=false){
         latest.cashout_multiplier,
         latest.payout
       );
+    }else if(latest?.status==='LOST'){
+      setBetResultFromBet(latest);
+      $('#aviatorMessage').textContent='Fim da rodada. A aposta foi perdida.';
+    }else if(latest?.status==='REFUNDED'){
+      setBetResultFromBet(latest);
+      $('#aviatorMessage').textContent='A aposta foi reembolsada pelo servidor.';
     }
   }catch(_){
     lastRecoveredRoundId=null;
@@ -779,6 +815,7 @@ function applyReconnectPlayerState(player){
 
   if(latest?.status==='CASHED_OUT'){
     clearPendingCashout();
+    setBetResultFromBet(latest);
     myBet=null;
     myStake=0;
     myAutoCashout=null;
@@ -790,6 +827,7 @@ function applyReconnectPlayerState(player){
     preserveMessageOnNextRoundSync=true;
   }else if(latest?.status==='LOST'){
     clearPendingCashout();
+    setBetResultFromBet(latest);
     myBet=null;
     myStake=0;
     myAutoCashout=null;
@@ -797,6 +835,7 @@ function applyReconnectPlayerState(player){
     preserveMessageOnNextRoundSync=true;
   }else if(latest?.status==='REFUNDED'){
     clearPendingCashout();
+    setBetResultFromBet(latest);
     myBet=null;
     myStake=0;
     myAutoCashout=null;
@@ -1025,6 +1064,7 @@ $('#aviatorBetForm').addEventListener('submit',async e=>{
       autoCashoutMultiplier:auto
     });
 
+    setBetResult(null);
     myBet=r.bet_id;
     myStake=Number(r.stake);
     myAutoCashout=Number(r.auto_cashout_multiplier)||null;
@@ -1075,6 +1115,12 @@ $('#cashoutBtn').addEventListener('click',async event=>{
       r.payout
     );
     sound?.playCashout();
+    setBetResult({
+      status:'CASHED_OUT',
+      stake:myStake,
+      payout:Number(r.payout),
+      cashout_multiplier:Number(r.multiplier)
+    });
 
     myBet=null;
     myStake=0;
