@@ -208,6 +208,17 @@ Esses cenários têm regressões transacionais em `tests/sql/aviator/`.
 - Migrations: `20260930001648_immutable_player_financial_ledger`, `20260930001729_ledger_initial_balance_posting` e `20260930001919_ledger_restrict_direct_writes`.
 - Regressão permanente: `tests/sql/aviator/aviator_immutable_financial_ledger.sql`.
 
+## Resultado visual da aposta
+
+- Resultado liquidado não depende apenas de cor. O painel `#betResultPanel` usa símbolo + palavra + detalhe textual.
+- `CASHED_OUT`: `✓ GANHA` e mostra `Recebido X MZN · Y×`.
+- `LOST`: `✕ PERDIDA` e mostra o valor perdido quando disponível.
+- `REFUNDED`: `↩ REEMBOLSADA` e mostra o valor devolvido quando disponível.
+- Além dos símbolos/textos, os três estados usam estilos de borda diferentes (solid/double/dashed), portanto continuam distinguíveis sem cor.
+- O estado vem exclusivamente dos estados autoritativos retornados pelo servidor: `CASHED_OUT`, `LOST`, `REFUNDED`.
+- O resultado permanece visível depois que `myBet` é limpo e só é limpo quando uma nova aposta ativa/confirmada substitui aquele contexto.
+- Regressão permanente: `tests/frontend/aviator-bet-result-state.test.cjs`.
+
 ## Cash-out de um único clique
 
 - O cash-out continua sendo executado com um único toque/clique válido; não existe modal, segundo clique, hold-to-confirm ou confirmação “tem certeza?”.
