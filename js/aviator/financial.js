@@ -61,6 +61,17 @@
       return value;
     }
 
+    async function placeBet({amount,requestKey,autoCashoutMultiplier}){
+      return rpc('jl_aviator_place_bet',{
+        p_token:playerToken(),
+        p_amount:Number(amount),
+        p_request_key:String(requestKey||betKey()||''),
+        p_auto_cashout_multiplier:autoCashoutMultiplier===null
+          ?null
+          :Number(autoCashoutMultiplier)
+      });
+    }
+
     async function requestFinancialCashout(betId,requestKey){
       const result=await rpc('jl_aviator_cashout',{
         p_token:playerToken(),
@@ -92,7 +103,7 @@
 
     return Object.freeze({
       cashoutRequestKey,readPendingCashout,savePendingCashout,clearPendingCashout,
-      betKey,requestFinancialCashout,fetchBetStatus,cashoutMessage
+      betKey,placeBet,requestFinancialCashout,fetchBetStatus,cashoutMessage
     });
   }
 
