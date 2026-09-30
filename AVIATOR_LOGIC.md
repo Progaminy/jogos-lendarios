@@ -212,11 +212,11 @@ Esses cenários têm regressões transacionais em `tests/sql/aviator/`.
 
 - O Aviator é uma rota isolada: a página principal não inclui `aviator.css`, `aviator.js`, fairness, runtime, Realtime nem o SDK Supabase usado pela rota do Aviator.
 - `games/manifest.json` passou para estratégia `route-isolated-lazy` e declara o Aviator com `homeEmbedded:false`, `loading:"navigation"` e `prefetch:"none"`.
-- Links da home usam `data-jl-game="aviator"`. O loader resolve a rota somente após clique explícito e então navega; ele não injeta os assets do jogo no DOM da home.
+- Links da home usam `href="./aviator.html"` + `data-jl-game="aviator"`. A própria navegação nativa do navegador é a fronteira lazy: nenhum loader injeta CSS/JS do jogo na home.
 - O prefetch automático por `pointerover`, `focusin` e `touchstart` foi removido para jogos isolados. Isso é especialmente importante no mobile, onde um simples toque/gesto não deve descarregar bundles de jogos que talvez nem sejam abertos.
 - A mesma regra aplica-se a outros jogos `live` com `homeEmbedded:false`: novos jogos podem adicionar rota/bundle próprios sem aumentar automaticamente o JavaScript/CSS inicial da página principal.
-- O `href` real continua presente nos links como fallback sem JavaScript e para acessibilidade/navegação nativa.
-- O manifesto é pequeno e só é consultado quando necessário; os assets listados nele são metadados, não são carregados pela home.
+- O `href` real é o mecanismo principal de navegação, preservando acessibilidade e evitando JavaScript extra apenas para abrir o jogo.
+- Os assets listados no manifesto são metadados/contrato de arquitetura e não são carregados pela home.
 - Regressão permanente: `tests/frontend/lazy-game-loading.test.cjs`.
 
 ## Persistência apenas de eventos importantes
