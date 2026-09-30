@@ -38,6 +38,7 @@
         "./js/aviator/ui.js",
         "./js/aviator/financial.js",
         "./js/aviator/history.js",
+        "./js/aviator/personal-history.js",
         "./js/aviator/sound.js",
         "./js/aviator/haptics.js",
         "./js/realtime/aviator.js",
