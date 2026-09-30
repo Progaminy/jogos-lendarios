@@ -205,7 +205,7 @@ Esses cenários têm regressões transacionais em `tests/sql/aviator/`.
 - Dois constraint triggers diferidos verificam a reconciliação nos dois sentidos antes do commit: mudar o saldo-cache exige movimento correspondente; criar movimento exige que o saldo-cache termine exatamente igual ao saldo do ledger.
 - Uma conta criada com saldo inicial diferente de zero recebe automaticamente uma transaction `adjustment` e o respectivo lançamento de abertura.
 - `jl_aviator_player_state` lê o saldo pelo ledger canónico, não diretamente por `players.balance`.
-- Migrations: `20260930001648_immutable_player_financial_ledger` e `20260930001729_ledger_initial_balance_posting`.
+- Migrations: `20260930001648_immutable_player_financial_ledger`, `20260930001729_ledger_initial_balance_posting` e `20260930001919_ledger_restrict_direct_writes`.
 - Regressão permanente: `tests/sql/aviator/aviator_immutable_financial_ledger.sql`.
 
 ## Ledger operacional da banca
