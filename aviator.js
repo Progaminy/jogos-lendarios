@@ -362,6 +362,7 @@ async function refreshCurrentBetLight(){
     if(!bet||Number(round?.id)!==requestedRoundId)return false;
 
     if(bet.status==='ACTIVE'){
+      setBetResult(null);
       myStake=Number(bet.stake)||myStake;
       myAutoCashout=Number(bet.auto_cashout_multiplier)||null;
       renderTicket();
@@ -436,6 +437,7 @@ async function reconcilePendingCashout(){
 
     if(bet.status==='ACTIVE'){
       clearPendingCashout();
+      setBetResult(null);
       if(Number(round?.id)===pending.round_id){
         myBet=bet.id;
         myStake=Number(bet.stake)||0;
@@ -502,6 +504,7 @@ async function recover(force=false){
     myBet=current?.id??null;
     myStake=current?Number(current.stake)||0:0;
     myAutoCashout=current?Number(current.auto_cashout_multiplier)||null:null;
+    if(current)setBetResult(null);
     lastRecoveredRoundId=requestedRoundId;
     renderTicket();
     renderBetConfirmation();
@@ -811,6 +814,7 @@ function applyReconnectPlayerState(player){
   myBet=current?.id??null;
   myStake=current?Number(current.stake)||0:0;
   myAutoCashout=current?Number(current.auto_cashout_multiplier)||null:null;
+  if(current)setBetResult(null);
   lastRecoveredRoundId=round?.id??null;
 
   if(latest?.status==='CASHED_OUT'){
