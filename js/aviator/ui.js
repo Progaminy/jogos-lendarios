@@ -139,7 +139,7 @@
         const nextStatus=status
           ?String(status)
           :active&&hasMultiplier&&hasStake
-            ?'Recebe agora '+money(s*m)
+            ?moneyCompact(s)+' × '+m.toFixed(2)+' = '+money(s*m)
             :'Disponível durante o voo';
         if(statusEl.textContent!==nextStatus)statusEl.textContent=nextStatus;
       }
