@@ -30,10 +30,12 @@ begin
   from required r
   left join pg_proc p
     on p.proname=r.name
+   and pg_get_function_identity_arguments(p.oid)=r.args
   left join pg_namespace n
-    on n.oid=p.pronamespace and n.nspname='public'
+    on n.oid=p.pronamespace
+   and n.nspname='public'
   where p.oid is null
-     or pg_get_function_identity_arguments(p.oid)<>r.args
+     or n.oid is null
      or position('jl_lock_player_wallet' in lower(pg_get_functiondef(p.oid)))=0;
 
   if missing_count<>0 then
