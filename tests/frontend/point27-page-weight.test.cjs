@@ -117,7 +117,8 @@ test('Ludo optional shared features are not eager', () => {
 
   assert.equal(styles.includes('support-ui.css'), false);
   assert.equal(styles.includes('recovery-ui.css'), false);
-  assert.ok(scripts.includes('js/platform/feature-loader.js'));
+  assert.ok(scripts.includes('js/platform/ludo-feature-loader.js'));
+  assert.equal(scripts.includes('js/platform/feature-loader.js'),false);
 });
 
 test('Ludo initial JavaScript source budget stays below 145 KiB', () => {
@@ -133,11 +134,13 @@ test('Ludo initial CSS source budget stays below 50 KiB', () => {
 });
 
 test('only one platform feature loader is eager per page', () => {
-  for (const file of ['index.html', 'ludo.html']) {
-    const scripts = scriptSources(read(file)).map(stripQuery);
-    assert.equal(scripts.includes('js/platform/lazy-loader.js'), false);
-    assert.equal(scripts.filter((src) => src === 'js/platform/feature-loader.js').length, 1);
-  }
+  const homeScripts=scriptSources(read('index.html')).map(stripQuery);
+  const ludoScripts=scriptSources(read('ludo.html')).map(stripQuery);
+  assert.equal(homeScripts.includes('js/platform/lazy-loader.js'),false);
+  assert.equal(ludoScripts.includes('js/platform/lazy-loader.js'),false);
+  assert.equal(homeScripts.filter(src=>src==='js/platform/feature-loader.js').length,1);
+  assert.equal(ludoScripts.filter(src=>src==='js/platform/ludo-feature-loader.js').length,1);
+  assert.equal(ludoScripts.includes('js/platform/feature-loader.js'),false);
 });
 
 test('Service Worker keeps authoritative game and money state online-only', () => {
