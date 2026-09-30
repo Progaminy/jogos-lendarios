@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="./styles.css?v=20260930-3">
   <link rel="stylesheet" href="./admin-bonus.css?v=20260922-14">
   <link rel="stylesheet" href="./admin-recovery.css?v=20260922-13">
+  <link rel="stylesheet" href="./admin-ludo-spectator.css?v=20260930-1">
 </head>
 <body>
   <div id="toast" class="toast" aria-live="polite"></div>
@@ -272,6 +273,37 @@
           <p class="muted-text">Cancele apenas a partida com problema. O valor já debitado dessa sala é devolvido aos jogadores; as outras partidas continuam normalmente.</p>
           <div id="ludoEmergencyRoomList" class="request-list"><div class="empty">A carregar partidas ativas…</div></div>
         </div>
+
+        <div id="ludoSpectatorPanel" class="card admin-card hidden" style="box-shadow:none">
+          <div class="ludo-spectator-head">
+            <div>
+              <p class="eyebrow">LUDO · ASSISTIR AO VIVO</p>
+              <h3 id="ludoSpectatorTitle">Partida</h3>
+              <p class="muted-text">Modo somente leitura. Assistir não ocupa assento, não altera dado, vez, peões, aposta ou resultado.</p>
+            </div>
+            <div class="ludo-spectator-actions">
+              <button id="ludoSpectatorRefresh" class="button ghost small" type="button">Atualizar</button>
+              <button id="ludoSpectatorClose" class="button ghost small" type="button">Fechar</button>
+            </div>
+          </div>
+          <div id="ludoSpectatorConnection" class="muted-text">A ligar…</div>
+          <div id="ludoSpectatorMeta" class="ludo-spectator-meta"></div>
+          <div class="ludo-spectator-grid">
+            <div id="ludoSpectatorBoard" class="ludo-watch-board" aria-label="Tabuleiro da partida observada"></div>
+            <div class="ludo-watch-side">
+              <div id="ludoSpectatorTurn" class="ludo-watch-turn">A carregar estado…</div>
+              <div>
+                <p class="eyebrow">JOGADORES</p>
+                <div id="ludoSpectatorPlayers" class="ludo-watch-players"></div>
+              </div>
+              <div>
+                <p class="eyebrow">EVENTOS RECENTES</p>
+                <div id="ludoSpectatorEvents" class="ludo-watch-events"></div>
+              </div>
+            </div>
+          </div>
+          <p id="ludoSpectatorMessage" class="form-message"></p>
+        </div>
       </section>
 
       <div class="admin-two">
@@ -369,13 +401,16 @@
     </section>
   </main>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.min.js"></script>
   <script src="./config.js"></script>
   <script src="./js/auth/session.js?v=20260928-2"></script>
   <script src="./js/a11y/dialogs.js?v=20260928-2"></script>
   <script src="./admin.js?v=20260930-5" defer></script>
   <script src="./admin-auth-security.js?v=20260928-1" defer></script>
   <script src="./admin-influencers.js?v=20260927-1" defer></script>
-  <script src="./admin-ludo-emergency.js?v=20260928-1" defer></script>
+  <script src="./js/realtime/ludo.js?v=20260930-1"></script>
+  <script src="./admin-ludo-emergency.js?v=20260930-1" defer></script>
+  <script src="./admin-ludo-spectator.js?v=20260930-1" defer></script>
   <script src="./admin-bonus.js?v=20260924-1" defer></script>
   <script src="./admin-recovery.js?v=20260925-2" defer></script>
   <script src="./admin-power.js?v=20260925-2" defer></script>
