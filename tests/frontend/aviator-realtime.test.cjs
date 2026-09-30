@@ -44,10 +44,12 @@ test('multiplicador visual interpola fórmula do servidor sem decidir cash-out',
   assert.ok(Math.abs(runtime.liveMultiplier(started,now)-Math.pow(1.06,10))<1e-10);
 
   const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
+  const engine=fs.readFileSync(path.join(__dirname,'../../js/aviator/engine.js'),'utf8');
+  const finance=fs.readFileSync(path.join(__dirname,'../../js/aviator/financial.js'),'utf8');
   assert.match(js,/requestAnimationFrame\(flightPaintLoop\)/);
-  assert.match(js,/runtime\.liveMultiplier\(round\.started_at,serverNowMs\(\)\)/);
+  assert.match(engine,/runtime\.liveMultiplier\(round\.started_at,serverNowMs\(\)\)/);
 
-  const financial=js.match(/async function requestFinancialCashout\(betId,requestKey\)[\s\S]*?\n\}/)?.[0]||'';
+  const financial=finance.match(/async function requestFinancialCashout\(betId,requestKey\)[\s\S]*?\n    \}/)?.[0]||'';
   assert.match(financial,/jl_aviator_cashout/);
   assert.match(financial,/p_bet_id:Number\(betId\)/);
   assert.doesNotMatch(financial,/p_multiplier|current_multiplier|started_at/);
