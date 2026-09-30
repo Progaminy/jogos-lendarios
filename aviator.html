@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0a0d14">
   <title>Aviator Lendário — Jogos Lendários</title>
   <link rel="stylesheet" href="./styles.css?v=20260929">
-  <link rel="stylesheet" href="./aviator.css?v=20261001-3">
+  <link rel="stylesheet" href="./aviator.css?v=20261001-4">
 </head>
 <body>
   <header class="topbar">
@@ -43,9 +43,9 @@
         <div class="flight-grid" aria-hidden="true"></div>
 
         <div id="preflight" class="preflight">
-          <span>PRÓXIMA DESCOLAGEM</span>
-          <strong id="preflightCountdown">—</strong>
-          <small>Apostas fecham antes do voo</small>
+          <span id="preflightLabel">DESCOLAGEM EM</span>
+          <strong id="preflightCountdown" class="countdown-value">—</strong>
+          <small id="preflightHint">Contagem em segundos</small>
         </div>
 
         <div id="plane" class="plane" aria-hidden="true">✈</div>
@@ -58,6 +58,10 @@
         <div id="crashText" class="crash-text hidden">
           <strong>VOOU!</strong>
           <span id="crashMultiplier">1.00×</span>
+          <div id="nextRoundCountdown" class="next-round-countdown">
+            <small>NOVA RODADA EM</small>
+            <strong id="nextRoundSeconds">—</strong>
+          </div>
         </div>
       </div>
 
@@ -126,13 +130,13 @@
   <script src="./js/auth/session.js"></script>
   <script src="./js/aviator/fairness.js?v=20260929-2"></script>
   <script src="./js/aviator/runtime.js?v=20260930-2"></script>
-  <script src="./js/aviator/engine.js?v=20261001-1"></script>
+  <script src="./js/aviator/engine.js?v=20261001-2"></script>
   <script src="./js/aviator/ui.js?v=20261001-1"></script>
   <script src="./js/aviator/financial.js?v=20261001-1"></script>
   <script src="./js/aviator/history.js?v=20261001-1"></script>
   <script src="./js/aviator/sound.js?v=20261001-1"></script>
   <script src="./js/aviator/haptics.js?v=20261001-1"></script>
   <script src="./js/realtime/aviator.js?v=20260930-1"></script>
-  <script src="./aviator.js?v=20261001-3" defer></script>
+  <script src="./aviator.js?v=20261001-4" defer></script>
 </body>
 </html>
