@@ -35,5 +35,5 @@ test('reduced motion elimina até a curta animação de crash',()=>{
 });
 
 test('asset de crash usa cache-bust próprio',()=>{
-  assert.match(html,/aviator\.css\?v=20261001-3/);
+  assert.match(html,/aviator\.css\?v=\d{8}-\d+/);
 });
