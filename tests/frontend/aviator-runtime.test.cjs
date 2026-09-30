@@ -271,7 +271,7 @@ test('auto cash-out e opcional na UI mas executado pelo servidor',()=>{
   const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
   assert.match(html,/id="aviatorAutoCashout"[^>]*min="1\.01"[^>]*step="0\.01"/);
   assert.match(html,/id="activeBetAuto"/);
-  assert.match(js,/p_auto_cashout_multiplier:auto/);
+  assert.match(financialSource,/p_auto_cashout_multiplier:autoCashoutMultiplier/);
   assert.match(js,/myAutoCashout=Number\(r\.auto_cashout_multiplier\)\|\|null/);
   assert.match(js,/Cash-out automático/);
   assert.match(js,/auto<1\.01/);
