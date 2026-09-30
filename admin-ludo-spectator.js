@@ -42,6 +42,17 @@
 
   const esc=(v)=>String(v??'').replace(/[&<>'"]/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
   const money=(v)=>Number(v||0).toLocaleString('pt-MZ',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const statusLabel=(value)=>({
+    waiting:'Aguardando',
+    negotiating:'Negociação',
+    funding:'Confirmação',
+    playing:'Em jogo',
+    finished:'Finalizada',
+    cancelled:'Cancelada',
+    active:'Ativo',
+    reentry:'Reentrada',
+    left:'Saiu'
+  })[String(value||'').toLowerCase()]||String(value||'—');
   const token=()=>window.JLSession?.getAdminToken?.()||sessionStorage.getItem(TOKEN_KEY)||'';
 
   async function rpc(name,args={}){
@@ -176,7 +187,7 @@
     const die=Number(r.dice_result);
     ui.turn.innerHTML=r.status==='playing'
       ? `<strong>Vez de ${esc(current?.name||current?.code||'—')}</strong><span class="muted-text"> · ${esc(phase)}${remaining}</span>${Number.isFinite(die)&&die>0?`<span class="ludo-watch-die">${die}</span>`:''}`
-      : `<strong>${esc(r.status||'—')}</strong><span class="muted-text"> · aguardando estado jogável</span>`;
+      : `<strong>${esc(statusLabel(r.status))}</strong>`;
   }
 
   function render(snapshot){
@@ -186,9 +197,9 @@
     ui.title.textContent=`Assistindo ${r.code||roomCode||'Ludo'}`;
     ui.connection.innerHTML=realtimeConnected
       ? '<span class="ludo-watch-live">● Ao vivo</span>'
-      : '<span class="ludo-watch-fallback">● Reconectando · atualização de segurança</span>';
+      : '<span class="ludo-watch-fallback">● Reconectando</span>';
     ui.meta.innerHTML=[
-      `<span class="badge">${esc(r.status||'—')}</span>`,
+      `<span class="badge">${esc(statusLabel(r.status))}</span>`,
       `<span class="badge muted">${players.length}/${Number(r.player_count||0)} jogadores</span>`,
       `<span class="badge muted">${esc(r.mode==='partners'?'Parceiros':'Cada um por si')}</span>`,
       `<span class="badge muted">MZN ${money(r.bet_amount||0)} por jogador</span>`,
@@ -200,7 +211,7 @@
       return `<div class="ludo-watch-player ${current?'current':''}">
         <span class="ludo-watch-dot ${esc(p.color)}"></span>
         <div><strong>${esc(p.name||p.code||'Jogador')}</strong><small>${esc(p.code||'')} · assento ${Number(p.seat||0)}${p.team?` · equipa ${Number(p.team)}`:''}</small></div>
-        <small>${esc(p.status||'—')}</small>
+        <small>${esc(statusLabel(p.status))}</small>
       </div>`;
     }).join(''):'<div class="empty">Nenhum jogador na sala.</div>';
 
@@ -259,7 +270,7 @@
     if(!roomId)return;
     ui.panel.classList.remove('hidden');
     ui.title.textContent=`A abrir ${roomCode||'partida'}…`;
-    ui.message.textContent='A ligar ao jogo em modo somente leitura…';
+    ui.message.textContent='';
     realtimeConnected=false;
     connectRealtime();
     await refresh(false);
