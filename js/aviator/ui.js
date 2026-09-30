@@ -113,6 +113,16 @@
       if(auto)auto.disabled=value;
     }
 
+    function renderBetAction({disabled=false,status='Disponível'}={}){
+      const button=$('#betBtn');
+      const statusEl=$('#betActionStatus');
+      if(button){
+        button.textContent='Apostar';
+        button.disabled=Boolean(disabled);
+      }
+      if(statusEl)statusEl.textContent=String(status||'');
+    }
+
     function renderTicket(multiplierValue=null){
       const round=getRound?.();
       const state=getBetState?.()||{};
@@ -167,7 +177,7 @@
     return Object.freeze({
       money,moneyCompact,playerMessage,show,setStagePhase,multiplierTier,
       applyMultiplierTier,renderMultiplier,resetCashout,renderRoundNumber,
-      setBetInputsLocked,renderTicket,renderBetConfirmation
+      setBetInputsLocked,renderBetAction,renderTicket,renderBetConfirmation
     });
   }
 
