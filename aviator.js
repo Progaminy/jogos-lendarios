@@ -25,6 +25,11 @@ let historyRetryAt=0;
 let fairnessProofBusy=false;
 let fairnessProofRoundId=null;
 let fairnessProofData=null;
+let realtimeConnected=false;
+let serverClockOffsetMs=0;
+let flightFrame=0;
+let lastFlightPaintAt=0;
+let autoRecoveryRoundId=null;
 
 const playerToken=()=>JLSession.getPlayerToken();
 const pendingCashoutKey='jl_aviator_pending_cashout_v1';
@@ -181,17 +186,35 @@ function show(selector,visible){
   if(el)el.classList.toggle('hidden',!visible);
 }
 
+function syncServerClock(snapshot){
+  const server=Date.parse(snapshot?.server_time);
+  if(Number.isFinite(server))serverClockOffsetMs=server-Date.now();
+}
+
+function serverNowMs(){
+  return Date.now()+serverClockOffsetMs;
+}
+
 function mul(){
+  if(round?.status==='FLYING'&&round?.started_at&&runtime.liveMultiplier){
+    return runtime.liveMultiplier(round.started_at,serverNowMs());
+  }
   const value=Number(round?.current_multiplier);
   return Number.isFinite(value)&&value>=1?value:1;
 }
 
 function secondsToClose(){
+  if(round?.betting_closes_at&&runtime.secondsUntil){
+    return runtime.secondsUntil(round.betting_closes_at,serverNowMs());
+  }
   const value=Number(round?.seconds_to_close);
   return Number.isFinite(value)&&value>=0?Math.floor(value):null;
 }
 
 function secondsToTakeoff(){
+  if(round?.takeoff_at&&runtime.secondsUntil){
+    return runtime.secondsUntil(round.takeoff_at,serverNowMs());
+  }
   const value=Number(round?.seconds_to_takeoff);
   return Number.isFinite(value)&&value>=0?Math.floor(value):null;
 }
@@ -216,7 +239,13 @@ function setStagePhase(phase){
   stage.classList.add(next);
 }
 
-function stopFlight(){}
+function stopFlight(){
+  if(flightFrame){
+    cancelAnimationFrame(flightFrame);
+    flightFrame=0;
+  }
+  lastFlightPaintAt=0;
+}
 
 function multiplierTier(value){
   const n=Number(value);
@@ -482,8 +511,34 @@ function paintFlight(){
   }
 }
 
+function flightPaintLoop(timestamp){
+  if(!connectionOnline||round?.status!=='FLYING'){
+    stopFlight();
+    return;
+  }
+
+  if(timestamp-lastFlightPaintAt>=50){
+    lastFlightPaintAt=timestamp;
+    paintFlight();
+
+    if(
+      myBet&&
+      myAutoCashout&&
+      Number(round?.id)!==Number(autoRecoveryRoundId)&&
+      mul()>=myAutoCashout
+    ){
+      autoRecoveryRoundId=Number(round.id);
+      void recover(true);
+    }
+  }
+
+  flightFrame=requestAnimationFrame(flightPaintLoop);
+}
+
 function startFlightPaint(){
+  if(flightFrame)return;
   paintFlight();
+  flightFrame=requestAnimationFrame(flightPaintLoop);
 }
 
 function cashoutMessage(source,multiplier,payout){
@@ -885,9 +940,9 @@ function renderCurrentRound(){
 function nextPollDelay(){
   const protectedFlight=!enabled&&round?.status==='FLYING'&&Boolean(myBet);
   if(!enabled&&!protectedFlight){
-    return document.hidden?30000:10000;
+    return document.hidden?60000:30000;
   }
-  return runtime.pollDelay(round?.status||'',document.hidden);
+  return runtime.pollDelay(round?.status||'',document.hidden,realtimeConnected);
 }
 
 function scheduleState(delay=nextPollDelay()){
@@ -966,6 +1021,7 @@ async function reconnectState(){
     }
 
     lastDisplaySeq=Number(x.display_seq);
+    syncServerClock(x);
     enabled=x.enabled!==false;
 
     const previousId=round?.id??null;
@@ -1044,6 +1100,7 @@ async function state(){
     }
 
     lastDisplaySeq=Number(x.display_seq);
+    syncServerClock(x);
     enabled=x.enabled!==false;
 
     const previousId=round?.id??null;
@@ -1248,6 +1305,73 @@ $('#cashoutBtn').addEventListener('click',async()=>{
   }
 });
 
+async function applyRealtimeSnapshot(x){
+  if(!x||!runtime.shouldAcceptSnapshot(lastDisplaySeq,x?.display_seq))return;
+
+  lastDisplaySeq=Number(x.display_seq);
+  syncServerClock(x);
+  enabled=x.enabled!==false;
+
+  const previousId=round?.id??null;
+  const previousStatus=round?.status??null;
+  round=x.round||null;
+
+  const changedRound=previousId!==round?.id;
+  const changedStatus=previousStatus!==round?.status;
+  const justFinished=
+    changedStatus&&['CRASHED','SETTLED'].includes(round?.status);
+
+  if(changedRound){
+    fairnessProofRoundId=null;
+    fairnessProofData=null;
+    fairnessProofBusy=false;
+    myBet=null;
+    myStake=0;
+    myAutoCashout=null;
+    autoRecoveryRoundId=null;
+    lastRecoveredRoundId=null;
+    stopFlight();
+    resetCashout();
+    renderTicket();
+    renderBetConfirmation();
+  }
+
+  if(round&&playerToken()&&(changedRound||changedStatus)){
+    await recover(true);
+  }
+
+  if(justFinished){
+    rememberCurrentResult();
+    void loadHistory(true);
+  }
+
+  if(renderMaintenanceView()){
+    stopOpenUiTick();
+    stopFlight();
+    resetCashout();
+    return;
+  }
+
+  renderCurrentRound();
+  clearTimeout(stateTimer);
+  if(connectionOnline)scheduleState();
+}
+
+function startRealtime(){
+  if(!window.JLAviatorRealtime)return;
+
+  window.JLAviatorRealtime.connect({
+    onState:(payload)=>{
+      void applyRealtimeSnapshot(payload);
+    },
+    onStatus:(connected)=>{
+      realtimeConnected=Boolean(connected);
+      clearTimeout(stateTimer);
+      if(connectionOnline)scheduleState(connected?30000:2000);
+    }
+  });
+}
+
 window.addEventListener('offline',()=>{
   setConnectionState(false);
 });
@@ -1277,7 +1401,13 @@ document.addEventListener('visibilitychange',()=>{
 
 renderHistory();
 setConnectionState(connectionOnline);
+startRealtime();
 if(connectionOnline){
   reconnectState();
 }
+
+window.addEventListener('pagehide',()=>{
+  window.JLAviatorRealtime?.disconnect?.();
+});
+
 })();
