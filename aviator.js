@@ -125,8 +125,7 @@ function setConnectionState(online){
   stopOpenUiTick();
   stopFlight();
 
-  const betBtn=$('#betBtn');
-  if(betBtn)betBtn.disabled=true;
+  renderBetAction(true,'Sem ligação');
 
   const cashout=$('#cashoutBtn');
   if(cashout){
@@ -191,6 +190,7 @@ function stopOpenUiTick(){
 }
 
 function setBetInputsLocked(locked){return ui.setBetInputsLocked(locked);}
+function renderBetAction(disabled,status){return ui.renderBetAction({disabled,status});}
 
 function updateRoundClock(){
   if(!connectionOnline){
@@ -216,15 +216,14 @@ function updateRoundClock(){
       !enabled||!connectionOnline||Boolean(myBet)||betting||closed;
     setBetInputsLocked(inputsLocked);
 
-    const betBtn=$('#betBtn');
-    if(betBtn){
-      betBtn.disabled=inputsLocked;
-      betBtn.textContent=myBet
+    renderBetAction(
+      inputsLocked,
+      myBet
         ?'Aposta confirmada'
         :closed
           ?'Apostas fechadas'
-          :'Apostar';
-    }
+          :'Disponível'
+    );
     return;
   }
 
@@ -588,6 +587,7 @@ function renderOpen(){
   renderBetConfirmation();
 
   if(myBet&&!$('#aviatorMessage').textContent.trim()){
+    renderBetAction(true,'Aposta confirmada');
     $('#aviatorMessage').textContent='Aposta confirmada. Aguarde a descolagem.';
   }
 }
@@ -609,11 +609,7 @@ function renderLocked(){
 
   setBetInputsLocked(true);
 
-  const betBtn=$('#betBtn');
-  if(betBtn){
-    betBtn.disabled=true;
-    betBtn.textContent='Apostas fechadas';
-  }
+  renderBetAction(true,'Apostas fechadas');
 
   resetCashout();
   renderTicket();
@@ -637,11 +633,7 @@ function renderFlying(){
   show('#multiplierWrap',true);
   show('#crashText',false);
 
-  const betBtn=$('#betBtn');
-  if(betBtn){
-    betBtn.disabled=true;
-    betBtn.textContent='Apostas fechadas';
-  }
+  renderBetAction(true,'Apostas fechadas');
 
   const cashout=$('#cashoutBtn');
   if(cashout){
@@ -676,11 +668,7 @@ function renderFinished(){
 
   setBetInputsLocked(true);
 
-  const betBtn=$('#betBtn');
-  if(betBtn){
-    betBtn.disabled=true;
-    betBtn.textContent='Aguarde';
-  }
+  renderBetAction(true,'Aguarde a próxima rodada');
 
   myBet=null;
   myStake=0;
@@ -708,11 +696,7 @@ function renderWaiting(){
   show('#multiplierWrap',false);
   show('#crashText',false);
 
-  const betBtn=$('#betBtn');
-  if(betBtn){
-    betBtn.disabled=true;
-    betBtn.textContent='Aguarde';
-  }
+  renderBetAction(true,'Aguarde a próxima rodada');
 
   resetCashout();
   renderTicket();
@@ -1002,8 +986,7 @@ $('#aviatorBetForm').addEventListener('submit',async e=>{
   if(betting)return;
 
   betting=true;
-  const button=$('#betBtn');
-  if(button)button.disabled=true;
+  renderBetAction(true,'Confirmando aposta…');
 
   try{
     if(!connectionOnline)throw new Error('Sem ligação. Aguarde a reconexão.');
