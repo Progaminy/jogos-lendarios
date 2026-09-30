@@ -208,6 +208,17 @@ Esses cenários têm regressões transacionais em `tests/sql/aviator/`.
 - Migrations: `20260930001648_immutable_player_financial_ledger`, `20260930001729_ledger_initial_balance_posting` e `20260930001919_ledger_restrict_direct_writes`.
 - Regressão permanente: `tests/sql/aviator/aviator_immutable_financial_ledger.sql`.
 
+## Saldo confirmado pelo servidor
+
+- O frontend nunca debita, credita ou projeta o saldo por conta própria.
+- `jl_player_state`, `jl_ludo_my_status`, `jl_check_funds` e `jl_aviator_player_state` devolvem saldo calculado pelo ledger canónico e marcam a resposta com `balance_confirmed: true`.
+- A interface principal e o Ludo só mostram saldo quando o snapshot recebido do servidor contém `balance_confirmed: true` e um valor numérico válido. Caso contrário, mostram `—` / `Saldo a confirmar`.
+- Depois de apostas, saques, depósitos e confirmação de stake do Ludo, a interface chama novamente o servidor e só então atualiza o saldo visual.
+- Foi removido do Ludo o cálculo local de “saldo depois da confirmação”. O modal mostra apenas o saldo confirmado atual e informa que o valor visual só muda após confirmação do servidor.
+- Em erros de saldo insuficiente, o frontend só mostra a insuficiência exata quando o `shortfall` veio confirmado do servidor; não deduz o valor a partir de um saldo local.
+- Teste permanente: `tests/point28-server-authoritative-balance.test.js`.
+- Migration: `20260930005156_server_confirmed_balance_snapshots`.
+
 ## Ledger operacional da banca
 
 - Ajustes administrativos continuam com `request_key` fornecida pelo admin.
