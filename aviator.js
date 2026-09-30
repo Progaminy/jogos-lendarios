@@ -139,6 +139,7 @@ function playerMessage(error,fallback='Não foi possível concluir. Tente novame
     .trim();
 
   const rules=[
+    [/RATE_LIMITED|muitas requisi[cç][oõ]es/i,'Muitas ações em pouco tempo. Aguarde um momento e tente novamente.'],
     [/saldo insuficiente/i,'Saldo insuficiente.'],
     [/jogador bloqueado/i,'A sua conta está bloqueada.'],
     [/aviator em manutencao|aviator brevemente/i,'Aviator brevemente.'],
