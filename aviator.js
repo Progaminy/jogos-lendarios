@@ -583,7 +583,7 @@ function flightPaintLoop(timestamp){
       mul()>=myAutoCashout
     ){
       autoRecoveryRoundId=Number(round.id);
-      void recover(true);
+      void refreshCurrentBetLight();
     }
   }
 
@@ -616,13 +616,77 @@ async function requestFinancialCashout(betId,requestKey){
   return result;
 }
 
+async function fetchBetStatus(betId){
+  const id=Number(betId);
+  if(!Number.isFinite(id)||!playerToken())return null;
+
+  const x=await JLApi.rpc('jl_aviator_bet_status',{
+    p_token:playerToken(),
+    p_bet_id:id
+  });
+
+  return x?.ok===true&&x?.bet?x.bet:null;
+}
+
+async function refreshCurrentBetLight(){
+  if(!myBet||!playerToken()||!round)return false;
+
+  const requestedBetId=Number(myBet);
+  const requestedRoundId=Number(round.id);
+
+  try{
+    const bet=await fetchBetStatus(requestedBetId);
+    if(!bet||Number(round?.id)!==requestedRoundId)return false;
+
+    if(bet.status==='ACTIVE'){
+      myStake=Number(bet.stake)||myStake;
+      myAutoCashout=Number(bet.auto_cashout_multiplier)||null;
+      renderTicket();
+      return true;
+    }
+
+    myBet=null;
+    myStake=0;
+    myAutoCashout=null;
+    lastRecoveredRoundId=requestedRoundId;
+    resetCashout();
+    renderTicket();
+    renderBetConfirmation();
+
+    if(bet.status==='CASHED_OUT'){
+      $('#aviatorMessage').textContent=cashoutMessage(
+        bet.cashout_source,
+        bet.cashout_multiplier,
+        bet.payout
+      );
+      preserveMessageOnNextRoundSync=true;
+      return true;
+    }
+
+    if(bet.status==='LOST'){
+      $('#aviatorMessage').textContent='Fim da rodada. Cash-out não disponível.';
+      preserveMessageOnNextRoundSync=true;
+      return true;
+    }
+
+    if(bet.status==='REFUNDED'){
+      $('#aviatorMessage').textContent='A aposta foi reembolsada pelo servidor.';
+      preserveMessageOnNextRoundSync=true;
+      return true;
+    }
+
+    return false;
+  }catch(_){
+    return false;
+  }
+}
+
 async function reconcilePendingCashout(){
   const pending=readPendingCashout();
   if(!pending||!connectionOnline||!playerToken())return false;
 
   try{
-    const x=await JLApi.rpc('jl_aviator_player_state',{p_token:playerToken()});
-    const bet=runtime.findBetById(x?.bets,pending.bet_id);
+    const bet=await fetchBetStatus(pending.bet_id);
 
     if(!bet)return false;
 
@@ -1395,9 +1459,10 @@ async function applyRealtimeSnapshot(x){
   if(
     round&&
     playerToken()&&
-    (changedRound||(Boolean(myBet)&&changedStatus))
+    Boolean(myBet)&&
+    changedStatus
   ){
-    await recover(true);
+    await refreshCurrentBetLight();
   }
 
   if(justFinished){
