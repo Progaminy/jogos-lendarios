@@ -26,7 +26,8 @@ test('mobile aumenta ainda mais a ação de cash-out',()=>{
 });
 
 test('voo com aposta ativa recebe prioridade visual forte',()=>{
-  assert.match(ui,/wrap\.classList\.toggle\('is-priority',Boolean\(active\)&&!disabled&&!pending\)/);
+  assert.match(ui,/const priority=Boolean\(active\)&&!disabled&&!pending/);
+  assert.match(ui,/wrap\.classList\.toggle\('is-priority',priority\)/);
   assert.match(css,/\.aviator-cashout-action\.is-priority #cashoutBtn:not\(:disabled\)/);
   assert.match(css,/background:#36c979/);
   assert.match(css,/box-shadow:0 0 0 2px rgba\(78,213,138,\.28\),0 14px 34px rgba\(78,213,138,\.24\)/);
