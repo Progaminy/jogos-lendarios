@@ -1,7 +1,7 @@
 {
-  "schema": 1,
-  "strategy": "route-isolated",
-  "note": "A página inicial carrega somente o shell e jogos incorporados. Jogos futuros devem ter rota e bundle próprios.",
+  "schema": 2,
+  "strategy": "route-isolated-lazy",
+  "note": "A página inicial carrega apenas o shell e jogos explicitamente incorporados. Jogos isolados carregam seus bundles somente após navegação explícita.",
   "games": [
     {
       "id": "number",
@@ -22,6 +22,24 @@
       "assets": []
     },
     {
+      "id": "aviator",
+      "name": "Aviator Lendário",
+      "category": "instantaneo",
+      "status": "live",
+      "route": "./aviator.html",
+      "homeEmbedded": false,
+      "loading": "navigation",
+      "prefetch": "none",
+      "assets": [
+        "./aviator.css",
+        "./aviator.js",
+        "./js/aviator/fairness.js",
+        "./js/aviator/runtime.js",
+        "./js/realtime/aviator.js",
+        "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.min.js"
+      ]
+    },
+    {
       "id": "ludo",
       "name": "Ludo Lendário",
       "category": "tabuleiro",
@@ -31,7 +49,9 @@
       "assets": [
         "./ludo.css",
         "./ludo.js"
-      ]
+      ],
+      "loading": "navigation",
+      "prefetch": "none"
     },
     {
       "id": "dama",
