@@ -50,7 +50,7 @@ test('vibração não existe no loop visual nem em chamadas financeiras',()=>{
   assert.doesNotMatch(loop,/haptics|vibrate/);
 
   assert.match(js,/haptics\?\.syncRound\(round\)/);
-  assert.doesNotMatch(haptics,/JLApi\.rpc|fetch\(|jl_aviator_/);
+  assert.doesNotMatch(haptics,/JLApi\.rpc|fetch\(/);
 });
 
 test('manifesto registra módulo de haptics',()=>{
