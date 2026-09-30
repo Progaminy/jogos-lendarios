@@ -6,7 +6,7 @@ const fs=require('node:fs');
 
 test('admin mostra exposição da rodada do Aviator a partir do snapshot do servidor',()=>{
   const html=fs.readFileSync('admin.html','utf8');
-  const js=fs.readFileSync('admin.js','utf8');
+  const js=fs.readFileSync('js/aviator/admin.js','utf8');
 
   assert.match(html,/EXPOSIÇÃO DA RODADA/);
   assert.match(html,/id="aviatorStaked"/);
