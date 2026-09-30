@@ -34,7 +34,6 @@
   const notificationQueue = [];
   let notificationFacade = null;
   let supportReplay = false;
-  let manifestPromise = null;
 
   function absolute(url) {
     return new URL(url, document.baseURI).href;
@@ -171,34 +170,6 @@
     document.head.appendChild(link);
   }
 
-  async function gameManifest() {
-    if (!manifestPromise) {
-      manifestPromise = fetch('./games/manifest.json', {
-        method: 'GET',
-        cache: 'force-cache',
-        credentials: 'same-origin'
-      }).then((response) => {
-        if (!response.ok) throw new Error('Catálogo de jogos indisponível.');
-        return response.json();
-      }).catch((error) => {
-        manifestPromise = null;
-        throw error;
-      });
-    }
-    return manifestPromise;
-  }
-
-  async function game(id) {
-    const manifest = await gameManifest();
-    return (manifest.games || []).find((item) => item.id === id) || null;
-  }
-
-  async function navigateGame(id) {
-    const item = await game(id);
-    if (!item?.route) return false;
-    location.href = item.route;
-    return true;
-  }
 
   function installNotificationFacade() {
     if (window.JLNotifications) return;
@@ -316,9 +287,6 @@
     idle,
     visible,
     isLoaded,
-    gameManifest,
-    game,
-    navigateGame,
     prefetchHref
   });
 
