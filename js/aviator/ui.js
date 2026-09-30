@@ -100,6 +100,7 @@
 
     function createCashoutGestureGuard(button,{maxTravelPx=14}={}){
       let pointer=null;
+      const supportsPointer=typeof globalThis.PointerEvent==='function';
 
       const clear=()=>{pointer=null;};
 
@@ -130,7 +131,7 @@
       button?.addEventListener('pointercancel',clear,{passive:true});
 
       function shouldAcceptClick(event){
-        if(event?.detail===0)return true;
+        if(event?.detail===0||!supportsPointer)return true;
         const accepted=Boolean(pointer)&&!pointer.moved;
         clear();
         return accepted;
