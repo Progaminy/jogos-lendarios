@@ -53,14 +53,11 @@ test('todo jogo live isolado segue política lazy por padrão',()=>{
   }
 });
 
-test('feature loader navega sem injetar bundle do jogo na home',()=>{
-  assert.match(loader,/function installLazyGameNavigation\(\)/);
-  assert.match(loader,/a\[data-jl-game\]\[href\]/);
-  assert.match(loader,/location\.href = item\.route/);
-  assert.doesNotMatch(loader,/installRouteIntentPrefetch/);
-
-  const lazyBlock=loader.match(/function installLazyGameNavigation\(\)[\s\S]*?\n  \}/)?.[0]||'';
-  assert.doesNotMatch(lazyBlock,/loadScript\(|loadStyle\(|item\.assets/);
+test('navegação nativa é a fronteira lazy, sem loader de bundle do jogo',()=>{
+  assert.match(html,/href="\.\/aviator\.html"[^>]*data-jl-game="aviator"/);
+  assert.doesNotMatch(html,/href="\.\/aviator\.html"[^>]*data-jl-route-prefetch/);
+  assert.doesNotMatch(loader,/installLazyGameNavigation/);
+  assert.doesNotMatch(loader,/item\.assets/);
 });
 
 test('Aviator não é feature eager da página principal',()=>{
