@@ -329,7 +329,7 @@ test('animação local é somente visual e cash-out continua autoritativo no ser
   assert.match(html,/id="plane"[^>]*aria-hidden="true"/);
   assert.match(css,/\.plane,\.flight-grid,\.flight-area::after\{pointer-events:none\}/);
 
-  const paint=js.match(/function paintFlight\(\)[\s\S]*?\n\}/)?.[0]||'';
+  const paint=js.match(/function paintFlight\([^)]*\)[\s\S]*?\n\}/)?.[0]||'';
   assert.match(paint,/const m=mul\(\)/);
   assert.doesNotMatch(paint,/JLApi\.rpc|jl_aviator_cashout|jl_aviator_tick/);
 
