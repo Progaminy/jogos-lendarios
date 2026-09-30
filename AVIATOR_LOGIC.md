@@ -208,6 +208,20 @@ Esses cenários têm regressões transacionais em `tests/sql/aviator/`.
 - Migrations: `20260930001648_immutable_player_financial_ledger`, `20260930001729_ledger_initial_balance_posting` e `20260930001919_ledger_restrict_direct_writes`.
 - Regressão permanente: `tests/sql/aviator/aviator_immutable_financial_ledger.sql`.
 
+## Módulos próprios do Aviator
+
+O código do Aviator está isolado dos outros jogos e dividido por responsabilidade:
+
+- `js/aviator/engine.js`: relógio sincronizado, multiplicador visual, contagens de tempo, perfil de performance e política de polling. Não faz payout nem altera saldo.
+- `js/aviator/ui.js`: formatação e renderização da interface do jogador. Recebe estado por dependência; não chama RPCs.
+- `js/aviator/financial.js`: chaves idempotentes de aposta/cash-out, cash-out pendente, RPC financeiro e consulta mínima por `bet_id`. Não renderiza DOM.
+- `js/aviator/history.js`: cache/normalização/renderização dos resultados recentes e única RPC de histórico.
+- `js/aviator/admin.js`: estado, exposição, banca, auditoria, manutenção, cancelamento, teste de uma rodada e ajuste administrativo do Aviator. Esse bloco não vive mais no `admin.js` geral.
+- `aviator.js`: orquestrador da página — mantém o estado transitório do jogador, coordena Realtime/reconnect e chama os módulos. Funções antigas de UI/financeiro/histórico ficaram como delegadores finos para preservar compatibilidade durante a refatoração.
+- O motor financeiro autoritativo continua no PostgreSQL/RPCs e migrations do Aviator; o módulo `engine.js` do browser é apenas motor de apresentação/tempo e nunca decide dinheiro.
+- `games/manifest.json` lista explicitamente os bundles próprios do Aviator e separa `adminAssets`.
+- Regressão permanente: `tests/frontend/aviator-module-boundaries.test.cjs`.
+
 ## Carregamento preguiçoso do Aviator
 
 - O Aviator é uma rota isolada: a página principal não inclui `aviator.css`, `aviator.js`, fairness, runtime, Realtime nem o SDK Supabase usado pela rota do Aviator.
