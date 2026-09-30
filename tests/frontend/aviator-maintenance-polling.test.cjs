@@ -6,11 +6,12 @@ const fs=require('node:fs');
 
 test('Realtime reduz polling do Aviator a fallback de segurança',()=>{
   const js=fs.readFileSync('aviator.js','utf8');
+  const engine=fs.readFileSync('js/aviator/engine.js','utf8');
 
   assert.match(js,/realtimeConnected/);
-  assert.match(js,/return runtime\.pollDelay\(round\?\.status\|\|'',document\.hidden,realtimeConnected\)/);
+  assert.match(js,/return engine\.pollDelay\(/);
   assert.match(js,/scheduleState\(120000\)/);
-  assert.match(js,/if\(realtimeConnected\)return document\.hidden\?300000:120000/);
+  assert.match(engine,/if\(realtimeConnected\)return hidden\?300000:120000/);
 });
 
 test('mudança de visibilidade força reconciliação sem reativar polling agressivo',()=>{
