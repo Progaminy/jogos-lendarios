@@ -224,7 +224,6 @@
         supportReplay = true;
         trigger.click();
       } catch {
-        // Keep the main page usable even if an optional module fails.
       } finally {
         supportReplay = false;
       }
@@ -268,11 +267,9 @@
     installRouteIntentPrefetch();
     observeRecoveryNeed();
 
-    // Purely visual features are loaded only when their section approaches the viewport.
     visible('#heroPromo', 'promo', '120px');
     visible('#sorteios', 'numberOrbs', '260px');
 
-    // Account-only cleanup/UI is irrelevant to logged-out visitors.
     visible('#playerArea', 'playerExtras', '220px');
 
     if (hasPlayerToken()) scheduleAuthenticatedFeatures();
