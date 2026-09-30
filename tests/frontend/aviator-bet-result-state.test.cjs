@@ -68,7 +68,7 @@ test('cash-out direto registra resultado antes de limpar stake',()=>{
 test('resultado anterior só é limpo quando uma aposta ativa assume o contexto',()=>{
   assert.match(js,/if\(status==='ACTIVE'\)setBetResult\(null\)/);
   assert.match(js,/if\(current\)setBetResult\(null\)/);
-  assert.match(js,/setBetResult\(null\);\n    myBet=r\.bet_id/);
+  assert.match(js,/setBetResult\(null\);\n    personalHistory\?\.invalidate\(\);\n    myBet=r\.bet_id/);
 
   const changedRound=js.match(/if\(changedRound\)\{[\s\S]*?\n  \}/)?.[0]||'';
   assert.doesNotMatch(changedRound,/setBetResult\(null\)/);
