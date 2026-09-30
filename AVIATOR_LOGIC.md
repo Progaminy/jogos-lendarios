@@ -208,6 +208,18 @@ Esses cenários têm regressões transacionais em `tests/sql/aviator/`.
 - Migrations: `20260930001648_immutable_player_financial_ledger`, `20260930001729_ledger_initial_balance_posting` e `20260930001919_ledger_restrict_direct_writes`.
 - Regressão permanente: `tests/sql/aviator/aviator_immutable_financial_ledger.sql`.
 
+## Contagem regressiva clara
+
+- A contagem regressiva é visualmente separada do multiplicador: segundos usam sufixo `s`; multiplicador usa sempre `×`.
+- Em `OPEN`, o cabeçalho mostra `APOSTAS FECHAM EM` e o painel central mostra `DESCOLAGEM EM`.
+- Em `LOCKED`, a contagem continua atualizando localmente a partir de `takeoff_at` + relógio sincronizado do servidor; não fica congelada esperando novo polling.
+- Após o crash/settlement, o backend expõe `next_round_at` e `seconds_to_next_round`; a interface mostra `NOVA RODADA EM 4s / 3s / 2s / 1s`.
+- `next_round_at` é publicado também via Realtime Broadcast.
+- A contagem é derivada do relógio do servidor; o telemóvel apenas interpola visualmente entre snapshots.
+- O bloco de contagem usa tipografia menor e cartão próprio, enquanto o multiplicador permanece grande e isolado durante `FLYING`.
+- Migrations: `20260930230332_aviator_public_next_round_countdown` e `20260930230529_aviator_realtime_next_round_countdown`.
+- Regressões: `tests/sql/aviator/aviator_next_round_countdown.sql` e `tests/frontend/aviator-countdown-separation.test.cjs`.
+
 ## Crash curto e direto
 
 - A animação visual do crash é deliberadamente curta: o texto final entra em 160 ms no desktop e 120 ms no perfil mobile.
