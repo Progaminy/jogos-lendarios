@@ -208,6 +208,19 @@ Esses cenários têm regressões transacionais em `tests/sql/aviator/`.
 - Migrations: `20260930001648_immutable_player_financial_ledger`, `20260930001729_ledger_initial_balance_posting` e `20260930001919_ledger_restrict_direct_writes`.
 - Regressão permanente: `tests/sql/aviator/aviator_immutable_financial_ledger.sql`.
 
+## Persistência apenas de eventos importantes
+
+- O multiplicador vivo não é uma coluna persistida e não existe tabela de histórico por frame/tick.
+- Durante o voo, o multiplicador visual é derivado de `started_at` + relógio do servidor; nenhum valor intermediário como 1,37x, 1,38x, 1,39x é gravado.
+- Os multiplicadores persistidos são somente eventos de negócio: auto cash-out configurado, cash-out realizado, crash final e ponto de exposição zero.
+- `audit_log_no_aviator_visual_noise` impede que ações técnicas como `aviator.frame`, `aviator.tick`, `aviator.multiplier_update`, `aviator.render` e heartbeat entrem no histórico durável.
+- `jl_aviator_schedule_next_engine_event` agora atualiza `engine_due_at` somente quando o valor realmente mudou (`IS DISTINCT FROM`), evitando UPDATE/WAL inútil.
+- O histórico do `pg_cron` foi ajustado: execuções bem-sucedidas do motor de 2 s ficam por 2 horas; falhas permanecem 30 dias; outros crons bem-sucedidos permanecem 48 horas.
+- A limpeza reduziu `cron.job_run_details` de 88.360 para cerca de 6,3 mil linhas. O espaço físico já alocado fica reutilizável pelo PostgreSQL e não exige `VACUUM FULL` em produção.
+- Continuam persistidos os eventos que importam: aposta, cash-out, refund, crash, settlement, manutenção/admin, ledger financeiro e prova/fairness.
+- Migration: `20260930122447_aviator_event_only_persistence`.
+- Regressões: `tests/sql/aviator/aviator_event_only_persistence.sql` e `tests/frontend/aviator-no-frame-persistence.test.cjs`.
+
 ## Motor do voo orientado a eventos
 
 - O multiplicador visual não faz consultas ao banco: ele é interpolado localmente a partir de `started_at` + relógio sincronizado do servidor.
