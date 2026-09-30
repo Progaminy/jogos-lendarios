@@ -208,6 +208,17 @@ Esses cenários têm regressões transacionais em `tests/sql/aviator/`.
 - Migrations: `20260930001648_immutable_player_financial_ledger`, `20260930001729_ledger_initial_balance_posting` e `20260930001919_ledger_restrict_direct_writes`.
 - Regressão permanente: `tests/sql/aviator/aviator_immutable_financial_ledger.sql`.
 
+## Payout único por aposta no banco
+
+- O payout do Aviator é limitado a exatamente uma transação por aposta pelo próprio PostgreSQL.
+- `transactions.aviator_payout_bet_id` é uma coluna `GENERATED ALWAYS`: recebe `aviator_bet_id` apenas quando `aviator_operation='PAYOUT'`; nos demais movimentos fica `NULL`.
+- A constraint `transactions_one_aviator_payout_per_bet UNIQUE (aviator_payout_bet_id)` impede fisicamente um segundo payout para a mesma aposta.
+- A regra não depende de JavaScript, estado do botão, retry do cliente ou apenas de locks da função de cash-out.
+- As proteções anteriores continuam ativas: `payout_transaction_id` único em `jl_aviator_bets`, FK para `transactions(id)`, e unicidade por `(aviator_bet_id, aviator_operation)`.
+- O teste de regressão tenta inserir um segundo payout para a mesma aposta e exige `unique_violation`.
+- Migration: `20260930054913_aviator_one_payout_per_bet_constraint`.
+- Regressão permanente: `tests/sql/aviator/aviator_one_payout_per_bet_constraint.sql`.
+
 ## Identificadores únicos de rodada e aposta
 
 - Cada rodada do Aviator possui `round_no` explícito, único e imutável.
