@@ -11,6 +11,7 @@
   const BASE={red:[[1,1],[1,4],[4,1],[4,4]],green:[[1,10],[1,13],[4,10],[4,13]],yellow:[[10,10],[10,13],[13,10],[13,13]],blue:[[10,1],[10,4],[13,1],[13,4]]};
   const FINISH={red:[7,6],green:[6,7],yellow:[7,8],blue:[8,7]};
   const TRACK_LAST=50,HOME_FIRST=51,HOME_LAST=55,FINISH_STEP=56;
+  const SAFE=new Set([0,8,13,21,26,34,39,47]);
 
   const ui={
     panel:$('ludoSpectatorPanel'),
@@ -23,6 +24,7 @@
     events:$('ludoSpectatorEvents'),
     message:$('ludoSpectatorMessage'),
     refresh:$('ludoSpectatorRefresh'),
+    fullscreen:$('ludoSpectatorFullscreen'),
     close:$('ludoSpectatorClose'),
     roomList:$('ludoEmergencyRoomList'),
     toast:$('toast')
@@ -76,16 +78,37 @@
 
   function boardClass(r,c){
     const classes=['ludo-watch-cell'];
+
     if(r<6&&c<6)classes.push('base-red');
     if(r<6&&c>8)classes.push('base-green');
     if(r>8&&c>8)classes.push('base-yellow');
     if(r>8&&c<6)classes.push('base-blue');
-    if(PATH.some(([rr,cc])=>rr===r&&cc===c))classes.push('track');
+
+    const yards=[
+      ['red',1,1],
+      ['green',1,10],
+      ['yellow',10,10],
+      ['blue',10,1]
+    ];
+    for(const [color,r0,c0] of yards){
+      if(r>=r0&&r<r0+4&&c>=c0&&c<c0+4)classes.push('yard',`yard-${color}`);
+    }
+
+    const pathIndex=PATH.findIndex(([rr,cc])=>rr===r&&cc===c);
+    if(pathIndex>=0){
+      classes.push('track');
+      if(SAFE.has(pathIndex))classes.push('safe');
+    }
+
     for(const color of ['red','green','yellow','blue']){
       if(HOME[color].some(([rr,cc])=>rr===r&&cc===c))classes.push(`home-${color}`);
-      const start=PATH[START[color]];
-      if(start?.[0]===r&&start?.[1]===c)classes.push(`start-${color}`);
     }
+
+    if(r===7&&c===0)classes.push('entry-red');
+    if(r===0&&c===7)classes.push('entry-green');
+    if(r===7&&c===14)classes.push('entry-yellow');
+    if(r===14&&c===7)classes.push('entry-blue');
+
     if(r>=6&&r<=8&&c>=6&&c<=8)classes.push('center');
     return classes.join(' ');
   }
@@ -112,13 +135,15 @@
         const stack=grouped.get(`${r},${c}`)||[];
         html+=`<div class="${boardClass(r,c)}">`;
         if(stack.length){
-          html+='<div class="ludo-watch-stack">'+stack.map(({t,p})=>
-            `<span class="ludo-watch-piece ${esc(p.color)}" title="${esc(p.name||p.code)} · peão ${Number(t.token_no)}">${Number(t.token_no)}</span>`
-          ).join('')+'</div>';
+          html+='<div class="ludo-watch-stack">'+stack.map(({t,p})=>{
+            const pawnStyle=['current','classic','video'].includes(String(p.pawn_style||''))?String(p.pawn_style):'current';
+            return `<span class="ludo-watch-piece ${esc(p.color)} pawn-style-${esc(pawnStyle)}" title="${esc(p.name||p.code)} · peão ${Number(t.token_no)}" aria-label="${esc(p.name||p.code)} peão ${Number(t.token_no)}"></span>`;
+          }).join('')+'</div>';
         }
         html+='</div>';
       }
     }
+    html+='<div class="ludo-watch-center" aria-hidden="true"></div>';
     ui.board.innerHTML=html;
   }
 
@@ -244,6 +269,14 @@
     ui.panel.scrollIntoView({behavior:'smooth',block:'start'});
   }
 
+  function toggleFullscreen(){
+    const enabled=!ui.panel.classList.contains('ludo-spectator-fullscreen');
+    ui.panel.classList.toggle('ludo-spectator-fullscreen',enabled);
+    document.body.style.overflow=enabled?'hidden':'';
+    ui.fullscreen?.setAttribute('aria-pressed',String(enabled));
+    if(ui.fullscreen)ui.fullscreen.textContent=enabled?'↙':'⛶';
+  }
+
   async function close(){
     roomId='';
     roomCode='';
@@ -254,6 +287,12 @@
     fallbackTimer=0;
     clockTimer=0;
     try{await window.JLLudoRealtime?.disconnect?.();}catch{}
+    ui.panel.classList.remove('ludo-spectator-fullscreen');
+    document.body.style.overflow='';
+    if(ui.fullscreen){
+      ui.fullscreen.textContent='⛶';
+      ui.fullscreen.setAttribute('aria-pressed','false');
+    }
     ui.panel.classList.add('hidden');
   }
 
@@ -263,6 +302,7 @@
     void watch(b.dataset.watchLudoRoom,b.dataset.roomCode||'');
   });
   ui.refresh?.addEventListener('click',()=>refresh(false));
+  ui.fullscreen?.addEventListener('click',toggleFullscreen);
   ui.close?.addEventListener('click',()=>{void close();});
 
   window.addEventListener('jl-admin-session-changed',(event)=>{
