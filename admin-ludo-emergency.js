@@ -114,6 +114,7 @@
           <small>Aposta: MZN ${money(room.bet_amount || 0)}</small>
         </div>
         <div class="row-actions">
+          <button class="button secondary small" type="button" data-watch-ludo-room="${escapeHtml(room.id)}" data-room-code="${escapeHtml(room.code || '')}" ${busy ? 'disabled' : ''}>Assistir</button>
           <button class="button danger small" type="button" data-cancel-ludo-room="${escapeHtml(room.id)}" data-room-code="${escapeHtml(room.code || '')}" ${busy ? 'disabled' : ''}>Cancelar este jogo</button>
         </div>
       </div>
