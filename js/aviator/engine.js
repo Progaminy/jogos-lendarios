@@ -73,6 +73,7 @@
       multiplier,
       secondsToClose:()=>secondsUntil('betting_closes_at','seconds_to_close'),
       secondsToTakeoff:()=>secondsUntil('takeoff_at','seconds_to_takeoff'),
+      secondsToNextRound:()=>secondsUntil('next_round_at','seconds_to_next_round'),
       pollDelay
     });
   }
