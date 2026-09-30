@@ -21,7 +21,7 @@ test('admin usa Reabrir Aviator separado e com confirmação',()=>{
   assert.match(js,/Aguarde a rodada atual terminar antes de reabrir o Aviator/);
 
   const reopenBlock=js.match(
-    /\$\('aviatorMaintenanceReopen'\)\?\.addEventListener\('click',[\s\S]*?\n  \}\);/
+    /\$\('aviatorMaintenanceReopen'\)\?\.addEventListener\('click',[\s\S]*?\n\s*\}\);/
   )?.[0]||'';
 
   assert.match(reopenBlock,/jl_aviator_admin_reopen/);
