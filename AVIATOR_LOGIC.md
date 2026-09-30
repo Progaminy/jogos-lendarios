@@ -208,6 +208,17 @@ Esses cenários têm regressões transacionais em `tests/sql/aviator/`.
 - Migrations: `20260930001648_immutable_player_financial_ledger`, `20260930001729_ledger_initial_balance_posting` e `20260930001919_ledger_restrict_direct_writes`.
 - Regressão permanente: `tests/sql/aviator/aviator_immutable_financial_ledger.sql`.
 
+## Carregamento preguiçoso do Aviator
+
+- O Aviator é uma rota isolada: a página principal não inclui `aviator.css`, `aviator.js`, fairness, runtime, Realtime nem o SDK Supabase usado pela rota do Aviator.
+- `games/manifest.json` passou para estratégia `route-isolated-lazy` e declara o Aviator com `homeEmbedded:false`, `loading:"navigation"` e `prefetch:"none"`.
+- Links da home usam `data-jl-game="aviator"`. O loader resolve a rota somente após clique explícito e então navega; ele não injeta os assets do jogo no DOM da home.
+- O prefetch automático por `pointerover`, `focusin` e `touchstart` foi removido para jogos isolados. Isso é especialmente importante no mobile, onde um simples toque/gesto não deve descarregar bundles de jogos que talvez nem sejam abertos.
+- A mesma regra aplica-se a outros jogos `live` com `homeEmbedded:false`: novos jogos podem adicionar rota/bundle próprios sem aumentar automaticamente o JavaScript/CSS inicial da página principal.
+- O `href` real continua presente nos links como fallback sem JavaScript e para acessibilidade/navegação nativa.
+- O manifesto é pequeno e só é consultado quando necessário; os assets listados nele são metadados, não são carregados pela home.
+- Regressão permanente: `tests/frontend/lazy-game-loading.test.cjs`.
+
 ## Persistência apenas de eventos importantes
 
 - O multiplicador vivo não é uma coluna persistida e não existe tabela de histórico por frame/tick.
