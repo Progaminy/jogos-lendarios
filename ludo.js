@@ -5,6 +5,47 @@
   const SOUND_KEY = 'jl_ludo_sound_enabled';
   const $ = (id) => document.getElementById(id);
   const state = window.JLLudoState.create();
+  let ludoRealtimeConnected=false;
+  let ludoRealtimeRoomId='';
+  let ludoRealtimeRefreshTimer=0;
+
+  function queueLudoRealtimeRefresh(){
+    clearTimeout(ludoRealtimeRefreshTimer);
+    ludoRealtimeRefreshTimer=setTimeout(()=>{
+      window.JLLudoSync?.kick?.('ludo-state');
+    },60);
+  }
+
+  function syncLudoRealtime(roomId){
+    const id=String(roomId||'').trim();
+
+    if(!id){
+      ludoRealtimeRoomId='';
+      ludoRealtimeConnected=false;
+      clearTimeout(ludoRealtimeRefreshTimer);
+      ludoRealtimeRefreshTimer=0;
+      void window.JLLudoRealtime?.disconnect?.();
+      return;
+    }
+
+    if(!window.JLLudoRealtime){
+      ludoRealtimeRoomId=id;
+      ludoRealtimeConnected=false;
+      return;
+    }
+
+    if(id===ludoRealtimeRoomId&&window.JLLudoRealtime.isConnected?.())return;
+
+    ludoRealtimeRoomId=id;
+    window.JLLudoRealtime.connect(id,{
+      onSignal:()=>queueLudoRealtimeRefresh(),
+      onStatus:(connected)=>{
+        if(ludoRealtimeRoomId!==id)return;
+        ludoRealtimeConnected=Boolean(connected);
+        if(!connected)window.JLLudoSync?.kick?.('ludo-state');
+      }
+    });
+  }
 
   function loadDeferredLudoStyles(){
     if(document.getElementById('ludoDeferredStyles'))return;
@@ -570,7 +611,7 @@
   async function loadStatus(silent=false){
     if(state.animating||state.diceRolling)return;
     const snapshotTicket=movementGuard.beginSnapshot();
-    if(!state.token){state.status=null;state.room=null;renderAll();return;}
+    if(!state.token){state.status=null;state.room=null;syncLudoRealtime(null);renderAll();return;}
     try{
       const nextStatus=await rpc('jl_ludo_my_status',{p_token:state.token});
       let nextRoom=null;
@@ -607,6 +648,7 @@
       // O destino autoritativo entra primeiro no estado. A animação apenas
       // representa visualmente o caminho; nunca é fonte da posição.
       state.room=nextRoom;
+      syncLudoRealtime(nextRoom?.room?.id||nextStatus?.active_room_id||null);
 
       if(movement&&els.ludoBoard?.childElementCount){
         state.animating=true;
@@ -627,7 +669,7 @@
 
       if(movementGuard.canApplySnapshot(snapshotTicket))renderAll();
     }catch(e){
-      if(/Sessão/.test(e.message)){saveToken('');state.status=null;state.room=null;renderAll();}
+      if(/Sessão/.test(e.message)){saveToken('');state.status=null;state.room=null;syncLudoRealtime(null);renderAll();}
       if(!silent)showToast(e.message,'error');
     }
   }
@@ -1062,6 +1104,7 @@
     closeVoice();
     state.status=null;
     state.room=null;
+    syncLudoRealtime(null);
     els.accountMenu?.classList.add('hidden');
     els.accountButton.setAttribute('aria-expanded','false');
     renderAll();
@@ -1206,7 +1249,7 @@
 
   if(window.JLLudoSync?.register){
     window.JLLudoSync.register('ludo-state',()=>loadStatus(true),{
-      interval:()=>state.room?3000:8000,
+      interval:()=>state.room?(ludoRealtimeConnected?15000:3000):8000,
       when:()=>Boolean(state.token),
       visibleOnly:true,
       immediate:false
