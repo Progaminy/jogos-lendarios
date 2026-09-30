@@ -18,49 +18,16 @@ let cashingOut=false;
 let openUiTimer=0;
 let connectionOnline=navigator.onLine!==false;
 let preserveMessageOnNextRoundSync=false;
-let recentResults=[];
-let historyBusy=false;
-let historyRemoteLoaded=false;
-let historyRetryAt=0;
 let fairnessProofBusy=false;
 let fairnessProofRoundId=null;
 let fairnessProofData=null;
 let realtimeConnected=false;
-let serverClockOffsetMs=0;
 let flightFrame=0;
 let lastFlightPaintAt=0;
 let autoRecoveryRoundId=null;
 let lastFlightHudAt=0;
 
-const visualPerformance=(()=>{
-  const mobileViewport=window.matchMedia?.('(max-width: 650px)').matches===true;
-  const coarsePointer=window.matchMedia?.('(pointer: coarse)').matches===true;
-  const isMobile=mobileViewport||coarsePointer;
-  const memory=Number(navigator.deviceMemory);
-  const cores=Number(navigator.hardwareConcurrency);
-  const saveData=navigator.connection?.saveData===true;
-  const lowPower=
-    saveData||
-    (Number.isFinite(memory)&&memory<=4)||
-    (Number.isFinite(cores)&&cores<=4);
-
-  const profile=Object.freeze({
-    isMobile,
-    lowPower,
-    frameIntervalMs:lowPower?125:isMobile?100:50,
-    hudIntervalMs:lowPower?300:isMobile?250:100,
-    openClockIntervalMs:lowPower?750:isMobile?500:250
-  });
-
-  const root=document.documentElement;
-  root.classList.toggle('aviator-mobile-lite',isMobile);
-  root.classList.toggle('aviator-low-power',lowPower);
-
-  return profile;
-})();
-
 const playerToken=()=>JLSession.getPlayerToken();
-const pendingCashoutKey='jl_aviator_pending_cashout_v1';
 const fairness=window.JLAviatorFairness||null;
 const runtime=window.JLAviatorRuntime||{
   pickActiveBet:(bets,roundId)=>{
@@ -99,48 +66,35 @@ const runtime=window.JLAviatorRuntime||{
   }
 };
 
-function cashoutRequestKey(betId){
-  const id=Number(betId);
-  if(!Number.isFinite(id))return null;
-  const storageKey='jl_aviator_cashout_request_key_'+id;
-  let value=sessionStorage.getItem(storageKey);
-  if(!value){
-    value=crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random().toString(36).slice(2);
-    sessionStorage.setItem(storageKey,value);
-  }
-  return value;
-}
+const engine=window.JLAviatorEngine.create({
+  runtime,
+  getRound:()=>round
+});
+const visualPerformance=engine.performance;
+const ui=window.JLAviatorUI.create({
+  $,
+  getRound:()=>round,
+  getBetState:()=>({myBet,myStake,myAutoCashout}),
+  multiplier:()=>engine.multiplier()
+});
+const financial=window.JLAviatorFinancial.create({
+  rpc:(name,args)=>JLApi.rpc(name,args),
+  playerToken,
+  getRoundId:()=>round?.id
+});
+const history=window.JLAviatorHistory.create({
+  $,
+  rpc:(name,args)=>JLApi.rpc(name,args),
+  multiplierTier:(value)=>ui.multiplierTier(value)
+});
 
-function readPendingCashout(){
-  try{
-    const value=JSON.parse(sessionStorage.getItem(pendingCashoutKey)||'null');
-    const betId=Number(value?.bet_id),roundId=Number(value?.round_id),createdAt=Number(value?.created_at);
-    if(!Number.isFinite(betId)||!Number.isFinite(roundId)||!Number.isFinite(createdAt))return null;
-    if(Date.now()-createdAt>6*60*60*1000){
-      sessionStorage.removeItem(pendingCashoutKey);
-      return null;
-    }
-    const requestKey=String(value?.request_key||cashoutRequestKey(betId)||'');
-    return {bet_id:betId,round_id:roundId,request_key:requestKey,created_at:createdAt};
-  }catch(_){
-    return null;
-  }
-}
+function cashoutRequestKey(betId){return financial.cashoutRequestKey(betId);}
 
-function savePendingCashout(betId,roundId,requestKey){
-  try{
-    sessionStorage.setItem(pendingCashoutKey,JSON.stringify({
-      bet_id:Number(betId),
-      round_id:Number(roundId),
-      request_key:String(requestKey||cashoutRequestKey(betId)||''),
-      created_at:Date.now()
-    }));
-  }catch(_){}
-}
+function readPendingCashout(){return financial.readPendingCashout();}
 
-function clearPendingCashout(){
-  try{sessionStorage.removeItem(pendingCashoutKey)}catch(_){}
-}
+function savePendingCashout(betId,roundId,requestKey){return financial.savePendingCashout(betId,roundId,requestKey);}
+
+function clearPendingCashout(){return financial.clearPendingCashout();}
 
 function cancelStateRequest(){
   const controller=stateController;
@@ -181,109 +135,27 @@ function setConnectionState(online){
   }
 }
 
-function money(value){
-  const n=Number(value);
-  return (Number.isFinite(n)?n:0).toLocaleString('pt-MZ',{
-    minimumFractionDigits:2,
-    maximumFractionDigits:2
-  })+' MZN';
-}
+function money(value){return ui.money(value);}
 
-function moneyCompact(value){
-  const n=Number(value);
-  return (Number.isFinite(n)?n:0).toLocaleString('pt-MZ',{
-    minimumFractionDigits:0,
-    maximumFractionDigits:2
-  })+' MZN';
-}
+function moneyCompact(value){return ui.moneyCompact(value);}
 
-function playerMessage(error,fallback='Não foi possível concluir. Tente novamente.'){
-  const raw=String(error?.message||error||'')
-    .replace(/\\n|\r|\n/g,' ')
-    .replace(/\s+/g,' ')
-    .trim();
+function playerMessage(error,fallback='Não foi possível concluir. Tente novamente.'){return ui.playerMessage(error,fallback);}
 
-  const rules=[
-    [/RATE_LIMITED|BOT_RATE_LIMITED|BOT_TOO_FAST|muitas requisi[cç][oõ]es|rápidas demais/i,'Muitas ações em pouco tempo. Aguarde um momento e tente novamente.'],
-    [/saldo insuficiente/i,'Saldo insuficiente.'],
-    [/jogador bloqueado/i,'A sua conta está bloqueada.'],
-    [/aviator em manutencao|aviator brevemente/i,'Aviator brevemente.'],
-    [/nao ha rodada aviator aberta|apostas fechadas/i,'Apostas fechadas. Aguarde a próxima rodada.'],
-    [/valor de aposta invalido|informe um valor/i,'Informe um valor de aposta válido.'],
-    [/cash-out automatico deve ser/i,'Verifique o valor do cash-out automático.'],
-    [/ja existe uma aposta nesta rodada/i,'A sua aposta desta rodada já foi confirmada.'],
-    [/aposta nao encontrada/i,'Aposta não encontrada. Atualize o jogo.'],
-    [/aposta ja liquidada/i,'Esta aposta já terminou.'],
-    [/voo nao esta ativo/i,'O voo já terminou.'],
-    [/crash ja atingido/i,'Fim da rodada. Cash-out não disponível.'],
-    [/sem liga[cç][aã]o|failed to fetch|network/i,'Sem ligação. Verifique a internet.'],
-    [/reserva da banca inconsistente/i,'Não foi possível concluir agora. Tente novamente.']
-  ];
+function show(selector,visible){return ui.show(selector,visible);}
 
-  for(const [pattern,message] of rules){
-    if(pattern.test(raw))return message;
-  }
+function syncServerClock(snapshot){return engine.syncServerClock(snapshot);}
 
-  return fallback;
-}
+function serverNowMs(){return engine.serverNowMs();}
 
-function show(selector,visible){
-  const el=typeof selector==='string'?$(selector):selector;
-  if(el)el.classList.toggle('hidden',!visible);
-}
+function mul(){return engine.multiplier();}
 
-function syncServerClock(snapshot){
-  const server=Date.parse(snapshot?.server_time);
-  if(Number.isFinite(server))serverClockOffsetMs=server-Date.now();
-}
+function secondsToClose(){return engine.secondsToClose();}
 
-function serverNowMs(){
-  return Date.now()+serverClockOffsetMs;
-}
+function secondsToTakeoff(){return engine.secondsToTakeoff();}
 
-function mul(){
-  if(round?.status==='FLYING'&&round?.started_at&&runtime.liveMultiplier){
-    return runtime.liveMultiplier(round.started_at,serverNowMs());
-  }
-  const value=Number(round?.current_multiplier);
-  return Number.isFinite(value)&&value>=1?value:1;
-}
+function betKey(){return financial.betKey();}
 
-function secondsToClose(){
-  if(round?.betting_closes_at&&runtime.secondsUntil){
-    return runtime.secondsUntil(round.betting_closes_at,serverNowMs());
-  }
-  const value=Number(round?.seconds_to_close);
-  return Number.isFinite(value)&&value>=0?Math.floor(value):null;
-}
-
-function secondsToTakeoff(){
-  if(round?.takeoff_at&&runtime.secondsUntil){
-    return runtime.secondsUntil(round.takeoff_at,serverNowMs());
-  }
-  const value=Number(round?.seconds_to_takeoff);
-  return Number.isFinite(value)&&value>=0?Math.floor(value):null;
-}
-
-function betKey(){
-  if(!round?.id)return null;
-  const key='jl_aviator_bet_key_'+round.id;
-  let value=sessionStorage.getItem(key);
-  if(!value){
-    value=crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random().toString(36).slice(2);
-    sessionStorage.setItem(key,value);
-  }
-  return value;
-}
-
-function setStagePhase(phase){
-  const stage=$('#aviatorStage');
-  if(!stage)return;
-  const next='is-'+phase;
-  if(stage.classList.contains(next))return;
-  stage.classList.remove('is-open','is-locked','is-flying','is-crashed','is-waiting');
-  stage.classList.add(next);
-}
+function setStagePhase(phase){return ui.setStagePhase(phase);}
 
 function stopFlight(){
   if(flightFrame){
@@ -294,51 +166,15 @@ function stopFlight(){
   lastFlightHudAt=0;
 }
 
-function multiplierTier(value){
-  const n=Number(value);
-  if(!Number.isFinite(n)||n<2)return 'low';
-  if(n<10)return 'medium';
-  return 'high';
-}
+function multiplierTier(value){return ui.multiplierTier(value);}
 
-function applyMultiplierTier(el,value){
-  if(!el)return;
-  const next='tier-'+multiplierTier(value);
-  if(el.classList.contains(next))return;
-  el.classList.remove('tier-low','tier-medium','tier-high');
-  el.classList.add(next);
-}
+function applyMultiplierTier(el,value){return ui.applyMultiplierTier(el,value);}
 
-function renderMultiplier(value){
-  const el=$('#multiplier');
-  if(!el)return;
-  const n=Number(value);
-  const safe=Number.isFinite(n)&&n>=1?n:1;
-  const text=safe.toFixed(2)+'×';
-  if(el.textContent!==text)el.textContent=text;
-  const isLong=text.length>=8;
-  if(el.classList.contains('long')!==isLong)el.classList.toggle('long',isLong);
-  applyMultiplierTier(el,safe);
-}
+function renderMultiplier(value){return ui.renderMultiplier(value);}
 
-function resetCashout(){
-  const button=$('#cashoutBtn');
-  if(!button)return;
-  button.disabled=true;
-  button.textContent='Cash-out';
-}
+function resetCashout(){return ui.resetCashout();}
 
-function renderRoundNumber(){
-  const el=$('#roundNumber');
-  const roundNo=Number(round?.round_no);
-  const internalId=Number(round?.id);
-  const displayNo=Number.isFinite(roundNo)&&roundNo>0
-    ?roundNo
-    :Number.isFinite(internalId)&&internalId>0
-      ?internalId
-      :null;
-  if(el)el.textContent=displayNo?'#'+displayNo:'—';
-}
+function renderRoundNumber(){return ui.renderRoundNumber();}
 
 function stopOpenUiTick(){
   if(openUiTimer){
@@ -347,13 +183,7 @@ function stopOpenUiTick(){
   }
 }
 
-function setBetInputsLocked(locked){
-  const value=Boolean(locked);
-  const amount=$('#aviatorAmount');
-  const auto=$('#aviatorAutoCashout');
-  if(amount)amount.disabled=value;
-  if(auto)auto.disabled=value;
-}
+function setBetInputsLocked(locked){return ui.setBetInputsLocked(locked);}
 
 function updateOpenClock(){
   if(!connectionOnline){
@@ -397,155 +227,17 @@ function startOpenUiTick(){
   openUiTimer=setInterval(updateOpenClock,visualPerformance.openClockIntervalMs);
 }
 
-function renderTicket(multiplierValue=null){
-  const panel=$('#activeBetPanel');
-  if(!panel)return;
+function renderTicket(multiplierValue=null){return ui.renderTicket(multiplierValue);}
 
-  const active=Boolean(myBet)&&myStake>0;
-  panel.classList.toggle('hidden',!active);
-  if(!active)return;
+function renderBetConfirmation(){return ui.renderBetConfirmation();}
 
-  $('#activeBetStake').textContent=money(myStake);
-  const auto=$('#activeBetAuto');
-  if(auto)auto.textContent=myAutoCashout
-    ?'Auto '+Number(myAutoCashout).toFixed(2)+'×'
-    :'Auto desligado';
+function normalizeHistoryItem(item){return history.normalize(item);}
 
-  if(round?.status==='FLYING'){
-    const m=Number(multiplierValue??mul());
-    const safeMultiplier=Number.isFinite(m)&&m>=1?m:1;
-    $('#activeBetMultiplier').textContent=safeMultiplier.toFixed(2)+'×';
-    $('#activeBetPayout').textContent=money(myStake*safeMultiplier);
-  }else{
-    $('#activeBetMultiplier').textContent='A aguardar';
-    $('#activeBetPayout').textContent=money(myStake);
-  }
-}
+function renderHistory(){return history.render();}
 
-function renderBetConfirmation(){
-  const box=$('#betConfirmation');
-  const text=$('#betConfirmationText');
-  const auto=$('#betConfirmationAuto');
-  if(!box||!text)return;
+function rememberCurrentResult(){return history.remember(round);}
 
-  const visible=
-    Boolean(myBet)&&
-    myStake>0&&
-    ['OPEN','LOCKED'].includes(round?.status);
-
-  box.classList.toggle('hidden',!visible);
-  if(!visible)return;
-
-  text.textContent='Aposta confirmada: '+moneyCompact(myStake);
-
-  if(auto){
-    const hasAuto=Number.isFinite(Number(myAutoCashout))&&Number(myAutoCashout)>=1.01;
-    auto.classList.toggle('hidden',!hasAuto);
-    auto.textContent=hasAuto
-      ?'Auto cash-out: '+Number(myAutoCashout).toFixed(2)+'×'
-      :'';
-  }
-}
-
-function normalizeHistoryItem(item){
-  const id=Number(item?.id);
-  const multiplier=Number(item?.crash_multiplier);
-  if(!Number.isFinite(id)||id<=0||!Number.isFinite(multiplier)||multiplier<1)return null;
-  const roundNo=Number(item?.round_no);
-  return {
-    id,
-    round_no:Number.isFinite(roundNo)&&roundNo>0?roundNo:id,
-    crash_multiplier:multiplier,
-    ended_at:item?.ended_at||null
-  };
-}
-
-function renderHistory(){
-  const wrap=$('#aviatorHistory');
-  const status=$('#historyStatus');
-  if(!wrap||!status)return;
-
-  const rows=recentResults
-    .map(normalizeHistoryItem)
-    .filter(Boolean)
-    .sort((a,b)=>b.id-a.id)
-    .slice(0,12);
-
-  if(!rows.length){
-    wrap.innerHTML='<span class="aviator-history-empty">Sem resultados recentes.</span>';
-    status.textContent=historyRemoteLoaded?'Atualizado':'—';
-    return;
-  }
-
-  wrap.innerHTML=rows.map((item,index)=>
-    '<span class="aviator-history-value tier-'+multiplierTier(item.crash_multiplier)+'" title="Rodada #'+item.round_no+'">'+
-      item.crash_multiplier.toFixed(2)+'x'+
-    '</span>'+
-    (index<rows.length-1
-      ?'<span class="aviator-history-separator" aria-hidden="true">·</span>'
-      :'')
-  ).join('');
-
-  wrap.setAttribute(
-    'aria-label',
-    'Multiplicadores recentes: '+
-      rows.map(item=>item.crash_multiplier.toFixed(2)+' vezes').join(', ')
-  );
-
-  status.textContent=rows.length+' recentes';
-}
-
-function rememberCurrentResult(){
-  if(!round||!['CRASHED','SETTLED'].includes(round.status))return;
-  const item=normalizeHistoryItem({
-    id:round.id,
-    round_no:round.round_no,
-    crash_multiplier:round.crash_multiplier,
-    ended_at:round.crashed_at||round.settled_at||null
-  });
-  if(!item)return;
-
-  recentResults=[
-    item,
-    ...recentResults.filter(x=>Number(x?.id)!==item.id)
-  ].slice(0,12);
-
-  renderHistory();
-}
-
-async function loadHistory(force=false){
-  const now=Date.now();
-  if(historyBusy||now<historyRetryAt)return;
-  if(historyRemoteLoaded&&!force)return;
-
-  historyBusy=true;
-  const status=$('#historyStatus');
-  if(status)status.textContent='A atualizar…';
-
-  try{
-    const raw=await JLApi.rpc('jl_aviator_recent_results',{p_limit:12});
-    const rows=Array.isArray(raw)?raw:[];
-    const normalized=rows.map(normalizeHistoryItem).filter(Boolean);
-
-    if(normalized.length){
-      const localOnly=recentResults.filter(local=>
-        !normalized.some(remote=>remote.id===Number(local?.id))
-      );
-      recentResults=[...normalized,...localOnly]
-        .sort((a,b)=>b.id-a.id)
-        .slice(0,12);
-    }
-
-    historyRemoteLoaded=true;
-    historyRetryAt=0;
-  }catch(_){
-    historyRemoteLoaded=false;
-    historyRetryAt=Date.now()+60000;
-  }finally{
-    historyBusy=false;
-    renderHistory();
-  }
-}
+async async function loadHistory(force=false){return history.load(force);}
 
 function paintFlight(timestamp=performance.now()){
   if(!connectionOnline||round?.status!=='FLYING'||document.hidden)return;
@@ -596,37 +288,11 @@ function startFlightPaint(){
   flightFrame=requestAnimationFrame(flightPaintLoop);
 }
 
-function cashoutMessage(source,multiplier,payout){
-  const label=source==='AUTO'?'Cash-out automático':'Cash-out';
-  return label+' em '+Number(multiplier).toFixed(2)+'× · '+money(payout);
-}
+function cashoutMessage(source,multiplier,payout){return financial.cashoutMessage(source,multiplier,payout);}
 
-async function requestFinancialCashout(betId,requestKey){
-  const result=await JLApi.rpc('jl_aviator_cashout',{
-    p_token:playerToken(),
-    p_bet_id:Number(betId),
-    p_request_key:String(requestKey||cashoutRequestKey(betId)||'')
-  });
-  if(result?.ok===false){
-    const error=new Error(result.message||'Não foi possível concluir o cash-out.');
-    error.code=result.error_code||'CASHOUT_REJECTED';
-    error.retryAfterMs=Number(result.retry_after_ms)||0;
-    throw error;
-  }
-  return result;
-}
+async async function requestFinancialCashout(betId,requestKey){return financial.requestFinancialCashout(betId,requestKey);}
 
-async function fetchBetStatus(betId){
-  const id=Number(betId);
-  if(!Number.isFinite(id)||!playerToken())return null;
-
-  const x=await JLApi.rpc('jl_aviator_bet_status',{
-    p_token:playerToken(),
-    p_bet_id:id
-  });
-
-  return x?.ok===true&&x?.bet?x.bet:null;
-}
+async async function fetchBetStatus(betId){return financial.fetchBetStatus(betId);}
 
 async function refreshCurrentBetLight(){
   if(!myBet||!playerToken()||!round)return false;
@@ -1057,12 +723,13 @@ function renderCurrentRound(){
 }
 
 function nextPollDelay(){
-  const protectedFlight=!enabled&&round?.status==='FLYING'&&Boolean(myBet);
-  if(!enabled&&!protectedFlight){
-    if(realtimeConnected)return document.hidden?300000:120000;
-    return document.hidden?60000:30000;
-  }
-  return runtime.pollDelay(round?.status||'',document.hidden,realtimeConnected);
+  return engine.pollDelay({
+    status:round?.status||'',
+    hidden:document.hidden,
+    realtimeConnected,
+    enabled,
+    hasBet:Boolean(myBet)
+  });
 }
 
 function scheduleState(delay=nextPollDelay()){
@@ -1167,7 +834,7 @@ async function reconnectState(){
 
     if(changedRound||justFinished){
       void loadHistory(true);
-    }else if(!historyRemoteLoaded&&!historyBusy){
+    }else if(!history.remoteLoaded()&&!history.busy()){
       void loadHistory(false);
     }
 
@@ -1259,7 +926,7 @@ async function state(){
 
     if(changedRound||justFinished){
       void loadHistory(true);
-    }else if(!historyRemoteLoaded&&!historyBusy){
+    }else if(!history.remoteLoaded()&&!history.busy()){
       void loadHistory(false);
     }
 
