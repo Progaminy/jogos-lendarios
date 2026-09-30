@@ -208,6 +208,17 @@ Esses cenários têm regressões transacionais em `tests/sql/aviator/`.
 - Migrations: `20260930001648_immutable_player_financial_ledger`, `20260930001729_ledger_initial_balance_posting` e `20260930001919_ledger_restrict_direct_writes`.
 - Regressão permanente: `tests/sql/aviator/aviator_immutable_financial_ledger.sql`.
 
+## Detalhes de cada aposta
+
+- Cada item de `Minhas apostas` mostra seis campos explícitos: `Rodada`, `Apostado`, `Cash-out`, `Crash`, `Pagamento` e `Horário`.
+- `Cash-out` usa `cashout_multiplier`; quando não houve cash-out confirmado, mostra `—`.
+- `Crash` usa o `crash_multiplier` autoritativo da rodada; enquanto ainda não existir, mostra `—`.
+- `Pagamento` mostra o payout confirmado para `CASHED_OUT`, `0,00 MZN` para `LOST`, o valor devolvido identificado como `(reembolso)` para `REFUNDED`, e `—` enquanto a aposta estiver ativa.
+- `Horário` mostra data + hora de `created_at`, evitando apresentar hora inventada no cliente.
+- Nenhum destes detalhes gera nova consulta: todos já vêm do RPC paginado `jl_aviator_my_history`.
+- No desktop os seis campos usam uma grelha de três colunas; no mobile, duas colunas para continuar legível sem scroll horizontal.
+- Regressão permanente: `tests/frontend/aviator-bet-history-details.test.cjs`.
+
 ## Histórico pessoal separado
 
 - `Minhas apostas` e `Histórico global` são secções distintas.
