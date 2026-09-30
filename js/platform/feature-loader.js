@@ -271,43 +271,14 @@
     document.addEventListener('click', warmAccountFeatures);
   }
 
-  function installLazyGameNavigation() {
-    document.addEventListener('click', async (event) => {
-      const link = event.target.closest?.('a[data-jl-game][href]');
-      if (!link) return;
-
-      // Preserve browser-native behavior for new tab/window and downloads.
-      if (
-        event.defaultPrevented ||
-        event.button !== 0 ||
-        event.metaKey ||
-        event.ctrlKey ||
-        event.shiftKey ||
-        event.altKey ||
-        link.hasAttribute('download') ||
-        link.target === '_blank'
-      ) return;
-
-      const gameId = String(link.dataset.jlGame || '').trim();
-      if (!gameId) return;
-
-      event.preventDefault();
-      link.setAttribute('aria-busy', 'true');
-
-      try {
-        const item = await game(gameId);
-        if (!item?.route) {
-          location.href = link.href;
-          return;
-        }
-
-        // Navigation is the lazy-load boundary: no game CSS/JS is injected
-        // into the home page before the player explicitly opens the game.
-        location.href = item.route;
-      } catch {
-        location.href = link.href;
-      }
-    });
+  function installRouteIntentPrefetch() {
+    const warm = (event) => {
+      const link = event.target.closest?.('a[data-jl-route-prefetch][href]');
+      if (link) prefetchHref(link.getAttribute('href'));
+    };
+    document.addEventListener('pointerover', warm, { passive: true });
+    document.addEventListener('focusin', warm);
+    document.addEventListener('touchstart', warm, { passive: true });
   }
 
   function isLudoPage() {
@@ -323,7 +294,7 @@
     installNotificationFacade();
     installSupportOnDemand();
     installAccountIntentLoading();
-    installLazyGameNavigation();
+    installRouteIntentPrefetch();
     observeRecoveryNeed();
 
     // Purely visual features are loaded only when their section approaches the viewport.
@@ -348,11 +319,7 @@
     gameManifest,
     game,
     navigateGame,
-    prefetchHref,
-    isRouteIsolated: async (id) => {
-      const item = await game(id);
-      return Boolean(item && item.homeEmbedded === false && item.loading === 'navigation');
-    }
+    prefetchHref
   });
 
   if (document.readyState === 'loading') {
