@@ -208,6 +208,21 @@ Esses cenários têm regressões transacionais em `tests/sql/aviator/`.
 - Migrations: `20260930001648_immutable_player_financial_ledger`, `20260930001729_ledger_initial_balance_posting` e `20260930001919_ledger_restrict_direct_writes`.
 - Regressão permanente: `tests/sql/aviator/aviator_immutable_financial_ledger.sql`.
 
+## Animação mobile extremamente leve
+
+- O Aviator detecta viewport móvel/pointer coarse e capacidade aproximada do aparelho (`deviceMemory`, `hardwareConcurrency` e `saveData`) para escolher um perfil visual adaptativo.
+- Desktop mantém atualização visual até ~20 fps (`50 ms`). Mobile usa ~10 fps (`100 ms`) e aparelhos fracos/economia de dados usam ~8 fps (`125 ms`).
+- O avião continua animado por CSS `transform: translate3d(...)`, permitindo composição pela GPU sem depender da frequência das atualizações de DOM.
+- HUD secundário (bilhete, payout visual e texto do botão) é atualizado mais devagar: 250 ms no mobile e 300 ms no perfil low-power.
+- O relógio visual de pré-voo caiu de 200 ms para 500 ms no mobile e 750 ms em low-power; a autoridade de tempo continua sendo o servidor.
+- Quando a página fica oculta, o `requestAnimationFrame` do voo é cancelado e o relógio visual para; ao regressar, o estado autoritativo é reconciliado.
+- Escritas DOM redundantes são evitadas: multiplicador, classes de tier e texto do cash-out só são alterados quando o valor realmente mudou.
+- Em telas até 650 px a grid mascarada é removida, o `drop-shadow` do avião é removido, a trilha deixa de animar, sombras são reduzidas e a área de voo usa `contain: layout paint style`.
+- Em low-power a trilha é removida por completo e a animação idle é desligada; a animação principal em voo permanece.
+- `prefers-reduced-motion: reduce` continua tendo prioridade e desativa as animações.
+- A otimização é exclusivamente visual; motor, aposta, cash-out, payout e relógio do servidor não foram alterados.
+- Regressão permanente: `tests/frontend/aviator-mobile-performance.test.cjs`.
+
 ## Relógio do servidor como autoridade
 
 - Aceitação de apostas usa exclusivamente tempo do PostgreSQL.
