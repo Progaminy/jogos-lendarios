@@ -208,6 +208,20 @@ Esses cenários têm regressões transacionais em `tests/sql/aviator/`.
 - Migrations: `20260930001648_immutable_player_financial_ledger`, `20260930001729_ledger_initial_balance_posting` e `20260930001919_ledger_restrict_direct_writes`.
 - Regressão permanente: `tests/sql/aviator/aviator_immutable_financial_ledger.sql`.
 
+## Histórico pessoal separado
+
+- `Minhas apostas` e `Histórico global` são secções distintas.
+- O histórico global continua mostrando somente os multiplicadores das rodadas públicas.
+- `Minhas apostas` usa `jl_aviator_my_history` e retorna somente apostas pertencentes ao jogador identificado pelo token de sessão.
+- O RPC pessoal não calcula saldo nem ledger; retorna apenas dados de apostas e é paginado por `bet_id`, até 20 linhas por página.
+- Há índice `jl_aviator_bets_player_id_desc_idx(player_id,id desc)` para manter a consulta eficiente com grande volume.
+- A secção pessoal é lazy: não chama o banco no carregamento inicial; a primeira consulta ocorre ao abrir `Minhas apostas`.
+- Cada linha mostra símbolo + estado textual (`✓ GANHA`, `✕ PERDIDA`, `↩ REEMBOLSADA`, `● ATIVA`), rodada, valores e hora.
+- `Carregar mais` usa `next_before_id`, sem offset caro.
+- Uma nova aposta ou liquidação invalida a cache pessoal; se a secção estiver aberta, ela é atualizada.
+- Migration: `20260930234209_aviator_personal_history`.
+- Regressões: `tests/sql/aviator/aviator_personal_history.sql` e `tests/frontend/aviator-personal-history.test.cjs`.
+
 ## Resultado visual da aposta
 
 - Resultado liquidado não depende apenas de cor. O painel `#betResultPanel` usa símbolo + palavra + detalhe textual.
