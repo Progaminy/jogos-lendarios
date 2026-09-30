@@ -29,7 +29,8 @@ test('loop visual para completamente em background',()=>{
 test('HUD não é reescrito a cada frame',()=>{
   assert.match(js,/timestamp-lastFlightHudAt<visualPerformance\.hudIntervalMs/);
   assert.match(ui,/if\(el\.textContent!==text\)el\.textContent=text/);
-  assert.match(js,/if\(cashout\.textContent!==text\)cashout\.textContent=text/);
+  assert.match(ui,/if\(button\.textContent!==nextText\)button\.textContent=nextText/);
+  assert.match(ui,/if\(statusEl\.textContent!==nextStatus\)statusEl\.textContent=nextStatus/);
 });
 
 test('mobile remove efeitos de pintura caros',()=>{
