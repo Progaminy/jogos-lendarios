@@ -6,7 +6,7 @@ const fs=require('node:fs');
 
 test('indicador financeiro da casa usa snapshot do servidor e atualização automática',()=>{
   const html=fs.readFileSync('admin.html','utf8');
-  const js=fs.readFileSync('admin.js','utf8');
+  const js=fs.readFileSync('js/aviator/admin.js','utf8');
   const css=fs.readFileSync('styles.css','utf8');
 
   assert.match(html,/FINANCEIRO DA CASA · TEMPO REAL/);
