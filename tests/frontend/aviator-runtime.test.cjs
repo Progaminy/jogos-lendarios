@@ -6,10 +6,16 @@ const path=require('node:path');
 const runtime=require('../../js/aviator/runtime.js');
 const fairness=require('../../js/aviator/fairness.js');
 
-test('runtime do navegador não contém motor de multiplicador nem relógio do jogo',()=>{
+test('runtime mantém apenas relógio visual derivado do snapshot autoritativo',()=>{
+  assert.equal(typeof runtime.liveMultiplier,'function');
+  assert.equal(typeof runtime.secondsUntil,'function');
   assert.equal(runtime.multiplier,undefined);
-  assert.equal(runtime.secondsUntil,undefined);
   assert.equal(runtime.clockSample,undefined);
+
+  const started='2026-09-30T10:00:00.000Z';
+  const now=Date.parse(started)+10_000;
+  assert.ok(Math.abs(runtime.liveMultiplier(started,now)-Math.pow(1.06,10))<1e-10);
+  assert.equal(runtime.secondsUntil('2026-09-30T10:00:05.000Z',Date.parse(started)),5);
 });
 
 test('recuperação escolhe apenas aposta ACTIVE da rodada pedida',()=>{
@@ -33,11 +39,13 @@ test('reconciliação encontra uma aposta específica pelo bet_id',()=>{
   assert.equal(runtime.findBetById(bets,99),null);
 });
 
-test('polling reduz carga fora da aba e acelera apenas durante voo',()=>{
-  assert.equal(runtime.pollDelay('FLYING',false),500);
-  assert.equal(runtime.pollDelay('OPEN',false),1000);
-  assert.equal(runtime.pollDelay('SETTLED',false),1400);
-  assert.equal(runtime.pollDelay('FLYING',true),5000);
+test('Realtime reduz polling a fallback de baixa frequência',()=>{
+  assert.equal(runtime.pollDelay('FLYING',false,true),30000);
+  assert.equal(runtime.pollDelay('OPEN',false,true),30000);
+  assert.equal(runtime.pollDelay('FLYING',true,true),60000);
+  assert.equal(runtime.pollDelay('FLYING',false,false),2000);
+  assert.equal(runtime.pollDelay('OPEN',false,false),5000);
+  assert.equal(runtime.pollDelay('SETTLED',false,false),10000);
 });
 
 test('fases públicas mapeiam para estados visuais estáveis',()=>{
@@ -56,6 +64,25 @@ test('HTML carrega fairness e runtime antes do controlador principal',()=>{
   assert.ok(fairnessAt>=0,'verificador provably fair deve estar incluído');
   assert.ok(runtimeAt>fairnessAt,'runtime deve carregar depois do verificador');
   assert.ok(controllerAt>runtimeAt,'controlador deve carregar por último');
+});
+
+test('HTML carrega cliente Realtime fixado antes do controlador',()=>{
+  const html=fs.readFileSync(path.join(__dirname,'../../aviator.html'),'utf8');
+  assert.match(html,/@supabase\/supabase-js@2\.117\.2\/dist\/umd\/supabase\.min\.js/);
+  const realtimeAt=html.indexOf('./js/realtime/aviator.js');
+  const controllerAt=html.indexOf('./aviator.js');
+  assert.ok(realtimeAt>=0);
+  assert.ok(controllerAt>realtimeAt);
+});
+
+test('controlador usa Broadcast como caminho principal e polling apenas como fallback',()=>{
+  const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
+  const realtime=fs.readFileSync(path.join(__dirname,'../../js/realtime/aviator.js'),'utf8');
+  assert.match(realtime,/channel\('aviator:round'/);
+  assert.match(realtime,/\.on\('broadcast',\{event:'state'\}/);
+  assert.match(js,/applyRealtimeSnapshot/);
+  assert.match(js,/realtimeConnected/);
+  assert.match(js,/scheduleState\(connected\?30000:2000\)/);
 });
 
 test('HTML mantém histórico e bilhete ao vivo com ids estáveis',()=>{
@@ -100,13 +127,12 @@ test('modo offline bloqueia aposta e cash-out até reconectar',()=>{
   assert.match(js,/if\(!connectionOnline\)throw new Error\('Sem ligação/);
 });
 
-test('controlador usa somente snapshots de voo calculados pelo servidor',()=>{
+test('controlador usa timestamps do servidor para interpolação apenas visual',()=>{
   const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
-  assert.match(js,/round\?\.current_multiplier/);
-  assert.match(js,/round\?\.seconds_to_close/);
-  assert.doesNotMatch(js,/Math\.pow\(1\.06/);
-  assert.doesNotMatch(js,/clockSample/);
-  assert.doesNotMatch(js,/serverNow/);
+  assert.match(js,/syncServerClock\(x\)/);
+  assert.match(js,/runtime\.liveMultiplier\(round\.started_at,serverNowMs\(\)\)/);
+  assert.match(js,/runtime\.secondsUntil\(round\.betting_closes_at,serverNowMs\(\)\)/);
+  assert.doesNotMatch(js,/p_multiplier\s*:/);
 });
 
 
@@ -121,7 +147,7 @@ test('resposta de recuperação antiga é descartada se a rodada mudou',()=>{
 test('cash-out ambíguo é persistido e reconciliado sem retry automático',()=>{
   const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
   assert.match(js,/jl_aviator_pending_cashout_v1/);
-  assert.match(js,/savePendingCashout\(id,cashoutRoundId\)/);
+  assert.match(js,/savePendingCashout\(id,cashoutRoundId,requestKey\)/);
   assert.match(js,/reconcilePendingCashout\(\)/);
   assert.match(js,/bet\.status==='CASHED_OUT'/);
   assert.match(js,/cashoutMessage\(/);
@@ -231,7 +257,7 @@ test('Aviator mostra LOCKED separado do voo e bloqueia nova aposta',()=>{
   assert.match(js,/APOSTAS FECHADAS/);
   assert.match(js,/DESCOLAGEM EM/);
   assert.match(js,/betBtn\.disabled=true/);
-  assert.equal(runtime.pollDelay('LOCKED',false),500);
+  assert.equal(runtime.pollDelay('LOCKED',false,false),2000);
   assert.equal(runtime.phase('LOCKED'),'locked');
 });
 
@@ -294,7 +320,7 @@ test('reconexão usa snapshot autoritativo e não reinicia a fase visual',()=>{
 });
 
 
-test('animação do Aviator é somente visual e não decide dinheiro',()=>{
+test('animação local é somente visual e cash-out continua autoritativo no servidor',()=>{
   const html=fs.readFileSync(path.join(__dirname,'../../aviator.html'),'utf8');
   const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
   const css=fs.readFileSync(path.join(__dirname,'../../aviator.css'),'utf8');
@@ -305,16 +331,15 @@ test('animação do Aviator é somente visual e não decide dinheiro',()=>{
 
   const paint=js.match(/function paintFlight\(\)[\s\S]*?\n\}/)?.[0]||'';
   assert.match(paint,/const m=mul\(\)/);
-  assert.doesNotMatch(paint,/JLApi\.rpc|jl_aviator_cashout|jl_aviator_tick|payout/);
+  assert.doesNotMatch(paint,/JLApi\.rpc|jl_aviator_cashout|jl_aviator_tick/);
 
-  const financial=js.match(/function requestFinancialCashout\(betId\)[\s\S]*?\n\}/)?.[0]||'';
+  const financial=js.match(/async function requestFinancialCashout\(betId,requestKey\)[\s\S]*?\n\}/)?.[0]||'';
   assert.match(financial,/jl_aviator_cashout/);
   assert.match(financial,/p_bet_id:Number\(betId\)/);
-  assert.doesNotMatch(financial,/multiplier|payout|current_multiplier|started_at/);
+  assert.match(financial,/p_request_key:/);
+  assert.doesNotMatch(financial,/p_multiplier|current_multiplier|started_at/);
 
-  assert.doesNotMatch(js,/requestAnimationFrame/);
-  assert.doesNotMatch(js,/Math\.exp/);
-  assert.doesNotMatch(js,/started_at\s*[-+]/);
+  assert.match(js,/requestAnimationFrame\(flightPaintLoop\)/);
 });
 
 
