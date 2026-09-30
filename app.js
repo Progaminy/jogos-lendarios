@@ -116,10 +116,14 @@
   }
 
   function directToDeposit(check, context = 'esta operação') {
-    const missing = Math.max(1, Math.ceil(Number(check?.shortfall || 0)));
-    if (els.depositAmount) els.depositAmount.value = String(missing);
+    const rawMissing = Number(check?.shortfall);
+    const hasConfirmedShortfall = check?.balance_confirmed === true && Number.isFinite(rawMissing) && rawMissing > 0;
+    const missing = hasConfirmedShortfall ? Math.ceil(rawMissing) : null;
+    if (els.depositAmount && missing !== null) els.depositAmount.value = String(missing);
     openAccountPanel('depositPanel');
-    const message = `Saldo insuficiente para ${context}. Faltam ${formatMoney(missing)} MZN. Faça um depósito para continuar.`;
+    const message = missing !== null
+      ? `Saldo insuficiente para ${context}. Faltam ${formatMoney(missing)} MZN. Faça um depósito para continuar.`
+      : `Saldo insuficiente para ${context}. Atualize o saldo confirmado pelo servidor antes de continuar.`;
     setMessage(els.depositMessage, message, 'error');
     showToast(message, 'error');
     try { history.replaceState(null, '', '#depositPanel'); } catch {}
@@ -599,15 +603,24 @@
     els.playerName.textContent = player.name;
     els.playerPhone.textContent = `+${player.phone}`;
     const bonus=state.data?.bonus||{};
-    els.balance.textContent = formatMoney(player.balance);
+    const confirmedBalance=Number(player.balance);
+    const hasConfirmedBalance=player.balance_confirmed===true&&Number.isFinite(confirmedBalance);
+    const balanceText=hasConfirmedBalance?formatMoney(confirmedBalance):'—';
+    els.balance.textContent = balanceText;
     if(els.bonusBalance)els.bonusBalance.textContent=formatMoney(bonus.total||0);
     if(els.bonusBreakdown)els.bonusBreakdown.textContent=`Número ${formatMoney(bonus.number||0)} · Dupla ${formatMoney(bonus.pair||0)} MZN`;
     els.accountButton.textContent = player.name.split(/\s+/)[0] || 'Minha conta';
     els.accountMenuPlayer.textContent = player.name;
-    els.accountMenuBalance.textContent = `${formatMoney(player.balance)} MZN`;
+    els.accountMenuBalance.textContent = hasConfirmedBalance?`${balanceText} MZN`:'Saldo a confirmar';
     if(els.accountMenuBonus)els.accountMenuBonus.textContent=`Bónus ${formatMoney(bonus.total||0)} MZN`;
-    if(els.withdrawableBalance)els.withdrawableBalance.textContent=`${formatMoney(player.withdrawable_balance??player.balance)} MZN`;
-    if(els.depositLockedBalance)els.depositLockedBalance.textContent=`${formatMoney(player.deposit_locked||0)} MZN`;
+    if(els.withdrawableBalance){
+      const withdrawable=Number(player.withdrawable_balance);
+      els.withdrawableBalance.textContent=hasConfirmedBalance&&Number.isFinite(withdrawable)?`${formatMoney(withdrawable)} MZN`:'—';
+    }
+    if(els.depositLockedBalance){
+      const locked=Number(player.deposit_locked);
+      els.depositLockedBalance.textContent=hasConfirmedBalance&&Number.isFinite(locked)?`${formatMoney(locked)} MZN`:'—';
+    }
     handleDepositRedirectFromUrl();
     renderHistory();
     checkWinNotifications();
