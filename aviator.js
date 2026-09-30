@@ -237,7 +237,7 @@ function renderHistory(){return history.render();}
 
 function rememberCurrentResult(){return history.remember(round);}
 
-async async function loadHistory(force=false){return history.load(force);}
+async function loadHistory(force=false){return history.load(force);}
 
 function paintFlight(timestamp=performance.now()){
   if(!connectionOnline||round?.status!=='FLYING'||document.hidden)return;
@@ -290,9 +290,9 @@ function startFlightPaint(){
 
 function cashoutMessage(source,multiplier,payout){return financial.cashoutMessage(source,multiplier,payout);}
 
-async async function requestFinancialCashout(betId,requestKey){return financial.requestFinancialCashout(betId,requestKey);}
+async function requestFinancialCashout(betId,requestKey){return financial.requestFinancialCashout(betId,requestKey);}
 
-async async function fetchBetStatus(betId){return financial.fetchBetStatus(betId);}
+async function fetchBetStatus(betId){return financial.fetchBetStatus(betId);}
 
 async function refreshCurrentBetLight(){
   if(!myBet||!playerToken()||!round)return false;
