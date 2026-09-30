@@ -208,6 +208,20 @@ Esses cenários têm regressões transacionais em `tests/sql/aviator/`.
 - Migrations: `20260930001648_immutable_player_financial_ledger`, `20260930001729_ledger_initial_balance_posting` e `20260930001919_ledger_restrict_direct_writes`.
 - Regressão permanente: `tests/sql/aviator/aviator_immutable_financial_ledger.sql`.
 
+## Proteção anti-bot no cash-out
+
+- O cash-out manual possui proteção específica além do rate limiting geral.
+- O frontend gera uma `request_key` estável por aposta e reutiliza a mesma chave em retries, tornando a intenção de cash-out idempotente do ponto de vista do cliente.
+- O endpoint público `jl_aviator_cashout(token, bet_id, request_key)` serializa a mesma request key com advisory lock e mantém o overload antigo apenas como wrapper compatível.
+- Existe limite persistente por token: 8 chamadas/10 s e 30/min. Existe também limite por aposta: 2 chamadas/s e 6/10 s.
+- `jl_aviator_cashout_guard` mantém `last_attempt_at`, total de tentativas e tentativas bloqueadas por aposta. Tentativas com intervalo inferior a 250 ms retornam `BOT_TOO_FAST`.
+- O core financeiro `jl_aviator_cashout_core` e o guard interno não são executáveis por `anon` nem `authenticated`; somente o wrapper público é exposto.
+- Erros esperados de cash-out são convertidos em resposta estruturada dentro do wrapper. Isso faz os contadores anti-bot permanecerem gravados mesmo quando a operação financeira é rejeitada, enquanto a subtransação financeira é revertida.
+- Retry de aposta já `CASHED_OUT` continua idempotente e devolve o payout/transaction já existentes; nunca cria segundo payout.
+- A tabela do guard tem RLS, cliente sem acesso e `service_role` somente leitura.
+- Migrations: `20260930092249_aviator_cashout_bot_and_replay_protection` e `20260930092528_cashout_guard_restrict_direct_writes`.
+- Regressão permanente: `tests/sql/aviator/aviator_cashout_bot_protection.sql`.
+
 ## Rate limiting de endpoints sensíveis
 
 - O servidor possui rate limiting por subject em `jl_api_rate_limits`, protegido por RLS e sem escrita direta pelo cliente nem pelo `service_role`.
