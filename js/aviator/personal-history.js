@@ -43,26 +43,38 @@
       return {icon:'●',label:'ATIVA',kind:'active'};
     }
 
-    function detail(row){
+    function valueOrDash(value,formatter){
+      const n=Number(value);
+      return Number.isFinite(n)?formatter(n):'—';
+    }
+
+    function paymentText(row){
       const status=String(row?.status||'').toUpperCase();
-      const stake=Number(row?.stake);
       const payout=Number(row?.payout);
-      const cashout=Number(row?.cashout_multiplier);
-      const crash=Number(row?.crash_multiplier);
+      const stake=Number(row?.stake);
 
       if(status==='CASHED_OUT'){
-        return (Number.isFinite(stake)?money(stake):'—')+
-          ' → '+(Number.isFinite(payout)?money(payout):'—')+
-          (Number.isFinite(cashout)?' · '+cashout.toFixed(2)+'×':'');
+        return Number.isFinite(payout)?money(payout):'—';
       }
       if(status==='LOST'){
-        return 'Apostado '+(Number.isFinite(stake)?money(stake):'—')+
-          (Number.isFinite(crash)?' · Crash '+crash.toFixed(2)+'×':'');
+        return money(0);
       }
       if(status==='REFUNDED'){
-        return 'Devolvido '+(Number.isFinite(stake)?money(stake):'—');
+        return Number.isFinite(stake)?money(stake)+' (reembolso)':'Reembolsada';
       }
-      return 'Aposta '+(Number.isFinite(stake)?money(stake):'—')+' · Em curso';
+      return '—';
+    }
+
+    function fields(row){
+      const roundNo=Number(row?.round_no)||Number(row?.round_id)||0;
+      return [
+        ['Rodada','#'+String(roundNo||'—')],
+        ['Apostado',valueOrDash(row?.stake,money)],
+        ['Cash-out',valueOrDash(row?.cashout_multiplier,n=>n.toFixed(2)+'×')],
+        ['Crash',valueOrDash(row?.crash_multiplier,n=>n.toFixed(2)+'×')],
+        ['Pagamento',paymentText(row)],
+        ['Horário',formatTime(row?.created_at)||'—']
+      ];
     }
 
     function render(){
@@ -84,15 +96,20 @@
 
       list.innerHTML=rows.map(row=>{
         const m=meta(row);
-        const roundNo=Number(row?.round_no)||Number(row?.round_id)||0;
-        const time=formatTime(row?.created_at);
+        const items=fields(row);
         return '<article class="aviator-my-history-row is-'+m.kind+'" data-bet-id="'+esc(row?.id)+'">'+
-          '<span class="aviator-my-history-icon" aria-hidden="true">'+m.icon+'</span>'+
-          '<div class="aviator-my-history-main">'+
-            '<div class="aviator-my-history-title"><strong>'+m.label+'</strong><span>Rodada #'+esc(roundNo)+'</span></div>'+
-            '<div class="aviator-my-history-detail">'+esc(detail(row))+'</div>'+
+          '<div class="aviator-my-history-head">'+
+            '<span class="aviator-my-history-icon" aria-hidden="true">'+m.icon+'</span>'+
+            '<strong>'+m.label+'</strong>'+
           '</div>'+
-          '<time>'+esc(time)+'</time>'+
+          '<dl class="aviator-my-history-fields">'+
+            items.map(([label,value])=>
+              '<div class="aviator-my-history-field">'+
+                '<dt>'+esc(label)+'</dt>'+
+                '<dd>'+esc(value)+'</dd>'+
+              '</div>'
+            ).join('')+
+          '</dl>'+
         '</article>';
       }).join('');
 
