@@ -6,16 +6,18 @@ const fs=require('node:fs');
 const path=require('node:path');
 
 const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
+const engine=fs.readFileSync(path.join(__dirname,'../../js/aviator/engine.js'),'utf8');
+const ui=fs.readFileSync(path.join(__dirname,'../../js/aviator/ui.js'),'utf8');
 const css=fs.readFileSync(path.join(__dirname,'../../aviator.css'),'utf8');
 const html=fs.readFileSync(path.join(__dirname,'../../aviator.html'),'utf8');
 
 test('perfil mobile reduz frequência de atualização visual',()=>{
-  assert.match(js,/frameIntervalMs:lowPower\?125:isMobile\?100:50/);
-  assert.match(js,/hudIntervalMs:lowPower\?300:isMobile\?250:100/);
-  assert.match(js,/openClockIntervalMs:lowPower\?750:isMobile\?500:250/);
-  assert.match(js,/navigator\.deviceMemory/);
-  assert.match(js,/navigator\.hardwareConcurrency/);
-  assert.match(js,/navigator\.connection\?\.saveData/);
+  assert.match(engine,/frameIntervalMs:lowPower\?125:isMobile\?100:50/);
+  assert.match(engine,/hudIntervalMs:lowPower\?300:isMobile\?250:100/);
+  assert.match(engine,/openClockIntervalMs:lowPower\?750:isMobile\?500:250/);
+  assert.match(engine,/navigator\?.deviceMemory/);
+  assert.match(engine,/navigator\?.hardwareConcurrency/);
+  assert.match(engine,/navigator\?.connection\?.saveData/);
 });
 
 test('loop visual para completamente em background',()=>{
@@ -26,7 +28,7 @@ test('loop visual para completamente em background',()=>{
 
 test('HUD não é reescrito a cada frame',()=>{
   assert.match(js,/timestamp-lastFlightHudAt<visualPerformance\.hudIntervalMs/);
-  assert.match(js,/if\(el\.textContent!==text\)el\.textContent=text/);
+  assert.match(ui,/if\(el\.textContent!==text\)el\.textContent=text/);
   assert.match(js,/if\(cashout\.textContent!==text\)cashout\.textContent=text/);
 });
 
