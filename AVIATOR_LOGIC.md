@@ -208,6 +208,17 @@ Esses cenários têm regressões transacionais em `tests/sql/aviator/`.
 - Migrations: `20260930001648_immutable_player_financial_ledger`, `20260930001729_ledger_initial_balance_posting` e `20260930001919_ledger_restrict_direct_writes`.
 - Regressão permanente: `tests/sql/aviator/aviator_immutable_financial_ledger.sql`.
 
+## Vibração curta no crash
+
+- Em dispositivos compatíveis com `navigator.vibrate`, o Aviator pode emitir uma vibração curta de 60 ms quando a rodada entra em crash/fim.
+- A vibração é independente do som e fica desligada por padrão até o jogador ativar.
+- O botão `#aviatorVibrationToggle` aparece somente quando a API de vibração existe e mostra `🚫 Vib.` ou `📳 Vib.`, com `aria-pressed` e `aria-label`.
+- A preferência é persistida em `localStorage` na chave `jl_aviator_vibration_enabled`.
+- `js/aviator/haptics.js` deduplica por rodada/estado: um mesmo crash vibra uma única vez, mesmo com múltiplos renders ou eventos Realtime.
+- Abrir/recarregar a página quando a rodada já terminou não provoca vibração retroativa; ela só ocorre na transição observada para estado terminal.
+- Não existe vibração no multiplicador, por frame, no polling nem em chamadas financeiras.
+- Regressão permanente: `tests/frontend/aviator-haptics-preference.test.cjs`.
+
 ## Som opcional e persistente
 
 - O Aviator começa silencioso para quem nunca escolheu uma preferência.
