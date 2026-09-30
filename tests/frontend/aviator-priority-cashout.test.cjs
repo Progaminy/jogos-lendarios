@@ -35,7 +35,7 @@ test('voo com aposta ativa recebe prioridade visual forte',()=>{
 
 test('cash-out mostra multiplicador e retorno estimado apenas como apresentação',()=>{
   assert.match(ui,/'Cash-out · '\+m\.toFixed\(2\)\+'×'/);
-  assert.match(ui,/'Recebe agora '\+money\(s\*m\)/);
+  assert.match(ui,/moneyCompact\(s\)\+' × '\+m\.toFixed\(2\)\+' = '\+money\(s\*m\)/);
   assert.doesNotMatch(ui,/JLApi\.rpc|jl_aviator_cashout|payout_transaction/);
 });
 
