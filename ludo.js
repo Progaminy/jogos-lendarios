@@ -222,10 +222,16 @@
   function wholeStake(value,label='A aposta'){const amount=Number(value);if(!Number.isFinite(amount)||!Number.isInteger(amount)||amount<10){showToast(`${label} deve ser um valor inteiro a partir de 10 MZN.`,'error');return null;}return amount;}
 
   function redirectToDeposit(check, context='continuar no Ludo'){
-    const missing=Math.max(1,Math.ceil(Number(check?.shortfall||0)));
-    const message=`Saldo insuficiente para ${context}. Faltam ${money(missing)} MZN. Você será levado ao depósito.`;
+    const rawMissing=Number(check?.shortfall);
+    const hasConfirmedShortfall=check?.balance_confirmed===true&&Number.isFinite(rawMissing)&&rawMissing>0;
+    const missing=hasConfirmedShortfall?Math.ceil(rawMissing):null;
+    const message=missing!==null
+      ?`Saldo insuficiente para ${context}. Faltam ${money(missing)} MZN. Você será levado ao depósito.`
+      :`Saldo insuficiente para ${context}. O valor será confirmado pelo servidor na carteira.`;
     showToast(message,'error');
-    const url=`./index.html?deposit_needed=${encodeURIComponent(missing)}&from=ludo#depositPanel`;
+    const url=missing!==null
+      ?`./index.html?deposit_needed=${encodeURIComponent(missing)}&from=ludo#depositPanel`
+      :'./index.html?open=deposit&from=ludo#depositPanel';
     setTimeout(()=>{window.location.href=url;},350);
   }
 
@@ -248,8 +254,12 @@
     const message=String(err?.message||err||'');
     const m=message.match(/Faltam\s+([\d.,]+)\s+MZN/i);
     if(/saldo insuficiente/i.test(message)){
-      const shortfall=m?Number(m[1].replace(/\./g,'').replace(',','.')):Math.max(1,10-Number(state.status?.identity?.balance||0));
-      redirectToDeposit({shortfall,redirect_to_deposit:true},context);
+      const shortfall=m?Number(m[1].replace(/\./g,'').replace(',','.')):null;
+      redirectToDeposit({
+        shortfall,
+        balance_confirmed:Number.isFinite(shortfall)&&shortfall>0,
+        redirect_to_deposit:true
+      },context);
       return true;
     }
     return false;
@@ -655,7 +665,7 @@
     }
     requestAnimationFrame(()=>target.scrollIntoView({behavior:'smooth',block:'start'}));
   }
-  function renderAll(){const authed=Boolean(state.token&&state.status?.identity);window.JLNotifications?.setActive(authed);els.ludoStatusStrip?.classList.toggle('hidden',!authed);els.loggedOut.classList.toggle('hidden',authed);els.lobby.classList.toggle('hidden',!authed||Boolean(state.room));els.notificationCenter?.classList.toggle('hidden',!authed);els.room.classList.toggle('hidden',!state.room);els.boardLobby.classList.toggle('hidden',Boolean(state.room));if(!state.room)renderLobbyBoard();if(authed){const i=state.status.identity;els.identityBadge.textContent=`${i.code} · ${money(i.balance)} MZN`;els.accountButton.textContent=i.name||i.code;els.accountMenuCode.textContent=`${i.name||'Jogador'} · ${i.code}`;els.accountMenuBalance.textContent=`${money(i.balance)} MZN`;els.balanceBadge.textContent=`${money(i.balance)} MZN`;renderLobby();}else{els.identityBadge.textContent='Não autenticado';els.accountButton.textContent='Entrar';els.accountMenu?.classList.add('hidden');els.accountButton.setAttribute('aria-expanded','false');}if(state.room)renderRoom();}
+  function renderAll(){const authed=Boolean(state.token&&state.status?.identity);window.JLNotifications?.setActive(authed);els.ludoStatusStrip?.classList.toggle('hidden',!authed);els.loggedOut.classList.toggle('hidden',authed);els.lobby.classList.toggle('hidden',!authed||Boolean(state.room));els.notificationCenter?.classList.toggle('hidden',!authed);els.room.classList.toggle('hidden',!state.room);els.boardLobby.classList.toggle('hidden',Boolean(state.room));if(!state.room)renderLobbyBoard();if(authed){const i=state.status.identity;const confirmedBalance=Number(i.balance);const hasConfirmedBalance=i.balance_confirmed===true&&Number.isFinite(confirmedBalance);const balanceText=hasConfirmedBalance?`${money(confirmedBalance)} MZN`:'Saldo a confirmar';els.identityBadge.textContent=`${i.code} · ${balanceText}`;els.accountButton.textContent=i.name||i.code;els.accountMenuCode.textContent=`${i.name||'Jogador'} · ${i.code}`;els.accountMenuBalance.textContent=balanceText;els.balanceBadge.textContent=balanceText;renderLobby();}else{els.identityBadge.textContent='Não autenticado';els.accountButton.textContent='Entrar';els.accountMenu?.classList.add('hidden');els.accountButton.setAttribute('aria-expanded','false');}if(state.room)renderRoom();}
   function renderLobby(){
     const s=state.status;if(!s)return;
     if(s.queue){
@@ -758,9 +768,13 @@
         els.stakeAcceptText.textContent=stakeAmount>0?`${money(stakeAmount)} MZN`:'Valor indisponível';
         els.stakeAcceptText.dataset.amount=String(stakeAmount);
       }
-      const balance=Number(state.status?.identity?.balance??0);
+      const identity=state.status?.identity;
+      const confirmedBalance=Number(identity?.balance);
+      const hasConfirmedBalance=identity?.balance_confirmed===true&&Number.isFinite(confirmedBalance);
       els.stakeBalanceText.textContent=stakeAmount>0
-        ?`Este é o valor que você aceita por jogador. Seu saldo: ${money(balance)} MZN · depois da confirmação: ${money(Math.max(0,balance-stakeAmount))} MZN`
+        ?hasConfirmedBalance
+          ?`Este é o valor que você aceita por jogador. Saldo confirmado pelo servidor: ${money(confirmedBalance)} MZN. O saldo só muda na tela depois da confirmação do servidor.`
+          :'Este é o valor que você aceita por jogador. Saldo a confirmar no servidor.'
         :'Não foi possível carregar o valor desta partida. Atualize a sala antes de confirmar.';
       if(els.stakeProposalAmount&&document.activeElement!==els.stakeProposalAmount&&stakeAmount>0){
         els.stakeProposalAmount.value=String(Math.trunc(stakeAmount));
