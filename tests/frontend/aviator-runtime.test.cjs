@@ -5,6 +5,10 @@ const path=require('node:path');
 
 const runtime=require('../../js/aviator/runtime.js');
 const fairness=require('../../js/aviator/fairness.js');
+const engineSource=fs.readFileSync(path.join(__dirname,'../../js/aviator/engine.js'),'utf8');
+const uiSource=fs.readFileSync(path.join(__dirname,'../../js/aviator/ui.js'),'utf8');
+const financialSource=fs.readFileSync(path.join(__dirname,'../../js/aviator/financial.js'),'utf8');
+const historySource=fs.readFileSync(path.join(__dirname,'../../js/aviator/history.js'),'utf8');
 
 test('runtime mantém apenas relógio visual derivado do snapshot autoritativo',()=>{
   assert.equal(typeof runtime.liveMultiplier,'function');
@@ -101,9 +105,9 @@ test('HTML mantém histórico e bilhete ao vivo com ids estáveis',()=>{
 
 test('controlador busca histórico em RPC separado do estado de voo',()=>{
   const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
-  assert.match(js,/jl_aviator_recent_results/);
+  assert.match(historySource,/jl_aviator_recent_results/);
   const publicStateCalls=(js.match(/jl_aviator_public_state/g)||[]).length;
-  const historyCalls=(js.match(/jl_aviator_recent_results/g)||[]).length;
+  const historyCalls=(historySource.match(/jl_aviator_recent_results/g)||[]).length;
   assert.equal(publicStateCalls,1);
   assert.equal(historyCalls,1);
 });
@@ -130,8 +134,8 @@ test('modo offline bloqueia aposta e cash-out até reconectar',()=>{
 test('controlador usa timestamps do servidor para interpolação apenas visual',()=>{
   const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
   assert.match(js,/syncServerClock\(x\)/);
-  assert.match(js,/runtime\.liveMultiplier\(round\.started_at,serverNowMs\(\)\)/);
-  assert.match(js,/runtime\.secondsUntil\(round\.betting_closes_at,serverNowMs\(\)\)/);
+  assert.match(engineSource,/runtime\.liveMultiplier\(round\.started_at,serverNowMs\(\)\)/);
+  assert.match(engineSource,/runtime\.secondsUntil\(round\[field\],serverNowMs\(\)\)/);
   assert.doesNotMatch(js,/p_multiplier\s*:/);
 });
 
@@ -146,7 +150,7 @@ test('resposta de recuperação antiga é descartada se a rodada mudou',()=>{
 
 test('cash-out ambíguo é persistido e reconciliado sem retry automático',()=>{
   const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
-  assert.match(js,/jl_aviator_pending_cashout_v1/);
+  assert.match(financialSource,/jl_aviator_pending_cashout_v1/);
   assert.match(js,/savePendingCashout\(id,cashoutRoundId,requestKey\)/);
   assert.match(js,/reconcilePendingCashout\(\)/);
   assert.match(js,/bet\.status==='CASHED_OUT'/);
@@ -271,7 +275,7 @@ test('auto cash-out e opcional na UI mas executado pelo servidor',()=>{
   assert.match(js,/myAutoCashout=Number\(r\.auto_cashout_multiplier\)\|\|null/);
   assert.match(js,/Cash-out automático/);
   assert.match(js,/auto<1\.01/);
-  assert.equal((js.match(/jl_aviator_cashout'/g)||[]).length,1,
+  assert.equal((financialSource.match(/jl_aviator_cashout'/g)||[]).length,1,
     'auto cash-out nao deve disparar jl_aviator_cashout pelo navegador');
 });
 
@@ -284,10 +288,10 @@ test('confirmação visual usa o valor confirmado pelo servidor antes do voo',()
   assert.match(html,/id="betConfirmationText"/);
   assert.match(html,/role="status"[^>]*aria-live="polite"/);
   assert.match(js,/function moneyCompact\(value\)/);
-  assert.match(js,/Aposta confirmada: '\+moneyCompact\(myStake\)/);
+  assert.match(uiSource,/Aposta confirmada: '\+moneyCompact\(state\.myStake\)/);
   assert.match(js,/myStake=Number\(r\.stake\);/);
   assert.doesNotMatch(js,/myStake=Number\(r\.stake\)\|\|amount/);
-  assert.match(js,/\['OPEN','LOCKED'\]\.includes\(round\?\.status\)/);
+  assert.match(uiSource,/\['OPEN','LOCKED'\]\.includes\(round\?\.status\)/);
 });
 
 
@@ -295,8 +299,8 @@ test('termos da aposta ficam bloqueados visualmente depois da confirmação/LOCK
   const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
   assert.match(js,/function setBetInputsLocked\(locked\)/);
   assert.match(js,/Boolean\(myBet\)\|\|betting\|\|closed/);
-  assert.match(js,/if\(amount\)amount\.disabled=value/);
-  assert.match(js,/if\(auto\)auto\.disabled=value/);
+  assert.match(uiSource,/if\(amount\)amount\.disabled=value/);
+  assert.match(uiSource,/if\(auto\)auto\.disabled=value/);
   assert.match(js,/function renderLocked\(\)[\s\S]*?setBetInputsLocked\(true\)/);
   assert.match(js,/function renderFlying\(\)[\s\S]*?setBetInputsLocked\(true\)/);
 });
@@ -309,7 +313,7 @@ test('reconexão usa snapshot autoritativo e não reinicia a fase visual',()=>{
   assert.match(js,/async function reconnectState\(\)/);
   assert.match(js,/applyReconnectPlayerState\(x\?\.player\)/);
   assert.match(js,/Ligação restabelecida\. Voo atual:/);
-  assert.match(js,/if\(stage\.classList\.contains\(next\)\)return/);
+  assert.match(uiSource,/if\(stage\.classList\.contains\(next\)\)return/);
 
   const onlineBlock=js.match(/window\.addEventListener\('online',[\s\S]*?\n\}\);/)?.[0]||'';
   assert.match(onlineBlock,/await reconnectState\(\)/);
@@ -333,7 +337,7 @@ test('animação local é somente visual e cash-out continua autoritativo no ser
   assert.match(paint,/const m=mul\(\)/);
   assert.doesNotMatch(paint,/JLApi\.rpc|jl_aviator_cashout|jl_aviator_tick/);
 
-  const financial=js.match(/async function requestFinancialCashout\(betId,requestKey\)[\s\S]*?\n\}/)?.[0]||'';
+  const financial=financialSource.match(/async function requestFinancialCashout\(betId,requestKey\)[\s\S]*?\n    \}/)?.[0]||'';
   assert.match(financial,/jl_aviator_cashout/);
   assert.match(financial,/p_bet_id:Number\(betId\)/);
   assert.match(financial,/p_request_key:/);
@@ -365,8 +369,8 @@ test('tela do Aviator mantém voo como foco e secundários recolhidos',()=>{
   assert.match(css,/\.aviator-history-summary/);
   assert.match(css,/@media\(max-width:650px\)[\s\S]*?\.flight-area\{height:360px/);
 
-  assert.match(js,/Auto '\+Number\(myAutoCashout\)\.toFixed\(2\)\+'×'/);
-  assert.match(js,/'Auto desligado'/);
+  assert.match(uiSource,/Auto '\+Number\(state\.myAutoCashout\)\.toFixed\(2\)\+'×'/);
+  assert.match(uiSource,/'Auto desligado'/);
 });
 
 
@@ -376,10 +380,10 @@ test('histórico recente usa linha pequena de multiplicadores separados por pont
   const css=fs.readFileSync(path.join(__dirname,'../../aviator.css'),'utf8');
 
   assert.match(html,/<details id="aviatorHistoryCard" class="aviator-history">/);
-  assert.match(js,/class="aviator-history-value tier-/);
-  assert.match(js,/class="aviator-history-separator"[^>]*>·<\/span>/);
-  assert.match(js,/crash_multiplier\.toFixed\(2\)\+'x'/);
-  assert.doesNotMatch(js,/aviator-history-chip/);
+  assert.match(historySource,/class="aviator-history-value tier-/);
+  assert.match(historySource,/class="aviator-history-separator"[^>]*>·<\/span>/);
+  assert.match(historySource,/crash_multiplier\.toFixed\(2\)\+'x'/);
+  assert.doesNotMatch(historySource,/aviator-history-chip/);
   assert.match(css,/\.aviator-history-value\{[^}]*font-size:\.84rem/);
   assert.match(css,/\.aviator-history-strip\{[^}]*white-space:nowrap/);
 });
@@ -389,11 +393,11 @@ test('multiplicadores baixos medios e altos usam tiers visuais sem animação ex
   const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
   const css=fs.readFileSync(path.join(__dirname,'../../aviator.css'),'utf8');
 
-  assert.match(js,/function multiplierTier\(value\)/);
-  assert.match(js,/if\(!Number\.isFinite\(n\)\|\|n<2\)return 'low'/);
-  assert.match(js,/if\(n<10\)return 'medium'/);
-  assert.match(js,/return 'high'/);
-  assert.match(js,/tier-'\+multiplierTier\(item\.crash_multiplier\)/);
+  assert.match(uiSource,/function multiplierTier\(value\)/);
+  assert.match(uiSource,/if\(!Number\.isFinite\(n\)\|\|n<2\)return 'low'/);
+  assert.match(uiSource,/if\(n<10\)return 'medium'/);
+  assert.match(uiSource,/return 'high'/);
+  assert.match(historySource,/tier-'\+multiplierTier\(item\.crash_multiplier\)/);
   assert.match(js,/applyMultiplierTier\(\$\('#crashMultiplier'\),result\)/);
 
   assert.match(css,/\.multiplier\.tier-low/);
@@ -411,13 +415,13 @@ test('multiplicadores baixos medios e altos usam tiers visuais sem animação ex
 test('mensagens do jogador nunca exibem erro técnico bruto nem quebras \\n',()=>{
   const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
 
-  assert.match(js,/function playerMessage\(error,fallback=/);
-  assert.match(js,/replace\(\/\\\\n\|\\r\|\\n\/g,' '\)/);
+  assert.match(uiSource,/function playerMessage\(error,fallback=/);
+  assert.match(uiSource,/replace\(\/\\\\n\|\\r\|\\n\/g,' '\)/);
   assert.doesNotMatch(js,/message\.textContent=e\.message/);
   assert.doesNotMatch(js,/aviatorMessage'\)\.textContent=e\.message/);
   assert.doesNotMatch(js,/textContent=raw\|\|/);
-  assert.match(js,/Saldo insuficiente\./);
-  assert.match(js,/Apostas fechadas\. Aguarde a próxima rodada\./);
+  assert.match(uiSource,/Saldo insuficiente\./);
+  assert.match(uiSource,/Apostas fechadas\. Aguarde a próxima rodada\./);
   assert.match(js,/Não foi possível confirmar o cash-out\./);
 });
 
