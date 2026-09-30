@@ -208,6 +208,18 @@ Esses cenários têm regressões transacionais em `tests/sql/aviator/`.
 - Migrations: `20260930001648_immutable_player_financial_ledger`, `20260930001729_ledger_initial_balance_posting` e `20260930001919_ledger_restrict_direct_writes`.
 - Regressão permanente: `tests/sql/aviator/aviator_immutable_financial_ledger.sql`.
 
+## Bloqueio de apostas concorrentes
+
+- Existe um mutex financeiro transacional global por jogador: `jl_lock_player_wallet(player_id)`.
+- O lock usa `pg_advisory_xact_lock` com chave derivada do `player_id` e permanece ativo até o fim da transação.
+- O lock é obtido antes da leitura autoritativa do saldo em todos os fluxos que podem consumir dinheiro: Aviator, Número, Dupla, stake do Ludo, reentrada do Ludo e saque.
+- O ajuste administrativo de saldo usa o mesmo mutex para não correr contra apostas do próprio jogador.
+- Depois de adquirir o mutex, cada fluxo mantém também o `FOR UPDATE` da linha de `players`. A segunda requisição do mesmo jogador espera a primeira terminar e só então relê o saldo já atualizado.
+- Resultado esperado para saldo de 100 MZN e duas requisições simultâneas de 100 MZN: apenas uma pode consumir os 100 MZN; a outra, ao prosseguir, encontra saldo insuficiente.
+- O lock é interno: `anon` e `authenticated` não possuem `EXECUTE` direto.
+- Migrations: `20260930050707_serialize_player_wallet_debits` e `20260930050850_serialize_admin_balance_adjustments`.
+- Regressão permanente: `tests/sql/financial/player_wallet_concurrency_guard.sql`.
+
 ## Saldo confirmado pelo servidor
 
 - O frontend nunca debita, credita ou projeta o saldo por conta própria.
