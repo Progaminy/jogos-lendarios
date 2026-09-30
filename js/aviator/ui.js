@@ -267,10 +267,64 @@
       }
     }
 
+    function renderBetResult(result=null){
+      const panel=$('#betResultPanel');
+      const icon=$('#betResultIcon');
+      const label=$('#betResultLabel');
+      const detail=$('#betResultDetail');
+      if(!panel||!icon||!label||!detail)return;
+
+      const status=String(result?.status||'').toUpperCase();
+      const stake=Number(result?.stake);
+      const payout=Number(result?.payout);
+      const multiplier=Number(result?.cashout_multiplier);
+
+      panel.classList.remove('is-won','is-lost','is-refunded');
+
+      if(!['CASHED_OUT','LOST','REFUNDED'].includes(status)){
+        panel.classList.add('hidden');
+        panel.removeAttribute('data-result');
+        return;
+      }
+
+      panel.classList.remove('hidden');
+
+      if(status==='CASHED_OUT'){
+        panel.classList.add('is-won');
+        panel.dataset.result='won';
+        icon.textContent='✓';
+        label.textContent='GANHA';
+        detail.textContent=Number.isFinite(payout)
+          ?'Recebido '+money(payout)+(Number.isFinite(multiplier)?' · '+multiplier.toFixed(2)+'×':'')
+          :'Cash-out confirmado';
+        return;
+      }
+
+      if(status==='LOST'){
+        panel.classList.add('is-lost');
+        panel.dataset.result='lost';
+        icon.textContent='✕';
+        label.textContent='PERDIDA';
+        detail.textContent=Number.isFinite(stake)&&stake>0
+          ?'Valor perdido '+money(stake)
+          :'Rodada encerrada sem cash-out';
+        return;
+      }
+
+      panel.classList.add('is-refunded');
+      panel.dataset.result='refunded';
+      icon.textContent='↩';
+      label.textContent='REEMBOLSADA';
+      detail.textContent=Number.isFinite(stake)&&stake>0
+        ?'Devolvido '+money(stake)
+        :'Valor devolvido ao saldo';
+    }
+
+
     return Object.freeze({
       money,moneyCompact,playerMessage,show,setStagePhase,multiplierTier,
       applyMultiplierTier,renderMultiplier,resetCashout,createCashoutGestureGuard,renderCashoutAction,renderRoundNumber,
-      setBetInputsLocked,renderBetAction,renderTicket,renderBetConfirmation
+      setBetInputsLocked,renderBetAction,renderTicket,renderBetConfirmation,renderBetResult
     });
   }
 
