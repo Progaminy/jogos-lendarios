@@ -998,11 +998,10 @@ $('#aviatorBetForm').addEventListener('submit',async e=>{
       throw new Error('Cash-out automático deve ser 1,01x ou maior, com até 2 casas decimais.');
     }
 
-    const r=await JLApi.rpc('jl_aviator_place_bet',{
-      p_token:playerToken(),
-      p_amount:amount,
-      p_request_key:betKey(),
-      p_auto_cashout_multiplier:auto
+    const r=await financial.placeBet({
+      amount,
+      requestKey:betKey(),
+      autoCashoutMultiplier:auto
     });
 
     myBet=r.bet_id;
