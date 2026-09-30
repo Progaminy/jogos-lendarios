@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0a0d14">
   <title>Aviator Lendário — Jogos Lendários</title>
   <link rel="stylesheet" href="./styles.css?v=20260929">
-  <link rel="stylesheet" href="./aviator.css?v=20261001-9">
+  <link rel="stylesheet" href="./aviator.css?v=20261001-10">
 </head>
 <body>
   <header class="topbar">
@@ -130,9 +130,18 @@
       <p id="aviatorMessage" class="form-message" aria-live="polite"></p>
     </section>
 
+    <details id="aviatorMyHistoryCard" class="aviator-history aviator-my-history">
+      <summary class="aviator-history-summary">
+        <span>Minhas apostas</span>
+        <small id="myHistoryStatus">Abrir</small>
+      </summary>
+      <div id="aviatorMyHistory" class="aviator-my-history-list" aria-live="polite"></div>
+      <button id="myHistoryMore" class="button secondary aviator-my-history-more" type="button" hidden>Carregar mais</button>
+    </details>
+
     <details id="aviatorHistoryCard" class="aviator-history">
       <summary class="aviator-history-summary">
-        <span>Resultados recentes</span>
+        <span>Histórico global</span>
         <small id="historyStatus">A carregar…</small>
       </summary>
       <div id="aviatorHistory" class="aviator-history-strip" aria-live="polite"></div>
@@ -149,9 +158,10 @@
   <script src="./js/aviator/ui.js?v=20261001-6"></script>
   <script src="./js/aviator/financial.js?v=20261001-1"></script>
   <script src="./js/aviator/history.js?v=20261001-1"></script>
+  <script src="./js/aviator/personal-history.js?v=20261001-1"></script>
   <script src="./js/aviator/sound.js?v=20261001-1"></script>
   <script src="./js/aviator/haptics.js?v=20261001-1"></script>
   <script src="./js/realtime/aviator.js?v=20260930-1"></script>
-  <script src="./aviator.js?v=20261001-8" defer></script>
+  <script src="./aviator.js?v=20261001-9" defer></script>
 </body>
 </html>
