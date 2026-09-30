@@ -158,6 +158,7 @@ function mul(){return engine.multiplier();}
 function secondsToClose(){return engine.secondsToClose();}
 
 function secondsToTakeoff(){return engine.secondsToTakeoff();}
+function secondsToNextRound(){return engine.secondsToNextRound();}
 
 function betKey(){return financial.betKey();}
 
@@ -191,46 +192,70 @@ function stopOpenUiTick(){
 
 function setBetInputsLocked(locked){return ui.setBetInputsLocked(locked);}
 
-function updateOpenClock(){
+function updateRoundClock(){
   if(!connectionOnline){
     stopOpenUiTick();
     return;
   }
 
-  if(round?.status!=='OPEN'){
-    stopOpenUiTick();
+  if(round?.status==='OPEN'){
+    const seconds=secondsToClose();
+    const takeoffSeconds=secondsToTakeoff();
+    const display=seconds===null?'—':String(seconds)+'s';
+    const takeoffDisplay=takeoffSeconds===null?'—':String(takeoffSeconds)+'s';
+    const closed=round?.betting_open===false||seconds===0;
+
+    $('#roundState').textContent=closed?'APOSTAS FECHADAS':'APOSTAS ABERTAS';
+    $('#clockLabel').textContent=closed?'DESCOLAGEM EM':'APOSTAS FECHAM EM';
+    $('#roundCountdown').textContent=closed?takeoffDisplay:display;
+    $('#preflightLabel').textContent='DESCOLAGEM EM';
+    $('#preflightCountdown').textContent=takeoffDisplay;
+    $('#preflightHint').textContent='Contagem em segundos';
+
+    const inputsLocked=
+      !enabled||!connectionOnline||Boolean(myBet)||betting||closed;
+    setBetInputsLocked(inputsLocked);
+
+    const betBtn=$('#betBtn');
+    if(betBtn){
+      betBtn.disabled=inputsLocked;
+      betBtn.textContent=myBet
+        ?'Aposta confirmada'
+        :closed
+          ?'Apostas fechadas'
+          :'Apostar';
+    }
     return;
   }
 
-  const seconds=secondsToClose();
-  const takeoffSeconds=secondsToTakeoff();
-  const display=seconds===null?'—':String(seconds);
-  const takeoffDisplay=takeoffSeconds===null?'—':String(takeoffSeconds);
-  const closed=round?.betting_open===false||seconds===0;
-
-  $('#roundState').textContent=closed?'APOSTAS FECHADAS':'APOSTAS ABERTAS';
-  $('#clockLabel').textContent=closed?'DESCOLAGEM':'FECHA EM';
-  $('#roundCountdown').textContent=closed?'AGUARDE':seconds===null?'—':display+'s';
-  $('#preflightCountdown').textContent=takeoffDisplay;
-
-  const inputsLocked=
-    !enabled||!connectionOnline||Boolean(myBet)||betting||closed;
-  setBetInputsLocked(inputsLocked);
-
-  const betBtn=$('#betBtn');
-  if(betBtn){
-    betBtn.disabled=inputsLocked;
-    betBtn.textContent=myBet
-      ?'Aposta confirmada'
-      :closed
-        ?'Apostas fechadas'
-        :'Apostar';
+  if(round?.status==='LOCKED'){
+    const seconds=secondsToTakeoff();
+    const display=seconds===null?'—':String(seconds)+'s';
+    $('#roundState').textContent='APOSTAS FECHADAS';
+    $('#clockLabel').textContent='DESCOLAGEM EM';
+    $('#roundCountdown').textContent=display;
+    $('#preflightLabel').textContent='DESCOLAGEM EM';
+    $('#preflightCountdown').textContent=display;
+    $('#preflightHint').textContent='Contagem em segundos';
+    return;
   }
+
+  if(round?.status==='CRASHED'||round?.status==='SETTLED'){
+    const seconds=secondsToNextRound();
+    const display=seconds===null?'—':String(seconds)+'s';
+    $('#clockLabel').textContent='NOVA RODADA EM';
+    $('#roundCountdown').textContent=display;
+    const next=$('#nextRoundSeconds');
+    if(next)next.textContent=display;
+    return;
+  }
+
+  stopOpenUiTick();
 }
 
 function startOpenUiTick(){
   if(openUiTimer)return;
-  openUiTimer=setInterval(updateOpenClock,visualPerformance.openClockIntervalMs);
+  openUiTimer=setInterval(updateRoundClock,visualPerformance.openClockIntervalMs);
 }
 
 function renderTicket(multiplierValue=null){return ui.renderTicket(multiplierValue);}
@@ -551,7 +576,7 @@ function renderOpen(){
   stopFlight();
   setStagePhase('open');
   renderRoundNumber();
-  updateOpenClock();
+  updateRoundClock();
   startOpenUiTick();
 
   show('#preflight',true);
@@ -573,13 +598,8 @@ function renderLocked(){
   setStagePhase('locked');
   renderRoundNumber();
 
-  const seconds=secondsToTakeoff();
-  const display=seconds===null?'—':String(seconds);
-
-  $('#roundState').textContent='APOSTAS FECHADAS';
-  $('#clockLabel').textContent='DESCOLAGEM EM';
-  $('#roundCountdown').textContent=seconds===null?'—':display+'s';
-  $('#preflightCountdown').textContent=display;
+  updateRoundClock();
+  startOpenUiTick();
 
   show('#preflight',true);
   show('#multiplierWrap',false);
@@ -643,8 +663,8 @@ function renderFinished(){
   const resultText=(Number.isFinite(result)&&result>=1?result:1).toFixed(2)+'×';
 
   $('#roundState').textContent='FIM DA RODADA';
-  $('#clockLabel').textContent='PRÓXIMA RODADA';
-  $('#roundCountdown').textContent='A AGUARDAR';
+  updateRoundClock();
+  startOpenUiTick();
   $('#crashMultiplier').textContent=resultText;
   applyMultiplierTier($('#crashMultiplier'),result);
 
@@ -680,7 +700,9 @@ function renderWaiting(){
   $('#roundState').textContent='AGUARDANDO';
   $('#clockLabel').textContent='PRÓXIMA RODADA';
   $('#roundCountdown').textContent='—';
+  $('#preflightLabel').textContent='PRÓXIMA RODADA';
   $('#preflightCountdown').textContent='—';
+  $('#preflightHint').textContent='A preparar';
 
   show('#preflight',true);
   show('#multiplierWrap',false);
