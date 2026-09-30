@@ -22,18 +22,20 @@ test('cada aposta mostra os seis detalhes pedidos',()=>{
   assert.match(personal,/row\?\.created_at/);
 });
 
-test('valores desconhecidos aparecem como traço em vez de valor inventado',()=>{
-  assert.match(personal,/return Number\.isFinite\(n\)\?formatter\(n\):'—'/);
-  assert.match(personal,/return '—';/);
+test('valores desconhecidos aparecem como traço em vez de zero ou data inventada',()=>{
+  assert.match(personal,/if\(value===null\|\|value===undefined\|\|value===''\)return null/);
+  assert.match(personal,/return n===null\?'—':formatter\(n\)/);
+  assert.match(personal,/if\(value===null\|\|value===undefined\|\|value===''\)return ''/);
+  assert.doesNotMatch(personal,/new Date\(value\)[\s\S]{0,80}1970/);
 });
 
 test('pagamento diferencia ganho, perda, reembolso e aposta ativa',()=>{
   assert.match(personal,/status==='CASHED_OUT'/);
-  assert.match(personal,/return Number\.isFinite\(payout\)\?money\(payout\):'—'/);
+  assert.match(personal,/return payout===null\?'—':money\(payout\)/);
   assert.match(personal,/status==='LOST'/);
   assert.match(personal,/return money\(0\)/);
   assert.match(personal,/status==='REFUNDED'/);
-  assert.match(personal,/money\(stake\)\+' \(reembolso\)'/);
+  assert.match(personal,/stake===null\?'Reembolsada':money\(stake\)\+' \(reembolso\)'/);
 });
 
 test('horário usa created_at retornado pelo servidor',()=>{
