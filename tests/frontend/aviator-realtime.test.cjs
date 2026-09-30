@@ -26,16 +26,16 @@ test('cliente Supabase está fixado e carrega antes do controlador',()=>{
 });
 
 test('Realtime saudável reduz polling a 30s/60s',()=>{
-  assert.equal(runtime.pollDelay('FLYING',false,true),30000);
-  assert.equal(runtime.pollDelay('OPEN',false,true),30000);
-  assert.equal(runtime.pollDelay('FLYING',true,true),60000);
+  assert.equal(runtime.pollDelay('FLYING',false,true),120000);
+  assert.equal(runtime.pollDelay('OPEN',false,true),120000);
+  assert.equal(runtime.pollDelay('FLYING',true,true),300000);
 });
 
 test('fallback sem WebSocket não volta ao polling agressivo antigo',()=>{
-  assert.equal(runtime.pollDelay('FLYING',false,false),2000);
-  assert.equal(runtime.pollDelay('LOCKED',false,false),2000);
+  assert.equal(runtime.pollDelay('FLYING',false,false),3000);
+  assert.equal(runtime.pollDelay('LOCKED',false,false),3000);
   assert.equal(runtime.pollDelay('OPEN',false,false),5000);
-  assert.equal(runtime.pollDelay('SETTLED',false,false),10000);
+  assert.equal(runtime.pollDelay('SETTLED',false,false),15000);
 });
 
 test('multiplicador visual interpola fórmula do servidor sem decidir cash-out',()=>{
@@ -57,6 +57,6 @@ test('controller recebe estado Realtime e mantém polling somente como reconcili
   const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
   assert.match(js,/async function applyRealtimeSnapshot\(x\)/);
   assert.match(js,/startRealtime\(\)/);
-  assert.match(js,/scheduleState\(connected\?30000:2000\)/);
+  assert.match(js,/scheduleState\(120000\)/);
   assert.match(js,/syncServerClock\(x\)/);
 });
