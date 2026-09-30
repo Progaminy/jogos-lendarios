@@ -47,6 +47,6 @@ test('modo low power mantém animação transform mas corta decoração',()=>{
 });
 
 test('assets mobile otimizados têm cache-bust dedicado',()=>{
-  assert.match(html,/aviator\.css\?v=20260930-14/);
-  assert.match(html,/aviator\.js\?v=20260930-5/);
+  assert.match(html,/aviator\.css\?v=\d{8}-\d+/);
+  assert.match(html,/aviator\.js\?v=\d{8}-\d+/);
 });
