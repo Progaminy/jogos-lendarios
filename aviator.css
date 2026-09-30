@@ -68,7 +68,10 @@ body{background:#070a10}
 .aviator-history-empty{font-size:.76rem;color:#7f8aa0;padding:2px 0}
 
 .aviator-controls{display:grid;grid-template-columns:minmax(0,1fr) minmax(180px,.42fr);gap:10px;padding-top:2px}
-.aviator-controls form{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.72fr) minmax(150px,.55fr);gap:8px;align-items:end}
+.aviator-controls form{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.72fr) minmax(180px,.6fr);gap:8px;align-items:end}
+.aviator-bet-action{display:grid;grid-template-rows:58px 16px;gap:4px;align-self:end;min-width:0}
+.aviator-bet-action #betBtn{width:100%;height:58px;min-height:58px;font-size:1.08rem;font-weight:950;line-height:1;white-space:nowrap}
+.aviator-bet-action-status{display:block;min-height:16px;text-align:center;font-size:.62rem;font-weight:800;line-height:16px;color:#7f8ba0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .aviator-controls .field>span{font-size:.68rem;color:#8b97aa}
 .aviator-controls .form-message{grid-column:1/-1;min-height:1em;margin:0 2px;font-size:.78rem}
 .aviator-controls .button{min-height:48px}
@@ -125,7 +128,9 @@ body{background:#070a10}
   #cashoutBtn:not(:disabled){box-shadow:0 0 0 1px rgba(78,213,138,.24)}
   .aviator-controls{grid-template-columns:1fr;gap:8px}
   .aviator-controls form{grid-template-columns:1fr 1fr}
-  .aviator-controls form .button{grid-column:1/-1}
+  .aviator-bet-action{grid-column:1/-1;grid-template-rows:64px 17px;gap:4px}
+  .aviator-bet-action #betBtn{height:64px;min-height:64px;font-size:1.2rem}
+  .aviator-bet-action-status{min-height:17px;line-height:17px;font-size:.66rem}
   #cashoutBtn{min-height:54px;font-size:1.05rem}
   .aviator-controls .form-message{grid-column:auto}
   .aviator-bet-confirmation{grid-column:auto;display:grid;justify-content:stretch;padding:9px 11px}
