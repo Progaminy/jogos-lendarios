@@ -127,11 +127,14 @@ function setConnectionState(online){
 
   renderBetAction(true,'Sem ligação');
 
-  const cashout=$('#cashoutBtn');
-  if(cashout){
-    cashout.disabled=true;
-    cashout.textContent=myBet?'Cash-out indisponível':'Cash-out';
-  }
+  renderCashoutAction({
+    active:Boolean(myBet)&&round?.status==='FLYING',
+    disabled:true,
+    pending:false,
+    multiplier:mul(),
+    stake:myStake,
+    status:myBet?'Sem ligação — cash-out indisponível':'Disponível durante o voo'
+  });
 
   if(round?.status==='FLYING'){
     $('#roundState').textContent='SEM LIGAÇÃO';
@@ -179,6 +182,7 @@ function applyMultiplierTier(el,value){return ui.applyMultiplierTier(el,value);}
 function renderMultiplier(value){return ui.renderMultiplier(value);}
 
 function resetCashout(){return ui.resetCashout();}
+function renderCashoutAction(options){return ui.renderCashoutAction(options);}
 
 function renderRoundNumber(){return ui.renderRoundNumber();}
 
@@ -279,13 +283,13 @@ function paintFlight(timestamp=performance.now()){
   lastFlightHudAt=timestamp;
   renderTicket(m);
 
-  const cashout=$('#cashoutBtn');
-  if(cashout){
-    const text=myBet?'Cash-out · '+m.toFixed(2)+'×':'Cash-out';
-    if(cashout.textContent!==text)cashout.textContent=text;
-    const disabled=!connectionOnline||!myBet||cashingOut;
-    if(cashout.disabled!==disabled)cashout.disabled=disabled;
-  }
+  renderCashoutAction({
+    active:Boolean(myBet),
+    disabled:!connectionOnline||!myBet||cashingOut,
+    pending:cashingOut,
+    multiplier:m,
+    stake:myStake
+  });
 }
 
 function flightPaintLoop(timestamp){
@@ -635,10 +639,13 @@ function renderFlying(){
 
   renderBetAction(true,'Apostas fechadas');
 
-  const cashout=$('#cashoutBtn');
-  if(cashout){
-    cashout.disabled=!connectionOnline||!myBet||cashingOut;
-  }
+  renderCashoutAction({
+    active:Boolean(myBet),
+    disabled:!connectionOnline||!myBet||cashingOut,
+    pending:cashingOut,
+    multiplier:mul(),
+    stake:myStake
+  });
 
   renderTicket(mul());
   renderBetConfirmation();
@@ -1046,11 +1053,14 @@ $('#cashoutBtn').addEventListener('click',async()=>{
   const cashoutRoundId=Number(round.id);
   const requestKey=cashoutRequestKey(id);
   savePendingCashout(id,cashoutRoundId,requestKey);
-  const button=$('#cashoutBtn');
-  if(button){
-    button.disabled=true;
-    button.textContent='Confirmando cash-out…';
-  }
+  renderCashoutAction({
+    active:true,
+    disabled:true,
+    pending:true,
+    multiplier:mul(),
+    stake:myStake,
+    status:'A confirmar no servidor'
+  });
 
   try{
     const r=await requestFinancialCashout(id,requestKey);
