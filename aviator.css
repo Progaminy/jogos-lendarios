@@ -67,14 +67,14 @@ body{background:#070a10}
 .aviator-history-separator{flex:0 0 auto;font-size:.8rem;line-height:1;color:#596579}
 .aviator-history-empty{font-size:.76rem;color:#7f8aa0;padding:2px 0}
 .aviator-my-history-list{display:grid;gap:7px;padding:9px 10px 8px}
-.aviator-my-history-row{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:9px;align-items:center;padding:9px 10px;border:1px solid rgba(255,255,255,.06);border-radius:11px;background:rgba(255,255,255,.02)}
-.aviator-my-history-icon{display:grid;place-items:center;width:30px;height:30px;border:1px solid currentColor;border-radius:50%;font-size:.9rem;font-weight:950}
-.aviator-my-history-main{display:grid;gap:2px;min-width:0}
-.aviator-my-history-title{display:flex;align-items:center;gap:7px;min-width:0}
-.aviator-my-history-title strong{font-size:.72rem;font-weight:950;letter-spacing:.04em}
-.aviator-my-history-title span{font-size:.62rem;color:#758196;white-space:nowrap}
-.aviator-my-history-detail{font-size:.7rem;font-weight:750;color:#a8b2c2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
-.aviator-my-history-row time{font-size:.58rem;color:#69758a;white-space:nowrap}
+.aviator-my-history-row{display:grid;gap:9px;padding:10px;border:1px solid rgba(255,255,255,.06);border-radius:11px;background:rgba(255,255,255,.02)}
+.aviator-my-history-head{display:flex;align-items:center;gap:8px;min-width:0}
+.aviator-my-history-head strong{font-size:.76rem;font-weight:950;letter-spacing:.04em}
+.aviator-my-history-icon{display:grid;place-items:center;width:30px;height:30px;border:1px solid currentColor;border-radius:50%;font-size:.9rem;font-weight:950;flex:0 0 auto}
+.aviator-my-history-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:0}
+.aviator-my-history-field{display:grid;gap:2px;min-width:0;padding:7px 8px;border:1px solid rgba(255,255,255,.045);border-radius:9px;background:rgba(0,0,0,.08)}
+.aviator-my-history-field dt{margin:0;font-size:.55rem;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:#718096}
+.aviator-my-history-field dd{margin:0;font-size:.72rem;font-weight:850;color:#d5dce7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
 .aviator-my-history-row.is-won{border-style:solid}
 .aviator-my-history-row.is-lost{border-style:double}
 .aviator-my-history-row.is-refunded{border-style:dashed}
