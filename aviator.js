@@ -183,6 +183,7 @@ function renderMultiplier(value){return ui.renderMultiplier(value);}
 
 function resetCashout(){return ui.resetCashout();}
 function renderCashoutAction(options){return ui.renderCashoutAction(options);}
+const cashoutGestureGuard=ui.createCashoutGestureGuard($('#cashoutBtn'));
 
 function renderRoundNumber(){return ui.renderRoundNumber();}
 
@@ -1041,7 +1042,9 @@ $('#aviatorBetForm').addEventListener('submit',async e=>{
   }
 });
 
-$('#cashoutBtn').addEventListener('click',async()=>{
+$('#cashoutBtn').addEventListener('click',async event=>{
+  event.preventDefault();
+  if(!cashoutGestureGuard.shouldAcceptClick(event))return;
   if(!connectionOnline){
     $('#aviatorMessage').textContent='Sem ligação. Cash-out indisponível até reconectar.';
     return;
