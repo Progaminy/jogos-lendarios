@@ -6,7 +6,7 @@ const fs=require('node:fs');
 
 test('admin usa botão dedicado Fechar Aviator e não toggle genérico',()=>{
   const html=fs.readFileSync('admin.html','utf8');
-  const js=fs.readFileSync('admin.js','utf8');
+  const js=fs.readFileSync('js/aviator/admin.js','utf8');
 
   assert.match(
     html,
