@@ -208,6 +208,20 @@ Esses cenários têm regressões transacionais em `tests/sql/aviator/`.
 - Migrations: `20260930001648_immutable_player_financial_ledger`, `20260930001729_ledger_initial_balance_posting` e `20260930001919_ledger_restrict_direct_writes`.
 - Regressão permanente: `tests/sql/aviator/aviator_immutable_financial_ledger.sql`.
 
+## Realtime do estado da rodada
+
+- O estado público do Aviator é distribuído por Supabase Realtime Broadcast no tópico público `aviator:round`, evento `state`.
+- O banco não transmite a linha interna de `jl_aviator_rounds`. O trigger chama `jl_aviator_public_state()` e envia apenas o payload público já filtrado; saldo da banca, reserva, limites financeiros internos, razões administrativas e outros campos privados não entram no WebSocket.
+- `jl_aviator_round_realtime_state` publica em mudanças relevantes de fase/tempo/prova da rodada. `jl_aviator_settings_realtime_state` publica mudanças de manutenção/abertura.
+- O frontend usa `@supabase/supabase-js@2.117.2` fixado e `js/realtime/aviator.js` para assinar Broadcast. Não usa `postgres_changes`.
+- Com WebSocket saudável, o polling HTTP cai para 30 s em primeiro plano e 60 s em segundo plano, somente como reconciliação de segurança. Sem WebSocket, o fallback é 2 s durante LOCKED/FLYING, 5 s em OPEN e 10 s nos demais estados — nunca mais 500 ms.
+- O multiplicador visual é interpolado localmente com a mesma fórmula matemática do servidor (`1.06^segundos`) usando `started_at` e offset de relógio derivado de `server_time`. Isso reduz tráfego sem transferir autoridade financeira ao navegador.
+- Cash-out continua a enviar apenas `bet_id` + `request_key`; o multiplicador financeiro é calculado exclusivamente no servidor no instante do cash-out.
+- Auto cash-out continua executado pelo servidor; o navegador faz no máximo uma reconciliação privada quando o limiar visual é alcançado.
+- A primeira conexão WebSocket cria/renova as partições diárias internas de `realtime.messages`; o projeto ainda não tinha partições no momento da migração porque não havia cliente Realtime conectado.
+- Migration: `20260930094256_aviator_realtime_round_broadcast`.
+- Regressões: `tests/sql/aviator/aviator_realtime_round_broadcast.sql` e `tests/frontend/aviator-realtime.test.cjs`.
+
 ## Proteção anti-bot no cash-out
 
 - O cash-out manual possui proteção específica além do rate limiting geral.
