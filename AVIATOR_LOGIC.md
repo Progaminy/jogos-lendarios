@@ -208,6 +208,17 @@ Esses cenários têm regressões transacionais em `tests/sql/aviator/`.
 - Migrations: `20260930001648_immutable_player_financial_ledger`, `20260930001729_ledger_initial_balance_posting` e `20260930001919_ledger_restrict_direct_writes`.
 - Regressão permanente: `tests/sql/aviator/aviator_immutable_financial_ledger.sql`.
 
+## Cash-out de um único clique
+
+- O cash-out continua sendo executado com um único toque/clique válido; não existe modal, segundo clique, hold-to-confirm ou confirmação “tem certeza?”.
+- O botão usa um guard de gesto: `pointerdown` registra o toque e um movimento superior a 14 px antes do clique é tratado como arrasto/scroll e não dispara cash-out.
+- Cliques por teclado/tecnologias assistivas (`event.detail === 0`) continuam aceitos diretamente.
+- O primeiro clique válido define `cashingOut=true` antes do RPC, desativa imediatamente o botão e bloqueia cliques repetidos enquanto a operação está pendente.
+- `touch-action: manipulation` reduz gestos ambíguos/atrasos de toque sem introduzir atraso artificial.
+- Não há debounce temporal antes do cash-out: um toque válido chama o servidor imediatamente.
+- A idempotência e proteção anti-replay do servidor continuam sendo a segunda camada contra duplicação.
+- Regressão permanente: `tests/frontend/aviator-single-click-cashout.test.cjs`.
+
 ## Retorno em tempo real
 
 - Durante `FLYING` com aposta ativa, a linha do cash-out mostra explicitamente `aposta × multiplicador = retorno estimado`.
