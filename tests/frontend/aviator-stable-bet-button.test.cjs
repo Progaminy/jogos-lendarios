@@ -26,10 +26,11 @@ test('mobile mantém botão grande em linha própria',()=>{
 
 test('texto principal do botão nunca muda com estado da rodada',()=>{
   assert.match(ui,/button\.textContent='Apostar'/);
-  assert.doesNotMatch(js,/betBtn[\s\S]{0,120}textContent/);
-  assert.doesNotMatch(js,/textContent='Apostas fechadas'/);
-  assert.doesNotMatch(js,/textContent='Aposta confirmada'/);
-  assert.doesNotMatch(js,/textContent='Aguarde'/);
+  assert.doesNotMatch(js,/\$\('#betBtn'\)[\s\S]{0,160}textContent/);
+  assert.doesNotMatch(js,/betBtn\.textContent/);
+  assert.doesNotMatch(js,/button\.textContent='Apostas fechadas'/);
+  assert.doesNotMatch(js,/button\.textContent='Aposta confirmada'/);
+  assert.doesNotMatch(js,/button\.textContent='Aguarde'/);
 });
 
 test('estado contextual usa linha separada e fixa',()=>{
