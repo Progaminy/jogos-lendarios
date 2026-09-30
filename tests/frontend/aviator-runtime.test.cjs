@@ -40,12 +40,12 @@ test('reconciliação encontra uma aposta específica pelo bet_id',()=>{
 });
 
 test('Realtime reduz polling a fallback de baixa frequência',()=>{
-  assert.equal(runtime.pollDelay('FLYING',false,true),30000);
-  assert.equal(runtime.pollDelay('OPEN',false,true),30000);
-  assert.equal(runtime.pollDelay('FLYING',true,true),60000);
-  assert.equal(runtime.pollDelay('FLYING',false,false),2000);
+  assert.equal(runtime.pollDelay('FLYING',false,true),120000);
+  assert.equal(runtime.pollDelay('OPEN',false,true),120000);
+  assert.equal(runtime.pollDelay('FLYING',true,true),300000);
+  assert.equal(runtime.pollDelay('FLYING',false,false),3000);
   assert.equal(runtime.pollDelay('OPEN',false,false),5000);
-  assert.equal(runtime.pollDelay('SETTLED',false,false),10000);
+  assert.equal(runtime.pollDelay('SETTLED',false,false),15000);
 });
 
 test('fases públicas mapeiam para estados visuais estáveis',()=>{
@@ -82,7 +82,7 @@ test('controlador usa Broadcast como caminho principal e polling apenas como fal
   assert.match(realtime,/\.on\('broadcast',\{event:'state'\}/);
   assert.match(js,/applyRealtimeSnapshot/);
   assert.match(js,/realtimeConnected/);
-  assert.match(js,/scheduleState\(connected\?30000:2000\)/);
+  assert.match(js,/scheduleState\(120000\)/);
 });
 
 test('HTML mantém histórico e bilhete ao vivo com ids estáveis',()=>{
@@ -257,7 +257,7 @@ test('Aviator mostra LOCKED separado do voo e bloqueia nova aposta',()=>{
   assert.match(js,/APOSTAS FECHADAS/);
   assert.match(js,/DESCOLAGEM EM/);
   assert.match(js,/betBtn\.disabled=true/);
-  assert.equal(runtime.pollDelay('LOCKED',false,false),2000);
+  assert.equal(runtime.pollDelay('LOCKED',false,false),3000);
   assert.equal(runtime.phase('LOCKED'),'locked');
 });
 
