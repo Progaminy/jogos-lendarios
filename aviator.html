@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0a0d14">
   <title>Aviator Lendário — Jogos Lendários</title>
   <link rel="stylesheet" href="./styles.css?v=20260929">
-  <link rel="stylesheet" href="./aviator.css?v=20260930-14">
+  <link rel="stylesheet" href="./aviator.css?v=20261001-1">
 </head>
 <body>
   <header class="topbar">
@@ -29,9 +29,12 @@
           <strong id="roundNumber">—</strong>
         </div>
         <div id="roundState" class="aviator-state">A carregar…</div>
-        <div class="aviator-clock">
-          <span id="clockLabel">AGUARDANDO</span>
-          <strong id="roundCountdown">—</strong>
+        <div class="aviator-head-tools">
+          <button id="aviatorSoundToggle" class="aviator-sound-toggle" type="button" aria-pressed="false" aria-label="Ativar som do Aviator" title="Ativar som">🔇 Som</button>
+          <div class="aviator-clock">
+            <span id="clockLabel">AGUARDANDO</span>
+            <strong id="roundCountdown">—</strong>
+          </div>
         </div>
       </div>
 
@@ -126,7 +129,8 @@
   <script src="./js/aviator/ui.js?v=20261001-1"></script>
   <script src="./js/aviator/financial.js?v=20261001-1"></script>
   <script src="./js/aviator/history.js?v=20261001-1"></script>
+  <script src="./js/aviator/sound.js?v=20261001-1"></script>
   <script src="./js/realtime/aviator.js?v=20260930-1"></script>
-  <script src="./aviator.js?v=20261001-1" defer></script>
+  <script src="./aviator.js?v=20261001-2" defer></script>
 </body>
 </html>
