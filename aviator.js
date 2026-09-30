@@ -338,7 +338,7 @@ function updateOpenClock(){
   const takeoffSeconds=secondsToTakeoff();
   const display=seconds===null?'—':String(seconds);
   const takeoffDisplay=takeoffSeconds===null?'—':String(takeoffSeconds);
-  const closed=seconds===0;
+  const closed=round?.betting_open===false||seconds===0;
 
   $('#roundState').textContent=closed?'APOSTAS FECHADAS':'APOSTAS ABERTAS';
   $('#clockLabel').textContent=closed?'DESCOLAGEM':'FECHA EM';
@@ -1211,7 +1211,7 @@ $('#aviatorBetForm').addEventListener('submit',async e=>{
     if(!connectionOnline)throw new Error('Sem ligação. Aguarde a reconexão.');
     if(!playerToken())throw new Error('Entre na sua conta primeiro.');
     if(!enabled)throw new Error('Aviator brevemente.');
-    if(!round||round.status!=='OPEN')throw new Error('Apostas fechadas.');
+    if(!round||round.status!=='OPEN'||round.betting_open===false)throw new Error('Apostas fechadas.');
 
     const amount=Number($('#aviatorAmount').value);
     if(!Number.isFinite(amount)||amount<0.5||amount>500){
