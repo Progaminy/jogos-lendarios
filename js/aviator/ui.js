@@ -98,6 +98,47 @@
       });
     }
 
+    function createCashoutGestureGuard(button,{maxTravelPx=14}={}){
+      let pointer=null;
+
+      const clear=()=>{pointer=null;};
+
+      button?.addEventListener('pointerdown',event=>{
+        if(button.disabled){
+          clear();
+          return;
+        }
+        if(event.pointerType==='mouse'&&event.button!==0){
+          clear();
+          return;
+        }
+        pointer={
+          id:event.pointerId,
+          x:Number(event.clientX)||0,
+          y:Number(event.clientY)||0,
+          moved:false
+        };
+      },{passive:true});
+
+      button?.addEventListener('pointermove',event=>{
+        if(!pointer||pointer.id!==event.pointerId||pointer.moved)return;
+        const dx=(Number(event.clientX)||0)-pointer.x;
+        const dy=(Number(event.clientY)||0)-pointer.y;
+        if(Math.hypot(dx,dy)>maxTravelPx)pointer.moved=true;
+      },{passive:true});
+
+      button?.addEventListener('pointercancel',clear,{passive:true});
+
+      function shouldAcceptClick(event){
+        if(event?.detail===0)return true;
+        const accepted=Boolean(pointer)&&!pointer.moved;
+        clear();
+        return accepted;
+      }
+
+      return Object.freeze({shouldAcceptClick});
+    }
+
     function renderCashoutAction({
       active=false,
       disabled=true,
@@ -227,7 +268,7 @@
 
     return Object.freeze({
       money,moneyCompact,playerMessage,show,setStagePhase,multiplierTier,
-      applyMultiplierTier,renderMultiplier,resetCashout,renderCashoutAction,renderRoundNumber,
+      applyMultiplierTier,renderMultiplier,resetCashout,createCashoutGestureGuard,renderCashoutAction,renderRoundNumber,
       setBetInputsLocked,renderBetAction,renderTicket,renderBetConfirmation
     });
   }
