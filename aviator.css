@@ -26,7 +26,8 @@ body{background:#070a10}
 .multiplier-wrap{position:relative;z-index:3;display:grid;justify-items:center;gap:8px}
 .multiplier{font-size:clamp(72px,16vw,145px);font-variant-numeric:tabular-nums;z-index:2;white-space:nowrap;max-width:calc(100% - 20px);text-align:center;line-height:.92;letter-spacing:-.045em;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;text-shadow:0 10px 34px rgba(0,0,0,.42)}
 .multiplier.long{font-size:clamp(48px,11vw,96px);letter-spacing:-.045em}
-.multiplier,.crash-text span,.aviator-history-value{transition:color .18s ease,text-shadow .18s ease}
+.multiplier,.aviator-history-value{transition:color .18s ease,text-shadow .18s ease}
+.crash-text span{transition:none}
 .multiplier.tier-low,.crash-text span.tier-low{color:#d8dee9;text-shadow:0 8px 28px rgba(0,0,0,.38)}
 .multiplier.tier-medium,.crash-text span.tier-medium{color:#e4b94f;text-shadow:0 8px 30px rgba(228,185,79,.10)}
 .multiplier.tier-high,.crash-text span.tier-high{color:#66d99a;text-shadow:0 8px 30px rgba(102,217,154,.12)}
@@ -37,7 +38,9 @@ body{background:#070a10}
 .aviator-stage.is-flying .plane{opacity:1;animation:aviatorFlight 4.4s cubic-bezier(.4,.05,.2,1) infinite}
 .aviator-stage.is-flying .flight-area::after{animation:trailPulse 1.2s ease-in-out infinite}
 .aviator-stage.is-crashed .plane{opacity:0;animation:none}
+.aviator-stage.is-crashed .flight-area::after{opacity:0;animation:none}
 .crash-text{position:relative;z-index:4;display:grid;justify-items:center;gap:8px;text-align:center}
+.aviator-stage.is-crashed .crash-text:not(.hidden){animation:aviatorCrashIn .16s ease-out both}
 .crash-text strong{font-size:clamp(2.4rem,10vw,5.2rem);line-height:.9;letter-spacing:-.04em}
 .crash-text span{font-size:clamp(1.3rem,5vw,2.3rem);font-weight:950;color:#f4bd42;font-variant-numeric:tabular-nums}
 .proof{margin:8px 2px 0;font-size:11px;opacity:.58}
@@ -89,6 +92,7 @@ body{background:#070a10}
 .aviator-maintenance-only .aviator-maintenance-notice{display:block!important}
 .aviator-maintenance-notice[hidden]{display:none}
 
+@keyframes aviatorCrashIn{0%{opacity:0;transform:scale(.94)}100%{opacity:1;transform:scale(1)}}
 @keyframes aviatorIdle{0%,100%{transform:translate3d(0,0,0) rotate(-13deg)}50%{transform:translate3d(0,-8px,0) rotate(-11deg)}}
 @keyframes aviatorFlight{0%{transform:translate3d(0,0,0) rotate(-13deg)}35%{transform:translate3d(18vw,-36px,0) rotate(-16deg)}70%{transform:translate3d(38vw,-104px,0) rotate(-20deg)}100%{transform:translate3d(58vw,-178px,0) rotate(-24deg)}}
 @keyframes trailPulse{0%,100%{opacity:.3;transform:scaleX(.45)}50%{opacity:.75;transform:scaleX(1)}}
@@ -110,6 +114,7 @@ body{background:#070a10}
   .aviator-stage.is-flying .plane{will-change:transform}
   .aviator-stage:not(.is-flying) .plane{will-change:auto}
   .multiplier,.crash-text span,.aviator-history-value{transition:none}
+  .aviator-stage.is-crashed .crash-text:not(.hidden){animation-duration:.12s}
   .multiplier{ text-shadow:0 5px 18px rgba(0,0,0,.30)}
   #cashoutBtn:not(:disabled){box-shadow:0 0 0 1px rgba(78,213,138,.24)}
   .aviator-controls{grid-template-columns:1fr;gap:8px}
@@ -132,5 +137,5 @@ body{background:#070a10}
 .aviator-low-power .multiplier{transition:none}
 
 @media(prefers-reduced-motion:reduce){
-  .plane,.aviator-stage.is-open .plane,.aviator-stage.is-flying .plane,.aviator-stage.is-flying .flight-area::after{animation:none!important}
+  .plane,.aviator-stage.is-open .plane,.aviator-stage.is-flying .plane,.aviator-stage.is-flying .flight-area::after,.aviator-stage.is-crashed .crash-text:not(.hidden){animation:none!important}
 }
