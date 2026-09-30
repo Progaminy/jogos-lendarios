@@ -244,37 +244,21 @@
       </section>
 
 
-      <section class="card admin-card" id="ludoEmergencyAdmin">
+      <section class="card admin-card" id="ludoLiveAdmin">
         <div class="section-head">
           <div>
-            <p class="eyebrow">LUDO · EMERGÊNCIA</p>
-            <h2>Cancelar jogos ativos</h2>
+            <p class="eyebrow">LUDO · PARTIDAS AO VIVO</p>
+            <h2>Assistir jogos</h2>
           </div>
-          <span id="ludoEmergencyBadge" class="badge muted">A verificar…</span>
-        </div>
-        <p class="muted-text">Use apenas quando houver bug ou situação de emergência. Todas as salas ativas são encerradas, apostas já debitadas são devolvidas e a fila do Ludo é limpa.</p>
-        <div class="admin-grid">
-          <div class="card metric"><span>Salas ativas</span><strong id="ludoEmergencyRooms">—</strong></div>
-          <div class="card metric"><span>Jogadores envolvidos</span><strong id="ludoEmergencyPlayers">—</strong></div>
-          <div class="card metric"><span>Valor a devolver</span><strong id="ludoEmergencyStaked">—</strong><small>MZN</small></div>
-          <div class="card metric"><span>Fila de espera</span><strong id="ludoEmergencyQueue">—</strong></div>
-        </div>
-        <div class="admin-actions">
-          <label class="field" style="min-width:min(100%,420px)"><span>Motivo</span><input id="ludoEmergencyReason" maxlength="220" value="Cancelamento administrativo de emergência"></label>
-          <button id="ludoEmergencyCancelAll" class="button danger" type="button" disabled>Cancelar todos os jogos do Ludo</button>
-        </div>
-        <p id="ludoEmergencyMessage" class="form-message"></p>
-
-        <div class="card admin-card" style="box-shadow:none;margin-top:14px">
-          <div class="section-head">
-            <div><p class="eyebrow">PARTIDAS ATIVAS</p><h3>Assistir ou cancelar jogo individual</h3></div>
+          <div class="admin-actions" style="margin:0">
+            <span id="ludoEmergencyBadge" class="badge muted">A verificar…</span>
             <button id="ludoEmergencyRefresh" class="button ghost small" type="button">Atualizar</button>
           </div>
-          <p class="muted-text">Abra qualquer partida em modo de observação ao vivo ou, se houver problema, cancele apenas essa sala. Assistir não interfere no jogo.</p>
-          <div id="ludoEmergencyRoomList" class="request-list"><div class="empty">A carregar partidas ativas…</div></div>
         </div>
+        <p class="muted-text">Todas as salas atuais aparecem aqui. Toque em <strong>Assistir</strong> para acompanhar a partida sem entrar no jogo nem interferir nos jogadores.</p>
+        <div id="ludoEmergencyRoomList" class="request-list"><div class="empty">A carregar partidas ativas…</div></div>
 
-        <div id="ludoSpectatorPanel" class="card admin-card hidden" style="box-shadow:none">
+        <div id="ludoSpectatorPanel" class="card admin-card hidden" style="box-shadow:none;margin-top:14px">
           <div class="ludo-spectator-head">
             <div>
               <p class="eyebrow">LUDO · ASSISTIR AO VIVO</p>
@@ -304,6 +288,27 @@
           </div>
           <p id="ludoSpectatorMessage" class="form-message"></p>
         </div>
+      </section>
+
+      <section class="card admin-card" id="ludoEmergencyAdmin">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">LUDO · EMERGÊNCIA</p>
+            <h2>Cancelar jogos</h2>
+          </div>
+        </div>
+        <p class="muted-text">Use somente em caso de bug ou emergência. O cancelamento devolve as apostas já debitadas.</p>
+        <div class="admin-grid">
+          <div class="card metric"><span>Salas ativas</span><strong id="ludoEmergencyRooms">—</strong></div>
+          <div class="card metric"><span>Jogadores envolvidos</span><strong id="ludoEmergencyPlayers">—</strong></div>
+          <div class="card metric"><span>Valor a devolver</span><strong id="ludoEmergencyStaked">—</strong><small>MZN</small></div>
+          <div class="card metric"><span>Fila de espera</span><strong id="ludoEmergencyQueue">—</strong></div>
+        </div>
+        <div class="admin-actions">
+          <label class="field" style="min-width:min(100%,420px)"><span>Motivo</span><input id="ludoEmergencyReason" maxlength="220" value="Cancelamento administrativo de emergência"></label>
+          <button id="ludoEmergencyCancelAll" class="button danger" type="button" disabled>Cancelar todos os jogos do Ludo</button>
+        </div>
+        <p id="ludoEmergencyMessage" class="form-message"></p>
       </section>
 
       <div class="admin-two">
@@ -415,6 +420,6 @@
   <script src="./admin-recovery.js?v=20260925-2" defer></script>
   <script src="./admin-power.js?v=20260925-2" defer></script>
   <script src="./bet-insights.js?v=20260926-1" defer></script>
-  <script src="./admin-collapse.js?v=20260925-1" defer></script>
+  <script src="./admin-collapse.js?v=20260930-2" defer></script>
 </body>
 </html>
