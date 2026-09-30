@@ -208,6 +208,18 @@ Esses cenários têm regressões transacionais em `tests/sql/aviator/`.
 - Migrations: `20260930001648_immutable_player_financial_ledger`, `20260930001729_ledger_initial_balance_posting` e `20260930001919_ledger_restrict_direct_writes`.
 - Regressão permanente: `tests/sql/aviator/aviator_immutable_financial_ledger.sql`.
 
+## Som opcional e persistente
+
+- O Aviator começa silencioso para quem nunca escolheu uma preferência.
+- O botão `#aviatorSoundToggle` fica visível no cabeçalho da rodada e mostra claramente `🔇 Som` ou `🔊 Som`, com `aria-pressed`, `aria-label` e foco de teclado.
+- A preferência é persistida em `localStorage` na chave `jl_aviator_sound_enabled`, portanto permanece após atualizar ou reabrir o jogo no mesmo dispositivo/navegador.
+- `js/aviator/sound.js` usa Web Audio sintetizado; não adiciona MP3s nem downloads de mídia.
+- Sons existem somente para eventos discretos: aposta confirmada, bloqueio, descolagem, cash-out confirmado e crash/fim da rodada.
+- O módulo deduplica por `round_id + status`, impedindo que múltiplos renders/Realtimes repitam o mesmo som.
+- Não existe som no loop do multiplicador nem áudio por frame.
+- O `AudioContext` só é criado/desbloqueado quando o som está habilitado e após interação do utilizador quando o navegador exigir.
+- Regressão permanente: `tests/frontend/aviator-sound-preference.test.cjs`.
+
 ## Módulos próprios do Aviator
 
 O código do Aviator está isolado dos outros jogos e dividido por responsabilidade:
