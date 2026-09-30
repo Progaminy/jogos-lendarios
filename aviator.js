@@ -48,6 +48,18 @@ const runtime=window.JLAviatorRuntime||{
   }
 };
 
+function cashoutRequestKey(betId){
+  const id=Number(betId);
+  if(!Number.isFinite(id))return null;
+  const storageKey='jl_aviator_cashout_request_key_'+id;
+  let value=sessionStorage.getItem(storageKey);
+  if(!value){
+    value=crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random().toString(36).slice(2);
+    sessionStorage.setItem(storageKey,value);
+  }
+  return value;
+}
+
 function readPendingCashout(){
   try{
     const value=JSON.parse(sessionStorage.getItem(pendingCashoutKey)||'null');
@@ -57,17 +69,19 @@ function readPendingCashout(){
       sessionStorage.removeItem(pendingCashoutKey);
       return null;
     }
-    return {bet_id:betId,round_id:roundId,created_at:createdAt};
+    const requestKey=String(value?.request_key||cashoutRequestKey(betId)||'');
+    return {bet_id:betId,round_id:roundId,request_key:requestKey,created_at:createdAt};
   }catch(_){
     return null;
   }
 }
 
-function savePendingCashout(betId,roundId){
+function savePendingCashout(betId,roundId,requestKey){
   try{
     sessionStorage.setItem(pendingCashoutKey,JSON.stringify({
       bet_id:Number(betId),
       round_id:Number(roundId),
+      request_key:String(requestKey||cashoutRequestKey(betId)||''),
       created_at:Date.now()
     }));
   }catch(_){}
@@ -139,7 +153,7 @@ function playerMessage(error,fallback='Não foi possível concluir. Tente novame
     .trim();
 
   const rules=[
-    [/RATE_LIMITED|muitas requisi[cç][oõ]es/i,'Muitas ações em pouco tempo. Aguarde um momento e tente novamente.'],
+    [/RATE_LIMITED|BOT_RATE_LIMITED|BOT_TOO_FAST|muitas requisi[cç][oõ]es|rápidas demais/i,'Muitas ações em pouco tempo. Aguarde um momento e tente novamente.'],
     [/saldo insuficiente/i,'Saldo insuficiente.'],
     [/jogador bloqueado/i,'A sua conta está bloqueada.'],
     [/aviator em manutencao|aviator brevemente/i,'Aviator brevemente.'],
@@ -477,11 +491,19 @@ function cashoutMessage(source,multiplier,payout){
   return label+' em '+Number(multiplier).toFixed(2)+'× · '+money(payout);
 }
 
-function requestFinancialCashout(betId){
-  return JLApi.rpc('jl_aviator_cashout',{
+async function requestFinancialCashout(betId,requestKey){
+  const result=await JLApi.rpc('jl_aviator_cashout',{
     p_token:playerToken(),
-    p_bet_id:Number(betId)
+    p_bet_id:Number(betId),
+    p_request_key:String(requestKey||cashoutRequestKey(betId)||'')
   });
+  if(result?.ok===false){
+    const error=new Error(result.message||'Não foi possível concluir o cash-out.');
+    error.code=result.error_code||'CASHOUT_REJECTED';
+    error.retryAfterMs=Number(result.retry_after_ms)||0;
+    throw error;
+  }
+  return result;
 }
 
 async function reconcilePendingCashout(){
@@ -1165,7 +1187,8 @@ $('#cashoutBtn').addEventListener('click',async()=>{
   cashingOut=true;
   const id=myBet;
   const cashoutRoundId=Number(round.id);
-  savePendingCashout(id,cashoutRoundId);
+  const requestKey=cashoutRequestKey(id);
+  savePendingCashout(id,cashoutRoundId,requestKey);
   const button=$('#cashoutBtn');
   if(button){
     button.disabled=true;
@@ -1173,7 +1196,7 @@ $('#cashoutBtn').addEventListener('click',async()=>{
   }
 
   try{
-    const r=await requestFinancialCashout(id);
+    const r=await requestFinancialCashout(id,requestKey);
 
     clearPendingCashout();
     $('#aviatorMessage').textContent=cashoutMessage(
