@@ -12,11 +12,11 @@ test('Aviator usa betting_open do servidor apenas como guarda visual',()=>{
 });
 
 test('pedido de aposta nunca envia timestamp do telemóvel',()=>{
-  const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
-  const block=js.match(/JLApi\.rpc\('jl_aviator_place_bet',[\s\S]*?\n\s*\}\);/)?.[0]||'';
-  assert.match(block,/p_token:/);
-  assert.match(block,/p_amount:/);
-  assert.match(block,/p_request_key:/);
+  const financial=fs.readFileSync(path.join(__dirname,'../../js/aviator/financial.js'),'utf8');
+  const block=financial.match(/async function placeBet\([^)]*\)[\s\S]*?\n    \}/)?.[0]||'';
+  assert.match(block,/p_token:playerToken\(\)/);
+  assert.match(block,/p_amount:Number\(amount\)/);
+  assert.match(block,/p_request_key:String\(requestKey/);
   assert.doesNotMatch(block,/Date\.now|created_at|timestamp|client_time|server_time/);
 });
 
