@@ -19,10 +19,13 @@ body{background:#070a10}
 .flight-area{height:405px;position:relative;display:grid;place-items:center;overflow:hidden;background:radial-gradient(circle at 50% 84%,rgba(244,181,31,.12),transparent 48%),linear-gradient(180deg,#0b121e 0%,#090d14 72%,#070a10 100%);border-radius:22px;border:1px solid rgba(255,255,255,.045)}
 .flight-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);background-size:42px 42px;mask-image:linear-gradient(to bottom,transparent,rgba(0,0,0,.8))}
 .flight-area::after{content:"";position:absolute;left:9%;right:9%;bottom:18%;height:2px;background:linear-gradient(90deg,transparent,rgba(244,181,31,.28),transparent);transform-origin:left center}
-.preflight{position:relative;z-index:3;display:grid;justify-items:center;gap:6px;text-align:center}
-.preflight span{font-size:.62rem;font-weight:900;letter-spacing:.14em;color:#dba934}
-.preflight strong{font-size:clamp(4.2rem,17vw,8.4rem);line-height:.88;font-variant-numeric:tabular-nums}
-.preflight small{font-size:.7rem;color:#718096;font-weight:650}
+.preflight{position:relative;z-index:3;display:grid;justify-items:center;gap:6px;text-align:center;padding:14px 18px;border:1px solid rgba(255,255,255,.06);border-radius:18px;background:rgba(7,11,17,.38);min-width:min(78%,280px)}
+.preflight span{font-size:.64rem;font-weight:950;letter-spacing:.16em;color:#dba934}
+.preflight .countdown-value{font-size:clamp(2.7rem,11vw,5.2rem);line-height:.92;font-variant-numeric:tabular-nums;letter-spacing:-.03em;color:#f2f5f9}
+.preflight small{font-size:.64rem;color:#718096;font-weight:750;letter-spacing:.04em}
+.next-round-countdown{display:grid;justify-items:center;gap:3px;margin-top:5px;padding:7px 12px;border:1px solid rgba(255,255,255,.07);border-radius:12px;background:rgba(7,11,17,.5)}
+.next-round-countdown small{font-size:.58rem;font-weight:900;letter-spacing:.12em;color:#8490a2}
+.next-round-countdown strong{font-size:clamp(1.35rem,5vw,2rem);line-height:1;font-variant-numeric:tabular-nums;color:#f2f5f9;letter-spacing:-.02em}
 .multiplier-wrap{position:relative;z-index:3;display:grid;justify-items:center;gap:8px}
 .multiplier{font-size:clamp(72px,16vw,145px);font-variant-numeric:tabular-nums;z-index:2;white-space:nowrap;max-width:calc(100% - 20px);text-align:center;line-height:.92;letter-spacing:-.045em;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;text-shadow:0 10px 34px rgba(0,0,0,.42)}
 .multiplier.long{font-size:clamp(48px,11vw,96px);letter-spacing:-.045em}
@@ -108,6 +111,9 @@ body{background:#070a10}
   .aviator-round strong,.aviator-clock strong{font-size:.78rem}
   .aviator-state{font-size:.56rem;padding:5px 7px}
   .flight-area{height:360px;border-radius:18px;contain:layout paint style;background:linear-gradient(180deg,#0b121e 0%,#090d14 72%,#070a10 100%)}
+  .preflight{min-width:min(82%,240px);padding:12px 14px}
+  .preflight .countdown-value{font-size:clamp(2.5rem,14vw,4.2rem)}
+  .next-round-countdown strong{font-size:1.35rem}
   .flight-grid{display:none}
   .flight-area::after{animation:none!important;opacity:.28}
   .plane{font-size:50px;filter:none}
