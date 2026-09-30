@@ -208,6 +208,20 @@ Esses cenários têm regressões transacionais em `tests/sql/aviator/`.
 - Migrations: `20260930001648_immutable_player_financial_ledger`, `20260930001729_ledger_initial_balance_posting` e `20260930001919_ledger_restrict_direct_writes`.
 - Regressão permanente: `tests/sql/aviator/aviator_immutable_financial_ledger.sql`.
 
+## Rate limiting de endpoints sensíveis
+
+- O servidor possui rate limiting por subject em `jl_api_rate_limits`, protegido por RLS e sem escrita direta pelo cliente nem pelo `service_role`.
+- O limitador usa duas janelas fixas por operação: uma de burst e outra sustentada. A atualização é atómica por `INSERT ... ON CONFLICT DO UPDATE`.
+- Aposta Aviator: 6 chamadas/10 s e 30/min por jogador.
+- Cash-out Aviator: 8 chamadas/10 s e 30/min por jogador.
+- Reconnect: 20 chamadas/10 s e 120/min por jogador, com bridge `jl_aviator_reconnect_rate_limit` que deriva o jogador do token e não expõe o helper genérico.
+- Administração possui camadas: base de sessão 240/10 s e 1200/min; guard normal 60/10 s e 300/min; operações elevadas 15/10 s e 60/min; super admin 30/10 s e 120/min; session info 30/10 s e 120/min.
+- O snapshot administrativo interno, acessível apenas ao `service_role`, também possui limite global de 120/10 s e 600/min.
+- O login administrativo mantém o rate limit progressivo existente por origem/IP; esta camada nova protege RPCs depois da autenticação.
+- Quando o limite é excedido, o servidor interrompe a chamada com `RATE_LIMITED`; o Aviator converte isso numa mensagem amigável.
+- Migrations: `20260930060749_rate_limit_player_and_admin_endpoints`, `20260930060853_secure_reconnect_rate_limit_bridge` e `20260930061107_rate_limit_restrict_direct_writes`.
+- Regressão permanente: `tests/sql/aviator/aviator_rate_limits.sql`.
+
 ## Payout único por aposta no banco
 
 - O payout do Aviator é limitado a exatamente uma transação por aposta pelo próprio PostgreSQL.
