@@ -115,7 +115,7 @@ test('controlador busca histórico em RPC separado do estado de voo',()=>{
 
 test('cash-out na fronteira do crash não mostra erro técnico cru',()=>{
   const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
-  assert.match(js,/Confirmando cash-out/);
+  assert.match(uiSource,/Confirmando cash-out/);
   assert.match(js,/Fim da rodada\. Cash-out não disponível\./);
   assert.match(js,/Crash ja atingido\|Aposta ja liquidada\|Voo nao esta ativo/);
 });
@@ -260,7 +260,7 @@ test('Aviator mostra LOCKED separado do voo e bloqueia nova aposta',()=>{
   assert.match(js,/round\.status==='LOCKED'/);
   assert.match(js,/APOSTAS FECHADAS/);
   assert.match(js,/DESCOLAGEM EM/);
-  assert.match(js,/betBtn\.disabled=true/);
+  assert.match(js,/renderBetAction\(true,'Apostas fechadas'\)/);
   assert.equal(runtime.pollDelay('LOCKED',false,false),3000);
   assert.equal(runtime.phase('LOCKED'),'locked');
 });
