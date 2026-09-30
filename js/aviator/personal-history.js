@@ -23,6 +23,7 @@
     }
 
     function formatTime(value){
+      if(value===null||value===undefined||value==='')return '';
       const d=new Date(value);
       if(Number.isNaN(d.getTime()))return '';
       try{
@@ -43,24 +44,30 @@
       return {icon:'●',label:'ATIVA',kind:'active'};
     }
 
-    function valueOrDash(value,formatter){
+    function numeric(value){
+      if(value===null||value===undefined||value==='')return null;
       const n=Number(value);
-      return Number.isFinite(n)?formatter(n):'—';
+      return Number.isFinite(n)?n:null;
+    }
+
+    function valueOrDash(value,formatter){
+      const n=numeric(value);
+      return n===null?'—':formatter(n);
     }
 
     function paymentText(row){
       const status=String(row?.status||'').toUpperCase();
-      const payout=Number(row?.payout);
-      const stake=Number(row?.stake);
+      const payout=numeric(row?.payout);
+      const stake=numeric(row?.stake);
 
       if(status==='CASHED_OUT'){
-        return Number.isFinite(payout)?money(payout):'—';
+        return payout===null?'—':money(payout);
       }
       if(status==='LOST'){
         return money(0);
       }
       if(status==='REFUNDED'){
-        return Number.isFinite(stake)?money(stake)+' (reembolso)':'Reembolsada';
+        return stake===null?'Reembolsada':money(stake)+' (reembolso)';
       }
       return '—';
     }
