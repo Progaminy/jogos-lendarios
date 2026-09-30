@@ -107,6 +107,19 @@
 - Depois de paga, a parte financeira da aposta fica imutável por trigger.
 - Retry após timeout/resposta perdida retorna o mesmo `transaction_id`, multiplicador e payout; não cria novo crédito, ledger ou auditoria.
 
+## Idempotência financeira fim a fim
+
+- Cada movimento de dinheiro do Aviator no ledger `transactions` possui agora uma identidade canónica formada por `aviator_bet_id + aviator_operation`.
+- Para cada aposta podem existir no máximo três operações distintas: `BET` (débito da aposta), `PAYOUT` (pagamento de cash-out) e `REFUND` (reembolso). Um índice único impede duas linhas da mesma operação para a mesma aposta.
+- A colocação de aposta continua usando `request_key` idempotente; um retry devolve a mesma aposta e o mesmo `transaction_id` do débito já confirmado, sem novo desconto de saldo.
+- Cash-out manual e automático convergem no mesmo caminho financeiro interno. Depois de pago, qualquer retry devolve o mesmo `payout_transaction_id`, multiplicador e payout.
+- Reembolso por manutenção e cancelamento administrativo convergem na mesma operação `REFUND`; uma aposta já reembolsada não pode receber um segundo reembolso.
+- `payout_transaction_id` e `refund_transaction_id` continuam ligados por FK à tabela `transactions`, com índices únicos específicos, enquanto o ledger acrescenta a proteção independente por operação.
+- Saldo do jogador, estado da aposta, transação, banca, ledger da banca e auditoria são confirmados dentro da mesma transação PostgreSQL; qualquer exceção provoca rollback completo.
+- O histórico financeiro Aviator existente foi reconciliado com as novas identidades canónicas antes da constraint ser ativada, evitando linhas antigas sem vínculo.
+- A proteção é deliberadamente em camadas: locks e estados impedem concorrência lógica; constraints e índices únicos impedem duplicação financeira mesmo se um caminho interno tentar repetir a operação.
+- A migration de produção é `20260930000422_aviator_financial_operation_idempotency`, com regressão permanente em `tests/sql/aviator/aviator_financial_operation_idempotency.sql`.
+
 ## Ciclo da rodada e janela de bloqueio
 
 - O ciclo público é **BETTING → LOCKED → FLYING → CRASHED → SETTLED**.
