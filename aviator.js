@@ -90,6 +90,9 @@ const history=window.JLAviatorHistory.create({
 const sound=window.JLAviatorSound?.create({
   button:$('#aviatorSoundToggle')
 })||null;
+const haptics=window.JLAviatorHaptics?.create({
+  button:$('#aviatorVibrationToggle')
+})||null;
 
 function cashoutRequestKey(betId){return financial.cashoutRequestKey(betId);}
 
@@ -697,6 +700,7 @@ function renderWaiting(){
 function renderCurrentRound(){
   renderProof();
   sound?.syncRound(round);
+  haptics?.syncRound(round);
 
   if(!round){
     renderWaiting();
