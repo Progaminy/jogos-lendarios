@@ -87,6 +87,9 @@ const history=window.JLAviatorHistory.create({
   rpc:(name,args)=>JLApi.rpc(name,args),
   multiplierTier:(value)=>ui.multiplierTier(value)
 });
+const sound=window.JLAviatorSound?.create({
+  button:$('#aviatorSoundToggle')
+})||null;
 
 function cashoutRequestKey(betId){return financial.cashoutRequestKey(betId);}
 
@@ -693,6 +696,7 @@ function renderWaiting(){
 
 function renderCurrentRound(){
   renderProof();
+  sound?.syncRound(round);
 
   if(!round){
     renderWaiting();
@@ -1007,6 +1011,7 @@ $('#aviatorBetForm').addEventListener('submit',async e=>{
     myBet=r.bet_id;
     myStake=Number(r.stake);
     myAutoCashout=Number(r.auto_cashout_multiplier)||null;
+    sound?.playBet();
     lastRecoveredRoundId=round.id;
     renderTicket();
     renderBetConfirmation();
@@ -1047,6 +1052,7 @@ $('#cashoutBtn').addEventListener('click',async()=>{
       r.multiplier,
       r.payout
     );
+    sound?.playCashout();
 
     myBet=null;
     myStake=0;
