@@ -208,6 +208,16 @@ Esses cenários têm regressões transacionais em `tests/sql/aviator/`.
 - Migrations: `20260930001648_immutable_player_financial_ledger`, `20260930001729_ledger_initial_balance_posting` e `20260930001919_ledger_restrict_direct_writes`.
 - Regressão permanente: `tests/sql/aviator/aviator_immutable_financial_ledger.sql`.
 
+## Botão Apostar grande e estável
+
+- O botão principal mantém sempre o texto `Apostar`; mudanças de rodada não trocam o rótulo para frases maiores como “Apostas fechadas”, “Aposta confirmada” ou “Aguarde”.
+- O estado contextual aparece numa linha fixa abaixo do botão (`#betActionStatus`), sem mover o botão.
+- No desktop, a área do botão reserva 58 px de altura; no mobile, 64 px. A largura é 100% da célula reservada.
+- A célula de ação permanece no mesmo lugar do formulário durante OPEN, LOCKED, FLYING, CRASHED e espera da próxima rodada.
+- Somente `disabled`, estilo visual e a linha de estado mudam; posição, ordem e dimensões do botão permanecem estáveis.
+- No mobile o botão ocupa uma linha própria de largura total, facilitando toque com o polegar.
+- Regressão permanente: `tests/frontend/aviator-stable-bet-button.test.cjs`.
+
 ## Contagem regressiva clara
 
 - A contagem regressiva é visualmente separada do multiplicador: segundos usam sufixo `s`; multiplicador usa sempre `×`.
