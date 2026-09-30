@@ -39,6 +39,7 @@
   function isMainGameCard(card) {
     return Boolean(
       card.id === 'adminFinancialPower' ||
+      card.id === 'ludoLiveAdmin' ||
       card.querySelector('#numberMetricRound') ||
       card.querySelector('#pairMetricRound')
     );
