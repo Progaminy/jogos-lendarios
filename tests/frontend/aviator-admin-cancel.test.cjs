@@ -6,7 +6,7 @@ const fs=require('node:fs');
 
 test('cancelamento administrativo do Aviator exige motivo e reembolsa via servidor',()=>{
   const html=fs.readFileSync('admin.html','utf8');
-  const js=fs.readFileSync('admin.js','utf8');
+  const js=fs.readFileSync('js/aviator/admin.js','utf8');
 
   assert.match(html,/CANCELAMENTO DA RODADA/);
   assert.match(html,/id="aviatorCancelReason"/);
@@ -27,7 +27,7 @@ test('cancelamento administrativo do Aviator exige motivo e reembolsa via servid
 });
 
 test('CRASHED e estados finais não ficam canceláveis no painel',()=>{
-  const js=fs.readFileSync('admin.js','utf8');
+  const js=fs.readFileSync('js/aviator/admin.js','utf8');
   const cancellable=js.match(
     /const cancellable=\['OPEN','LOCKED','FLYING'\]\.includes\(String\(r\.status\|\|''\)\)/
   )?.[0]||'';
