@@ -194,6 +194,20 @@ Esses cenários têm regressões transacionais em `tests/sql/aviator/`.
 - Toggle manual de manutenção cancela o flag de teste.
 - O botão do admin não inicia automaticamente nesta implantação; exige clique e confirmação do administrador.
 
+## Ledger financeiro do jogador
+
+- O saldo do jogador e o histórico financeiro foram separados. `players.balance` permanece apenas como cache operacional compatível com o restante da plataforma; a fonte contabilística passa a ser `player_financial_ledger`.
+- Cada linha de `transactions` gera exatamente um lançamento append-only no ledger, com `transaction_id`, `player_id`, `delta`, `balance_after`, tipo, referência, estado no momento do lançamento e timestamps.
+- O histórico existente foi migrado integralmente e reconciliado: todos os movimentos reconstruíram exatamente os saldos atuais, sem saldo inicial artificial.
+- Saque rejeitado preserva o débito original e cria um `withdrawal_refund` separado. O estado do pedido pode mudar, mas o movimento contabilístico original não é reescrito.
+- Campos financeiros de `transactions` são imutáveis depois do lançamento: jogador, tipo, valor, referência, timestamp e vínculos do Aviator não podem ser alterados. Apenas campos de workflow, como `status` e `note`, podem evoluir quando necessário.
+- O ledger bloqueia `UPDATE` e `DELETE` por trigger. A FK `transaction_id -> transactions(id)` também impede apagar a transaction de origem.
+- Dois constraint triggers diferidos verificam a reconciliação nos dois sentidos antes do commit: mudar o saldo-cache exige movimento correspondente; criar movimento exige que o saldo-cache termine exatamente igual ao saldo do ledger.
+- Uma conta criada com saldo inicial diferente de zero recebe automaticamente uma transaction `adjustment` e o respectivo lançamento de abertura.
+- `jl_aviator_player_state` lê o saldo pelo ledger canónico, não diretamente por `players.balance`.
+- Migrations: `20260930001648_immutable_player_financial_ledger` e `20260930001729_ledger_initial_balance_posting`.
+- Regressão permanente: `tests/sql/aviator/aviator_immutable_financial_ledger.sql`.
+
 ## Ledger operacional da banca
 
 - Ajustes administrativos continuam com `request_key` fornecida pelo admin.
