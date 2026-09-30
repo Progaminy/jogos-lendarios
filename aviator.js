@@ -88,6 +88,12 @@ const history=window.JLAviatorHistory.create({
   rpc:(name,args)=>JLApi.rpc(name,args),
   multiplierTier:(value)=>ui.multiplierTier(value)
 });
+const personalHistory=window.JLAviatorPersonalHistory?.create({
+  $,
+  rpc:(name,args)=>JLApi.rpc(name,args),
+  playerToken,
+  money:(value)=>ui.money(value)
+})||null;
 const sound=window.JLAviatorSound?.create({
   button:$('#aviatorSoundToggle')
 })||null;
@@ -269,6 +275,7 @@ function renderBetConfirmation(){return ui.renderBetConfirmation();}
 function setBetResult(result=null){
   lastBetResult=result||null;
   ui.renderBetResult(lastBetResult);
+  if(result)personalHistory?.invalidate();
 }
 function setBetResultFromBet(bet){
   if(!bet){
@@ -1069,6 +1076,7 @@ $('#aviatorBetForm').addEventListener('submit',async e=>{
     });
 
     setBetResult(null);
+    personalHistory?.invalidate();
     myBet=r.bet_id;
     myStake=Number(r.stake);
     myAutoCashout=Number(r.auto_cashout_multiplier)||null;
