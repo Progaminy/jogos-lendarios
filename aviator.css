@@ -79,6 +79,12 @@ body{background:#070a10}
 .aviator-bet-confirmation{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border:1px solid rgba(78,213,138,.42);border-radius:14px;background:rgba(78,213,138,.11)}
 .aviator-bet-confirmation strong{font-size:1rem;font-weight:900;letter-spacing:.01em}
 .aviator-bet-confirmation small{font-size:.78rem;font-weight:800;color:#9ee7bd}
+.aviator-cashout-action{display:grid;grid-template-rows:64px 16px;gap:4px;align-self:end;min-width:0}
+.aviator-cashout-action #cashoutBtn{width:100%;height:64px;min-height:64px;font-size:1.12rem;font-weight:950;line-height:1;white-space:nowrap;transition:box-shadow .16s ease,background-color .16s ease,border-color .16s ease}
+.aviator-cashout-action-status{display:block;min-height:16px;text-align:center;font-size:.62rem;font-weight:850;line-height:16px;color:#7f8ba0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.aviator-cashout-action.is-priority #cashoutBtn:not(:disabled){background:#36c979;border-color:#36c979;color:#07130c;box-shadow:0 0 0 2px rgba(78,213,138,.28),0 14px 34px rgba(78,213,138,.24)}
+.aviator-cashout-action.is-priority .aviator-cashout-action-status{color:#8fe0b4}
+.aviator-cashout-action.is-pending #cashoutBtn{box-shadow:0 0 0 2px rgba(244,181,31,.18)}
 #cashoutBtn:not(:disabled){box-shadow:0 0 0 1px rgba(78,213,138,.25),0 10px 28px rgba(78,213,138,.16)}
 .aviator-ticket{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:center;padding:9px 11px;border:1px solid rgba(78,213,138,.14);border-radius:12px;background:rgba(78,213,138,.03)}
 .aviator-ticket-main{min-width:0}
@@ -131,7 +137,9 @@ body{background:#070a10}
   .aviator-bet-action{grid-column:1/-1;grid-template-rows:64px 17px;gap:4px}
   .aviator-bet-action #betBtn{height:64px;min-height:64px;font-size:1.2rem}
   .aviator-bet-action-status{min-height:17px;line-height:17px;font-size:.66rem}
-  #cashoutBtn{min-height:54px;font-size:1.05rem}
+  .aviator-cashout-action{grid-template-rows:72px 18px;gap:5px}
+  .aviator-cashout-action #cashoutBtn{height:72px;min-height:72px;font-size:1.28rem}
+  .aviator-cashout-action-status{min-height:18px;line-height:18px;font-size:.68rem}
   .aviator-controls .form-message{grid-column:auto}
   .aviator-bet-confirmation{grid-column:auto;display:grid;justify-content:stretch;padding:9px 11px}
   .aviator-ticket{grid-column:auto;grid-template-columns:1fr 1fr}
