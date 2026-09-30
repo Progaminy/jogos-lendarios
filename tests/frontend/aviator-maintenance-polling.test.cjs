@@ -9,8 +9,8 @@ test('Realtime reduz polling do Aviator a fallback de segurança',()=>{
 
   assert.match(js,/realtimeConnected/);
   assert.match(js,/return runtime\.pollDelay\(round\?\.status\|\|'',document\.hidden,realtimeConnected\)/);
-  assert.match(js,/scheduleState\(connected\?30000:2000\)/);
-  assert.match(js,/return document\.hidden\?60000:30000/);
+  assert.match(js,/scheduleState\(120000\)/);
+  assert.match(js,/if\(realtimeConnected\)return document\.hidden\?300000:120000/);
 });
 
 test('mudança de visibilidade força reconciliação sem reativar polling agressivo',()=>{
