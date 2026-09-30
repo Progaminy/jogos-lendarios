@@ -114,28 +114,34 @@
       const hasMultiplier=Number.isFinite(m)&&m>=1;
       const hasStake=Number.isFinite(s)&&s>0;
 
+      const priority=Boolean(active)&&!disabled&&!pending;
       if(wrap){
-        wrap.classList.toggle('is-priority',Boolean(active)&&!disabled&&!pending);
-        wrap.classList.toggle('is-pending',Boolean(pending));
+        if(wrap.classList.contains('is-priority')!==priority){
+          wrap.classList.toggle('is-priority',priority);
+        }
+        if(wrap.classList.contains('is-pending')!==Boolean(pending)){
+          wrap.classList.toggle('is-pending',Boolean(pending));
+        }
       }
 
       if(button){
-        button.disabled=Boolean(disabled);
-        button.textContent=pending
+        const nextDisabled=Boolean(disabled);
+        const nextText=pending
           ?'Confirmando cash-out…'
           :active&&hasMultiplier
             ?'Cash-out · '+m.toFixed(2)+'×'
             :'Cash-out';
+        if(button.disabled!==nextDisabled)button.disabled=nextDisabled;
+        if(button.textContent!==nextText)button.textContent=nextText;
       }
 
       if(statusEl){
-        if(status){
-          statusEl.textContent=String(status);
-        }else if(active&&hasMultiplier&&hasStake){
-          statusEl.textContent='Recebe agora '+money(s*m);
-        }else{
-          statusEl.textContent='Disponível durante o voo';
-        }
+        const nextStatus=status
+          ?String(status)
+          :active&&hasMultiplier&&hasStake
+            ?'Recebe agora '+money(s*m)
+            :'Disponível durante o voo';
+        if(statusEl.textContent!==nextStatus)statusEl.textContent=nextStatus;
       }
     }
 
