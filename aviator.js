@@ -236,7 +236,14 @@ function resetCashout(){
 
 function renderRoundNumber(){
   const el=$('#roundNumber');
-  if(el)el.textContent=round?.id?'#'+round.id:'—';
+  const roundNo=Number(round?.round_no);
+  const internalId=Number(round?.id);
+  const displayNo=Number.isFinite(roundNo)&&roundNo>0
+    ?roundNo
+    :Number.isFinite(internalId)&&internalId>0
+      ?internalId
+      :null;
+  if(el)el.textContent=displayNo?'#'+displayNo:'—';
 }
 
 function stopOpenUiTick(){
@@ -350,8 +357,10 @@ function normalizeHistoryItem(item){
   const id=Number(item?.id);
   const multiplier=Number(item?.crash_multiplier);
   if(!Number.isFinite(id)||id<=0||!Number.isFinite(multiplier)||multiplier<1)return null;
+  const roundNo=Number(item?.round_no);
   return {
     id,
+    round_no:Number.isFinite(roundNo)&&roundNo>0?roundNo:id,
     crash_multiplier:multiplier,
     ended_at:item?.ended_at||null
   };
@@ -375,7 +384,7 @@ function renderHistory(){
   }
 
   wrap.innerHTML=rows.map((item,index)=>
-    '<span class="aviator-history-value tier-'+multiplierTier(item.crash_multiplier)+'" title="Rodada #'+item.id+'">'+
+    '<span class="aviator-history-value tier-'+multiplierTier(item.crash_multiplier)+'" title="Rodada #'+item.round_no+'">'+
       item.crash_multiplier.toFixed(2)+'x'+
     '</span>'+
     (index<rows.length-1
@@ -396,6 +405,7 @@ function rememberCurrentResult(){
   if(!round||!['CRASHED','SETTLED'].includes(round.status))return;
   const item=normalizeHistoryItem({
     id:round.id,
+    round_no:round.round_no,
     crash_multiplier:round.crash_multiplier,
     ended_at:round.crashed_at||round.settled_at||null
   });
