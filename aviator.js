@@ -30,6 +30,34 @@ let serverClockOffsetMs=0;
 let flightFrame=0;
 let lastFlightPaintAt=0;
 let autoRecoveryRoundId=null;
+let lastFlightHudAt=0;
+
+const visualPerformance=(()=>{
+  const mobileViewport=window.matchMedia?.('(max-width: 650px)').matches===true;
+  const coarsePointer=window.matchMedia?.('(pointer: coarse)').matches===true;
+  const isMobile=mobileViewport||coarsePointer;
+  const memory=Number(navigator.deviceMemory);
+  const cores=Number(navigator.hardwareConcurrency);
+  const saveData=navigator.connection?.saveData===true;
+  const lowPower=
+    saveData||
+    (Number.isFinite(memory)&&memory<=4)||
+    (Number.isFinite(cores)&&cores<=4);
+
+  const profile=Object.freeze({
+    isMobile,
+    lowPower,
+    frameIntervalMs:lowPower?125:isMobile?100:50,
+    hudIntervalMs:lowPower?300:isMobile?250:100,
+    openClockIntervalMs:lowPower?750:isMobile?500:250
+  });
+
+  const root=document.documentElement;
+  root.classList.toggle('aviator-mobile-lite',isMobile);
+  root.classList.toggle('aviator-low-power',lowPower);
+
+  return profile;
+})();
 
 const playerToken=()=>JLSession.getPlayerToken();
 const pendingCashoutKey='jl_aviator_pending_cashout_v1';
@@ -263,6 +291,7 @@ function stopFlight(){
     flightFrame=0;
   }
   lastFlightPaintAt=0;
+  lastFlightHudAt=0;
 }
 
 function multiplierTier(value){
@@ -274,8 +303,10 @@ function multiplierTier(value){
 
 function applyMultiplierTier(el,value){
   if(!el)return;
+  const next='tier-'+multiplierTier(value);
+  if(el.classList.contains(next))return;
   el.classList.remove('tier-low','tier-medium','tier-high');
-  el.classList.add('tier-'+multiplierTier(value));
+  el.classList.add(next);
 }
 
 function renderMultiplier(value){
@@ -284,8 +315,9 @@ function renderMultiplier(value){
   const n=Number(value);
   const safe=Number.isFinite(n)&&n>=1?n:1;
   const text=safe.toFixed(2)+'×';
-  el.textContent=text;
-  el.classList.toggle('long',text.length>=8);
+  if(el.textContent!==text)el.textContent=text;
+  const isLong=text.length>=8;
+  if(el.classList.contains('long')!==isLong)el.classList.toggle('long',isLong);
   applyMultiplierTier(el,safe);
 }
 
@@ -362,7 +394,7 @@ function updateOpenClock(){
 
 function startOpenUiTick(){
   if(openUiTimer)return;
-  openUiTimer=setInterval(updateOpenClock,200);
+  openUiTimer=setInterval(updateOpenClock,visualPerformance.openClockIntervalMs);
 }
 
 function renderTicket(multiplierValue=null){
@@ -515,29 +547,34 @@ async function loadHistory(force=false){
   }
 }
 
-function paintFlight(){
-  if(!connectionOnline||round?.status!=='FLYING')return;
+function paintFlight(timestamp=performance.now()){
+  if(!connectionOnline||round?.status!=='FLYING'||document.hidden)return;
 
   const m=mul();
   renderMultiplier(m);
+
+  if(timestamp-lastFlightHudAt<visualPerformance.hudIntervalMs)return;
+  lastFlightHudAt=timestamp;
   renderTicket(m);
 
   const cashout=$('#cashoutBtn');
   if(cashout){
-    cashout.textContent=myBet?'Cash-out · '+m.toFixed(2)+'×':'Cash-out';
-    cashout.disabled=!connectionOnline||!myBet||cashingOut;
+    const text=myBet?'Cash-out · '+m.toFixed(2)+'×':'Cash-out';
+    if(cashout.textContent!==text)cashout.textContent=text;
+    const disabled=!connectionOnline||!myBet||cashingOut;
+    if(cashout.disabled!==disabled)cashout.disabled=disabled;
   }
 }
 
 function flightPaintLoop(timestamp){
-  if(!connectionOnline||round?.status!=='FLYING'){
+  if(!connectionOnline||round?.status!=='FLYING'||document.hidden){
     stopFlight();
     return;
   }
 
-  if(timestamp-lastFlightPaintAt>=50){
+  if(timestamp-lastFlightPaintAt>=visualPerformance.frameIntervalMs){
     lastFlightPaintAt=timestamp;
-    paintFlight();
+    paintFlight(timestamp);
 
     if(
       myBet&&
@@ -554,8 +591,8 @@ function flightPaintLoop(timestamp){
 }
 
 function startFlightPaint(){
-  if(flightFrame)return;
-  paintFlight();
+  if(flightFrame||document.hidden)return;
+  paintFlight(performance.now());
   flightFrame=requestAnimationFrame(flightPaintLoop);
 }
 
@@ -1424,6 +1461,7 @@ document.addEventListener('visibilitychange',()=>{
     reconnectState();
   }else{
     stopOpenUiTick();
+    stopFlight();
     scheduleState();
   }
 });
