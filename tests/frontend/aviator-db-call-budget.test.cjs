@@ -6,6 +6,8 @@ const fs=require('node:fs');
 const path=require('node:path');
 
 const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
+const financial=fs.readFileSync(path.join(__dirname,'../../js/aviator/financial.js'),'utf8');
+const engine=fs.readFileSync(path.join(__dirname,'../../js/aviator/engine.js'),'utf8');
 
 test('multiplicador do voo não chama banco por frame',()=>{
   const paint=js.match(/function paintFlight\([\s\S]*?\n\}/)?.[0]||'';
@@ -17,7 +19,7 @@ test('multiplicador do voo não chama banco por frame',()=>{
 
 test('auto cash-out visual usa status mínimo por bet_id, não player_state',()=>{
   const light=js.match(/async function refreshCurrentBetLight\(\)[\s\S]*?\n\}/)?.[0]||'';
-  const fetch=js.match(/async function fetchBetStatus\(betId\)[\s\S]*?\n\}/)?.[0]||'';
+  const fetch=financial.match(/async function fetchBetStatus\(betId\)[\s\S]*?\n    \}/)?.[0]||'';
   assert.match(fetch,/jl_aviator_bet_status/);
   assert.match(fetch,/p_bet_id:id/);
   assert.doesNotMatch(fetch,/jl_aviator_player_state/);
@@ -38,5 +40,5 @@ test('reconciliação de cash-out pendente usa consulta mínima',()=>{
 });
 
 test('polling com Realtime continua somente como fallback lento',()=>{
-  assert.match(js,/if\(realtimeConnected\)return document\.hidden\?300000:120000/);
+  assert.match(engine,/if\(realtimeConnected\)return hidden\?300000:120000/);
 });
