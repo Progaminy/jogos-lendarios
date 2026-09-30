@@ -26,11 +26,27 @@
     return bets.find((bet)=>Number(bet?.id)===target)||null;
   }
 
-  function pollDelay(status,hidden){
-    if(hidden)return 5000;
-    if(status==='FLYING'||status==='LOCKED')return 500;
-    if(status==='OPEN')return 1000;
-    return 1400;
+  function pollDelay(status,hidden,realtimeConnected=false){
+    if(realtimeConnected)return hidden?60000:30000;
+    if(hidden)return 15000;
+    if(status==='FLYING'||status==='LOCKED')return 2000;
+    if(status==='OPEN')return 5000;
+    return 10000;
+  }
+
+  function liveMultiplier(startedAt,serverNowMs){
+    const start=Date.parse(startedAt);
+    const now=Number(serverNowMs);
+    if(!Number.isFinite(start)||!Number.isFinite(now))return 1;
+    const seconds=Math.max(0,(now-start)/1000);
+    return Math.max(1,Math.pow(1.06,seconds));
+  }
+
+  function secondsUntil(isoTime,serverNowMs){
+    const target=Date.parse(isoTime);
+    const now=Number(serverNowMs);
+    if(!Number.isFinite(target)||!Number.isFinite(now))return null;
+    return Math.max(0,Math.ceil((target-now)/1000));
   }
 
   function phase(status){
@@ -53,6 +69,8 @@
     pickActiveBet,
     findBetById,
     pollDelay,
+    liveMultiplier,
+    secondsUntil,
     phase,
     shouldAcceptSnapshot
   });
