@@ -208,6 +208,19 @@ Esses cenários têm regressões transacionais em `tests/sql/aviator/`.
 - Migrations: `20260930001648_immutable_player_financial_ledger`, `20260930001729_ledger_initial_balance_posting` e `20260930001919_ledger_restrict_direct_writes`.
 - Regressão permanente: `tests/sql/aviator/aviator_immutable_financial_ledger.sql`.
 
+## Relógio do servidor como autoridade
+
+- Aceitação de apostas usa exclusivamente tempo do PostgreSQL.
+- O endpoint canónico captura `v_server_received_at := clock_timestamp()` e só seleciona rodada `OPEN` com `betting_closes_at > v_server_received_at`.
+- O trigger `jl_aviator_server_bet_window` é uma segunda barreira no próprio `INSERT`: lê a rodada sob lock e rejeita qualquer aposta se o estado não for `OPEN`, se não existir prazo, ou se `clock_timestamp() >= betting_closes_at`.
+- `jl_aviator_bets.created_at` usa `clock_timestamp()` por padrão e o trigger sobrescreve qualquer valor fornecido pelo caller. Portanto não é possível retroceder uma aposta com um relógio falsificado.
+- O overload legado de 2 argumentos foi convertido em wrapper do endpoint canónico; não existe mais um caminho antigo que aceite somente por `status='OPEN'`.
+- `locked_at` passou a usar `clock_timestamp()`.
+- `jl_aviator_public_state().round.betting_open` usa `v_now=clock_timestamp()`. O frame de 250 ms continua apenas para suavidade visual.
+- O navegador pode usar `Date.now()` para cache, retries e interpolação visual do relógio sincronizado; nunca envia horário do dispositivo no RPC de aposta e nunca determina a aceitação financeira.
+- Migrations: `20260930100103_aviator_server_clock_bet_authority` e `20260930100215_aviator_server_clock_public_window`.
+- Regressões: `tests/sql/aviator/aviator_server_clock_authority.sql` e `tests/frontend/aviator-server-clock.test.cjs`.
+
 ## Realtime do estado da rodada
 
 - O estado público do Aviator é distribuído por Supabase Realtime Broadcast no tópico público `aviator:round`, evento `state`.
