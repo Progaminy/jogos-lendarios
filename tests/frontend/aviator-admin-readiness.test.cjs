@@ -6,7 +6,7 @@ const fs=require('node:fs');
 
 test('admin mostra prontidão e tetos de referência do Aviator',()=>{
   const html=fs.readFileSync('admin.html','utf8');
-  const js=fs.readFileSync('admin.js','utf8');
+  const js=fs.readFileSync('js/aviator/admin.js','utf8');
 
   assert.match(html,/id="aviatorReadiness"/);
   assert.match(html,/id="aviatorReferenceCeilings"/);
@@ -16,7 +16,7 @@ test('admin mostra prontidão e tetos de referência do Aviator',()=>{
 });
 
 test('botão Fechar Aviator é dedicado, direto e não contém lógica de reabertura',()=>{
-  const js=fs.readFileSync('admin.js','utf8');
+  const js=fs.readFileSync('js/aviator/admin.js','utf8');
   assert.match(js,/async function closeAviatorFromAdmin/);
   assert.match(js,/jl_aviator_admin_close/);
   assert.match(js,/window\.JLCloseAviator=closeAviatorFromAdmin/);
