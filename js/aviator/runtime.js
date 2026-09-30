@@ -27,11 +27,11 @@
   }
 
   function pollDelay(status,hidden,realtimeConnected=false){
-    if(realtimeConnected)return hidden?60000:30000;
-    if(hidden)return 15000;
-    if(status==='FLYING'||status==='LOCKED')return 2000;
+    if(realtimeConnected)return hidden?300000:120000;
+    if(hidden)return 30000;
+    if(status==='FLYING'||status==='LOCKED')return 3000;
     if(status==='OPEN')return 5000;
-    return 10000;
+    return 15000;
   }
 
   function liveMultiplier(startedAt,serverNowMs){
