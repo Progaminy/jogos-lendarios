@@ -45,11 +45,11 @@ const runtime=window.JLAviatorRuntime||{
     return bets.find(b=>Number(b?.id)===Number(betId))||null;
   },
   pollDelay:(status,hidden,realtimeConnected=false)=>{
-    if(realtimeConnected)return hidden?60000:30000;
-    if(hidden)return 15000;
-    if(status==='FLYING'||status==='LOCKED')return 2000;
+    if(realtimeConnected)return hidden?300000:120000;
+    if(hidden)return 30000;
+    if(status==='FLYING'||status==='LOCKED')return 3000;
     if(status==='OPEN')return 5000;
-    return 10000;
+    return 15000;
   },
   liveMultiplier:(startedAt,serverNowMs)=>{
     const start=Date.parse(startedAt);
@@ -958,6 +958,7 @@ function renderCurrentRound(){
 function nextPollDelay(){
   const protectedFlight=!enabled&&round?.status==='FLYING'&&Boolean(myBet);
   if(!enabled&&!protectedFlight){
+    if(realtimeConnected)return document.hidden?300000:120000;
     return document.hidden?60000:30000;
   }
   return runtime.pollDelay(round?.status||'',document.hidden,realtimeConnected);
@@ -1354,7 +1355,11 @@ async function applyRealtimeSnapshot(x){
     renderBetConfirmation();
   }
 
-  if(round&&playerToken()&&(changedRound||changedStatus)){
+  if(
+    round&&
+    playerToken()&&
+    (changedRound||(Boolean(myBet)&&changedStatus))
+  ){
     await recover(true);
   }
 
@@ -1385,7 +1390,13 @@ function startRealtime(){
     onStatus:(connected)=>{
       realtimeConnected=Boolean(connected);
       clearTimeout(stateTimer);
-      if(connectionOnline)scheduleState(connected?30000:2000);
+      if(!connectionOnline)return;
+      if(connected){
+        if(!stateBusy)void reconnectState();
+        scheduleState(120000);
+      }else{
+        scheduleState(3000);
+      }
     }
   });
 }
