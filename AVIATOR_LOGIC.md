@@ -208,6 +208,22 @@ Esses cenários têm regressões transacionais em `tests/sql/aviator/`.
 - Migrations: `20260930001648_immutable_player_financial_ledger`, `20260930001729_ledger_initial_balance_posting` e `20260930001919_ledger_restrict_direct_writes`.
 - Regressão permanente: `tests/sql/aviator/aviator_immutable_financial_ledger.sql`.
 
+## Motor do voo orientado a eventos
+
+- O multiplicador visual não faz consultas ao banco: ele é interpolado localmente a partir de `started_at` + relógio sincronizado do servidor.
+- O cron global continua em 2 s porque atende também Número/Dupla, mas o ramo Aviator agora é apenas um gate leve. Uma rodada `FLYING` só chama `jl_aviator_tick` quando `engine_due_at <= clock_timestamp()`.
+- Cada rodada guarda `engine_due_at`, o próximo instante financeiro relevante.
+- Em `OPEN`, o próximo evento é `betting_closes_at`; em `LOCKED`, `takeoff_at`; em `FLYING`, o menor entre próximo auto cash-out ativo e crash.
+- `jl_aviator_multiplier_reach_at` converte um multiplicador em timestamp exato usando a mesma curva do motor, evitando ticks para recalcular continuamente o multiplicador.
+- `jl_aviator_tick` reagenda o próximo evento depois de processar os auto cash-outs devidos. Cash-out manual também reagenda porque pode alterar a exposição/target visual.
+- Índice parcial `jl_aviator_bets_active_auto_due_idx` permite localizar o próximo auto cash-out apenas entre apostas ACTIVE que realmente possuem alvo automático.
+- Índice `jl_aviator_rounds_engine_due_idx` permite o gate do motor localizar eventos vencidos sem varredura ampla.
+- A reconciliação privada durante o voo usa `jl_aviator_bet_status(token, bet_id)`, uma consulta por PK. Ela não calcula ledger, não agrega histórico e não carrega as últimas 20 apostas.
+- O limiar visual de auto cash-out não chama mais `jl_aviator_player_state`. Mudanças públicas de rodada também não fazem consulta privada para todos os jogadores; somente quem ainda possui uma aposta conhecida reconcilia seu `bet_id`.
+- O `player_state` completo continua reservado para login/reconnect real, quando é necessário descobrir a aposta do jogador.
+- Migrations: `20260930111947_aviator_event_driven_engine_schedule` e `20260930112207_aviator_lightweight_bet_status`.
+- Regressões: `tests/sql/aviator/aviator_event_driven_engine.sql` e `tests/frontend/aviator-db-call-budget.test.cjs`.
+
 ## Animação mobile extremamente leve
 
 - O Aviator detecta viewport móvel/pointer coarse e capacidade aproximada do aparelho (`deviceMemory`, `hardwareConcurrency` e `saveData`) para escolher um perfil visual adaptativo.
