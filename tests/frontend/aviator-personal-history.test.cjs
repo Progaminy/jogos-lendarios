@@ -41,11 +41,14 @@ test('carregar mais usa paginação por cursor',()=>{
   assert.match(personal,/moreBtn\?\.addEventListener\('click',\(\)=>void load\(false\)\)/);
 });
 
-test('linhas pessoais têm estados textuais e símbolos',()=>{
+test('linhas pessoais têm estados textuais, símbolos e campos detalhados',()=>{
   assert.match(personal,/icon:'✓',label:'GANHA'/);
   assert.match(personal,/icon:'✕',label:'PERDIDA'/);
   assert.match(personal,/icon:'↩',label:'REEMBOLSADA'/);
   assert.match(personal,/icon:'●',label:'ATIVA'/);
+  for(const label of ['Rodada','Apostado','Cash-out','Crash','Pagamento','Horário']){
+    assert.ok(personal.includes("['"+label+"'"));
+  }
 });
 
 test('histórico global continua independente',()=>{
