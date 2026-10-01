@@ -13,34 +13,35 @@ const css=read('aviator.css');
 const js=read('aviator.js');
 const ui=read('js/aviator/ui.js');
 
-test('botão Apostar vive em slot estrutural fixo',()=>{
-  assert.match(html,/class="aviator-bet-action"[\s\S]*id="betBtn"[^>]*>Apostar<\/button>[\s\S]*id="betActionStatus"/);
-  assert.match(css,/\.aviator-bet-action\{display:grid;grid-template-rows:58px 16px/);
-  assert.match(css,/\.aviator-bet-action #betBtn\{width:100%;height:58px;min-height:58px/);
+test('ação principal vive num único slot estrutural fixo',()=>{
+  assert.match(html,/class="aviator-primary-action-slot"[\s\S]*id="betBtn"[\s\S]*id="cashoutAction"[\s\S]*id="cashoutBtn"/);
+  assert.match(css,/\.aviator-primary-action-slot\{display:grid/);
+  assert.match(css,/\.aviator-primary-action-slot>\.aviator-bet-action,\.aviator-primary-action-slot>\.aviator-cashout-action\{grid-area:1\/1\}/);
 });
 
-test('mobile mantém botão grande em linha própria',()=>{
-  assert.match(css,/\.aviator-bet-action\{grid-column:1\/-1;grid-template-rows:64px 17px/);
-  assert.match(css,/\.aviator-bet-action #betBtn\{height:64px;min-height:64px;font-size:1\.2rem\}/);
+test('mobile mantém o mesmo slot grande sem deslocamento',()=>{
+  assert.match(css,/\.aviator-primary-action-slot\{grid-column:1\/-1\}/);
+  assert.match(css,/\.aviator-bet-action #betBtn\{height:72px;min-height:72px;font-size:1\.28rem\}/);
+  assert.match(css,/\.aviator-cashout-action #cashoutBtn\{height:72px;min-height:72px;font-size:1\.28rem\}/);
 });
 
-test('texto principal do botão nunca muda com estado da rodada',()=>{
-  assert.match(ui,/button\.textContent='Apostar'/);
-  assert.doesNotMatch(js,/\$\('#betBtn'\)[\s\S]{0,160}textContent/);
-  assert.doesNotMatch(js,/betBtn\.textContent/);
-  assert.doesNotMatch(js,/button\.textContent='Apostas fechadas'/);
-  assert.doesNotMatch(js,/button\.textContent='Aposta confirmada'/);
-  assert.doesNotMatch(js,/button\.textContent='Aguarde'/);
+test('ação muda Apostar -> Cancelar -> Cash-out conforme estado',()=>{
+  assert.match(ui,/label='Apostar'/);
+  assert.match(ui,/mode='bet'/);
+  assert.match(ui,/wrap\.classList\.toggle\('is-cancel',mode==='cancel'\)/);
+  assert.match(js,/'Cancelar',[\s\S]*?'cancel'/);
+  assert.match(js,/renderCashoutAction\(\{[\s\S]*?active:Boolean\(myBet\)/);
 });
 
-test('estado contextual usa linha separada e fixa',()=>{
-  assert.match(ui,/const statusEl=\$\('#betActionStatus'\)/);
-  assert.match(ui,/statusEl\.textContent=String\(status\|\|''\)/);
-  assert.match(js,/renderBetAction\(true,'Confirmando aposta…'\)/);
-  assert.match(js,/renderBetAction\(true,'Apostas fechadas'\)/);
-  assert.match(js,/renderBetAction\(true,'Aguarde a próxima rodada'\)/);
+test('OPEN com aposta confirmada disponibiliza cancelamento real',()=>{
+  assert.match(js,/const canCancel=[\s\S]*?Boolean\(myBet\)[\s\S]*?!closed/);
+  assert.match(js,/Aposta confirmada · toque para cancelar/);
+  assert.match(js,/financial\.cancelBet\(/);
+  assert.match(js,/financial\.cancelBetRequestKey\(id\)/);
 });
 
-test('OPEN altera apenas disabled e status, não estrutura',()=>{
-  assert.match(js,/renderBetAction\([\s\S]*?'Aposta confirmada'[\s\S]*?'Apostas fechadas'[\s\S]*?'Disponível'[\s\S]*?\);/);
+test('FLYING esconde ação de aposta quando existe cash-out',()=>{
+  const flying=js.match(/function renderFlying\(\)[\s\S]*?\n\}/)?.[0]||'';
+  assert.match(flying,/renderBetAction\([\s\S]*?Boolean\(myBet\)/);
+  assert.match(flying,/renderCashoutAction\([\s\S]*?active:Boolean\(myBet\)/);
 });
