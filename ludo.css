@@ -814,3 +814,22 @@
 
 
 .pawn-type-classic{filter:drop-shadow(0 3px 4px rgba(0,0,0,.28))}.pawn-type-classic:after{content:none!important;display:none!important}.pawn-type-classic:before{content:""!important;position:absolute!important;z-index:1!important;left:10%!important;top:-1%!important;width:80%!important;height:102%!important;aspect-ratio:auto!important;border-radius:48% 48% 54% 54% / 42% 42% 58% 58%!important;clip-path:polygon(50% 0,70% 4%,86% 16%,96% 35%,94% 53%,82% 69%,50% 100%,18% 69%,6% 53%,4% 35%,14% 16%,30% 4%)!important;border:1.5px solid rgba(95,105,116,.9)!important;background:radial-gradient(circle at 50% 34%,var(--preview-color) 0 22%,color-mix(in srgb,var(--preview-color) 74%,black) 23% 25%,transparent 26%),linear-gradient(145deg,#ffffff 0%,#f4f6fa 52%,#cfd5df 100%)!important;box-shadow:0 4px 7px rgba(0,0,0,.42),inset 3px 3px 5px rgba(255,255,255,.72),inset -3px -3px 5px rgba(90,99,111,.22)!important}.piece.pawn-style-classic{filter:drop-shadow(0 2px 3px rgba(0,0,0,.3))}.piece.pawn-style-classic:after{content:none!important;display:none!important}.piece.pawn-style-classic:before{content:""!important;position:absolute!important;z-index:-1!important;left:11%!important;top:0%!important;width:78%!important;height:100%!important;aspect-ratio:auto!important;border-radius:48% 48% 54% 54% / 42% 42% 58% 58%!important;clip-path:polygon(50% 0,70% 4%,86% 16%,96% 35%,94% 53%,82% 69%,50% 100%,18% 69%,6% 53%,4% 35%,14% 16%,30% 4%)!important;border:1.2px solid rgba(95,105,116,.92)!important;background:radial-gradient(circle at 50% 34%,var(--pawn-color) 0 22%,color-mix(in srgb,var(--pawn-color) 72%,black) 23% 25%,transparent 26%),linear-gradient(145deg,#ffffff 0%,#f4f6fa 52%,#cfd5df 100%)!important;box-shadow:0 3px 5px rgba(0,0,0,.4),inset 2px 2px 4px rgba(255,255,255,.72),inset -2px -2px 4px rgba(90,99,111,.22)!important}
+
+
+/* VEZ ATIVA — o lacre acompanha a cor do jogador */
+.player-card.current.red{
+  border-color:var(--red)!important;
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--red) 42%,transparent),0 0 18px color-mix(in srgb,var(--red) 28%,transparent)!important;
+}
+.player-card.current.green{
+  border-color:var(--green)!important;
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--green) 42%,transparent),0 0 18px color-mix(in srgb,var(--green) 28%,transparent)!important;
+}
+.player-card.current.yellow{
+  border-color:var(--yellow)!important;
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--yellow) 46%,transparent),0 0 18px color-mix(in srgb,var(--yellow) 30%,transparent)!important;
+}
+.player-card.current.blue{
+  border-color:var(--blue)!important;
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--blue) 42%,transparent),0 0 18px color-mix(in srgb,var(--blue) 28%,transparent)!important;
+}
