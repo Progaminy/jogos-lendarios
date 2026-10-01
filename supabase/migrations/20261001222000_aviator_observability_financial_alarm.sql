@@ -122,8 +122,8 @@ declare
   v_refund_tx numeric:=0;
   v_ok boolean:=false;
 begin
-  select count(*),coalesce(sum(stake),0)
-    into v_bet_missing,v_stakes
+  select count(*)
+    into v_bet_missing
   from public.jl_aviator_bets b
   where not exists(
     select 1
@@ -135,6 +135,10 @@ begin
       and t.status='completed'
   );
 
+  select coalesce(sum(stake),0)
+    into v_stakes
+  from public.jl_aviator_bets;
+
   select coalesce(sum(-amount),0)
     into v_bet_debits
   from public.transactions
@@ -142,8 +146,8 @@ begin
     and kind='aviator_bet'
     and status='completed';
 
-  select count(*),coalesce(sum(b.payout),0)
-    into v_payout_missing,v_payouts
+  select count(*)
+    into v_payout_missing
   from public.jl_aviator_bets b
   where b.status='CASHED_OUT'
     and (
@@ -160,6 +164,11 @@ begin
       )
     );
 
+  select coalesce(sum(payout),0)
+    into v_payouts
+  from public.jl_aviator_bets
+  where status='CASHED_OUT';
+
   select coalesce(sum(amount),0)
     into v_payout_tx
   from public.transactions
@@ -167,8 +176,8 @@ begin
     and kind='aviator_payout'
     and status='completed';
 
-  select count(*),coalesce(sum(b.stake),0)
-    into v_refund_missing,v_refunds
+  select count(*)
+    into v_refund_missing
   from public.jl_aviator_bets b
   where b.status='REFUNDED'
     and (
@@ -184,6 +193,11 @@ begin
           and t.status='completed'
       )
     );
+
+  select coalesce(sum(stake),0)
+    into v_refunds
+  from public.jl_aviator_bets
+  where status='REFUNDED';
 
   select coalesce(sum(amount),0)
     into v_refund_tx
