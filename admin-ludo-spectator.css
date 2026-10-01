@@ -169,3 +169,18 @@
   .ludo-watch-player{padding:8px}
   .ludo-watch-events{max-height:130px}
 }
+
+
+/* No espectador, o lacre da vez usa a cor do próprio jogador. */
+.ludo-watch-player.current:has(.ludo-watch-dot.red){
+  border-color:#ef2737!important;box-shadow:0 0 0 2px rgba(239,39,55,.24),0 0 14px rgba(239,39,55,.18)!important
+}
+.ludo-watch-player.current:has(.ludo-watch-dot.green){
+  border-color:#079a54!important;box-shadow:0 0 0 2px rgba(7,154,84,.24),0 0 14px rgba(7,154,84,.18)!important
+}
+.ludo-watch-player.current:has(.ludo-watch-dot.yellow){
+  border-color:#ffd428!important;box-shadow:0 0 0 2px rgba(255,212,40,.25),0 0 14px rgba(255,212,40,.18)!important
+}
+.ludo-watch-player.current:has(.ludo-watch-dot.blue){
+  border-color:#28a9e8!important;box-shadow:0 0 0 2px rgba(40,169,232,.24),0 0 14px rgba(40,169,232,.18)!important
+}
