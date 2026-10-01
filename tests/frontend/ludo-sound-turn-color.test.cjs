@@ -17,6 +17,11 @@ test('efeitos de eventos remotos são processados na mesma atualização Realtim
   assert.match(js,/renderAll\(\);[\s\S]{0,220}processGameEffects\(nextRoom\)/);
 });
 
+test('efeito de captura/chegada local toca junto da atualização visual final',()=>{
+  const js=fs.readFileSync(path.join(__dirname,'../../ludo.js'),'utf8');
+  assert.match(js,/await visualMove;[\s\S]{0,700}renderRoom\(\);[\s\S]{0,120}processGameEffects\(confirmedRoom\)/);
+});
+
 test('lacre da vez segue a cor do jogador no Ludo e no espectador',()=>{
   const css=fs.readFileSync(path.join(__dirname,'../../ludo.css'),'utf8');
   const adminCss=fs.readFileSync(path.join(__dirname,'../../admin-ludo-spectator.css'),'utf8');
