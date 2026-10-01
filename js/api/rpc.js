@@ -1,76 +1,18 @@
-(() => {
-  'use strict';
-
-  const PLAYER_TOKEN_KEY = 'jl_player_token';
-
-  function config() {
-    const cfg = window.JL_CONFIG || {};
-    if (!cfg.supabaseUrl || !cfg.supabaseKey) {
-      throw new Error('Configuração do Supabase ausente.');
-    }
-    return cfg;
+(()=>{
+'use strict';
+const K='jl_player_token';
+async function rpc(name,args={},options={}){
+  const c=window.JL_CONFIG||{};
+  if(!c.supabaseUrl||!c.supabaseKey)throw new Error('Configuração do Supabase ausente.');
+  const r=await fetch(`${c.supabaseUrl}/rest/v1/rpc/${name}`,{method:'POST',headers:{apikey:c.supabaseKey,Authorization:`Bearer ${c.supabaseKey}`,'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify(args),keepalive:Boolean(options.keepalive),signal:options.signal});
+  const raw=await r.text();let p=null;
+  try{p=raw?JSON.parse(raw):null}catch{p=raw}
+  if(!r.ok){
+    const m=p?.message||p?.error||p?.hint||`Erro ${r.status}`,t=typeof args?.p_token==='string'?args.p_token:'',a=window.JLSession?.getPlayerToken?.()||localStorage.getItem(K)||'';
+    if(t&&a===t&&/sess[aã]o.*(?:inv[aá]lida|expirada)/i.test(m))window.JLSession?.setPlayerToken?window.JLSession.setPlayerToken(''):localStorage.removeItem(K);
+    throw new Error(m);
   }
-
-  function isInvalidPlayerSession(message) {
-    return /sess[aã]o.*(?:inv[aá]lida|expirada)/i.test(String(message || ''));
-  }
-
-  function currentPlayerToken() {
-    return window.JLSession?.getPlayerToken?.() ||
-      localStorage.getItem(PLAYER_TOKEN_KEY) ||
-      '';
-  }
-
-  function invalidateRejectedPlayerSession(args, message) {
-    const rejectedToken = typeof args?.p_token === 'string' ? args.p_token : '';
-    if (!rejectedToken || !isInvalidPlayerSession(message)) return false;
-
-    const activeToken = currentPlayerToken();
-
-    // Never let a delayed response from an older request log out a newer login.
-    if (!activeToken || activeToken !== rejectedToken) return false;
-
-    if (window.JLSession?.setPlayerToken) {
-      window.JLSession.setPlayerToken('');
-    } else {
-      localStorage.removeItem(PLAYER_TOKEN_KEY);
-    }
-
-    window.dispatchEvent(new CustomEvent('jl-player-session-invalidated', {
-      detail: {
-        message: String(message || ''),
-        reason: 'replaced_or_expired'
-      }
-    }));
-    return true;
-  }
-
-  async function rpc(name, args = {}, options = {}) {
-    const cfg = config();
-    const response = await fetch(`${cfg.supabaseUrl}/rest/v1/rpc/${name}`, {
-      method: 'POST',
-      headers: {
-        apikey: cfg.supabaseKey,
-        Authorization: `Bearer ${cfg.supabaseKey}`,
-        'Content-Type': 'application/json',
-        Accept: 'application/json'
-      },
-      body: JSON.stringify(args),
-      keepalive: Boolean(options.keepalive),
-      signal: options.signal
-    });
-
-    const raw = await response.text();
-    let payload = null;
-    try { payload = raw ? JSON.parse(raw) : null; } catch { payload = raw; }
-
-    if (!response.ok) {
-      const message = payload?.message || payload?.error || payload?.hint || `Erro ${response.status}`;
-      invalidateRejectedPlayerSession(args, message);
-      throw new Error(message);
-    }
-    return payload;
-  }
-
-  window.JLApi = Object.freeze({ rpc });
+  return p;
+}
+window.JLApi=Object.freeze({rpc});
 })();
