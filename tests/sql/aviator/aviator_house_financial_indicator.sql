@@ -91,10 +91,11 @@ begin
   );
 
   insert into public.transactions(
-    player_id,kind,amount,status,note
+    player_id,kind,amount,status,note,aviator_bet_id,aviator_operation
   )
   values(
-    v_p2,'aviator_payout',30,'completed','House indicator cashout'
+    v_p2,'aviator_payout',30,'completed','House indicator cashout',
+    (v_b2->>'bet_id')::bigint,'PAYOUT'
   )
   returning id into v_tx;
 
