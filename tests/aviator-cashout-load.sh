@@ -138,13 +138,9 @@ set +e
 cat "$jobs" | xargs -P "$PARALLEL" -n2 bash -c '
   token="$1"
   bet_id="$2"
-  out=$(psql "$JL_TEST_DATABASE_URL" -X -qAt -v ON_ERROR_STOP=1 -c "
-    select public.jl_aviator_cashout(
-      '\''$token'\'',
-      $bet_id,
-      '\''load-cashout-'$RUN_ID'-'\''||$bet_id::text
-    );
-  " 2>&1)
+  out=$(psql "$JL_TEST_DATABASE_URL" -X -qAt -v ON_ERROR_STOP=1 \
+    -v token="$token" -v bet_id="$bet_id" \
+    -c "select public.jl_aviator_cashout(:'\''token'\'', :bet_id::bigint);" 2>&1)
   status=$?
   if [ "$status" -ne 0 ] || ! printf "%s" "$out" | grep -q "\"ok\": true"; then
     printf "cashout failed token=%s bet=%s status=%s out=%s\n" "$token" "$bet_id" "$status" "$out" >&2
