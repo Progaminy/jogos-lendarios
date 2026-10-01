@@ -38,7 +38,7 @@
 
     ludoRealtimeRoomId=id;
     window.JLLudoRealtime.connect(id,{
-      onSignal:()=>queueLudoRealtimeRefresh(),
+      onSignal:(p)=>{showRealtimeDice(p,id);queueLudoRealtimeRefresh();},
       onStatus:(connected)=>{
         if(ludoRealtimeRoomId!==id)return;
         ludoRealtimeConnected=Boolean(connected);
@@ -131,6 +131,17 @@
     els.dice.setAttribute('aria-label',els.rollDice&&!els.rollDice.disabled?`Dado: ${n}. Toque para lançar`:`Dado: ${n}`);
     const visible=new Set(DICE_LAYOUTS[n]);
     for(let i=1;i<=9;i++){const pip=document.createElement('span');pip.className=`pip p${i}${visible.has(i)?' on':''}`;els.dice.appendChild(pip);}
+  }
+  function showRealtimeDice(p,id){
+    if(p?.kind!=='dice_rolled'||String(p.room_id||'')!==id)return;
+    const n=Number(Array.isArray(p.dice_values)?p.dice_values[0]:p.dice);
+    if(!Number.isInteger(n)||n<1||n>6)return;
+    state.lastDiceRoomId=id;state.lastDiceValue=n;
+    if(String(p.player_id||'')===String(me()||'')&&state.diceRolling)return;
+    renderDiceFace(n);playDiceLanding();
+    const x=roomPlayers().find(x=>String(x.player_id)===String(p.player_id)),who=x?firstPlayerName(x):'Adversário';
+    if(els.moveHint)els.moveHint.textContent=`${who} tirou ${n}.`;
+    announceLive(els.ludoDiceLive,`${who} tirou ${n} no dado.`,{force:true});
   }
 
   function renderDiceRollingNeutral(){
@@ -631,8 +642,6 @@
         nextStatus.public_challenges=state.status?.public_challenges||[];
       }
 
-      // Qualquer resposta iniciada antes de uma jogada, de um lançamento ou
-      // de uma resposta mais nova é descartada antes de tocar no DOM/estado.
       if(state.animating||state.diceRolling||!movementGuard.canApplySnapshot(snapshotTicket))return;
 
       const previousRoom=state.room;
@@ -645,8 +654,6 @@
       state.status=nextStatus;
       if(previousRoom&&!nextRoom)closeVoice();
 
-      // O destino autoritativo entra primeiro no estado. A animação apenas
-      // representa visualmente o caminho; nunca é fonte da posição.
       state.room=nextRoom;
       syncLudoRealtime(nextRoom?.room?.id||nextStatus?.active_room_id||null);
 
@@ -669,8 +676,6 @@
 
       if(movementGuard.canApplySnapshot(snapshotTicket)){
         renderAll();
-        // Realtime entrega o evento e o efeito sonoro na mesma atualização.
-        // Evita captura/chegada/vitória soarem apenas numa consulta posterior.
         processGameEffects(nextRoom);
       }
     }catch(e){
@@ -943,8 +948,6 @@
         toSteps:Number(move.to_steps)
       });
 
-      // Otimismo visual: o estado local já conhece o destino. Se qualquer
-      // resposta antiga chegar depois, a geração da jogada invalida-a.
       if(movingToken)movingToken.steps=Number(move.to_steps);
 
       state.animating=true;
