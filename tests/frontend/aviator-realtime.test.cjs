@@ -51,7 +51,7 @@ test('multiplicador visual interpola fórmula do servidor sem decidir cash-out',
 
   const financial=finance.match(/async function requestFinancialCashout\(betId,requestKey\)[\s\S]*?\n    \}/)?.[0]||'';
   assert.match(financial,/jl_aviator_cashout/);
-  assert.match(financial,/p_bet_id:Number\(betId\)/);
+  assert.match(financial,/p_bet_id:id/);
   assert.doesNotMatch(financial,/p_multiplier|current_multiplier|started_at/);
 });
 
