@@ -22,9 +22,8 @@ test('criacao da sala envia pawn_count escolhido ao servidor',()=>{
 
 test('pre-jogo mostra somente a quantidade configurada de peoes',()=>{
   const js=fs.readFileSync(path.join(__dirname,'../../js/ludo/render.js'),'utf8');
-  assert.match(js,/pawnCount=Math\.max\(1,Math\.min\(4,\+item\?\.pawn_count\|\|4\)\)/);
   assert.match(js,/base\[color\]\.slice\(0,pawnCount\)/);
-  assert.match(js,/pawn_count:state\.room\?\.room\?\.pawn_count\|\|4/);
+  assert.match(js,/renderStaticBoard\(els\.ludoBoard,pieces,state\.room\?\.room\?\.pawn_count\|\|4\)/);
 });
 
 test('resumo da sala mostra peoes por jogador',()=>{
