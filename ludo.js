@@ -667,7 +667,12 @@
         }
       }
 
-      if(movementGuard.canApplySnapshot(snapshotTicket))renderAll();
+      if(movementGuard.canApplySnapshot(snapshotTicket)){
+        renderAll();
+        // Realtime entrega o evento e o efeito sonoro na mesma atualização.
+        // Evita captura/chegada/vitória soarem apenas numa consulta posterior.
+        processGameEffects(nextRoom);
+      }
     }catch(e){
       if(/Sessão/.test(e.message)){saveToken('');state.status=null;state.room=null;syncLudoRealtime(null);renderAll();}
       if(!silent)showToast(e.message,'error');
