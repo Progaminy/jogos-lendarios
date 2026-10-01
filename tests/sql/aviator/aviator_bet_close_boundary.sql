@@ -224,9 +224,9 @@ begin
       end if;
   end;
 
-  drop trigger jl_point55_delay_wallet_update on public.players;
-  drop function public.jl_point55_delay_wallet_update();
-
+  -- Não fazemos DROP aqui: o teste inteiro roda dentro de uma transação
+  -- que termina em ROLLBACK. Remover o trigger manualmente exige
+  -- AccessExclusiveLock e pode entrar em deadlock com o cron do motor.
   if not blocked then
     raise exception 'Ponto 55: corrida fechamento x INSERT não foi bloqueada';
   end if;
