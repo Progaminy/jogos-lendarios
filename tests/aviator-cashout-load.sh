@@ -112,9 +112,9 @@ select public.jl_aviator_start_round($round_id);
 
 update public.jl_aviator_rounds
 set started_at=clock_timestamp()-interval '1 second',
-    financial_ceiling=100,
-    locked_effective_target=100,
-    effective_target=100,
+    financial_ceiling=1000000000,
+    locked_effective_target=1000000000,
+    effective_target=1000000000,
     visual_extension=false,
     engine_due_at=clock_timestamp()+interval '10 minutes'
 where id=$round_id;
