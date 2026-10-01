@@ -2,6 +2,10 @@ name: Aviator Stress Certification
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/aviator-stress.yml'
 
 permissions:
   contents: read
