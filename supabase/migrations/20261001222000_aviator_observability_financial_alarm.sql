@@ -412,7 +412,7 @@ begin
   from public.jl_aviator_client_metrics
   where created_at>=clock_timestamp()-interval '15 minutes';
 
-  v_consistency:=public.jl_aviator_financial_consistency_snapshot();
+  v_consistency:=public.jl_aviator_financial_consistency_watch();
 
   select coalesce(jsonb_agg(jsonb_build_object(
     'id',id,
