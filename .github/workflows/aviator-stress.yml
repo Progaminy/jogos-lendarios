@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 env:
-  STRESS_REVISION: '4'
+  STRESS_REVISION: '5'
 
 jobs:
   cashout-load:
