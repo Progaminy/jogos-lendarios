@@ -57,6 +57,6 @@ test('confirmação mantém o mesmo slot sem deslocar a ação',()=>{
 
 test('financeiro continua autoritativo no servidor',()=>{
   assert.match(financial,/jl_aviator_cashout/);
-  assert.match(financial,/p_bet_id:Number\(betId\)/);
+  assert.match(financial,/p_bet_id:id/);
   assert.doesNotMatch(financial,/p_multiplier|estimated_payout|client_payout/);
 });
