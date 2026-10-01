@@ -122,6 +122,40 @@ begin
   ) then
     raise exception 'Ponto 66: alarme não foi resolvido após correção';
   end if;
+
+  -- Divergência da banca: cria um movimento legítimo e depois altera apenas
+  -- o saldo materializado, sem novo lançamento no ledger da banca.
+  perform public.jl_aviator_admin_adjust_bank(
+    v_admin_token,
+    10,
+    'Ponto 66 · preparar teste de reconciliação da banca'
+  );
+
+  update public.jl_aviator_bank
+     set balance=balance+1,
+         updated_at=clock_timestamp()
+   where id=true;
+
+  v_consistency:=public.jl_aviator_financial_consistency_watch();
+
+  if coalesce((v_consistency->>'ok')::boolean,true) is distinct from false
+     or coalesce(
+       (v_consistency->'counts'->>'aviator_bank_balance_mismatch')::integer,
+       0
+     )<>1 then
+    raise exception 'Ponto 66: divergência da banca não foi detectada: %',v_consistency;
+  end if;
+
+  update public.jl_aviator_bank
+     set balance=balance-1,
+         updated_at=clock_timestamp()
+   where id=true;
+
+  v_consistency:=public.jl_aviator_financial_consistency_watch();
+
+  if coalesce((v_consistency->>'ok')::boolean,false) is distinct from true then
+    raise exception 'Ponto 66: banca corrigida não voltou a OK: %',v_consistency;
+  end if;
 end
 $point65_66$;
 
