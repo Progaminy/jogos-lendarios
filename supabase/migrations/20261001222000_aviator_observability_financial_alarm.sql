@@ -373,6 +373,7 @@ declare
   v_bet_failures_15 bigint:=0;
   v_cashout_failures_15 bigint:=0;
   v_reconnect_failures_15 bigint:=0;
+  v_payment_failures_15 bigint:=0;
   v_bet_p95 numeric:=0;
   v_cashout_p95 numeric:=0;
   v_reconnect_p95 numeric:=0;
@@ -413,8 +414,25 @@ begin
   select
     count(*) filter(where operation='BET' and not success),
     count(*) filter(where operation='CASHOUT' and not success),
-    count(*) filter(where operation='RECONNECT' and not success)
-  into v_bet_failures_15,v_cashout_failures_15,v_reconnect_failures_15
+    count(*) filter(where operation='RECONNECT' and not success),
+    count(*) filter(
+      where operation='CASHOUT'
+        and not success
+        and coalesce(error_code,'') not in (
+          'ROUND_CRASHED',
+          'BET_SETTLED',
+          'FLIGHT_INACTIVE',
+          'BOT_RATE_LIMITED',
+          'BOT_TOO_FAST',
+          'RATE_LIMITED',
+          'AUTH_INVALID'
+        )
+    )
+  into
+    v_bet_failures_15,
+    v_cashout_failures_15,
+    v_reconnect_failures_15,
+    v_payment_failures_15
   from public.jl_aviator_client_metrics
   where created_at>=clock_timestamp()-interval '15 minutes';
 
@@ -474,9 +492,10 @@ begin
       'bet',v_bet_failures_15,
       'cashout',v_cashout_failures_15,
       'reconnect',v_reconnect_failures_15,
-      'payment',v_cashout_failures_15+
+      'payment',v_payment_failures_15+
         coalesce((v_consistency->'counts'->>'payout_mismatches')::bigint,0)+
-        coalesce((v_consistency->'counts'->>'refund_mismatches')::bigint,0)
+        coalesce((v_consistency->'counts'->>'refund_mismatches')::bigint,0)+
+        coalesce((v_consistency->'counts'->>'unexpected_money_operations')::bigint,0)
     ),
     'financial_consistency',v_consistency,
     'alerts',v_alerts,
