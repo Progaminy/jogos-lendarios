@@ -2,7 +2,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
 
-select plan(5);
+select plan(6);
 
 select ok(
   to_regprocedure('public.jl_ludo_realtime_broadcast_sync()') is not null,
@@ -57,6 +57,16 @@ select ok(
     'EXECUTE'
   ),
   'Ludo: função interna de Broadcast não é executável pelo cliente'
+);
+
+select ok(
+  lower(pg_get_functiondef('public.jl_ludo_realtime_broadcast_sync()'::regprocedure))
+    like '%dice_rolled%'
+  and lower(pg_get_functiondef('public.jl_ludo_realtime_broadcast_sync()'::regprocedure))
+    like '%player_id%'
+  and lower(pg_get_functiondef('public.jl_ludo_realtime_broadcast_sync()'::regprocedure))
+    like '%dice_values%',
+  'Ludo: Broadcast inclui jogador e resultado público do dado'
 );
 
 select * from finish();
