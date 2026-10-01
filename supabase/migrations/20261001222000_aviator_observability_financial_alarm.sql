@@ -119,6 +119,7 @@ declare
   v_balance_mismatch bigint:=0;
   v_negative_balance bigint:=0;
   v_active_finalized bigint:=0;
+  v_bank_balance_mismatch bigint:=0;
   v_stakes numeric:=0;
   v_bet_debits numeric:=0;
   v_payouts numeric:=0;
@@ -237,6 +238,24 @@ begin
   where b.status='ACTIVE'
     and r.status in ('CANCELLED','SETTLED');
 
+  select
+    case
+      when latest.id is null then 0
+      when round(bank.balance,2)=round(latest.balance_after,2) then 0
+      else 1
+    end
+  into v_bank_balance_mismatch
+  from public.jl_aviator_bank bank
+  left join lateral(
+    select id,balance_after
+    from public.jl_aviator_bank_ledger
+    order by id desc
+    limit 1
+  ) latest on true
+  where bank.id=true;
+
+  v_bank_balance_mismatch:=coalesce(v_bank_balance_mismatch,0);
+
   v_ok:=
     v_bet_missing=0
     and v_payout_missing=0
@@ -245,6 +264,7 @@ begin
     and v_balance_mismatch=0
     and v_negative_balance=0
     and v_active_finalized=0
+    and v_bank_balance_mismatch=0
     and round(v_stakes,2)=round(v_bet_debits,2)
     and round(v_payouts,2)=round(v_payout_tx,2)
     and round(v_refunds,2)=round(v_refund_tx,2);
@@ -259,7 +279,8 @@ begin
       'unexpected_money_operations',v_unexpected_money,
       'player_balance_mismatches',v_balance_mismatch,
       'negative_player_balances',v_negative_balance,
-      'active_bets_in_finalized_rounds',v_active_finalized
+      'active_bets_in_finalized_rounds',v_active_finalized,
+      'aviator_bank_balance_mismatch',v_bank_balance_mismatch
     ),
     'totals',jsonb_build_object(
       'bet_stakes',round(v_stakes,2),
@@ -495,7 +516,8 @@ begin
       'payment',v_payment_failures_15+
         coalesce((v_consistency->'counts'->>'payout_mismatches')::bigint,0)+
         coalesce((v_consistency->'counts'->>'refund_mismatches')::bigint,0)+
-        coalesce((v_consistency->'counts'->>'unexpected_money_operations')::bigint,0)
+        coalesce((v_consistency->'counts'->>'unexpected_money_operations')::bigint,0)+
+        coalesce((v_consistency->'counts'->>'aviator_bank_balance_mismatch')::bigint,0)
     ),
     'financial_consistency',v_consistency,
     'alerts',v_alerts,
