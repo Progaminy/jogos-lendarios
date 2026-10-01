@@ -61,29 +61,88 @@
       return value;
     }
 
+    async function recordClientMetric(operation,durationMs,success,errorCode=null,roundId=null,betId=null){
+      const token=playerToken();
+      if(!token)return;
+      try{
+        await rpc('jl_aviator_record_client_metric',{
+          p_token:token,
+          p_operation:String(operation||'').toUpperCase(),
+          p_duration_ms:Math.max(0,Math.min(60000,Math.round(Number(durationMs)||0))),
+          p_success:Boolean(success),
+          p_error_code:errorCode?String(errorCode).slice(0,80):null,
+          p_round_id:Number.isFinite(Number(roundId))?Number(roundId):null,
+          p_bet_id:Number.isFinite(Number(betId))?Number(betId):null
+        });
+      }catch(_){}
+    }
+
     async function placeBet({amount,requestKey,autoCashoutMultiplier}){
-      return rpc('jl_aviator_place_bet',{
-        p_token:playerToken(),
-        p_amount:Number(amount),
-        p_request_key:String(requestKey||betKey()||''),
-        p_auto_cashout_multiplier:autoCashoutMultiplier===null
-          ?null
-          :Number(autoCashoutMultiplier)
-      });
+      const started=Date.now();
+      try{
+        const result=await rpc('jl_aviator_place_bet',{
+          p_token:playerToken(),
+          p_amount:Number(amount),
+          p_request_key:String(requestKey||betKey()||''),
+          p_auto_cashout_multiplier:autoCashoutMultiplier===null
+            ?null
+            :Number(autoCashoutMultiplier)
+        });
+        void recordClientMetric(
+          'BET',
+          Date.now()-started,
+          true,
+          null,
+          result?.round_id,
+          result?.bet_id
+        );
+        return result;
+      }catch(error){
+        void recordClientMetric(
+          'BET',
+          Date.now()-started,
+          false,
+          error?.code||error?.message||'BET_FAILED',
+          getRoundId?.(),
+          null
+        );
+        throw error;
+      }
     }
 
     async function requestFinancialCashout(betId,requestKey){
-      const result=await rpc('jl_aviator_cashout',{
-        p_token:playerToken(),
-        p_bet_id:Number(betId),
-        p_request_key:String(requestKey||cashoutRequestKey(betId)||'')
-      });
-      if(!result?.ok){
-        const error=new Error(result?.message||'Cash-out rejeitado.');
-        error.code=result?.error_code||'CASHOUT_REJECTED';
+      const started=Date.now();
+      try{
+        const result=await rpc('jl_aviator_cashout',{
+          p_token:playerToken(),
+          p_bet_id:Number(betId),
+          p_request_key:String(requestKey||cashoutRequestKey(betId)||'')
+        });
+        if(!result?.ok){
+          const error=new Error(result?.message||'Cash-out rejeitado.');
+          error.code=result?.error_code||'CASHOUT_REJECTED';
+          throw error;
+        }
+        void recordClientMetric(
+          'CASHOUT',
+          Date.now()-started,
+          true,
+          null,
+          result?.round_id||getRoundId?.(),
+          betId
+        );
+        return result;
+      }catch(error){
+        void recordClientMetric(
+          'CASHOUT',
+          Date.now()-started,
+          false,
+          error?.code||error?.message||'CASHOUT_FAILED',
+          getRoundId?.(),
+          betId
+        );
         throw error;
       }
-      return result;
     }
 
     async function fetchBetStatus(betId){
@@ -103,7 +162,8 @@
 
     return Object.freeze({
       cashoutRequestKey,readPendingCashout,savePendingCashout,clearPendingCashout,
-      betKey,placeBet,requestFinancialCashout,fetchBetStatus,cashoutMessage
+      betKey,placeBet,requestFinancialCashout,fetchBetStatus,cashoutMessage,
+      recordClientMetric
     });
   }
 
