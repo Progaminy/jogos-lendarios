@@ -64,7 +64,7 @@ begin
        where id=true;
 
       update public.jl_aviator_bank
-         set balance=100000,
+         set balance=20,
              exposure_ratio=.5,
              updated_at=clock_timestamp()
        where id=true;
@@ -129,10 +129,6 @@ begin
 
       update public.jl_aviator_rounds
          set started_at=clock_timestamp()-interval '1 second',
-             financial_ceiling=5.00,
-             locked_effective_target=5.00,
-             effective_target=5.00,
-             visual_extension=false,
              engine_due_at=clock_timestamp()+interval '10 minutes'
        where id=v_round;
 
@@ -177,10 +173,6 @@ begin
       -- caminho crash: a segunda aposta permanece ativa até perder.
       update public.jl_aviator_rounds
          set started_at=clock_timestamp()-interval '20 seconds',
-             financial_ceiling=2.00,
-             locked_effective_target=2.00,
-             effective_target=2.00,
-             visual_extension=false,
              engine_due_at=clock_timestamp()
        where id=v_round;
 
