@@ -14,9 +14,10 @@ const js=read('aviator.js');
 const ui=read('js/aviator/ui.js');
 const financial=read('js/aviator/financial.js');
 
-test('cash-out tem slot próprio e grande',()=>{
-  assert.match(html,/id="cashoutAction" class="aviator-cashout-action"[\s\S]*id="cashoutBtn"/);
-  assert.match(css,/\.aviator-cashout-action\{display:grid;grid-template-rows:64px 16px/);
+test('cash-out ocupa o mesmo slot principal e permanece grande',()=>{
+  assert.match(html,/class="aviator-primary-action-slot"[\s\S]*id="cashoutAction" class="aviator-cashout-action hidden"[\s\S]*id="cashoutBtn"/);
+  assert.match(css,/\.aviator-primary-action-slot>\.aviator-bet-action,\.aviator-primary-action-slot>\.aviator-cashout-action\{grid-area:1\/1\}/);
+  assert.match(css,/\.aviator-cashout-action\{display:grid;grid-template-rows:64px 18px/);
   assert.match(css,/\.aviator-cashout-action #cashoutBtn\{width:100%;height:64px;min-height:64px/);
 });
 
