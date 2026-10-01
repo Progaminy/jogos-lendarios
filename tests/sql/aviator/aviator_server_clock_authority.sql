@@ -54,10 +54,14 @@ begin
     raise exception 'created_at não usa clock_timestamp()';
   end if;
 
-  select id into v_player
-  from public.players
-  order by id
-  limit 1;
+  insert into public.players(name,phone,pin_hash,balance)
+  values(
+    'AVIATOR SERVER CLOCK TEST',
+    'point37-'||gen_random_uuid()::text,
+    'test-only',
+    10
+  )
+  returning id into v_player;
 
   insert into public.jl_aviator_rounds(status,betting_closes_at,takeoff_at)
   values(
