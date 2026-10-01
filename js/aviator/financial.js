@@ -3,6 +3,8 @@
 
   function create({rpc,playerToken,getRoundId,storage=sessionStorage,cryptoRef=crypto}) {
     const pendingCashoutKey='jl_aviator_pending_cashout_v1';
+    const pendingMetricsKey='jl_aviator_metric_queue_v1';
+    let metricFlushBusy=false;
 
     function uuid(){
       return cryptoRef.randomUUID?cryptoRef.randomUUID():Date.now()+'-'+Math.random().toString(36).slice(2);
@@ -61,20 +63,85 @@
       return value;
     }
 
-    async function recordClientMetric(operation,durationMs,success,errorCode=null,roundId=null,betId=null){
-      const token=playerToken();
-      if(!token)return;
+    function metricPayload(operation,durationMs,success,errorCode=null,roundId=null,betId=null){
+      return {
+        operation:String(operation||'').toUpperCase(),
+        duration_ms:Math.max(0,Math.min(60000,Math.round(Number(durationMs)||0))),
+        success:Boolean(success),
+        error_code:errorCode?String(errorCode).slice(0,80):null,
+        round_id:Number.isFinite(Number(roundId))?Number(roundId):null,
+        bet_id:Number.isFinite(Number(betId))?Number(betId):null,
+        queued_at:Date.now()
+      };
+    }
+
+    function readMetricQueue(){
       try{
-        await rpc('jl_aviator_record_client_metric',{
-          p_token:token,
-          p_operation:String(operation||'').toUpperCase(),
-          p_duration_ms:Math.max(0,Math.min(60000,Math.round(Number(durationMs)||0))),
-          p_success:Boolean(success),
-          p_error_code:errorCode?String(errorCode).slice(0,80):null,
-          p_round_id:Number.isFinite(Number(roundId))?Number(roundId):null,
-          p_bet_id:Number.isFinite(Number(betId))?Number(betId):null
-        });
+        const parsed=JSON.parse(storage.getItem(pendingMetricsKey)||'[]');
+        return Array.isArray(parsed)?parsed.slice(-20):[];
+      }catch(_){
+        return [];
+      }
+    }
+
+    function writeMetricQueue(items){
+      try{
+        const bounded=(Array.isArray(items)?items:[]).slice(-20);
+        if(bounded.length)storage.setItem(pendingMetricsKey,JSON.stringify(bounded));
+        else storage.removeItem(pendingMetricsKey);
       }catch(_){}
+    }
+
+    function queueMetric(metric){
+      const queued=readMetricQueue();
+      queued.push(metric);
+      writeMetricQueue(queued);
+    }
+
+    async function sendMetric(metric){
+      const token=playerToken();
+      if(!token)throw new Error('NO_PLAYER_TOKEN');
+
+      return rpc('jl_aviator_record_client_metric',{
+        p_token:token,
+        p_operation:metric.operation,
+        p_duration_ms:metric.duration_ms,
+        p_success:metric.success,
+        p_error_code:metric.error_code,
+        p_round_id:metric.round_id,
+        p_bet_id:metric.bet_id
+      });
+    }
+
+    async function flushPendingMetrics(){
+      if(metricFlushBusy||!playerToken())return;
+      const queued=readMetricQueue();
+      if(!queued.length)return;
+
+      metricFlushBusy=true;
+      let index=0;
+      try{
+        for(;index<queued.length;index+=1){
+          await sendMetric(queued[index]);
+        }
+        writeMetricQueue([]);
+      }catch(_){
+        writeMetricQueue(queued.slice(index));
+      }finally{
+        metricFlushBusy=false;
+      }
+    }
+
+    async function recordClientMetric(operation,durationMs,success,errorCode=null,roundId=null,betId=null){
+      const metric=metricPayload(operation,durationMs,success,errorCode,roundId,betId);
+      if(!playerToken())return;
+
+      try{
+        await sendMetric(metric);
+        void flushPendingMetrics();
+      }catch(_){
+        queueMetric(metric);
+      }
     }
 
     async function placeBet({amount,requestKey,autoCashoutMultiplier}){
@@ -163,7 +230,7 @@
     return Object.freeze({
       cashoutRequestKey,readPendingCashout,savePendingCashout,clearPendingCashout,
       betKey,placeBet,requestFinancialCashout,fetchBetStatus,cashoutMessage,
-      recordClientMetric
+      recordClientMetric,flushPendingMetrics
     });
   }
 
