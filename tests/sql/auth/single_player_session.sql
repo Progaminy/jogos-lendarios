@@ -46,17 +46,13 @@ begin
     raise exception 'session guard trigger function is directly executable by browser roles';
   end if;
 
-  select id into v_player
-  from public.players
-  order by id
-  limit 1;
-
-  if v_player is null then
-    raise exception 'test requires at least one player';
-  end if;
-
-  delete from public.player_sessions
-  where player_id=v_player;
+  insert into public.players(name,phone,pin_hash)
+  values(
+    'CI Session Test',
+    '__ci_session_' || replace(gen_random_uuid()::text,'-',''),
+    extensions.crypt('1234',extensions.gen_salt('bf'))
+  )
+  returning id into v_player;
 
   insert into public.player_sessions(player_id,token_hash,expires_at)
   values(
