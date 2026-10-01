@@ -39,3 +39,14 @@ test('ponto 67: botão Testar motor usa gate completo, não apenas preflight est
   assert.match(block,/financial_consistency/);
   assert.doesNotMatch(block,/jl_aviator_admin_engine_preflight/);
 });
+
+
+test('ponto 65: telemetria falhada fica em fila e é reenviada após recuperação',()=>{
+  const financial=fs.readFileSync('js/aviator/financial.js','utf8');
+  assert.match(financial,/jl_aviator_metric_queue_v1/);
+  assert.match(financial,/function queueMetric\(/);
+  assert.match(financial,/async function flushPendingMetrics\(/);
+  assert.match(financial,/queueMetric\(metric\)/);
+  assert.match(financial,/void flushPendingMetrics\(\)/);
+  assert.match(financial,/slice\(-20\)/);
+});
