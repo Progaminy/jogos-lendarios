@@ -15,7 +15,6 @@ do $oneround$
 declare
   v_round bigint;
   v_tick jsonb;
-  v_admin_result jsonb;
   v_enabled boolean;
   v_test boolean;
   v_status text;
@@ -34,30 +33,32 @@ begin
 
   v_tick:=public.jl_process_game_engine_tick()->'aviator';
 
-  if v_tick->>'action'<>'LOCKED'
-     or v_tick->>'status'<>'LOCKED' then
+  if coalesce(v_tick->>'action','')<>'LOCKED'
+     or coalesce(v_tick->>'status','')<>'LOCKED' then
     raise exception 'one-round test deveria entrar LOCKED primeiro: %',v_tick;
   end if;
 
   update public.jl_aviator_rounds
-     set takeoff_at=clock_timestamp()-interval '1 second'
+     set takeoff_at=clock_timestamp()-interval '1 second',
+         engine_due_at=clock_timestamp()-interval '1 second'
    where id=v_round;
 
   v_tick:=public.jl_process_game_engine_tick()->'aviator';
 
-  if v_tick->>'action'<>'STARTED'
-     or v_tick->>'status'<>'FLYING' then
+  if coalesce(v_tick->>'action','')<>'STARTED'
+     or coalesce(v_tick->>'status','')<>'FLYING' then
     raise exception 'one-round test nao iniciou FLYING: %',v_tick;
   end if;
 
   update public.jl_aviator_rounds
-     set started_at=clock_timestamp()-interval '200 seconds'
+     set started_at=clock_timestamp()-interval '200 seconds',
+         engine_due_at=clock_timestamp()-interval '1 second'
    where id=v_round;
 
   v_tick:=public.jl_process_game_engine_tick()->'aviator';
 
-  if v_tick->>'status'<>'CRASHED'
-     or v_tick->>'phase'<>'CRASHED' then
+  if coalesce(v_tick->>'status','')<>'CRASHED'
+     or coalesce(v_tick->>'phase','')<>'CRASHED' then
     raise exception 'one-round test deveria commit CRASHED antes de SETTLED: %',v_tick;
   end if;
 
