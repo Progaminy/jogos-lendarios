@@ -254,8 +254,9 @@
         const releaseFlow=releaseResult?.repeated_flow||{};
         const releaseStatus=$('aviatorReleaseGateStatus');
         const releaseDetail=$('aviatorReleaseGateDetail');
+        const releaseCurrentlyValid=releasePassed&&observability?.financial_consistency?.ok===true;
         if(releaseStatus){
-          releaseStatus.textContent=releasePassed?'CERTIFICADO':'NÃO CERTIFICADO';
+          releaseStatus.textContent=releaseCurrentlyValid?'CERTIFICADO':'NÃO CERTIFICADO';
         }
         if(releaseDetail){
           releaseDetail.textContent=releaseGate?.tested_at
@@ -296,7 +297,7 @@
             ?'TESTE 1 RODADA'
             :d.enabled
               ?'ABERTO'
-              :releasePassed
+              :releaseCurrentlyValid
                 ?referenceCeiling<1.5
                   ?'CERTIFICADO · BANCA BAIXA'
                   :'CERTIFICADO'
