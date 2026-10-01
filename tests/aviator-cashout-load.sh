@@ -55,13 +55,11 @@ with created as (
     'AVIATOR LOAD '||g::text,
     '$PREFIX-'||g::text,
     'load-only',
-    90
+    100
   from generate_series(1,$PLAYERS) g
   returning id,phone
 )
-insert into public.transactions(id,player_id,kind,amount,status,note)
-select gen_random_uuid(),id,'deposit',100,'completed','Aviator load fixture'
-from created;
+select count(*) from created;
 
 insert into public.player_sessions(player_id,token_hash,expires_at)
 select
@@ -81,6 +79,11 @@ select
   'ACTIVE',
   'load-bet-'||id::text||'-$RUN_ID'
 from public.players
+where phone like '$PREFIX-%';
+
+update public.players
+set balance=90,
+    updated_at=clock_timestamp()
 where phone like '$PREFIX-%';
 
 insert into public.transactions(
