@@ -158,6 +158,7 @@
 
       const priority=Boolean(active)&&!disabled&&!pending;
       if(wrap){
+        wrap.classList.toggle('hidden',!active&&!pending);
         if(wrap.classList.contains('is-priority')!==priority){
           wrap.classList.toggle('is-priority',priority);
         }
@@ -206,13 +207,28 @@
       if(auto)auto.disabled=value;
     }
 
-    function renderBetAction({disabled=false,status='Disponível'}={}){
+    function renderBetAction({
+      disabled=false,
+      status='Disponível',
+      label='Apostar',
+      mode='bet',
+      hidden=false
+    }={}){
+      const wrap=$('.aviator-bet-action');
       const button=$('#betBtn');
       const statusEl=$('#betActionStatus');
-      if(button){
-        button.textContent='Apostar';
-        button.disabled=Boolean(disabled);
+
+      if(wrap){
+        wrap.classList.toggle('hidden',Boolean(hidden));
+        wrap.classList.toggle('is-cancel',mode==='cancel');
       }
+
+      if(button){
+        button.textContent=String(label||'Apostar');
+        button.disabled=Boolean(disabled);
+        button.dataset.action=String(mode||'bet');
+      }
+
       if(statusEl)statusEl.textContent=String(status||'');
     }
 
