@@ -245,9 +245,11 @@ begin
   if not exists(
     select 1
     from public.audit_log
-    where action='aviator.maintenance_changed'
-      and details->>'admin_id'=v_admin::text
-      and coalesce((details->>'enabled')::boolean,true)=false
+    where action='aviator.admin.closed'
+      and actor_admin_id=v_admin
+      and target_type='aviator_settings'
+      and target_id='global'
+      and coalesce((after_state->>'enabled')::boolean,true)=false
   ) then
     raise exception 'Ponto 62: fechamento administrativo nao ficou auditado';
   end if;
