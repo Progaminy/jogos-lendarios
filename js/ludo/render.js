@@ -87,7 +87,7 @@
       for (const item of pieces) {
         const color = typeof item === 'string' ? item : item.color;
         const pawnStyle = ['current','classic','video'].includes(item?.pawn_style) ? item.pawn_style : 'current';
-        const pawnCount = Math.max(1,Math.min(4,Number(item?.pawn_count)||4));
+        const pawnCount=Math.max(1,Math.min(4,+item?.pawn_count||4));
         if (!base[color]) continue;
         base[color].slice(0,pawnCount).forEach(([r, c], index) => {
           const p = document.createElement('span');
@@ -108,7 +108,7 @@
     function renderPregameBoard() {
       const pieces = roomPlayers()
         .filter((p) => p.status !== 'left' && base[p.color])
-        .map((p) => ({color:p.color,pawn_style:p.pawn_style||'current',pawn_count:state.room?.room?.pawn_count||4}));
+        .map(p=>({color:p.color,pawn_style:p.pawn_style||'current',pawn_count:state.room?.room?.pawn_count||4}));
       renderStaticBoard(els.ludoBoard, pieces);
     }
 
