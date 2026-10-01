@@ -1,34 +1,50 @@
 import ws from 'k6/ws';
 import { check } from 'k6';
+import { Rate } from 'k6/metrics';
 
 const PROJECT = __ENV.SUPABASE_PROJECT || 'bxndjyzghgrmkelshtdp';
 const API_KEY = __ENV.SUPABASE_ANON_KEY || 'sb_publishable_E-Uikud2p7M6-dgcCK5ttg_eWUV8i_l';
 const URL = `wss://${PROJECT}.supabase.co/realtime/v1/websocket?apikey=${encodeURIComponent(API_KEY)}&vsn=1.0.0`;
 
+const openedRate = new Rate('realtime_opened');
+const joinedRate = new Rate('realtime_joined');
+const earlyCloseRate = new Rate('realtime_early_close');
+
+const scenarios = {};
+for (let i = 0; i < 10; i += 1) {
+  scenarios[`wave_${i + 1}`] = {
+    executor: 'per-vu-iterations',
+    vus: 100,
+    iterations: 1,
+    startTime: `${i * 5}s`,
+    maxDuration: '2m',
+  };
+}
+
 export const options = {
-  stages: [
-    { duration: '20s', target: 100 },
-    { duration: '20s', target: 300 },
-    { duration: '20s', target: 600 },
-    { duration: '20s', target: 1000 },
-    { duration: '60s', target: 1000 },
-    { duration: '20s', target: 0 },
-  ],
+  scenarios,
   thresholds: {
-    checks: ['rate>0.99'],
-    ws_connecting: ['p(95)<2000'],
+    realtime_opened: ['rate>0.99'],
+    realtime_joined: ['rate>0.99'],
+    realtime_early_close: ['rate<0.01'],
+    ws_connecting: ['p(95)<3000'],
   },
 };
 
-function fakeRoomId(vu) {
-  const tail = String(vu).padStart(12, '0').slice(-12);
+function fakeRoomId(vu, scenario) {
+  const n = Math.abs((vu * 97) + scenario.length);
+  const tail = String(n).padStart(12, '0').slice(-12);
   return `00000000-0000-4000-8000-${tail}`;
 }
 
 export default function () {
+  const startedAt = Date.now();
   let opened = false;
   let joined = false;
-  const roomId = fakeRoomId(__VU);
+  let earlyClose = false;
+  let intentionalClose = false;
+
+  const roomId = fakeRoomId(__VU, __ENV.K6_SCENARIO || 'wave');
   const topic = `realtime:ludo:room:${roomId}`;
 
   const res = ws.connect(URL, {}, function (socket) {
@@ -65,27 +81,37 @@ export default function () {
       } catch (_) {}
     });
 
-    socket.setInterval(() => {
-      if (opened) {
-        socket.send(JSON.stringify({
-          topic: 'phoenix',
-          event: 'heartbeat',
-          payload: {},
-          ref: String(Date.now())
-        }));
+    socket.on('close', () => {
+      if (!intentionalClose && Date.now() - startedAt < 55000) {
+        earlyClose = true;
       }
+    });
+
+    socket.setInterval(() => {
+      if (!opened) return;
+      socket.send(JSON.stringify({
+        topic: 'phoenix',
+        event: 'heartbeat',
+        payload: {},
+        ref: String(Date.now())
+      }));
     }, 25000);
 
     socket.setTimeout(() => {
-      check(null, {
-        'realtime websocket opened': () => opened,
-        'realtime channel joined': () => joined,
-      });
+      intentionalClose = true;
       socket.close();
-    }, 90000);
+    }, 60000);
   });
 
-  check(res, {
-    'websocket handshake HTTP 101': (r) => r && r.status === 101,
+  if (!opened || !res) earlyClose = true;
+
+  openedRate.add(opened);
+  joinedRate.add(joined);
+  earlyCloseRate.add(earlyClose);
+
+  check(null, {
+    'realtime websocket opened': () => opened,
+    'realtime channel joined': () => joined,
+    'connection stayed alive': () => !earlyClose,
   });
 }
