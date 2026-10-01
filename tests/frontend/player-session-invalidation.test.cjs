@@ -66,9 +66,8 @@ test('token rejeitado da sessao atual encerra a sessao local',async()=>{
   );
 
   assert.equal(h.token(),'');
-  assert.equal(h.events.length,2);
-  assert.equal(h.events[0].type,'jl-player-session-changed');
-  assert.equal(h.events[1].type,'jl-player-session-invalidated');
+  assert.equal(h.events.length,1);
+  assert.equal(h.events[0].type,'jl-player-session-invalidated');
 });
 
 test('resposta atrasada do token antigo nao derruba o login mais recente',async()=>{
