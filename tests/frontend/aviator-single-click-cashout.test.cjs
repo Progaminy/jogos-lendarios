@@ -54,7 +54,7 @@ test('touch é otimizado sem atraso artificial',()=>{
 test('cash-out mantém proteção financeira/idempotente no servidor',()=>{
   assert.match(financial,/jl_aviator_cashout/);
   assert.match(financial,/p_request_key:String\(requestKey/);
-  assert.match(financial,/p_bet_id:Number\(betId\)/);
+  assert.match(financial,/p_bet_id:id/);
 });
 
 test('estado do cash-out é associado ao botão para acessibilidade',()=>{
