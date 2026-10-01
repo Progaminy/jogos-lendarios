@@ -208,6 +208,21 @@ Esses cenários têm regressões transacionais em `tests/sql/aviator/`.
 - Migrations: `20260930001648_immutable_player_financial_ledger`, `20260930001729_ledger_initial_balance_posting` e `20260930001919_ledger_restrict_direct_writes`.
 - Regressão permanente: `tests/sql/aviator/aviator_immutable_financial_ledger.sql`.
 
+## Testes automatizados antes da abertura real
+
+- A abertura real do Aviator agora é bloqueada pelo banco até um preflight automático do motor passar.
+- `jl_aviator_admin_engine_preflight` executa 18 checks de produção: Aviator fechado, ausência de rodada transitória, cron do motor, funções críticas, relógio do servidor, limites de aposta, engine orientado a eventos, permissões internas, bloqueio de DML financeiro direto, unicidade de rodada/aposta, payout único, idempotência financeira, ledger=saldos, banca válida e proteção contra audit visual.
+- `jl_aviator_admin_set_enabled(...,true)` chama o preflight obrigatoriamente. Portanto uma chamada direta ao RPC também não contorna a barreira.
+- `jl_aviator_admin_reopen` retorna a certificação aprovada. Se qualquer check falhar, `enabled` permanece `false`.
+- A rodada única de teste também passa pelo preflight antes de ativar o motor.
+- O resultado é auditado como `aviator.admin.engine_preflight_passed` ou `aviator.admin.engine_preflight_failed`.
+- O painel administrativo mostra `TESTES OK` / `TESTES NECESSÁRIOS` e permite executar o preflight manualmente.
+- Fechar o Aviator ou entrar em modo de uma rodada invalida a certificação visual armazenada; a próxima abertura real executa os checks novamente.
+- O CI continua rodando toda a suíte SQL do Aviator e os testes de concorrência. O teste `aviator_engine_preopen_gate.sql` roda por último como etapa nomeada de certificação.
+- O teste adversarial remove temporariamente a constraint de payout único dentro de uma transação, confirma que a abertura é bloqueada e executa `ROLLBACK`.
+- Migration: `20261001000532_aviator_preopen_automated_engine_tests`.
+- Regressões: `tests/sql/aviator/aviator_engine_preopen_gate.sql` e `tests/frontend/aviator-admin-preflight.test.cjs`.
+
 ## Detalhes de cada aposta
 
 - Cada item de `Minhas apostas` mostra seis campos explícitos: `Rodada`, `Apostado`, `Cash-out`, `Crash`, `Pagamento` e `Horário`.
