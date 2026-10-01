@@ -951,6 +951,7 @@
       let visualMove=Promise.resolve();
       let serverConfirmed=false;
       let moveError=null;
+      let confirmedRoom=null;
 
       try{
         visualMove=animateTokenPath(
@@ -971,7 +972,7 @@
         if(!movementGuard.isMoveCurrent(moveTicket))return;
 
         serverConfirmed=true;
-        processGameEffects(nextRoom);
+        confirmedRoom=nextRoom;
         rememberDiceBundle(nextRoom);
         state.room=nextRoom;
         await visualMove;
@@ -992,6 +993,7 @@
           state.animating=false;
           els.ludoBoard?.classList.remove('piece-moving');
           renderRoom();
+          if(serverConfirmed&&confirmedRoom)processGameEffects(confirmedRoom);
         }
         movementGuard.finishMove(moveTicket);
         window.JLLudoSync?.kick?.('ludo-state');
