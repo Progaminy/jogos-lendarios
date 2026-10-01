@@ -64,9 +64,15 @@ begin
     from pg_proc p join pg_namespace n on n.oid=p.pronamespace
     where n.nspname='public'
       and p.proname='jl_aviator_cashout'
-      and position('jl_rate_limit_enforce' in pg_get_functiondef(p.oid))>0
+      and pg_get_function_identity_arguments(p.oid)=
+          'p_token text, p_bet_id bigint, p_request_key text'
+      and position('jl_rate_limit_hit' in pg_get_functiondef(p.oid))>0
+      and position('aviator_cashout_token:burst' in pg_get_functiondef(p.oid))>0
+      and position('aviator_cashout_token:sustained' in pg_get_functiondef(p.oid))>0
+      and position('aviator_cashout_bet:burst' in pg_get_functiondef(p.oid))>0
+      and position('aviator_cashout_bet:sustained' in pg_get_functiondef(p.oid))>0
   ) then
-    raise exception 'cash-out Aviator sem rate limit';
+    raise exception 'cash-out Aviator sem rate limit por token/aposta';
   end if;
 
   if not exists(
