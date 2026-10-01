@@ -39,8 +39,6 @@ begin
   )
   returning id into v_player;
 
-  insert into public.transactions(id,player_id,kind,amount,status,note)
-  values(gen_random_uuid(),v_player,'deposit',100,'completed','Observability test funding');
 
   insert into public.player_sessions(player_id,token_hash,expires_at)
   values(v_player,public.jl_token_hash(v_token),clock_timestamp()+interval '1 hour');
