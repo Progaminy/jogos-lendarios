@@ -63,8 +63,18 @@ begin
     raise exception 'service_role possui escrita direta no cashout guard';
   end if;
 
-  -- O teste deve ser autossuficiente e não pode ligar o motor: cria
-  -- diretamente uma rodada já encerrada e a sua própria aposta LOST.
+  -- O teste deve ser autossuficiente e não pode ligar o motor.
+  -- Primeiro limpa qualquer rodada viva deixada pelo estado reconstruído.
+  update public.jl_aviator_settings
+     set enabled=false,
+         one_round_test=false
+   where id=true;
+
+  update public.jl_aviator_rounds
+     set status='CANCELLED',
+         settled_at=coalesce(settled_at,clock_timestamp())
+   where status in ('OPEN','LOCKED','FLYING','CRASHED');
+
   insert into public.players(name,phone,pin_hash,balance)
   values(
     'AVIATOR BOT GUARD TEST',
@@ -83,23 +93,36 @@ begin
     v_player,v_subject,now()+interval '10 minutes',now()
   );
 
+  -- O gatilho autoritativo de apostas exige rodada OPEN e relógio futuro.
+  -- Criamos a aposta nesse estado e só depois a marcamos como LOST.
   insert into public.jl_aviator_rounds(
-    status,settled_at,total_staked
+    status,betting_closes_at,takeoff_at,total_staked
   )
   values(
-    'SETTLED',
-    clock_timestamp(),
+    'OPEN',
+    clock_timestamp()+interval '30 seconds',
+    clock_timestamp()+interval '33 seconds',
     10
   )
   returning id into v_round_id;
 
   insert into public.jl_aviator_bets(
-    round_id,player_id,stake,status,payout
+    round_id,player_id,stake,status
   )
   values(
-    v_round_id,v_player,10,'LOST',0
+    v_round_id,v_player,10,'ACTIVE'
   )
   returning id into v_bet_id;
+
+  update public.jl_aviator_bets
+     set status='LOST',
+         payout=0
+   where id=v_bet_id;
+
+  update public.jl_aviator_rounds
+     set status='SETTLED',
+         settled_at=clock_timestamp()
+   where id=v_round_id;
 
   delete from public.jl_aviator_cashout_guard
   where bet_id=v_bet_id;
