@@ -78,6 +78,12 @@ begin
   )
   returning id into v_bad_player;
 
+  -- A criação com saldo gera o lançamento inicial automaticamente.
+  -- Para simular corrupção real, altera apenas o cache depois.
+  update public.players
+     set balance=balance+1
+   where id=v_bad_player;
+
   begin
     perform public.jl_aviator_admin_set_enabled(v_token,true);
   exception
