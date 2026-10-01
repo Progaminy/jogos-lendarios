@@ -10,16 +10,24 @@
       return cryptoRef.randomUUID?cryptoRef.randomUUID():Date.now()+'-'+Math.random().toString(36).slice(2);
     }
 
-    function cashoutRequestKey(betId){
+    function requestKeyFor(prefix,betId){
       const id=Number(betId);
       if(!Number.isFinite(id))return null;
-      const storageKey='jl_aviator_cashout_request_key_'+id;
+      const storageKey='jl_aviator_'+prefix+'_request_key_'+id;
       let value=storage.getItem(storageKey);
       if(!value){
         value=uuid();
         storage.setItem(storageKey,value);
       }
       return value;
+    }
+
+    function cashoutRequestKey(betId){
+      return requestKeyFor('cashout',betId);
+    }
+
+    function cancelBetRequestKey(betId){
+      return requestKeyFor('cancel',betId);
     }
 
     function readPendingCashout(){
@@ -177,39 +185,96 @@
       }
     }
 
+    function isTransientCashoutError(error){
+      const raw=String(error?.message||error||'');
+      const code=String(error?.code||'');
+      const status=Number(error?.status||error?.statusCode||0);
+      return status===502||status===503||status===504
+        || code==='PGRST003'
+        || /timed out acquiring connection|connection pool|gateway timeout|fetch failed|network/i.test(raw);
+    }
+
     async function requestFinancialCashout(betId,requestKey){
       const started=Date.now();
-      try{
-        const result=await rpc('jl_aviator_cashout',{
-          p_token:playerToken(),
-          p_bet_id:Number(betId),
-          p_request_key:String(requestKey||cashoutRequestKey(betId)||'')
-        });
-        if(!result?.ok){
-          const error=new Error(result?.message||'Cash-out rejeitado.');
-          error.code=result?.error_code||'CASHOUT_REJECTED';
-          throw error;
+      const id=Number(betId);
+      const key=String(requestKey||cashoutRequestKey(id)||'');
+      let firstError=null;
+
+      for(let attempt=0;attempt<2;attempt+=1){
+        try{
+          const result=await rpc('jl_aviator_cashout',{
+            p_token:playerToken(),
+            p_bet_id:id,
+            p_request_key:key
+          });
+          if(!result?.ok){
+            const error=new Error(result?.message||'Cash-out rejeitado.');
+            error.code=result?.error_code||'CASHOUT_REJECTED';
+            throw error;
+          }
+          void recordClientMetric(
+            'CASHOUT',
+            Date.now()-started,
+            true,
+            null,
+            result?.round_id||getRoundId?.(),
+            id
+          );
+          return result;
+        }catch(error){
+          firstError=firstError||error;
+          if(attempt===0&&isTransientCashoutError(error)){
+            const settled=await fetchBetStatus(id).catch(()=>null);
+            if(settled?.status==='CASHED_OUT'){
+              void recordClientMetric(
+                'CASHOUT',
+                Date.now()-started,
+                true,
+                null,
+                settled.round_id||getRoundId?.(),
+                id
+              );
+              return {
+                ok:true,
+                already_processed:true,
+                bet_id:id,
+                round_id:settled.round_id,
+                transaction_id:settled.payout_transaction_id,
+                source:settled.cashout_source,
+                multiplier:settled.cashout_multiplier,
+                payout:settled.payout
+              };
+            }
+            continue;
+          }
+          break;
         }
-        void recordClientMetric(
-          'CASHOUT',
-          Date.now()-started,
-          true,
-          null,
-          result?.round_id||getRoundId?.(),
-          betId
-        );
-        return result;
-      }catch(error){
-        void recordClientMetric(
-          'CASHOUT',
-          Date.now()-started,
-          false,
-          error?.code||error?.message||'CASHOUT_FAILED',
-          getRoundId?.(),
-          betId
-        );
+      }
+
+      void recordClientMetric(
+        'CASHOUT',
+        Date.now()-started,
+        false,
+        firstError?.code||firstError?.message||'CASHOUT_FAILED',
+        getRoundId?.(),
+        id
+      );
+      throw firstError||new Error('Não foi possível concluir o cash-out.');
+    }
+
+    async function cancelBet(betId,requestKey){
+      const id=Number(betId);
+      const result=await rpc('jl_aviator_cancel_bet',{
+        p_token:playerToken(),
+        p_bet_id:id,
+        p_request_key:String(requestKey||cancelBetRequestKey(id)||'')
+      });
+      if(!result?.ok){
+        const error=new Error(result?.message||'Cancelamento rejeitado.');
+        error.code=result?.error_code||'CANCEL_REJECTED';
         throw error;
       }
+      return result;
     }
 
     async function fetchBetStatus(betId){
@@ -228,8 +293,9 @@
     }
 
     return Object.freeze({
-      cashoutRequestKey,readPendingCashout,savePendingCashout,clearPendingCashout,
-      betKey,placeBet,requestFinancialCashout,fetchBetStatus,cashoutMessage,
+      cashoutRequestKey,cancelBetRequestKey,
+      readPendingCashout,savePendingCashout,clearPendingCashout,
+      betKey,placeBet,cancelBet,requestFinancialCashout,fetchBetStatus,cashoutMessage,
       recordClientMetric,flushPendingMetrics
     });
   }
