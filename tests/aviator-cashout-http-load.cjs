@@ -37,8 +37,12 @@ function percentile(values,p){
   return sorted[idx];
 }
 
-function request(job){
-  const body=JSON.stringify({p_token:job.token,p_bet_id:job.betId});
+function requestOnce(job){
+  const body=JSON.stringify({
+    p_token:job.token,
+    p_bet_id:job.betId,
+    p_request_key:'load-cashout-'+job.betId
+  });
   const started=performance.now();
 
   return new Promise(resolve=>{
@@ -88,6 +92,43 @@ function request(job){
   });
 }
 
+function transient(result){
+  return result?.status===0
+    || result?.status===502
+    || result?.status===503
+    || result?.status===504
+    || result?.payload?.code==='PGRST003';
+}
+
+function sleep(ms){
+  return new Promise(resolve=>setTimeout(resolve,ms));
+}
+
+async function request(job){
+  const totalStarted=performance.now();
+  let result=null;
+  const delays=[0,75,200,500];
+
+  for(let attempt=0;attempt<delays.length;attempt+=1){
+    if(delays[attempt])await sleep(delays[attempt]);
+    result=await requestOnce(job);
+    if(result.ok){
+      return {
+        ...result,
+        attempts:attempt+1,
+        duration:performance.now()-totalStarted
+      };
+    }
+    if(!transient(result))break;
+  }
+
+  return {
+    ...result,
+    attempts:delays.length,
+    duration:performance.now()-totalStarted
+  };
+}
+
 (async()=>{
   const started=performance.now();
 
@@ -111,7 +152,9 @@ function request(job){
       max:Math.round(Math.max(0,...latencies))
     },
     successes:jobs.length-failures.length,
-    failures:failures.length
+    failures:failures.length,
+    retried:results.filter(r=>Number(r.attempts)>1).length,
+    max_attempts:Math.max(1,...results.map(r=>Number(r.attempts)||1))
   };
 
   console.log(JSON.stringify(report));
