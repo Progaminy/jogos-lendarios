@@ -139,29 +139,31 @@ order by b.id;
 
 export JL_TEST_DATABASE_URL
 export AVIATOR_LOAD_ROUND_ID="$round_id"
-start_ms=$(date +%s%3N)
+export AVIATOR_LOAD_API_URL="${AVIATOR_LOAD_API_URL:-http://127.0.0.1:54321}"
 
+AVIATOR_LOAD_ANON_KEY="${AVIATOR_LOAD_ANON_KEY:-$(
+  supabase status -o env |
+  sed -n 's/^ANON_KEY=//p' |
+  head -n1 |
+  tr -d '"'
+)}"
+export AVIATOR_LOAD_ANON_KEY
+
+if [ -z "$AVIATOR_LOAD_ANON_KEY" ]; then
+  echo "FAIL point64: não foi possível obter ANON_KEY da stack local" >&2
+  exit 1
+fi
+
+start_ms=$(date +%s%3N)
 set +e
-cat "$jobs" | xargs -P "$PARALLEL" -n2 bash -c '
-  token="$1"
-  bet_id="$2"
-  out=$(psql "$JL_TEST_DATABASE_URL" -X -qAt -v ON_ERROR_STOP=1 \
-    -v token="$token" -v bet_id="$bet_id" \
-    -c "select public.jl_aviator_cashout(:'\''token'\'', :bet_id::bigint);" 2>&1)
-  status=$?
-  if [ "$status" -ne 0 ] || ! printf "%s" "$out" | grep -q "\"ok\": true"; then
-    printf "cashout failed token=%s bet=%s status=%s out=%s\n" "$token" "$bet_id" "$status" "$out" >&2
-    exit 1
-  fi
-' _ 
+node tests/aviator-cashout-http-load.cjs "$jobs"
 load_status=$?
 set -e
-
 end_ms=$(date +%s%3N)
 duration_ms=$((end_ms-start_ms))
 
 if [ "$load_status" -ne 0 ]; then
-  echo "FAIL point64: one or more concurrent cash-outs failed"
+  echo "FAIL point64: one or more simultaneous HTTP cash-outs failed"
   exit 1
 fi
 
