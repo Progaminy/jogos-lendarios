@@ -22,10 +22,12 @@ test('refresh lê certificação do motor separadamente',()=>{
   assert.match(admin,/TESTES NECESSÁRIOS/);
 });
 
-test('botão manual executa preflight real no servidor',()=>{
-  assert.match(admin,/jl_aviator_admin_engine_preflight/);
+test('botão manual executa certificação completa no servidor',()=>{
+  assert.match(admin,/jl_aviator_admin_release_gate/);
   assert.match(admin,/Testando motor/);
-  assert.match(admin,/testes automáticos passaram/);
+  assert.match(admin,/Certificação aprovada/);
+  assert.match(admin,/repeated_flow/);
+  assert.match(admin,/financial_consistency/);
 });
 
 test('reabertura comunica que o preflight foi executado',()=>{
