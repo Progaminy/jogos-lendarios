@@ -90,10 +90,6 @@ begin
       )
       returning id into v_p_loss;
 
-      insert into public.transactions(id,player_id,kind,amount,status,note)
-      values
-        (gen_random_uuid(),v_p_cash,'deposit',100,'completed','Aviator release probe funding'),
-        (gen_random_uuid(),v_p_loss,'deposit',100,'completed','Aviator release probe funding');
 
       insert into public.player_sessions(player_id,token_hash,expires_at)
       values
