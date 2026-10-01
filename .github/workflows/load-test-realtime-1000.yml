@@ -1,0 +1,45 @@
+name: Controlled 1000 User Realtime Load Test
+
+on:
+  push:
+    branches:
+      - loadtest-1000
+    paths:
+      - '.github/workflows/load-test-realtime-1000.yml'
+      - 'tests/load/k6-1000-realtime.js'
+
+permissions:
+  contents: read
+
+jobs:
+  realtime-load-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run 1000 concurrent Supabase Realtime connections
+        shell: bash
+        env:
+          SUPABASE_PROJECT: bxndjyzghgrmkelshtdp
+          SUPABASE_ANON_KEY: sb_publishable_E-Uikud2p7M6-dgcCK5ttg_eWUV8i_l
+        run: |
+          set -o pipefail
+          mkdir -p load-results
+          chmod 777 load-results
+          docker run --rm \
+            -e SUPABASE_PROJECT \
+            -e SUPABASE_ANON_KEY \
+            -v "$PWD:/work" \
+            -w /work \
+            grafana/k6:0.54.0 \
+            run tests/load/k6-1000-realtime.js \
+            | tee load-results/realtime-output.txt
+
+      - name: Upload result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jogos-lendarios-realtime-loadtest-1000
+          path: load-results/realtime-output.txt
+          if-no-files-found: error
