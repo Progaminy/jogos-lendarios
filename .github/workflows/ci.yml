@@ -103,6 +103,11 @@ jobs:
           JL_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
         run: bash tests/aviator-same-account-tabs-logins.sh
 
+      - name: Run Aviator insufficient-balance concurrency test
+        env:
+          JL_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+        run: bash tests/aviator-insufficient-balance-concurrency.sh
+
       - name: Run Aviator pre-open engine certification gate
         env:
           JL_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
