@@ -864,6 +864,7 @@ async function reconnectState(){
     return state();
   }
 
+  const metricStartedAt=Date.now();
   const controller=new AbortController();
   stateController=controller;
   stateBusy=true;
@@ -873,6 +874,15 @@ async function reconnectState(){
       'jl_aviator_reconnect',
       {p_token:playerToken()},
       {signal:controller.signal}
+    );
+
+    void financial.recordClientMetric(
+      'RECONNECT',
+      Date.now()-metricStartedAt,
+      true,
+      null,
+      x?.round?.id,
+      null
     );
 
     if(!runtime.shouldAcceptSnapshot(lastDisplaySeq,x?.display_seq)){
@@ -928,6 +938,14 @@ async function reconnectState(){
     }
   }catch(e){
     if(e?.name==='AbortError')return;
+    void financial.recordClientMetric(
+      'RECONNECT',
+      Date.now()-metricStartedAt,
+      false,
+      e?.code||e?.message||'RECONNECT_FAILED',
+      round?.id,
+      null
+    );
     if(navigator.onLine===false)setConnectionState(false);
     const message=$('#aviatorMessage');
     if(message)message.textContent=playerMessage(e,'Não foi possível sincronizar o jogo.');
