@@ -833,3 +833,10 @@
   border-color:var(--blue)!important;
   box-shadow:0 0 0 3px color-mix(in srgb,var(--blue) 42%,transparent),0 0 18px color-mix(in srgb,var(--blue) 28%,transparent)!important;
 }
+
+/* O lacre do dado acompanha a cor de quem tem a vez. */
+.dice[data-turn-color=red]{--dice-turn:var(--red)}
+.dice[data-turn-color=green]{--dice-turn:var(--green)}
+.dice[data-turn-color=yellow]{--dice-turn:var(--yellow)}
+.dice[data-turn-color=blue]{--dice-turn:var(--blue)}
+.dice[data-turn-color]:not([data-turn-color=""]){border-color:var(--dice-turn)!important;box-shadow:0 0 0 5px color-mix(in srgb,var(--dice-turn) 52%,transparent),0 0 20px color-mix(in srgb,var(--dice-turn) 45%,transparent),inset 0 0 0 1px rgba(0,0,0,.08)!important}
