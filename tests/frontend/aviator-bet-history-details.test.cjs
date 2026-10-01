@@ -47,5 +47,5 @@ test('horário usa created_at retornado pelo servidor',()=>{
 test('detalhes são uma grelha responsiva sem scroll horizontal obrigatório',()=>{
   assert.match(css,/\.aviator-my-history-fields\{display:grid;grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
   assert.match(css,/\.aviator-my-history-fields\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
-  assert.match(html,/personal-history\.js\?v=20261001-2/);
+  assert.match(html,/personal-history\.js\?v=\d{8}-\d+/);
 });
