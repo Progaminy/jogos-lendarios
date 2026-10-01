@@ -1,0 +1,58 @@
+name: Controlled 1000 User Load Test
+
+on:
+  push:
+    branches:
+      - loadtest-1000
+    paths:
+      - '.github/workflows/load-test-1000.yml'
+      - 'tests/load/k6-1000-users.js'
+
+permissions:
+  contents: read
+
+jobs:
+  load-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run controlled k6 load test
+        shell: bash
+        env:
+          BASE_URL: https://jogoslendarios.adadpsf.shop
+        run: |
+          set -o pipefail
+          docker run --rm \
+            -e BASE_URL \
+            -v "$PWD:/work" \
+            -w /work \
+            grafana/k6:0.54.0 \
+            run --summary-export=/work/load-summary.json tests/load/k6-1000-users.js \
+            | tee load-output.txt
+
+      - name: Publish quick summary
+        if: always()
+        shell: bash
+        run: |
+          echo "## Controlled 1000-user load test" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Target: https://jogoslendarios.adadpsf.shop" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          if [ -f load-summary.json ]; then
+            echo '~~~json' >> "$GITHUB_STEP_SUMMARY"
+            cat load-summary.json >> "$GITHUB_STEP_SUMMARY"
+            echo '~~~' >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jogos-lendarios-loadtest-1000
+          path: |
+            load-summary.json
+            load-output.txt
+          if-no-files-found: warn
