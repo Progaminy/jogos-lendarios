@@ -767,9 +767,9 @@
     const mobile=window.matchMedia?.('(max-width:600px)')?.matches;
     if(mobile){
       const amount=Number(r.bet_amount||0).toLocaleString('pt-MZ',{maximumFractionDigits:2});
-      return `${r.player_count}J · ${Number(r.pawn_count)||4}P · ${r.mode==='partners'?'Dupla':'Solo'} · ${amount} MZN · ${r.is_public?'Púb.':'Priv.'}`;
+      return `${r.player_count}J · ${r.pawn_count||4}P · ${r.mode==='partners'?'Dupla':'Solo'} · ${amount} MZN · ${r.is_public?'Púb.':'Priv.'}`;
     }
-    return `${r.player_count} jogadores · ${Number(r.pawn_count)||4} peões/jogador · ${r.mode==='partners'?'Parceiros 2 × 2':'Cada um por si'} · ${money(r.bet_amount)} MZN por jogador · ${r.is_public?'Pública':'Privada'}`;
+    return `${r.player_count} jogadores · ${r.pawn_count||4} peões/jogador · ${r.mode==='partners'?'Parceiros 2 × 2':'Cada um por si'} · ${money(r.bet_amount)} MZN por jogador · ${r.is_public?'Pública':'Privada'}`;
   }
   function renderRoom(){const r=roomData();if(!r)return;els.roomCode.textContent=r.code;els.roomMeta.textContent=roomMetaBase(r);if(els.roomPot)els.roomPot.textContent=`${money(r.pot)} MZN`;if(els.roomPrize)els.roomPrize.textContent=commissionText();els.rulesVersion.textContent=`v${r.rules_version}`;const playing=r.status==='playing';els.leaveRoom?.classList.toggle('hidden',playing);els.forfeitRoom?.classList.toggle('hidden',!playing);renderPlayers();renderRules();renderDeadline();renderFunding();renderGame();renderResult();renderInviter();syncEntryFlowModals();}
   function entryRuleRows(){
