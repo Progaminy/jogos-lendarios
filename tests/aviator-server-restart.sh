@@ -51,10 +51,6 @@ where id=true;
 insert into public.players(name,phone,pin_hash,balance)
 values('AVIATOR POINT63 RESTART','25899061263','ci-only',100);
 
-insert into public.transactions(id,player_id,kind,amount,status,note)
-select gen_random_uuid(),id,'deposit',100,'completed','Point63 restart fixture'
-from public.players
-where phone='25899061263';
 
 insert into public.player_sessions(player_id,token_hash,expires_at)
 select id,public.jl_token_hash('aviator-point63-restart'),clock_timestamp()+interval '1 hour'
