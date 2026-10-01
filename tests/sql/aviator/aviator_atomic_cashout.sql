@@ -183,21 +183,16 @@ begin
          updated_at=clock_timestamp()
    where id=true;
 
-  begin
-    perform public.jl_aviator_cashout(
-      t2,(b2->>'bet_id')::bigint
-    );
-  exception
-    when others then
-      if position('Reserva da banca inconsistente.' in sqlerrm)>0 then
-        reserve_blocked:=true;
-      else
-        raise;
-      end if;
-  end;
+  c2:=public.jl_aviator_cashout(
+    t2,(b2->>'bet_id')::bigint
+  );
+
+  reserve_blocked:=
+    coalesce((c2->>'ok')::boolean,true)=false
+    and c2->>'error_code'='CASHOUT_REJECTED';
 
   if not reserve_blocked then
-    raise exception 'cash-out sem reserva deveria falhar atomicamente';
+    raise exception 'cash-out sem reserva deveria ser rejeitado atomicamente: %',c2;
   end if;
 
   select status into bet_status
