@@ -166,6 +166,19 @@ begin
         raise exception 'pagamento do cash-out não fechou';
       end if;
 
+      -- reconexão depois do pagamento deve reconstruir CASHED_OUT.
+      v_snap:=public.jl_aviator_reconnect(v_t_cash);
+
+      select value into v_bet
+      from jsonb_array_elements(v_snap->'player'->'bets')
+      where (value->>'id')::bigint=(v_b_cash->>'bet_id')::bigint;
+
+      if v_bet is null
+         or v_bet->>'status'<>'CASHED_OUT'
+         or (v_bet->>'payout_transaction_id') is null then
+        raise exception 'reconnect pós-pagamento não trouxe CASHED_OUT completo';
+      end if;
+
       -- caminho crash: a segunda aposta permanece ativa até perder.
       update public.jl_aviator_rounds
          set started_at=clock_timestamp()-interval '20 seconds',
