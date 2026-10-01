@@ -77,8 +77,6 @@
   const HOME_FIRST_STEP=51;
   const HOME_LAST_STEP=55;
   const FINISH_STEP=56;
-  // Vitória: cada cor termina no seu próprio triângulo central.
-  // Estas coordenadas são a primeira célula do centro na direção da HOME de cada cor.
   const FINISH_CELL={red:[7,6],green:[6,7],yellow:[7,8],blue:[8,7]};
   const DICE_LAYOUTS={1:[5],2:[1,9],3:[1,5,9],4:[1,3,7,9],5:[1,3,5,7,9],6:[1,3,4,6,7,9]};
 
