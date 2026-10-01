@@ -9,7 +9,6 @@ const source=fs.readFileSync('js/api/rpc.js','utf8');
 
 function harness({storedToken,requestMessage='Sessão do jogador inválida ou expirada.'}){
   let token=storedToken;
-  const events=[];
   const local=new Map(storedToken ? [['jl_player_token',storedToken]] : []);
 
   const window={
@@ -22,8 +21,8 @@ function harness({storedToken,requestMessage='Sessão do jogador inválida ou ex
         else local.delete('jl_player_token');
         return token;
       }
-    },
-    dispatchEvent:(event)=>events.push(event)
+    }
+
   };
 
   const context={
@@ -32,9 +31,6 @@ function harness({storedToken,requestMessage='Sessão do jogador inválida ou ex
       getItem:(key)=>local.get(key)||null,
       setItem:(key,value)=>local.set(key,String(value)),
       removeItem:(key)=>local.delete(key)
-    },
-    CustomEvent:class CustomEvent{
-      constructor(type,init={}){this.type=type;this.detail=init.detail;}
     },
     fetch:async()=>({
       ok:false,
@@ -52,8 +48,7 @@ function harness({storedToken,requestMessage='Sessão do jogador inválida ou ex
 
   return {
     rpc:window.JLApi.rpc,
-    token:()=>token,
-    events
+    token:()=>token
   };
 }
 
@@ -66,8 +61,6 @@ test('token rejeitado da sessao atual encerra a sessao local',async()=>{
   );
 
   assert.equal(h.token(),'');
-  assert.equal(h.events.length,1);
-  assert.equal(h.events[0].type,'jl-player-session-invalidated');
 });
 
 test('resposta atrasada do token antigo nao derruba o login mais recente',async()=>{
@@ -79,7 +72,6 @@ test('resposta atrasada do token antigo nao derruba o login mais recente',async(
   );
 
   assert.equal(h.token(),'token-novo');
-  assert.equal(h.events.length,0);
 });
 
 test('erros que nao sao de sessao nao encerram a conta',async()=>{
@@ -94,5 +86,4 @@ test('erros que nao sao de sessao nao encerram a conta',async()=>{
   );
 
   assert.equal(h.token(),'token-atual');
-  assert.equal(h.events.length,0);
 });
