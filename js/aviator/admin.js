@@ -177,7 +177,10 @@
     async function refreshAviatorAdmin(){
       if(!state.token||!$('aviatorAdmin')) return;
       try{
-        const d=await rpc('jl_aviator_admin_state',{p_token:state.token}),r=d.round||{};
+        const [d,engineTest]=await Promise.all([
+          rpc('jl_aviator_admin_state',{p_token:state.token}),
+          rpc('jl_aviator_admin_engine_test_state',{p_token:state.token})
+        ]),r=d.round||{};
         const roundExposure=d.exposure||{};
         const house=d.house||{};
         const bankBalance=Number(d.bank?.balance)||0,exposure=Number(d.bank?.exposure_ratio)||0.5;
@@ -212,6 +215,22 @@
         $('aviatorHouseUpdated').textContent='Atualizado agora';
         const referenceStake=10,referenceCeiling=1+(bankBalance*exposure/referenceStake),bankWarning=$('aviatorBankWarning');
         const readiness=$('aviatorReadiness'),referenceCeilings=$('aviatorReferenceCeilings');
+        const enginePassed=engineTest?.passed===true;
+        const engineFailed=Array.isArray(engineTest?.failed_checks)?engineTest.failed_checks:[];
+        const engineChecks=Array.isArray(engineTest?.checks)?engineTest.checks:[];
+        const enginePassedCount=engineChecks.filter(item=>item?.ok===true).length;
+        const engineTotal=engineChecks.length;
+        const engineStatus=$('aviatorEngineTestStatus');
+        const engineDetail=$('aviatorEngineTestDetail');
+        if(engineStatus){
+          engineStatus.textContent=enginePassed?'TESTES OK':'TESTES NECESSÁRIOS';
+        }
+        if(engineDetail){
+          const when=engineTest?.tested_at?dateTime(engineTest.tested_at):'Nunca executado';
+          engineDetail.textContent=engineTotal
+            ?enginePassedCount+'/'+engineTotal+' · '+when
+            :when;
+        }
         const refs=[1,5,10,50].map(stake=>({
           stake,
           ceiling:1+(bankBalance*exposure/stake)
@@ -233,9 +252,11 @@
             ?'TESTE 1 RODADA'
             :d.enabled
               ?'ABERTO'
-              :referenceCeiling<1.5
-                ?'BANCA MUITO BAIXA'
-                :'PRONTO PARA TESTE';
+              :enginePassed
+                ?referenceCeiling<1.5
+                  ?'TESTES OK · BANCA BAIXA'
+                  :'TESTES OK'
+                :'TESTES NECESSÁRIOS';
         }
         const draining=
           !d.enabled&&['OPEN','LOCKED','FLYING','CRASHED'].includes(String(r.status||''));
@@ -258,6 +279,16 @@
           reopenBtn.classList.toggle('success',!d.enabled&&!draining);
         }
     
+        const preflightBtn=$('aviatorEnginePreflight');
+        if(preflightBtn){
+          preflightBtn.disabled=Boolean(d.enabled)||draining||Boolean(d.one_round_test);
+          preflightBtn.textContent=d.enabled
+            ?'Feche para testar'
+            :draining
+              ?'Aguarde a rodada atual'
+              :'Testar motor';
+        }
+
         const oneRound=$('aviatorOneRoundTest');
         if(oneRound){
           oneRound.disabled=Boolean(d.enabled)||draining;
@@ -411,6 +442,37 @@
       }
     });
     
+    $('aviatorEnginePreflight')?.addEventListener('click',async()=>{
+      const button=$('aviatorEnginePreflight');
+      try{
+        if(button){
+          button.disabled=true;
+          button.textContent='Testando motor…';
+        }
+        $('aviatorAdminMessage').textContent='Executando testes automáticos do motor…';
+
+        const result=await rpc('jl_aviator_admin_engine_preflight',{p_token:state.token});
+        const passed=Number(result?.passed)||0;
+        const total=Number(result?.total)||0;
+        const failed=Array.isArray(result?.failed_checks)?result.failed_checks:[];
+
+        if(result?.ok===true){
+          $('aviatorAdminMessage').textContent=
+            passed+'/'+total+' testes automáticos passaram. Motor certificado para tentativa de abertura.';
+          toast('Testes do motor aprovados.','success');
+        }else{
+          $('aviatorAdminMessage').textContent=
+            'Testes do motor falharam: '+(failed.length?failed.join(', '):'falha não identificada')+'.';
+          toast('Testes do motor falharam.','error');
+        }
+      }catch(e){
+        $('aviatorAdminMessage').textContent=
+          'Falha ao testar motor: '+String(e?.message||e||'Erro desconhecido.');
+      }finally{
+        await refreshAviatorAdmin();
+      }
+    });
+
     $('aviatorMaintenanceReopen')?.addEventListener('click',async()=>{
       const button=$('aviatorMaintenanceReopen');
       try{
@@ -448,11 +510,15 @@
     
         if(button){
           button.disabled=true;
-          button.textContent='Reabrindo…';
+          button.textContent='Testando e reabrindo…';
         }
-    
-        await rpc('jl_aviator_admin_reopen',{p_token:state.token});
-        $('aviatorAdminMessage').textContent='Aviator reaberto.';
+
+        const reopened=await rpc('jl_aviator_admin_reopen',{p_token:state.token});
+        const engineTest=reopened?.engine_test||{};
+        const passed=Number(engineTest?.passed)||0;
+        const total=Number(engineTest?.total)||0;
+        $('aviatorAdminMessage').textContent=
+          'Aviator reaberto após '+passed+'/'+total+' testes automáticos do motor.';
         await refreshAviatorAdmin();
       }catch(e){
         $('aviatorAdminMessage').textContent=e.message;
@@ -474,8 +540,11 @@
           'Com 10 MZN apostados, o teto estimado atual é '+ceiling10.toFixed(2)+'×.'
         );
         if(!ok)return;
-        await rpc('jl_aviator_admin_start_one_round_test',{p_token:state.token});
-        $('aviatorAdminMessage').textContent='Rodada de teste armada. O Aviator voltará à manutenção após liquidá-la.';
+        const started=await rpc('jl_aviator_admin_start_one_round_test',{p_token:state.token});
+        const engineTest=started?.engine_test||{};
+        $('aviatorAdminMessage').textContent=
+          'Motor aprovado em '+(Number(engineTest.passed)||0)+'/'+(Number(engineTest.total)||0)+
+          ' checks. Rodada de teste armada; o Aviator voltará à manutenção após liquidá-la.';
         await refreshAviatorAdmin();
       }catch(e){$('aviatorAdminMessage').textContent=e.message}
     });
