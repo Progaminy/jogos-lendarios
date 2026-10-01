@@ -196,7 +196,7 @@ begin
   set search_path to 'pg_catalog','public'
   as $delay$
   begin
-    if old.id=p_race then
+    if old.name='AVIATOR POINT55 RACE' then
       perform pg_sleep(3);
     end if;
     return new;
