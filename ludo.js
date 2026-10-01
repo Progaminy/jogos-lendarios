@@ -849,6 +849,7 @@
     const r=roomData(),playing=['playing','finished'].includes(r.status);
     els.gamePanel.classList.remove('hidden');
     const current=roomPlayers().find(p=>p.player_id===r.current_player_id);
+    els.dice.dataset.turnColor=r.status==='playing'&&LUDO_COLORS.has(current?.color)?current.color:'';
 
     if(!playing){
       const title=r.status==='waiting'
