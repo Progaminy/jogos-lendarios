@@ -840,3 +840,4 @@
 .dice[data-turn-color=yellow]{--dice-turn:var(--yellow)}
 .dice[data-turn-color=blue]{--dice-turn:var(--blue)}
 .dice[data-turn-color]:not([data-turn-color=""]){border-color:var(--dice-turn)!important;box-shadow:0 0 0 5px color-mix(in srgb,var(--dice-turn) 52%,transparent),0 0 20px color-mix(in srgb,var(--dice-turn) 45%,transparent),inset 0 0 0 1px rgba(0,0,0,.08)!important}
+.quick-pawn-count .player-count-picker{grid-template-columns:repeat(4,minmax(0,1fr))}
