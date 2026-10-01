@@ -81,6 +81,8 @@ select
 from public.players
 where phone like '$PREFIX-%';
 
+begin;
+
 update public.players
 set balance=90,
     updated_at=clock_timestamp()
@@ -102,6 +104,8 @@ from public.jl_aviator_bets b
 join public.players p on p.id=b.player_id
 where b.round_id=$round_id
   and p.phone like '$PREFIX-%';
+
+commit;
 SQL
 
 "${PSQL[@]}" -c "select public.jl_aviator_lock_round('$round_id');" >/dev/null
