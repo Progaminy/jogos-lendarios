@@ -72,6 +72,19 @@ begin
     raise exception 'cash-out manual não reagenda motor';
   end if;
 
+  -- A reconstrução local pode deixar uma rodada do motor aberta.
+  -- Este teste isola a sua própria rodada sem enfraquecer a garantia de
+  -- uma única rodada viva no banco.
+  update public.jl_aviator_settings
+     set enabled=false,
+         one_round_test=false
+   where id=true;
+
+  update public.jl_aviator_rounds
+     set status='CANCELLED',
+         settled_at=coalesce(settled_at,clock_timestamp())
+   where status in ('OPEN','LOCKED','FLYING','CRASHED');
+
   insert into public.jl_aviator_rounds(
     status,started_at,financial_ceiling,effective_target,visual_target
   )
