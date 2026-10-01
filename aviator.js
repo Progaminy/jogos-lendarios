@@ -202,7 +202,9 @@ function stopOpenUiTick(){
 }
 
 function setBetInputsLocked(locked){return ui.setBetInputsLocked(locked);}
-function renderBetAction(disabled,status){return ui.renderBetAction({disabled,status});}
+function renderBetAction(disabled,status,label='Apostar',mode='bet',hidden=false){
+  return ui.renderBetAction({disabled,status,label,mode,hidden});
+}
 
 function updateRoundClock(){
   if(!connectionOnline){
@@ -226,16 +228,29 @@ function updateRoundClock(){
 
     const inputsLocked=
       !enabled||!connectionOnline||Boolean(myBet)||betting||closed;
+    const canCancel=
+      enabled&&connectionOnline&&Boolean(myBet)&&!betting&&!closed;
     setBetInputsLocked(inputsLocked);
 
-    renderBetAction(
-      inputsLocked,
-      myBet
-        ?'Aposta confirmada'
-        :closed
-          ?'Apostas fechadas'
-          :'Disponível'
-    );
+    if(canCancel){
+      renderBetAction(
+        false,
+        'Aposta confirmada · toque para cancelar',
+        'Cancelar',
+        'cancel'
+      );
+    }else{
+      renderBetAction(
+        inputsLocked,
+        myBet
+          ?closed?'Apostas fechadas':'Aposta confirmada'
+          :closed
+            ?'Apostas fechadas'
+            :'Disponível',
+        'Apostar',
+        'bet'
+      );
+    }
     return;
   }
 
@@ -638,8 +653,7 @@ function renderOpen(){
   renderBetConfirmation();
 
   if(myBet&&!$('#aviatorMessage').textContent.trim()){
-    renderBetAction(true,'Aposta confirmada');
-    $('#aviatorMessage').textContent='Aposta confirmada. Aguarde a descolagem.';
+    $('#aviatorMessage').textContent='Aposta confirmada. Pode cancelar enquanto as apostas estiverem abertas.';
   }
 }
 
@@ -684,7 +698,13 @@ function renderFlying(){
   show('#multiplierWrap',true);
   show('#crashText',false);
 
-  renderBetAction(true,'Apostas fechadas');
+  renderBetAction(
+    true,
+    'Apostas fechadas',
+    'Apostar',
+    'bet',
+    Boolean(myBet)
+  );
 
   renderCashoutAction({
     active:Boolean(myBet),
@@ -1061,8 +1081,58 @@ $('#aviatorBetForm').addEventListener('submit',async e=>{
   e.preventDefault();
   if(betting)return;
 
+  const action=String($('#betBtn')?.dataset.action||'bet');
   betting=true;
-  renderBetAction(true,'Confirmando aposta…');
+
+  if(action==='cancel'){
+    const id=myBet;
+    const stake=myStake;
+    renderBetAction(true,'Cancelando aposta…','Cancelar','cancel');
+
+    try{
+      if(!connectionOnline)throw new Error('Sem ligação. Aguarde a reconexão.');
+      if(!playerToken())throw new Error('Entre na sua conta primeiro.');
+      if(!id||!round||round.status!=='OPEN'||round.betting_open===false){
+        throw new Error('Cancelamento encerrado para esta rodada.');
+      }
+
+      const result=await financial.cancelBet(
+        id,
+        financial.cancelBetRequestKey(id)
+      );
+
+      personalHistory?.invalidate();
+      setBetResult({
+        status:'REFUNDED',
+        stake,
+        payout:Number(result.refund)||stake
+      });
+
+      myBet=null;
+      myStake=0;
+      myAutoCashout=null;
+      lastRecoveredRoundId=round?.id??null;
+      renderTicket();
+      renderBetConfirmation();
+      $('#aviatorMessage').textContent=
+        'Aposta cancelada. '+money(Number(result.refund)||stake)+' devolvidos.';
+    }catch(error){
+      $('#aviatorMessage').textContent=playerMessage(
+        error,
+        'Não foi possível cancelar a aposta.'
+      );
+      if(/Cancelamento encerrado|Apostas fechadas/i.test(String(error?.message||error))){
+        lastRecoveredRoundId=null;
+        await reconnectState();
+      }
+    }finally{
+      betting=false;
+      renderCurrentRound();
+    }
+    return;
+  }
+
+  renderBetAction(true,'Confirmando aposta…','Apostar','bet');
 
   try{
     if(!connectionOnline)throw new Error('Sem ligação. Aguarde a reconexão.');
