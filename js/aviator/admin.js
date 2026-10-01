@@ -296,7 +296,9 @@
           readiness.textContent=d.one_round_test
             ?'TESTE 1 RODADA'
             :d.enabled
-              ?'ABERTO'
+              ?obsConsistency.ok===true
+                ?'ABERTO'
+                :'ALERTA FINANCEIRO'
               :releaseCurrentlyValid
                 ?referenceCeiling<1.5
                   ?'CERTIFICADO · BANCA BAIXA'
