@@ -1,0 +1,65 @@
+name: Aviator Stress Certification
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  cashout-load:
+    name: Cash-out load ${{ matrix.players }} players
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - players: 100
+            parallel: 50
+          - players: 1000
+            parallel: 100
+          - players: 5000
+            parallel: 100
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: 2.118.0
+
+      - name: Initialize local Supabase config
+        run: |
+          if [ ! -f supabase/config.toml ]; then
+            supabase init
+          fi
+
+      - name: Start disposable Supabase
+        env:
+          KONG_NGINX_WORKER_PROCESSES: auto
+        run: supabase start
+
+      - name: Rebuild database
+        run: supabase db reset --local
+
+      - name: Run staged cash-out load
+        env:
+          JL_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+          AVIATOR_LOAD_PLAYERS: ${{ matrix.players }}
+          AVIATOR_LOAD_PARALLEL: ${{ matrix.parallel }}
+        run: |
+          set -euo pipefail
+          bash tests/aviator-cashout-load.sh | tee "aviator-load-${{ matrix.players }}.log"
+
+      - name: Upload load report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aviator-load-${{ matrix.players }}
+          path: aviator-load-${{ matrix.players }}.log
+
+      - name: Stop Supabase
+        if: always()
+        run: supabase stop --no-backup
