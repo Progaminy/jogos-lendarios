@@ -38,7 +38,7 @@
 
     ludoRealtimeRoomId=id;
     window.JLLudoRealtime.connect(id,{
-      onSignal:()=>queueLudoRealtimeRefresh(),
+      onSignal:(p)=>{showRealtimeDice(p,id);queueLudoRealtimeRefresh();},
       onStatus:(connected)=>{
         if(ludoRealtimeRoomId!==id)return;
         ludoRealtimeConnected=Boolean(connected);
@@ -66,7 +66,6 @@
     'chatMessages','chatForm','chatInput','resultPanel','resultTitle','resultPayouts','rematchBet','rematchButton','rematchHelp','authModal','closeAuth','loginTab','registerTab','loginForm','registerForm','loginPhone','loginPin',
     'registerName','registerPhone','registerPin','registerPinConfirm','registerInviteCode','registerInviteStatus','authMessage','winModal','winModalTitle','winModalMessage','winModalOk','ludoDiceLive','ludoTurnLive','ludoErrorLive','ludoVictoryLive'
   ].map(k => [k, $(k)]));
-  // O próprio dado é o botão de lançamento.
   els.rollDice = els.dice;
 
   const PATH = [[6,1],[6,2],[6,3],[6,4],[6,5],[5,6],[4,6],[3,6],[2,6],[1,6],[0,6],[0,7],[0,8],[1,8],[2,8],[3,8],[4,8],[5,8],[6,9],[6,10],[6,11],[6,12],[6,13],[6,14],[7,14],[8,14],[8,13],[8,12],[8,11],[8,10],[8,9],[9,8],[10,8],[11,8],[12,8],[13,8],[14,8],[14,7],[14,6],[13,6],[12,6],[11,6],[10,6],[9,6],[8,5],[8,4],[8,3],[8,2],[8,1],[8,0],[7,0],[6,0]];
@@ -132,6 +131,17 @@
     const visible=new Set(DICE_LAYOUTS[n]);
     for(let i=1;i<=9;i++){const pip=document.createElement('span');pip.className=`pip p${i}${visible.has(i)?' on':''}`;els.dice.appendChild(pip);}
   }
+  function showRealtimeDice(p,id){
+    if(p?.kind!=='dice_rolled'||String(p.room_id||'')!==id)return;
+    const n=Number(Array.isArray(p.dice_values)?p.dice_values[0]:p.dice);
+    if(!Number.isInteger(n)||n<1||n>6)return;
+    state.lastDiceRoomId=id;state.lastDiceValue=n;
+    if(String(p.player_id||'')===String(me()||'')&&state.diceRolling)return;
+    renderDiceFace(n);playDiceLanding();
+    const x=roomPlayers().find(x=>String(x.player_id)===String(p.player_id)),who=x?firstPlayerName(x):'Adversário';
+    if(els.moveHint)els.moveHint.textContent=`${who} tirou ${n}.`;
+    announceLive(els.ludoDiceLive,`${who} tirou ${n} no dado.`,{force:true});
+  }
 
   function renderDiceRollingNeutral(){
     if(!els.dice)return;
@@ -169,8 +179,6 @@
       delete els.dice.dataset.jlRolling;
     };
     renderDiceRollingNeutral();
-    // O giro visual tem duração limitada e não fica preso à latência do servidor.
-    // Se a resposta demorar, o cubo fica parado de forma neutra até chegar o valor real.
     settleTimer=setTimeout(()=>{
       if(stopped)return;
       els.dice.classList.remove('rolling');
@@ -631,8 +639,6 @@
         nextStatus.public_challenges=state.status?.public_challenges||[];
       }
 
-      // Qualquer resposta iniciada antes de uma jogada, de um lançamento ou
-      // de uma resposta mais nova é descartada antes de tocar no DOM/estado.
       if(state.animating||state.diceRolling||!movementGuard.canApplySnapshot(snapshotTicket))return;
 
       const previousRoom=state.room;
@@ -645,8 +651,6 @@
       state.status=nextStatus;
       if(previousRoom&&!nextRoom)closeVoice();
 
-      // O destino autoritativo entra primeiro no estado. A animação apenas
-      // representa visualmente o caminho; nunca é fonte da posição.
       state.room=nextRoom;
       syncLudoRealtime(nextRoom?.room?.id||nextStatus?.active_room_id||null);
 
@@ -669,8 +673,6 @@
 
       if(movementGuard.canApplySnapshot(snapshotTicket)){
         renderAll();
-        // Realtime entrega o evento e o efeito sonoro na mesma atualização.
-        // Evita captura/chegada/vitória soarem apenas numa consulta posterior.
         processGameEffects(nextRoom);
       }
     }catch(e){
@@ -943,8 +945,6 @@
         toSteps:Number(move.to_steps)
       });
 
-      // Otimismo visual: o estado local já conhece o destino. Se qualquer
-      // resposta antiga chegar depois, a geração da jogada invalida-a.
       if(movingToken)movingToken.steps=Number(move.to_steps);
 
       state.animating=true;
