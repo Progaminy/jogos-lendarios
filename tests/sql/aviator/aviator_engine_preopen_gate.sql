@@ -70,7 +70,8 @@ begin
     perform public.jl_aviator_admin_set_enabled(v_token,true);
   exception
     when others then
-      if position('Testes automáticos do motor falharam' in sqlerrm)>0 then
+      if position('Certificação completa do Aviator falhou' in sqlerrm)>0
+         or position('Testes automáticos do motor falharam' in sqlerrm)>0 then
         v_blocked:=true;
       else
         raise;
