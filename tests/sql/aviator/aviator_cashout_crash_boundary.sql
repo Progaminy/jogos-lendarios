@@ -78,11 +78,12 @@ begin
   returning id into p_before;
 
   insert into public.jl_aviator_rounds(
-    status,started_at,effective_target,financial_ceiling,visual_target
+    status,betting_closes_at,takeoff_at,effective_target,financial_ceiling,visual_target
   )
   values(
-    'FLYING',
-    clock_timestamp()-interval '1 second',
+    'OPEN',
+    clock_timestamp()+interval '1 minute',
+    clock_timestamp()+interval '63 seconds',
     2.000000,
     2.000000,
     2.000000
@@ -97,6 +98,11 @@ begin
     'point56-before-'||r_before::text
   )
   returning id into b_before;
+
+  update public.jl_aviator_rounds
+     set status='FLYING',
+         started_at=clock_timestamp()-interval '1 second'
+   where id=r_before;
 
   c:=public.jl_aviator_cashout_locked(
     b_before,
@@ -129,11 +135,12 @@ begin
   returning id into p_equal;
 
   insert into public.jl_aviator_rounds(
-    status,started_at,effective_target,financial_ceiling,visual_target
+    status,betting_closes_at,takeoff_at,effective_target,financial_ceiling,visual_target
   )
   values(
-    'FLYING',
-    clock_timestamp()-interval '1 second',
+    'OPEN',
+    clock_timestamp()+interval '1 minute',
+    clock_timestamp()+interval '63 seconds',
     2.000000,
     2.000000,
     2.000000
@@ -148,6 +155,11 @@ begin
     'point56-equal-'||r_equal::text
   )
   returning id into b_equal;
+
+  update public.jl_aviator_rounds
+     set status='FLYING',
+         started_at=clock_timestamp()-interval '1 second'
+   where id=r_equal;
 
   blocked:=false;
   begin
@@ -207,11 +219,12 @@ begin
   returning id into p_after;
 
   insert into public.jl_aviator_rounds(
-    status,started_at,effective_target,financial_ceiling,visual_target
+    status,betting_closes_at,takeoff_at,effective_target,financial_ceiling,visual_target
   )
   values(
-    'FLYING',
-    clock_timestamp()-interval '1 second',
+    'OPEN',
+    clock_timestamp()+interval '1 minute',
+    clock_timestamp()+interval '63 seconds',
     2.000000,
     2.000000,
     2.000000
@@ -226,6 +239,11 @@ begin
     'point56-after-'||r_after::text
   )
   returning id into b_after;
+
+  update public.jl_aviator_rounds
+     set status='FLYING',
+         started_at=clock_timestamp()-interval '1 second'
+   where id=r_after;
 
   blocked:=false;
   begin
