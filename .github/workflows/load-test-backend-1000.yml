@@ -1,0 +1,45 @@
+name: Controlled 1000 User Backend Load Test
+
+on:
+  push:
+    branches:
+      - loadtest-1000
+    paths:
+      - '.github/workflows/load-test-backend-1000.yml'
+      - 'tests/load/k6-1000-backend.js'
+
+permissions:
+  contents: read
+
+jobs:
+  backend-load-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run production backend load test
+        shell: bash
+        env:
+          SUPABASE_URL: https://bxndjyzghgrmkelshtdp.supabase.co
+          SUPABASE_ANON_KEY: sb_publishable_E-Uikud2p7M6-dgcCK5ttg_eWUV8i_l
+        run: |
+          set -o pipefail
+          mkdir -p load-results
+          chmod 777 load-results
+          docker run --rm \
+            -e SUPABASE_URL \
+            -e SUPABASE_ANON_KEY \
+            -v "$PWD:/work" \
+            -w /work \
+            grafana/k6:0.54.0 \
+            run tests/load/k6-1000-backend.js \
+            | tee load-results/backend-output.txt
+
+      - name: Upload result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jogos-lendarios-backend-loadtest-1000
+          path: load-results/backend-output.txt
+          if-no-files-found: error
