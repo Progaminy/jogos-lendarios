@@ -11,8 +11,9 @@ test('admin mostra prontidão e tetos de referência do Aviator',()=>{
   assert.match(html,/id="aviatorReadiness"/);
   assert.match(html,/id="aviatorReferenceCeilings"/);
   assert.match(js,/\[1,5,10,50\]/);
-  assert.match(js,/BANCA MUITO BAIXA/);
-  assert.match(js,/PRONTO PARA TESTE/);
+  assert.match(js,/TESTES NECESSÁRIOS/);
+  assert.match(js,/TESTES OK/);
+  assert.match(js,/BANCA BAIXA/);
 });
 
 test('botão Fechar Aviator é dedicado, direto e não contém lógica de reabertura',()=>{
