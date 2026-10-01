@@ -40,6 +40,7 @@
   }
 
   function queueSignal(payload){
+    if(payload?.kind==='dice_rolled'){try{handlers.onSignal?.(payload);}catch(_){}return;}
     pendingPayload=payload||pendingPayload;
     if(signalTimer)return;
     signalTimer=setTimeout(flushSignal,60);
