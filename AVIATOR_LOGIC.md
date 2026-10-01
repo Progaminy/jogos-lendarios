@@ -220,7 +220,7 @@ Esses cenários têm regressões transacionais em `tests/sql/aviator/`.
 - Fechar o Aviator ou entrar em modo de uma rodada invalida a certificação visual armazenada; a próxima abertura real executa os checks novamente.
 - O CI continua rodando toda a suíte SQL do Aviator e os testes de concorrência. O teste `aviator_engine_preopen_gate.sql` roda por último como etapa nomeada de certificação.
 - O teste adversarial remove temporariamente a constraint de payout único dentro de uma transação, confirma que a abertura é bloqueada e executa `ROLLBACK`.
-- Migration: `20261001000532_aviator_preopen_automated_engine_tests`.
+- Migrations: `20261001000532_aviator_preopen_automated_engine_tests` e `20261001001135_aviator_one_round_returns_engine_test`.
 - Regressões: `tests/sql/aviator/aviator_engine_preopen_gate.sql` e `tests/frontend/aviator-admin-preflight.test.cjs`.
 
 ## Detalhes de cada aposta
