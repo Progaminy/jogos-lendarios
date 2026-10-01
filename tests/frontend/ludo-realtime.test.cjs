@@ -37,3 +37,14 @@ test('Realtime é apenas gatilho para buscar estado autoritativo',()=>{
     /players|tokens|balance|stake_amount/
   );
 });
+
+test('resultado do dado do adversario chega sem esperar polling',()=>{
+  const realtime=fs.readFileSync(path.join(__dirname,'../../js/realtime/ludo.js'),'utf8');
+  const controller=fs.readFileSync(path.join(__dirname,'../../ludo.js'),'utf8');
+  assert.match(realtime,/payload\?\.kind==='dice_rolled'/);
+  assert.match(realtime,/handlers\.onSignal\?\.\(payload\)/);
+  assert.match(controller,/onSignal:\(p\)=>\{showRealtimeDice\(p,id\);queueLudoRealtimeRefresh\(\);\}/);
+  assert.match(controller,/function showRealtimeDice\(p,id\)/);
+  assert.match(controller,/renderDiceFace\(n\);playDiceLanding\(\)/);
+  assert.match(controller,/moveHint\.textContent=.*tirou/);
+});
