@@ -10,6 +10,9 @@ on:
 permissions:
   contents: read
 
+env:
+  STRESS_REVISION: '2'
+
 jobs:
   cashout-load:
     name: Cash-out load ${{ matrix.players }} players
