@@ -296,6 +296,11 @@ begin
   into v_had_open;
 
   if not v_ok then
+    update public.jl_aviator_settings
+       set last_release_gate_passed=false
+     where id=true
+       and coalesce(last_release_gate_passed,false)=true;
+
     insert into public.jl_aviator_admin_alerts(
       alert_key,severity,title,message,details,first_seen_at,last_seen_at,resolved_at
     )
