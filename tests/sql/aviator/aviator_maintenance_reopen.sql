@@ -3,7 +3,7 @@ begin;
 update public.jl_aviator_rounds
    set status='CANCELLED',
        settled_at=coalesce(settled_at,now())
- where status in ('OPEN','LOCKED','FLYING');
+ where status in ('OPEN','LOCKED','FLYING','CRASHED');
 
 update public.jl_aviator_settings
    set enabled=false,
