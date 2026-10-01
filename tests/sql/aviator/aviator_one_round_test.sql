@@ -15,6 +15,7 @@ do $oneround$
 declare
   v_round bigint;
   v_tick jsonb;
+  v_admin_result jsonb;
   v_enabled boolean;
   v_test boolean;
   v_status text;
@@ -96,6 +97,19 @@ begin
 
   if coalesce((v_tick->>'opened')::boolean,false) then
     raise exception 'cron abriu segunda rodada depois do one-round test: %',v_tick;
+  end if;
+  if position(
+    '''engine_test'',v_preflight'
+    in (
+      select pg_get_functiondef(p.oid)
+      from pg_proc p
+      join pg_namespace n on n.oid=p.pronamespace
+      where n.nspname='public'
+        and p.proname='jl_aviator_admin_start_one_round_test'
+        and pg_get_function_identity_arguments(p.oid)='p_token text'
+    )
+  )=0 then
+    raise exception 'rodada única deve retornar engine_test aprovado';
   end if;
 end
 $oneround$;
