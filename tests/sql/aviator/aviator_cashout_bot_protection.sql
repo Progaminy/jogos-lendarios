@@ -4,7 +4,9 @@ begin;
 do $test$
 declare
   v_bet_id bigint;
+  v_round_id bigint;
   v_player uuid;
+  v_setup jsonb;
   v_token text:='point34-'||gen_random_uuid()::text;
   v_subject text;
   v_request1 text:='cashout-'||gen_random_uuid()::text;
@@ -62,16 +64,28 @@ begin
     raise exception 'service_role possui escrita direta no cashout guard';
   end if;
 
-  select id,player_id
-  into v_bet_id,v_player
-  from public.jl_aviator_bets
-  where status='LOST'
-  order by id
-  limit 1;
+  -- O teste deve ser autossuficiente: cria a própria aposta LOST em vez de
+  -- depender de dados deixados por outro teste/transação.
+  update public.jl_aviator_settings
+     set enabled=true,
+         one_round_test=false,
+         updated_at=clock_timestamp()
+   where id=true;
 
-  if v_bet_id is null then
-    raise exception 'Nenhuma aposta LOST para regressão';
-  end if;
+  update public.jl_aviator_bank
+     set balance=100000,
+         exposure_ratio=.5,
+         updated_at=clock_timestamp()
+   where id=true;
+
+  insert into public.players(name,phone,pin_hash,balance)
+  values(
+    'AVIATOR BOT GUARD TEST',
+    'bot-guard-'||gen_random_uuid()::text,
+    'x',
+    100
+  )
+  returning id into v_player;
 
   v_subject:=public.jl_token_hash(v_token);
 
@@ -81,6 +95,38 @@ begin
   values(
     v_player,v_subject,now()+interval '10 minutes',now()
   );
+
+  insert into public.jl_aviator_rounds(
+    status,betting_closes_at,takeoff_at
+  )
+  values(
+    'OPEN',
+    clock_timestamp()+interval '30 seconds',
+    clock_timestamp()+interval '33 seconds'
+  )
+  returning id into v_round_id;
+
+  v_setup:=public.jl_aviator_place_bet(
+    v_token,
+    10,
+    'bot-guard-setup-'||v_round_id::text
+  );
+
+  v_bet_id:=(v_setup->>'bet_id')::bigint;
+
+  if v_bet_id is null then
+    raise exception 'Falha ao criar aposta da regressão: %',v_setup;
+  end if;
+
+  update public.jl_aviator_bets
+     set status='LOST',
+         payout=0
+   where id=v_bet_id;
+
+  update public.jl_aviator_rounds
+     set status='SETTLED',
+         settled_at=clock_timestamp()
+   where id=v_round_id;
 
   delete from public.jl_aviator_cashout_guard
   where bet_id=v_bet_id;
