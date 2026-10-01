@@ -1,0 +1,37 @@
+'use strict';
+
+const test=require('node:test');
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const path=require('node:path');
+
+const root=path.join(__dirname,'../..');
+const html=fs.readFileSync(path.join(root,'admin.html'),'utf8');
+const admin=fs.readFileSync(path.join(root,'js/aviator/admin.js'),'utf8');
+
+test('painel mostra estado e botão de testes automáticos',()=>{
+  assert.match(html,/id="aviatorEnginePreflight"/);
+  assert.match(html,/id="aviatorEngineTestStatus"/);
+  assert.match(html,/>Testar motor</);
+});
+
+test('refresh lê certificação do motor separadamente',()=>{
+  assert.match(admin,/jl_aviator_admin_engine_test_state/);
+  assert.match(admin,/engineTest/);
+  assert.match(admin,/TESTES OK/);
+  assert.match(admin,/TESTES NECESSÁRIOS/);
+});
+
+test('botão manual executa preflight real no servidor',()=>{
+  assert.match(admin,/jl_aviator_admin_engine_preflight/);
+  assert.match(admin,/Testando motor/);
+  assert.match(admin,/testes automáticos passaram/);
+});
+
+test('reabertura comunica que o preflight foi executado',()=>{
+  const block=admin.match(/\$\('aviatorMaintenanceReopen'\)\?\.addEventListener\('click',[\s\S]*?\n    \}\);/)?.[0]||'';
+  assert.match(block,/jl_aviator_admin_reopen/);
+  assert.match(block,/engine_test/);
+  assert.match(block,/Testando e reabrindo/);
+  assert.doesNotMatch(block,/jl_aviator_admin_set_enabled/);
+});
