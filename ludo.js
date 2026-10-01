@@ -66,7 +66,6 @@
     'chatMessages','chatForm','chatInput','resultPanel','resultTitle','resultPayouts','rematchBet','rematchButton','rematchHelp','authModal','closeAuth','loginTab','registerTab','loginForm','registerForm','loginPhone','loginPin',
     'registerName','registerPhone','registerPin','registerPinConfirm','registerInviteCode','registerInviteStatus','authMessage','winModal','winModalTitle','winModalMessage','winModalOk','ludoDiceLive','ludoTurnLive','ludoErrorLive','ludoVictoryLive'
   ].map(k => [k, $(k)]));
-  // O próprio dado é o botão de lançamento.
   els.rollDice = els.dice;
 
   const PATH = [[6,1],[6,2],[6,3],[6,4],[6,5],[5,6],[4,6],[3,6],[2,6],[1,6],[0,6],[0,7],[0,8],[1,8],[2,8],[3,8],[4,8],[5,8],[6,9],[6,10],[6,11],[6,12],[6,13],[6,14],[7,14],[8,14],[8,13],[8,12],[8,11],[8,10],[8,9],[9,8],[10,8],[11,8],[12,8],[13,8],[14,8],[14,7],[14,6],[13,6],[12,6],[11,6],[10,6],[9,6],[8,5],[8,4],[8,3],[8,2],[8,1],[8,0],[7,0],[6,0]];
@@ -180,8 +179,6 @@
       delete els.dice.dataset.jlRolling;
     };
     renderDiceRollingNeutral();
-    // O giro visual tem duração limitada e não fica preso à latência do servidor.
-    // Se a resposta demorar, o cubo fica parado de forma neutra até chegar o valor real.
     settleTimer=setTimeout(()=>{
       if(stopped)return;
       els.dice.classList.remove('rolling');
