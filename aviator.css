@@ -86,10 +86,13 @@ body{background:#070a10}
 .aviator-my-history-empty{padding:12px;font-size:.74rem;color:#7f8aa0}
 .aviator-my-history-more{display:block;width:calc(100% - 20px);margin:0 10px 10px;min-height:36px}
 
-.aviator-controls{display:grid;grid-template-columns:minmax(0,1fr) minmax(180px,.42fr);gap:10px;padding-top:2px}
-.aviator-controls form{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.72fr) minmax(180px,.6fr);gap:8px;align-items:end}
-.aviator-bet-action{display:grid;grid-template-rows:58px 16px;gap:4px;align-self:end;min-width:0}
-.aviator-bet-action #betBtn{width:100%;height:58px;min-height:58px;font-size:1.08rem;font-weight:950;line-height:1;white-space:nowrap}
+.aviator-controls{display:grid;grid-template-columns:1fr;gap:10px;padding-top:2px}
+.aviator-controls form{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.72fr) minmax(190px,.62fr);gap:8px;align-items:end}
+.aviator-primary-action-slot{display:grid;align-self:end;min-width:0}
+.aviator-primary-action-slot>.aviator-bet-action,.aviator-primary-action-slot>.aviator-cashout-action{grid-area:1/1}
+.aviator-bet-action{display:grid;grid-template-rows:64px 18px;gap:4px;align-self:end;min-width:0}
+.aviator-bet-action #betBtn{width:100%;height:64px;min-height:64px;font-size:1.12rem;font-weight:950;line-height:1;white-space:nowrap;transition:background-color .16s ease,border-color .16s ease,box-shadow .16s ease}
+.aviator-bet-action.is-cancel #betBtn:not(:disabled){background:#c94444;border-color:#c94444;color:#fff;box-shadow:0 0 0 1px rgba(201,68,68,.24),0 10px 28px rgba(201,68,68,.16)}
 .aviator-bet-action-status{display:block;min-height:16px;text-align:center;font-size:.62rem;font-weight:800;line-height:16px;color:#7f8ba0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .aviator-controls .field>span{font-size:.68rem;color:#8b97aa}
 .aviator-controls .form-message{grid-column:1/-1;min-height:1em;margin:0 2px;font-size:.78rem}
@@ -110,7 +113,7 @@ body{background:#070a10}
 .aviator-bet-result.is-won .aviator-bet-result-icon{color:#66d99a}
 .aviator-bet-result.is-lost .aviator-bet-result-icon{color:#e58d8d}
 .aviator-bet-result.is-refunded .aviator-bet-result-icon{color:#e4b94f}
-.aviator-cashout-action{display:grid;grid-template-rows:64px 16px;gap:4px;align-self:end;min-width:0}
+.aviator-cashout-action{display:grid;grid-template-rows:64px 18px;gap:4px;align-self:end;min-width:0}
 .aviator-cashout-action #cashoutBtn{width:100%;height:64px;min-height:64px;font-size:1.12rem;font-weight:950;line-height:1;white-space:nowrap;transition:box-shadow .16s ease,background-color .16s ease,border-color .16s ease;touch-action:manipulation;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
 .aviator-cashout-action-status{display:block;min-height:18px;text-align:center;font-size:.68rem;font-weight:900;line-height:18px;color:#7f8ba0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
 .aviator-cashout-action.is-priority #cashoutBtn:not(:disabled){background:#36c979;border-color:#36c979;color:#07130c;box-shadow:0 0 0 2px rgba(78,213,138,.28),0 14px 34px rgba(78,213,138,.24)}
@@ -165,9 +168,10 @@ body{background:#070a10}
   #cashoutBtn:not(:disabled){box-shadow:0 0 0 1px rgba(78,213,138,.24)}
   .aviator-controls{grid-template-columns:1fr;gap:8px}
   .aviator-controls form{grid-template-columns:1fr 1fr}
-  .aviator-bet-action{grid-column:1/-1;grid-template-rows:64px 17px;gap:4px}
-  .aviator-bet-action #betBtn{height:64px;min-height:64px;font-size:1.2rem}
-  .aviator-bet-action-status{min-height:17px;line-height:17px;font-size:.66rem}
+  .aviator-primary-action-slot{grid-column:1/-1}
+  .aviator-bet-action{grid-template-rows:72px 18px;gap:5px}
+  .aviator-bet-action #betBtn{height:72px;min-height:72px;font-size:1.28rem}
+  .aviator-bet-action-status{min-height:20px;line-height:20px;font-size:.72rem}
   .aviator-cashout-action{grid-template-rows:72px 18px;gap:5px}
   .aviator-cashout-action #cashoutBtn{height:72px;min-height:72px;font-size:1.28rem}
   .aviator-cashout-action-status{min-height:20px;line-height:20px;font-size:.72rem}
