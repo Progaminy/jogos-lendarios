@@ -123,6 +123,37 @@ select
     join public.players p on p.id=t.player_id
     where p.phone in ('25899061201','25899061202')
       and t.kind='aviator_payout')||':'||
+  (select count(*) from public.jl_aviator_bank_ledger
+    where request_key in ('cashout:$bet_a','cashout:$bet_b'))||':'||
+  (select count(*) from public.audit_log
+    where action='aviator.cashout'
+      and details->>'betId' in ('$bet_a','$bet_b'))||':'||
+  (select (
+      p.balance=round(990+b.payout,2)
+      and exists(
+        select 1 from public.transactions t
+        where t.id=b.payout_transaction_id
+          and t.player_id=p.id
+          and t.kind='aviator_payout'
+          and t.amount=b.payout
+      )
+    )::text
+    from public.players p
+    join public.jl_aviator_bets b on b.player_id=p.id
+    where p.phone='25899061201' and b.id='$bet_a')||':'||
+  (select (
+      p.balance=round(990+b.payout,2)
+      and exists(
+        select 1 from public.transactions t
+        where t.id=b.payout_transaction_id
+          and t.player_id=p.id
+          and t.kind='aviator_payout'
+          and t.amount=b.payout
+      )
+    )::text
+    from public.players p
+    join public.jl_aviator_bets b on b.player_id=p.id
+    where p.phone='25899061202' and b.id='$bet_b')||':'||
   (select visual_extension::text from public.jl_aviator_rounds where id='$round_id')||':'||
   (select (zero_exposure_at_multiplier is not null)::text
      from public.jl_aviator_rounds where id='$round_id')||':'||
@@ -133,11 +164,11 @@ select
      from public.jl_aviator_rounds where id='$round_id');
 ")
 
-[[ "$result" == "2:0:2:true:true:true" ]] || {
+[[ "$result" == "2:0:2:2:2:true:true:true:true:true" ]] || {
   echo "FAIL concurrent cashout invariant: $result"
   echo "A:"; cat /tmp/aviator-co-a.out /tmp/aviator-co-a.err
   echo "B:"; cat /tmp/aviator-co-b.out /tmp/aviator-co-b.err
   exit 1
 }
 
-echo "PASS aviator: two concurrent cash-outs, one payout each, final visual extension consistent"
+echo "PASS aviator point 57: two simultaneous cash-outs, exactly one payout/ledger/audit per bet, balances and final round state consistent"
