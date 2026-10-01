@@ -75,6 +75,20 @@
         </div>
         <div id="aviatorReferenceCeilings" class="aviator-reference-ceilings" aria-live="polite"></div>
         <div id="aviatorBankWarning" class="aviator-bank-warning hidden" role="status" aria-live="polite"></div>
+
+        <p class="eyebrow">MONITORIZAÇÃO DO AVIATOR</p>
+        <div class="admin-grid">
+          <div class="card metric"><span>Duração da rodada</span><strong id="aviatorMetricRoundDuration">—</strong></div>
+          <div class="card metric"><span>Apostas por segundo</span><strong id="aviatorMetricBetsPerSec">0,00</strong></div>
+          <div class="card metric"><span>Cash-outs por segundo</span><strong id="aviatorMetricCashoutsPerSec">0,00</strong></div>
+          <div class="card metric"><span>Latência p95</span><strong id="aviatorMetricLatency">—</strong></div>
+        </div>
+        <div class="admin-grid">
+          <div class="card metric"><span>Falhas de pagamento · 15 min</span><strong id="aviatorMetricPaymentFailures">0</strong></div>
+          <div class="card metric"><span>Consistência financeira</span><strong id="aviatorFinancialConsistency">A verificar…</strong></div>
+          <div class="card metric"><span>Certificação de abertura</span><strong id="aviatorReleaseGateStatus">NÃO CERTIFICADO</strong><small id="aviatorReleaseGateDetail">—</small></div>
+        </div>
+        <div id="aviatorFinancialAlert" class="aviator-bank-warning hidden" role="alert" aria-live="assertive"></div>
         <div class="admin-actions">
           <button id="aviatorMaintenanceClose" class="button danger" type="button">Fechar Aviator</button>
           <button id="aviatorEnginePreflight" class="button" type="button">Testar motor</button>
