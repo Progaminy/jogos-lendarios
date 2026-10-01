@@ -27,7 +27,7 @@ jobs:
         run: |
           node --check ludo.js
           node --check aviator.js
-          node --check js/aviator/runtime.js
+          for file in js/aviator/*.js; do node --check "$file"; done
           node --check app.js
           node --check js/ludo/movement-guard.js
           node --check js/ludo/room-state.js
@@ -69,6 +69,9 @@ jobs:
         run: |
           set -euo pipefail
           for file in tests/sql/aviator/*.sql; do
+            if [ "$(basename "$file")" = "aviator_engine_preopen_gate.sql" ]; then
+              continue
+            fi
             echo "::group::$file"
             psql "$JL_TEST_DATABASE_URL" -X -v ON_ERROR_STOP=1 -f "$file"
             echo "::endgroup::"
@@ -83,6 +86,11 @@ jobs:
         env:
           JL_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
         run: bash tests/aviator-cashout-same-bet-concurrency.sh
+
+      - name: Run Aviator pre-open engine certification gate
+        env:
+          JL_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+        run: psql "$JL_TEST_DATABASE_URL" -X -v ON_ERROR_STOP=1 -f tests/sql/aviator/aviator_engine_preopen_gate.sql
 
       - name: Run room-entry concurrency test when local reconstruction supports it
         env:
