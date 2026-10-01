@@ -177,9 +177,11 @@
     async function refreshAviatorAdmin(){
       if(!state.token||!$('aviatorAdmin')) return;
       try{
-        const [d,engineTest]=await Promise.all([
+        const [d,engineTest,releaseGate,observability]=await Promise.all([
           rpc('jl_aviator_admin_state',{p_token:state.token}),
-          rpc('jl_aviator_admin_engine_test_state',{p_token:state.token})
+          rpc('jl_aviator_admin_engine_test_state',{p_token:state.token}),
+          rpc('jl_aviator_admin_release_gate_state',{p_token:state.token}),
+          rpc('jl_aviator_admin_observability',{p_token:state.token})
         ]),r=d.round||{};
         const roundExposure=d.exposure||{};
         const house=d.house||{};
@@ -247,16 +249,58 @@
             ?'Atenção: com banca de '+money(bankBalance)+' MZN e 10 MZN apostados, o teto financeiro estimado seria '+referenceCeiling.toFixed(2)+'×. A banca baixa faz o crash financeiro ocorrer muito cedo.'
             :'';
         }
+        const releasePassed=releaseGate?.passed===true;
+        const releaseResult=releaseGate?.result||{};
+        const releaseFlow=releaseResult?.repeated_flow||{};
+        const releaseStatus=$('aviatorReleaseGateStatus');
+        const releaseDetail=$('aviatorReleaseGateDetail');
+        if(releaseStatus){
+          releaseStatus.textContent=releasePassed?'CERTIFICADO':'NÃO CERTIFICADO';
+        }
+        if(releaseDetail){
+          releaseDetail.textContent=releaseGate?.tested_at
+            ?(Number(releaseFlow?.passed)||0)+'/'+(Number(releaseFlow?.iterations)||3)+' fluxos · '+dateTime(releaseGate.tested_at)
+            :'Nunca certificado';
+        }
+
+        const obsRound=observability?.round||{};
+        const obsThroughput=observability?.throughput||{};
+        const obsLatency=observability?.latency_p95_ms_15m||{};
+        const obsFailures=observability?.failures_15m||{};
+        const obsConsistency=observability?.financial_consistency||{};
+        const obsAlerts=Array.isArray(observability?.alerts)?observability.alerts:[];
+        const latestDuration=Number(obsRound.latest_duration_ms)||0;
+        $('aviatorMetricRoundDuration').textContent=latestDuration
+          ?(latestDuration/1000).toFixed(2)+' s'
+          :'—';
+        $('aviatorMetricBetsPerSec').textContent=(Number(obsThroughput.bets_per_second_60s)||0).toFixed(2);
+        $('aviatorMetricCashoutsPerSec').textContent=(Number(obsThroughput.cashouts_per_second_60s)||0).toFixed(2);
+        $('aviatorMetricLatency').textContent=
+          'A '+Math.round(Number(obsLatency.bet)||0)+' ms · C '+
+          Math.round(Number(obsLatency.cashout)||0)+' ms · R '+
+          Math.round(Number(obsLatency.reconnect)||0)+' ms';
+        $('aviatorMetricPaymentFailures').textContent=String(Number(obsFailures.payment)||0);
+        $('aviatorFinancialConsistency').textContent=obsConsistency.ok===true?'OK':'DIVERGÊNCIA';
+
+        const financialAlert=$('aviatorFinancialAlert');
+        if(financialAlert){
+          const critical=obsAlerts.find(item=>String(item?.severity).toUpperCase()==='CRITICAL');
+          financialAlert.classList.toggle('hidden',!critical);
+          financialAlert.textContent=critical
+            ?String(critical.title||'Inconsistência financeira')+': '+String(critical.message||'Verifique imediatamente.')
+            :'';
+        }
+
         if(readiness){
           readiness.textContent=d.one_round_test
             ?'TESTE 1 RODADA'
             :d.enabled
               ?'ABERTO'
-              :enginePassed
+              :releasePassed
                 ?referenceCeiling<1.5
-                  ?'TESTES OK · BANCA BAIXA'
-                  :'TESTES OK'
-                :'TESTES NECESSÁRIOS';
+                  ?'CERTIFICADO · BANCA BAIXA'
+                  :'CERTIFICADO'
+                :'NÃO ABRIR · CERTIFICAÇÃO NECESSÁRIA';
         }
         const draining=
           !d.enabled&&['OPEN','LOCKED','FLYING','CRASHED'].includes(String(r.status||''));
@@ -451,19 +495,25 @@
         }
         $('aviatorAdminMessage').textContent='Executando testes automáticos do motor…';
 
-        const result=await rpc('jl_aviator_admin_engine_preflight',{p_token:state.token});
-        const passed=Number(result?.passed)||0;
-        const total=Number(result?.total)||0;
-        const failed=Array.isArray(result?.failed_checks)?result.failed_checks:[];
+        const result=await rpc('jl_aviator_admin_release_gate',{p_token:state.token});
+        const structural=result?.structural||{};
+        const flow=result?.repeated_flow||{};
+        const financial=result?.financial_consistency||{};
+        const passed=Number(structural?.passed)||0;
+        const total=Number(structural?.total)||0;
 
         if(result?.ok===true){
           $('aviatorAdminMessage').textContent=
-            passed+'/'+total+' testes automáticos passaram. Motor certificado para tentativa de abertura.';
-          toast('Testes do motor aprovados.','success');
+            'Certificação aprovada: '+passed+'/'+total+' checks estruturais, '+
+            (Number(flow?.passed)||0)+'/'+(Number(flow?.iterations)||3)+
+            ' fluxos completos e reconciliação financeira sem divergência.';
+          toast('Aviator certificado para abertura.','success');
         }else{
           $('aviatorAdminMessage').textContent=
-            'Testes do motor falharam: '+(failed.length?failed.join(', '):'falha não identificada')+'.';
-          toast('Testes do motor falharam.','error');
+            'Certificação falhou. Estrutural: '+passed+'/'+total+
+            ' · fluxo: '+(Number(flow?.passed)||0)+'/'+(Number(flow?.iterations)||3)+
+            ' · financeiro: '+(financial?.ok===true?'OK':'DIVERGÊNCIA')+'.';
+          toast('Aviator continua bloqueado.','error');
         }
       }catch(e){
         $('aviatorAdminMessage').textContent=
