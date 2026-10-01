@@ -25,7 +25,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="stylesheet" href="./ludo.css?v=20261001-2">
+  <link rel="stylesheet" href="./ludo.css?v=20261001-3">
   <link rel="stylesheet" href="./site-nav.css?v=20260928-20">
   <style id="ludo-critical-mobile-fix">
     @media (max-width:600px){
@@ -148,6 +148,19 @@
                 <button class="pawn-style-choice active" type="button" data-pawn-style="current" aria-label="Peão atual" aria-pressed="true"><span class="pawn-type-preview pawn-type-current" aria-hidden="true"></span><small>Atual</small><span class="choice-check" aria-hidden="true">✓</span></button>
                 <button class="pawn-style-choice" type="button" data-pawn-style="classic" aria-label="Peão em forma de pino marcador" aria-pressed="false"><span class="pawn-type-preview pawn-type-classic" aria-hidden="true"></span><small>Pino</small><span class="choice-check" aria-hidden="true">✓</span></button>
                 <button class="pawn-style-choice" type="button" data-pawn-style="video" aria-label="Peão em forma de escudo" aria-pressed="false"><span class="pawn-type-preview pawn-type-video" aria-hidden="true"></span><small>Escudo</small><span class="choice-check" aria-hidden="true">✓</span></button>
+              </div>
+            </div>
+
+            <div class="quick-start-step" aria-label="Escolha a quantidade de peões por jogador">
+              <span class="quick-step-icon" aria-hidden="true">♟</span>
+              <div class="player-count-field quick-player-count quick-pawn-count">
+                <div class="player-count-picker" data-select-id="createPawnCount" role="group" aria-label="Quantidade de peões por jogador">
+                  <button type="button" data-player-count="1" aria-pressed="false"><span class="players-symbol" aria-hidden="true">♟</span><strong>1</strong></button>
+                  <button type="button" data-player-count="2" aria-pressed="false"><span class="players-symbol" aria-hidden="true">♟♟</span><strong>2</strong></button>
+                  <button type="button" data-player-count="3" aria-pressed="false"><span class="players-symbol" aria-hidden="true">♟♟♟</span><strong>3</strong></button>
+                  <button type="button" data-player-count="4" class="active" aria-pressed="true"><span class="players-symbol" aria-hidden="true">♟♟♟♟</span><strong>4</strong></button>
+                </div>
+                <select id="createPawnCount" class="player-count-select" aria-hidden="true" tabindex="-1"><option value="1">1 peão</option><option value="2">2 peões</option><option value="3">3 peões</option><option value="4" selected>4 peões</option></select>
               </div>
             </div>
 
@@ -371,13 +384,13 @@
   <script src="./js/ludo/movement-guard.js?v=20260928-2"></script>
   <script src="./js/ludo/sound.js?v=20261001-1"></script>
   <script src="./js/ludo/animation.js?v=20260928-2"></script>
-  <script src="./js/ludo/render.js?v=20260929-2"></script>
+  <script src="./js/ludo/render.js?v=20261001-3"></script>
   <script src="./js/ludo/voice.js?v=20260928-2"></script>
   <script src="./js/realtime/ludo.js?v=20261001-2"></script>
   <script src="./js/platform/ludo-feature-loader.js?v=20261001-1" defer></script>
   <script src="./logout-confirm.js?v=20260924-2" defer></script>
   <script src="./ludo-sync.js?v=20260928-1" defer></script>
-  <script src="./ludo.js?v=20261001-4" defer></script>
+  <script src="./ludo.js?v=20261001-5" defer></script>
   <script src="./js/ui/collapse.js?v=20260928-2" defer></script>
   <script src="./js/ludo/policy.js?v=20260928-2" defer></script>
 </body>
