@@ -87,12 +87,22 @@ body{background:#070a10}
 .aviator-my-history-more{display:block;width:calc(100% - 20px);margin:0 10px 10px;min-height:36px}
 
 .aviator-controls{display:grid;grid-template-columns:1fr;gap:10px;padding-top:2px}
-.aviator-controls form{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.72fr) minmax(190px,.62fr);gap:8px;align-items:end}
+.aviator-controls form{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.72fr) minmax(120px,.38fr) minmax(190px,.62fr);gap:8px;align-items:end}
 .aviator-primary-action-slot{display:grid;align-self:end;min-width:0}
 .aviator-primary-action-slot>.aviator-bet-action,.aviator-primary-action-slot>.aviator-cashout-action{grid-area:1/1}
 .aviator-bet-action{display:grid;grid-template-rows:64px 18px;gap:4px;align-self:end;min-width:0}
 .aviator-bet-action #betBtn{width:100%;height:64px;min-height:64px;font-size:1.12rem;font-weight:950;line-height:1;white-space:nowrap;transition:background-color .16s ease,border-color .16s ease,box-shadow .16s ease}
 .aviator-bet-action.is-cancel #betBtn:not(:disabled){background:#c94444;border-color:#c94444;color:#fff;box-shadow:0 0 0 1px rgba(201,68,68,.24),0 10px 28px rgba(201,68,68,.16)}
+.aviator-auto-bet-toggle{min-height:82px;display:grid;grid-template-columns:auto 1fr;grid-template-rows:1fr auto;align-items:center;column-gap:8px;padding:9px 10px;border:1px solid rgba(255,255,255,.07);border-radius:12px;background:rgba(255,255,255,.025);cursor:pointer}
+.aviator-auto-bet-toggle input{width:20px;height:20px;grid-row:1/3;accent-color:#36c979}
+.aviator-auto-bet-toggle span{font-size:.76rem;font-weight:900;color:#d5dce7}
+.aviator-auto-bet-toggle small{font-size:.62rem;font-weight:800;color:#7f8ba0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.aviator-history-top{padding:8px 10px;margin:0;overflow:hidden}
+.aviator-history-top .aviator-history-summary{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 2px 6px}
+.aviator-history-top .aviator-history-summary span{font-size:.64rem;font-weight:900;letter-spacing:.05em;color:#8f9bad}
+.aviator-history-top .aviator-history-summary small{font-size:.58rem;color:#657187}
+.aviator-history-top .aviator-history-strip{overflow-x:auto;scrollbar-width:none;white-space:nowrap}
+.aviator-history-top .aviator-history-strip::-webkit-scrollbar{display:none}
 .aviator-bet-action-status{display:block;min-height:16px;text-align:center;font-size:.62rem;font-weight:800;line-height:16px;color:#7f8ba0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .aviator-controls .field>span{font-size:.68rem;color:#8b97aa}
 .aviator-controls .form-message{grid-column:1/-1;min-height:1em;margin:0 2px;font-size:.78rem}
@@ -168,6 +178,9 @@ body{background:#070a10}
   #cashoutBtn:not(:disabled){box-shadow:0 0 0 1px rgba(78,213,138,.24)}
   .aviator-controls{grid-template-columns:1fr;gap:8px}
   .aviator-controls form{grid-template-columns:1fr 1fr}
+  .aviator-auto-bet-toggle{grid-column:1/-1;min-height:54px;grid-template-columns:auto 1fr auto;grid-template-rows:1fr;padding:8px 10px}
+  .aviator-auto-bet-toggle input{grid-row:auto}
+  .aviator-auto-bet-toggle small{text-align:right}
   .aviator-primary-action-slot{grid-column:1/-1}
   .aviator-bet-action{grid-template-rows:72px 18px;gap:5px}
   .aviator-bet-action #betBtn{height:72px;min-height:72px;font-size:1.28rem}
