@@ -1269,6 +1269,7 @@ window.addEventListener('online',async()=>{
   const message=$('#aviatorMessage');
   if(message)message.textContent='Ligação restabelecida. A sincronizar…';
   await reconnectState();
+  await reconcilePendingCashout();
 });
 
 document.addEventListener('visibilitychange',()=>{
