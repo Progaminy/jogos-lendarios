@@ -22,11 +22,12 @@ test('efeito de captura/chegada local toca junto da atualização visual final',
   assert.match(js,/await visualMove;[\s\S]{0,700}renderRoom\(\);[\s\S]{0,120}processGameEffects\(confirmedRoom\)/);
 });
 
-test('lacre da vez segue a cor do jogador no Ludo e no espectador',()=>{
+test('lacre do dado segue a cor do jogador da vez',()=>{
+  const js=fs.readFileSync(path.join(__dirname,'../../ludo.js'),'utf8');
   const css=fs.readFileSync(path.join(__dirname,'../../ludo.css'),'utf8');
-  const adminCss=fs.readFileSync(path.join(__dirname,'../../admin-ludo-spectator.css'),'utf8');
+  assert.match(js,/dice\.dataset\.turnColor=r\.status==='playing'/);
   for(const color of ['red','green','yellow','blue']){
-    assert.match(css,new RegExp('player-card\\.current\\.'+color));
-    assert.match(adminCss,new RegExp('ludo-watch-player\\.current:has\\(\\.ludo-watch-dot\\.'+color+'\\)'));
+    assert.match(css,new RegExp('dice\\[data-turn-color='+color+'\\]'));
   }
+  assert.match(css,/--dice-turn/);
 });
