@@ -14,12 +14,13 @@ const globalHistory=read('js/aviator/history.js');
 const js=read('aviator.js');
 const manifest=JSON.parse(read('games/manifest.json'));
 
-test('histórico pessoal e global são secções diferentes',()=>{
+test('histórico pessoal e multiplicadores globais são secções diferentes',()=>{
   assert.match(html,/id="aviatorMyHistoryCard"/);
   assert.match(html,/>Minhas apostas</);
   assert.match(html,/id="aviatorHistoryCard"/);
-  assert.match(html,/>Histórico global</);
-  assert.ok(html.indexOf('aviatorMyHistoryCard')<html.indexOf('aviatorHistoryCard'));
+  assert.match(html,/>Últimos multiplicadores</);
+  assert.ok(html.indexOf('aviatorHistoryCard')<html.indexOf('aviatorStage'));
+  assert.ok(html.indexOf('aviatorMyHistoryCard')>html.indexOf('aviatorStage'));
 });
 
 test('histórico pessoal é lazy e não carrega no arranque',()=>{
