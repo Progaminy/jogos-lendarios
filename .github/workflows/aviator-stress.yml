@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 env:
-  STRESS_REVISION: '3'
+  STRESS_REVISION: '4'
 
 jobs:
   cashout-load:
@@ -23,11 +23,11 @@ jobs:
       matrix:
         include:
           - players: 100
-            parallel: 50
+            parallel: 100
           - players: 1000
-            parallel: 100
+            parallel: 250
           - players: 5000
-            parallel: 100
+            parallel: 500
 
     steps:
       - uses: actions/checkout@v4
