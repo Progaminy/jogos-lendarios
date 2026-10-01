@@ -2,6 +2,10 @@
   'use strict';
 
   function create({ state, els, showToast }) {
+    const MASTER_VOLUME=2.35;
+    const MAX_TONE_VOLUME=.22;
+    const MAX_NOISE_VOLUME=.20;
+
     function updateSoundButton() {
       if (!els.soundToggle) return;
       els.soundToggle.textContent = state.soundEnabled ? '🔊 Som' : '🔇 Som';
@@ -27,7 +31,8 @@
       osc.type = type;
       osc.frequency.setValueAtTime(freq, start);
       gain.gain.setValueAtTime(.0001, start);
-      gain.gain.exponentialRampToValueAtTime(Math.max(.0002, volume), start + .008);
+      const boosted=Math.min(MAX_TONE_VOLUME,Math.max(.0002,Number(volume||0)*MASTER_VOLUME));
+      gain.gain.exponentialRampToValueAtTime(boosted, start + .008);
       gain.gain.exponentialRampToValueAtTime(.0001, start + duration);
       osc.connect(gain);
       gain.connect(ctx.destination);
@@ -40,7 +45,7 @@
       localStorage.setItem('jl_ludo_sound_enabled', state.soundEnabled ? '1' : '0');
       if (state.soundEnabled) {
         ensureAudio();
-        soundTone(520, .08, .03, 0, 'triangle');
+        soundTone(520, .09, .05, 0, 'triangle');
         showToast('Som do Ludo ligado.', 'success');
       } else {
         showToast('Som do Ludo desligado.');
@@ -83,7 +88,7 @@
       const gain = ctx.createGain();
       src.buffer = buffer;
       const start = ctx.currentTime + delay;
-      gain.gain.setValueAtTime(Math.max(.001, volume), start);
+      gain.gain.setValueAtTime(Math.min(MAX_NOISE_VOLUME,Math.max(.001,Number(volume||0)*MASTER_VOLUME)), start);
       gain.gain.exponentialRampToValueAtTime(.0001, start + duration);
       src.connect(gain);
       gain.connect(ctx.destination);
