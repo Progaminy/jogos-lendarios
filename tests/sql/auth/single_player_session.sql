@@ -1,11 +1,14 @@
--- Regression: a player account can never have two active sessions at once.
+-- Regression: exactly one player session survives and the latest successful login wins.
 begin;
 
 do $test$
 declare
   v_player uuid;
-  v_blocked boolean:=false;
+  v_token_1 text := encode(extensions.gen_random_bytes(32),'hex');
+  v_token_2 text := encode(extensions.gen_random_bytes(32),'hex');
   v_count integer;
+  v_remaining_hash text;
+  v_old_rejected boolean := false;
 begin
   if not exists (
     select 1
@@ -58,62 +61,52 @@ begin
   insert into public.player_sessions(player_id,token_hash,expires_at)
   values(
     v_player,
-    md5(random()::text||clock_timestamp()::text),
+    public.jl_token_hash(v_token_1),
     now()+interval '1 hour'
   );
 
-  begin
-    insert into public.player_sessions(player_id,token_hash,expires_at)
-    values(
-      v_player,
-      md5(random()::text||clock_timestamp()::text),
-      now()+interval '1 hour'
-    );
-  exception
-    when others then
-      if sqlerrm='Esta conta já está ligada noutro dispositivo.' then
-        v_blocked:=true;
-      else
-        raise;
-      end if;
-  end;
-
-  if not v_blocked then
-    raise exception 'second active session was accepted';
+  if public.jl_player_id(v_token_1)<>v_player then
+    raise exception 'first session did not validate';
   end if;
 
-  select count(*) into v_count
+  insert into public.player_sessions(player_id,token_hash,expires_at)
+  values(
+    v_player,
+    public.jl_token_hash(v_token_2),
+    now()+interval '1 hour'
+  );
+
+  select count(*),max(token_hash)
+  into v_count,v_remaining_hash
   from public.player_sessions
   where player_id=v_player
     and expires_at>now();
 
   if v_count<>1 then
-    raise exception 'expected exactly one active session, found %',v_count;
+    raise exception 'expected exactly one active session after replacement, found %',v_count;
   end if;
 
-  delete from public.player_sessions
-  where player_id=v_player;
+  if v_remaining_hash<>public.jl_token_hash(v_token_2) then
+    raise exception 'latest login did not replace the previous session';
+  end if;
 
-  insert into public.player_sessions(player_id,token_hash,expires_at)
-  values(
-    v_player,
-    md5(random()::text||clock_timestamp()::text),
-    now()-interval '1 minute'
-  );
+  begin
+    perform public.jl_player_id(v_token_1);
+  exception
+    when others then
+      if sqlerrm='Sessão do jogador inválida ou expirada.' then
+        v_old_rejected:=true;
+      else
+        raise;
+      end if;
+  end;
 
-  insert into public.player_sessions(player_id,token_hash,expires_at)
-  values(
-    v_player,
-    md5(random()::text||clock_timestamp()::text),
-    now()+interval '1 hour'
-  );
+  if not v_old_rejected then
+    raise exception 'previous token still validates after latest login';
+  end if;
 
-  select count(*) into v_count
-  from public.player_sessions
-  where player_id=v_player;
-
-  if v_count<>1 then
-    raise exception 'expired session was not replaced cleanly';
+  if public.jl_player_id(v_token_2)<>v_player then
+    raise exception 'latest token did not validate';
   end if;
 end
 $test$;
