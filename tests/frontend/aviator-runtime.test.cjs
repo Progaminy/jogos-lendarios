@@ -295,14 +295,16 @@ test('confirmação visual usa o valor confirmado pelo servidor antes do voo',()
 });
 
 
-test('termos da aposta ficam bloqueados visualmente depois da confirmação/LOCKED',()=>{
+test('termos da aposta confirmada ficam imutáveis e campos podem preparar a próxima',()=>{
   const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
   assert.match(js,/function setBetInputsLocked\(locked\)/);
   assert.match(js,/Boolean\(myBet\)\|\|betting\|\|closed/);
   assert.match(uiSource,/if\(amount\)amount\.disabled=value/);
   assert.match(uiSource,/if\(auto\)auto\.disabled=value/);
-  assert.match(js,/function renderLocked\(\)[\s\S]*?setBetInputsLocked\(true\)/);
-  assert.match(js,/function renderFlying\(\)[\s\S]*?setBetInputsLocked\(true\)/);
+  assert.match(js,/myStake=Number\(r\.stake\);/);
+  assert.match(js,/myAutoCashout=Number\(r\.auto_cashout_multiplier\)\|\|null/);
+  assert.match(js,/function renderLocked\(\)[\s\S]*?setBetInputsLocked\(!connectionOnline\|\|!enabled\)/);
+  assert.match(js,/function renderFlying\(\)[\s\S]*?setBetInputsLocked\(!connectionOnline\|\|!enabled\)/);
 });
 
 
@@ -339,7 +341,7 @@ test('animação local é somente visual e cash-out continua autoritativo no ser
 
   const financial=financialSource.match(/async function requestFinancialCashout\(betId,requestKey\)[\s\S]*?\n    \}/)?.[0]||'';
   assert.match(financial,/jl_aviator_cashout/);
-  assert.match(financial,/p_bet_id:Number\(betId\)/);
+  assert.match(financial,/p_bet_id:id/);
   assert.match(financial,/p_request_key:/);
   assert.doesNotMatch(financial,/p_multiplier|current_multiplier|started_at/);
 
@@ -347,26 +349,24 @@ test('animação local é somente visual e cash-out continua autoritativo no ser
 });
 
 
-test('tela do Aviator mantém voo como foco e secundários recolhidos',()=>{
+test('tela do Aviator mantém voo como foco e multiplicadores recentes no topo',()=>{
   const html=fs.readFileSync(path.join(__dirname,'../../aviator.html'),'utf8');
   const css=fs.readFileSync(path.join(__dirname,'../../aviator.css'),'utf8');
-  const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
 
   assert.match(html,/id="aviatorStage" class="aviator-stage card aviator-focus"/);
-  assert.match(html,/<details id="aviatorHistoryCard" class="aviator-history">/);
-  assert.doesNotMatch(html,/<details id="aviatorHistoryCard"[^>]*\sopen(?:\s|>)/);
+  assert.match(html,/id="aviatorHistoryCard" class="aviator-history aviator-history-top card"/);
+  assert.ok(
+    html.indexOf('id="aviatorHistoryCard"')<html.indexOf('id="aviatorStage"'),
+    'multiplicadores recentes devem aparecer acima do voo'
+  );
   assert.match(html,/class="aviator-controls"/);
   assert.doesNotMatch(html,/class="card aviator-controls"/);
-  assert.ok(
-    html.indexOf('class="aviator-controls"')<html.indexOf('id="aviatorHistoryCard"'),
-    'controles principais devem aparecer antes do histórico secundário'
-  );
   assert.match(html,/class="aviator-ticket-main aviator-ticket-return"/);
   assert.match(html,/class="aviator-ticket-meta"/);
 
   assert.match(css,/\.flight-area\{height:405px/);
   assert.match(css,/\.multiplier\{font-size:clamp\(72px,16vw,145px\)/);
-  assert.match(css,/\.aviator-history-summary/);
+  assert.match(css,/\.aviator-history-top/);
   assert.match(css,/@media\(max-width:650px\)[\s\S]*?\.flight-area\{height:360px/);
 
   assert.match(uiSource,/Auto '\+Number\(state\.myAutoCashout\)\.toFixed\(2\)\+'×'/);
@@ -374,18 +374,17 @@ test('tela do Aviator mantém voo como foco e secundários recolhidos',()=>{
 });
 
 
-test('histórico recente usa linha pequena de multiplicadores separados por ponto',()=>{
+test('histórico recente usa linha pequena no topo com multiplicadores separados por ponto',()=>{
   const html=fs.readFileSync(path.join(__dirname,'../../aviator.html'),'utf8');
-  const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
   const css=fs.readFileSync(path.join(__dirname,'../../aviator.css'),'utf8');
 
-  assert.match(html,/<details id="aviatorHistoryCard" class="aviator-history">/);
+  assert.match(html,/id="aviatorHistoryCard" class="aviator-history aviator-history-top card"/);
   assert.match(historySource,/class="aviator-history-value tier-/);
   assert.match(historySource,/class="aviator-history-separator"[^>]*>·<\/span>/);
   assert.match(historySource,/crash_multiplier\.toFixed\(2\)\+'x'/);
   assert.doesNotMatch(historySource,/aviator-history-chip/);
   assert.match(css,/\.aviator-history-value\{[^}]*font-size:\.84rem/);
-  assert.match(css,/\.aviator-history-strip\{[^}]*white-space:nowrap/);
+  assert.match(css,/\.aviator-history-top \.aviator-history-strip\{[^}]*overflow-x:auto/);
 });
 
 
