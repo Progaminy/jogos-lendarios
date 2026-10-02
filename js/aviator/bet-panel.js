@@ -73,7 +73,7 @@
       const statusEl=$('#betActionStatus'+suffix);
       if(wrap){
         wrap.classList.toggle('hidden',Boolean(hidden));
-        wrap.classList.remove('is-cancel');
+        wrap.classList.toggle('is-cancel',mode==='cancel'||mode==='cancel-next');
       }
       if(betButton){
         betButton.textContent=String(label||'Apostar');
