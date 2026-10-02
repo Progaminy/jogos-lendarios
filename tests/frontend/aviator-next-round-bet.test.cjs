@@ -17,10 +17,11 @@ test('painel principal delega preparação da próxima aposta a módulo próprio
   assert.match(primary,/nextBet\?\.hasQueued\(\)/);
 });
 
-test('módulo permite preparar a próxima aposta durante LOCKED ou FLYING',()=>{
+test('módulo permite preparar a próxima aposta durante LOCKED ou FLYING sem texto explicativo',()=>{
   assert.match(nextBet,/storageKey='jl_aviator_next_bet_v1_slot_'\+slot/);
   assert.match(nextBet,/\['LOCKED','FLYING'\]\.includes\(r\.status\)/);
-  assert.match(nextBet,/Próxima aposta preparada\./);
+  assert.match(nextBet,/save\(parseCurrent\(\)\);[\s\S]*?onMessage\?\.\(''\)/);
+  assert.doesNotMatch(nextBet,/onMessage\?\.\('Próxima aposta preparada\.'/);
 });
 
 test('aposta preparada só é enviada quando a nova rodada está OPEN',()=>{
@@ -50,4 +51,16 @@ test('botão da próxima rodada continua escrito Apostar',()=>{
   assert.match(secondary,/label:queuedNextBet\?'Cancelar próxima':'Apostar'/);
   assert.doesNotMatch(primary,/'Preparar próxima'/);
   assert.doesNotMatch(secondary,/'Preparar próxima'/);
+});
+
+
+test('painel 2 não mostra a mensagem explicativa de envio futuro',()=>{
+  assert.doesNotMatch(
+    secondary,
+    /message\.textContent='Próxima aposta preparada\. Será enviada quando as apostas abrirem\.'/
+  );
+  assert.match(
+    secondary,
+    /saveQueuedNextBet\(\{amount,auto_cashout:auto\}\);[\s\S]*?message\.textContent=''/
+  );
 });
