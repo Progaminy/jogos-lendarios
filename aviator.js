@@ -268,7 +268,7 @@ function updateRoundClock(){
     const seconds=secondsToClose();
     const takeoffSeconds=secondsToTakeoff();
     const display=seconds===null?'—':String(seconds)+'s';
-    const takeoffDisplay=takeoffSeconds===null?'—':String(takeoffSeconds)+'s';
+    const takeoffDisplay=takeoffSeconds===null?'—':String(takeoffSeconds);
     const closed=round?.betting_open===false||seconds===0;
 
     $('#roundState').textContent=closed?'APOSTAS FECHADAS':'APOSTAS ABERTAS';
@@ -308,7 +308,7 @@ function updateRoundClock(){
 
   if(round?.status==='LOCKED'){
     const seconds=secondsToTakeoff();
-    const display=seconds===null?'—':String(seconds)+'s';
+    const display=seconds===null?'—':String(seconds);
     $('#roundState').textContent='APOSTAS FECHADAS';
     $('#clockLabel').textContent='DESCOLAGEM EM';
     $('#roundCountdown').textContent=display;
