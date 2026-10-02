@@ -26,7 +26,7 @@ test('durante OPEN Apostar envia imediatamente para a rodada atual',()=>{
 });
 
 test('durante LOCKED ou FLYING Apostar guarda silenciosamente para a próxima rodada',()=>{
-  assert.match(nextBet,/\['LOCKED','FLYING'\]\.includes\(r\.status\)/);
+  assert.match(nextBet,/\['LOCKED','FLYING','CRASHED','SETTLED','CANCELLED'\]\.includes\(r\.status\)/);
   assert.match(primary,/queued\?'Cancelar':'Apostar'/);
   assert.match(primary,/queued\?'cancel-next':'queue-next'/);
   assert.match(secondary,/label:queued\?'Cancelar':'Apostar'/);
@@ -48,4 +48,19 @@ test('fila manual tem prioridade sobre auto-bet',()=>{
   assert.match(secondary,/Boolean\(nextBet\?\.hasQueued\(\)\)/);
   assert.match(primary,/if\(queuedTriggered\)nextBet\?\.consume/);
   assert.match(secondary,/if\(queuedTriggered\)nextBet\?\.consume/);
+});
+
+
+test('fila força submit como aposta real quando OPEN chega',()=>{
+  assert.match(nextBet,/if\(button\)button\.dataset\.action='bet'/);
+  assert.match(nextBet,/submittingRoundId=roundId/);
+  assert.match(nextBet,/form\?\.requestSubmit\?\.\(\)/);
+});
+
+test('entre rodadas Apostar continua disponível para os dois painéis',()=>{
+  const finished=primary.match(/function renderFinished\(\)[\s\S]*?\n\}/)?.[0]||'';
+  const waiting=primary.match(/function renderWaiting\(\)[\s\S]*?\n\}/)?.[0]||'';
+  assert.match(finished,/queued\?'Cancelar':'Apostar'/);
+  assert.match(waiting,/queued\?'Cancelar':'Apostar'/);
+  assert.match(secondary,/status:queued\?'Aposta registada':'Disponível'/);
 });
