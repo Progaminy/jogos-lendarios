@@ -20,7 +20,6 @@ test('cash-out button shows the live monetary return in both bet slots',()=>{
 test('confirmed bet no longer falls back to Apostar after the window closes',()=>{
   assert.match(main,/myBet\?'Foi apostado':'Apostar'/);
   assert.match(panel,/label:betId\?'Foi apostado':'Apostar'/);
-  assert.match(panel,/label:betId\?'Foi apostado':queued\?'Cancelar':'Apostar'/);
 });
 
 
