@@ -217,3 +217,140 @@ body{background:#070a10}
 @media(prefers-reduced-motion:reduce){
   .plane,.aviator-stage.is-open .plane,.aviator-stage.is-flying .plane,.aviator-stage.is-flying .flight-area::after,.aviator-stage.is-crashed .crash-text:not(.hidden){animation:none!important}
 }
+
+/* Interface compacta: prioridade ao jogo, não a textos explicativos. */
+.sr-only{
+  position:absolute!important;
+  width:1px!important;
+  height:1px!important;
+  padding:0!important;
+  margin:-1px!important;
+  overflow:hidden!important;
+  clip:rect(0,0,0,0)!important;
+  white-space:nowrap!important;
+  border:0!important
+}
+.aviator-history-top .aviator-history-summary.aviator-visually-quiet{display:none}
+.aviator-history-top{padding:0 8px}
+.aviator-history-top .aviator-history-strip{padding:7px 2px;gap:7px}
+.aviator-stage{min-height:0;padding:9px}
+.aviator-head{min-height:30px;margin:0 2px 5px}
+.aviator-round span,.aviator-clock span{display:none}
+.aviator-round strong,.aviator-clock strong{font-size:.76rem}
+.aviator-state{padding:4px 7px;font-size:.55rem}
+.flight-area{height:320px;border-radius:16px}
+.preflight{gap:3px;padding:10px 14px;border:0;background:transparent}
+.preflight span{font-size:.58rem}
+.multiplier-wrap{gap:0}
+.aviator-bet-panel{gap:5px;padding:7px;border-radius:13px}
+.aviator-controls{gap:7px}
+.aviator-controls form{
+  display:grid;
+  grid-template-columns:minmax(0,1.15fr) minmax(0,.8fr) minmax(145px,1.35fr);
+  grid-template-rows:44px 42px;
+  gap:5px;
+  align-items:stretch
+}
+.aviator-controls form>.field:nth-of-type(1){grid-column:1;grid-row:1}
+.aviator-controls form>.field:nth-of-type(2){grid-column:2;grid-row:1}
+.aviator-controls form .aviator-auto-bet-toggle{
+  grid-column:1/3;
+  grid-row:2;
+  min-height:0;
+  height:42px;
+  padding:5px 8px;
+  grid-template-columns:auto 1fr;
+  grid-template-rows:1fr
+}
+.aviator-auto-bet-toggle input{grid-row:auto;width:18px;height:18px}
+.aviator-auto-bet-toggle span{font-size:.68rem}
+.aviator-controls form .aviator-primary-action-slot{
+  grid-column:3;
+  grid-row:1/3;
+  min-height:91px
+}
+.aviator-bet-action,.aviator-cashout-action{
+  grid-template-rows:1fr;
+  gap:0;
+  height:100%
+}
+.aviator-bet-action #betBtn,.aviator-cashout-action #cashoutBtn{
+  height:100%;
+  min-height:91px;
+  border-radius:12px;
+  font-size:1.08rem
+}
+.aviator-controls .field{min-width:0}
+.aviator-controls .field .money-input{height:44px;min-height:44px}
+.aviator-controls .field input{min-width:0}
+.aviator-controls .form-message:empty{display:none}
+.aviator-controls .form-message{
+  grid-column:1/-1;
+  min-height:0;
+  margin:2px 1px 0;
+  font-size:.69rem
+}
+.aviator-bet-confirmation{padding:7px 9px;border-radius:10px}
+.aviator-bet-confirmation strong{font-size:.78rem}
+.aviator-bet-confirmation small{font-size:.66rem}
+.aviator-bet-result{padding:7px 9px;border-radius:10px}
+.aviator-bet-result-icon{width:34px;height:34px;font-size:1rem}
+.aviator-ticket{padding:6px 8px;border-radius:9px}
+.aviator-ticket-main span{font-size:.5rem}
+.aviator-ticket-main strong{font-size:.8rem}
+
+@media(max-width:650px){
+  .aviator-shell{padding:5px 7px 12px;gap:5px}
+  .aviator-stage{padding:6px;min-height:0}
+  .aviator-head{min-height:27px;margin-bottom:4px}
+  .aviator-head-tools{gap:3px}
+  .aviator-sound-toggle,.aviator-vibration-toggle{
+    min-height:26px;
+    max-width:34px;
+    overflow:hidden;
+    white-space:nowrap;
+    padding:3px 6px
+  }
+  .flight-area{height:245px;border-radius:13px}
+  .preflight{padding:8px}
+  .preflight .countdown-value{font-size:clamp(2.2rem,12vw,3.5rem)}
+  .multiplier{font-size:clamp(58px,17vw,92px)}
+  .plane{font-size:42px}
+  .aviator-history-top .aviator-history-strip{padding:6px 1px}
+  .aviator-history-value{font-size:.73rem}
+  .aviator-controls{grid-template-columns:1fr;gap:5px}
+  .aviator-bet-panel{padding:6px;gap:4px}
+  .aviator-controls form{
+    grid-template-columns:minmax(0,1.15fr) minmax(0,.8fr) minmax(132px,1.25fr);
+    grid-template-rows:40px 38px;
+    gap:4px
+  }
+  .aviator-controls form .aviator-auto-bet-toggle{
+    grid-column:1/3;
+    grid-row:2;
+    height:38px;
+    min-height:38px;
+    padding:4px 7px
+  }
+  .aviator-controls form .aviator-primary-action-slot{
+    grid-column:3;
+    grid-row:1/3;
+    min-height:82px
+  }
+  .aviator-bet-action,.aviator-cashout-action{height:82px}
+  .aviator-bet-action #betBtn,.aviator-cashout-action #cashoutBtn{
+    height:82px;
+    min-height:82px;
+    font-size:1rem
+  }
+  .aviator-controls .field .money-input{height:40px;min-height:40px}
+  .aviator-controls .form-message{
+    grid-column:1/-1;
+    margin-top:1px;
+    font-size:.66rem
+  }
+  .aviator-bet-confirmation,.aviator-bet-result,.aviator-ticket{grid-column:1/-1}
+  .aviator-bet-confirmation{padding:6px 8px}
+  .aviator-ticket{grid-template-columns:1fr 1fr auto}
+  .aviator-ticket-meta{grid-column:auto;justify-content:flex-end}
+}
