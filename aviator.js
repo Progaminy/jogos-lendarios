@@ -174,6 +174,7 @@ function setConnectionState(online){
   stopFlight();
 
   renderBetAction(true,'Sem ligação');
+  renderBetAction2(true,'Sem ligação');
 
   renderCashoutAction({
     active:Boolean(myBet)&&round?.status==='FLYING',
@@ -182,6 +183,14 @@ function setConnectionState(online){
     multiplier:mul(),
     stake:myStake,
     status:myBet?'Sem ligação — cash-out indisponível':'Disponível durante o voo'
+  });
+  renderCashoutAction2({
+    active:Boolean(myBet2)&&round?.status==='FLYING',
+    disabled:true,
+    pending:false,
+    multiplier:mul(),
+    stake:myStake2,
+    status:myBet2?'Sem ligação — cash-out indisponível':'Disponível durante o voo'
   });
 
   if(round?.status==='FLYING'){
@@ -1529,6 +1538,7 @@ async function reconnectState(){
       stopOpenUiTick();
       stopFlight();
       resetCashout();
+      resetCashout2();
       return;
     }
 
@@ -1539,6 +1549,14 @@ async function reconnectState(){
         'Ligação restabelecida. Voo atual: '+mul().toFixed(2)+'× · Aposta ativa.';
     }else if(round?.status==='LOCKED'&&myBet){
       $('#aviatorMessage').textContent=
+        'Ligação restabelecida. Aposta confirmada; aguardando descolagem.';
+    }
+
+    if(round?.status==='FLYING'&&myBet2){
+      $('#aviatorMessage2').textContent=
+        'Ligação restabelecida. Voo atual: '+mul().toFixed(2)+'× · Aposta ativa.';
+    }else if(round?.status==='LOCKED'&&myBet2){
+      $('#aviatorMessage2').textContent=
         'Ligação restabelecida. Aposta confirmada; aguardando descolagem.';
     }
   }catch(e){
@@ -1629,6 +1647,7 @@ async function state(){
       stopOpenUiTick();
       stopFlight();
       resetCashout();
+      resetCashout2();
       return;
     }
 
@@ -2084,21 +2103,24 @@ async function applyRealtimeSnapshot(x){
     myBet=null;
     myStake=0;
     myAutoCashout=null;
+    myBet2=null;
+    myStake2=0;
+    myAutoCashout2=null;
     autoRecoveryRoundId=null;
+    autoRecoveryRoundId2=null;
     lastRecoveredRoundId=null;
     stopFlight();
     resetCashout();
+    resetCashout2();
     renderTicket();
+    renderTicket2();
     renderBetConfirmation();
+    renderBetConfirmation2();
   }
 
-  if(
-    round&&
-    playerToken()&&
-    Boolean(myBet)&&
-    changedStatus
-  ){
-    await refreshCurrentBetLight();
+  if(round&&playerToken()&&changedStatus){
+    if(myBet)await refreshCurrentBetLight();
+    if(myBet2)await refreshCurrentBetLight2();
   }
 
   if(justFinished){
@@ -2154,6 +2176,7 @@ window.addEventListener('online',async()=>{
   if(message)message.textContent='Ligação restabelecida. A sincronizar…';
   await reconnectState();
   await reconcilePendingCashout();
+  await reconcilePendingCashout2();
 });
 
 document.addEventListener('visibilitychange',()=>{
@@ -2188,7 +2211,28 @@ if(autoBetToggle){
   });
 }
 
+const autoBetToggle2=$('#aviatorAutoBet2');
+if(autoBetToggle2){
+  autoBetToggle2.checked=autoBetEnabled2;
+  autoBetToggle2.addEventListener('change',()=>{
+    autoBetEnabled2=Boolean(autoBetToggle2.checked);
+    try{
+      sessionStorage.setItem(
+        'jl_aviator_auto_bet_v1_slot_2',
+        autoBetEnabled2?'1':'0'
+      );
+    }catch(_){}
+    if(!autoBetEnabled2){
+      autoBetSubmittingRoundId2=null;
+      autoBetAttemptedRoundId2=null;
+    }
+    renderAutoBetStatus2();
+    if(autoBetEnabled2)scheduleAutoBetForOpenRound2();
+  });
+}
+
 renderAutoBetStatus();
+renderAutoBetStatus2();
 renderHistory();
 setConnectionState(connectionOnline);
 startRealtime();
