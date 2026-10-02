@@ -89,8 +89,11 @@ begin
 
   perform pg_advisory_xact_lock(hashtext('jl_aviator_house_profit'));
 
-  select house_profit_last_accrued_at
-    into v_last
+  select
+    house_profit_last_accrued_at,
+    balance,
+    house_profit_balance
+  into v_last,v_bank_after,v_profit_after
   from public.jl_aviator_bank
   where id=true
   for update;
@@ -101,11 +104,6 @@ begin
   )::bigint;
 
   if v_minutes<=0 then
-    select balance,house_profit_balance
-      into v_bank_after,v_profit_after
-    from public.jl_aviator_bank
-    where id=true;
-
     return jsonb_build_object(
       'ok',true,
       'moved',0,
@@ -117,27 +115,17 @@ begin
   end if;
 
   v_requested:=round(v_minutes*v_rate,2);
+  v_moved:=round(least(v_requested,coalesce(v_bank_after,0)),2);
   v_new_last:=v_last+(v_minutes*interval '1 minute');
 
   update public.jl_aviator_bank
-     set balance=round(greatest(balance-least(v_requested,balance),0),2),
-         house_profit_balance=round(
-           house_profit_balance+least(v_requested,balance),
-           2
-         ),
+     set balance=round(balance-v_moved,2),
+         house_profit_balance=round(house_profit_balance+v_moved,2),
          house_profit_last_accrued_at=v_new_last,
          updated_at=v_now
    where id=true
-  returning
-    round(least(v_requested,(balance+least(v_requested,balance))),2),
-    balance,
-    house_profit_balance
-  into v_moved,v_bank_after,v_profit_after;
-
-  -- Recalcular o valor efetivamente movido pela diferença para evitar
-  -- qualquer ambiguidade de avaliação das expressões do UPDATE.
-  v_moved:=least(v_requested,round(v_bank_after+v_moved,2));
-  v_moved:=round(greatest(v_moved,0),2);
+  returning balance,house_profit_balance
+  into v_bank_after,v_profit_after;
 
   if v_moved>0 then
     insert into public.jl_aviator_bank_ledger(
