@@ -394,7 +394,7 @@
         renderBetAction({
           disabled:!online()||!enabled(),
           status:queuedNextBet?'Próxima aposta preparada':'Prepare a próxima rodada',
-          label:queuedNextBet?'Cancelar próxima':'Apostar',
+          label:queuedNextBet?'Cancelar':'Apostar',
           mode:queuedNextBet?'cancel-next':'queue-next'
         });
         resetCashout();
@@ -413,7 +413,7 @@
             :queuedNextBet
               ?'Próxima aposta preparada'
               :'Prepare a próxima rodada',
-          label:queuedNextBet?'Cancelar próxima':'Apostar',
+          label:queuedNextBet?'Cancelar':'Apostar',
           mode:queuedNextBet?'cancel-next':'queue-next',
           hidden:Boolean(betId)
         });
