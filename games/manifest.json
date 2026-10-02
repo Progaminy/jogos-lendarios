@@ -37,6 +37,7 @@
         "./js/aviator/engine.js",
         "./js/aviator/ui.js",
         "./js/aviator/financial.js",
+        "./js/aviator/balance.js",
         "./js/aviator/next-bet.js",
         "./js/aviator/bet-panel.js",
         "./js/aviator/history.js",
