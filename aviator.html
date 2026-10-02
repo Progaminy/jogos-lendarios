@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0a0d14">
   <title>Aviator Lendário — Jogos Lendários</title>
   <link rel="stylesheet" href="./styles.css?v=20260929">
-  <link rel="stylesheet" href="./aviator.css?v=20261002-8">
+  <link rel="stylesheet" href="./aviator.css?v=20261002-9">
 </head>
 <body>
   <header class="topbar">
@@ -95,7 +95,6 @@
             <div class="stake-stepper">
               <button id="aviatorAmountMinus" class="stake-step" type="button" aria-label="Diminuir valor da aposta">−</button>
               <div class="money-input">
-                <span>MZN</span>
                 <input aria-label="Valor da aposta 1" id="aviatorAmount" type="number" min="0.5" max="500" step="0.01" value="0.5" inputmode="decimal" required>
               </div>
               <button id="aviatorAmountPlus" class="stake-step" type="button" aria-label="Aumentar valor da aposta">+</button>
@@ -119,7 +118,7 @@
               <small id="betActionStatus" class="aviator-bet-action-status sr-only" aria-live="polite">Disponível</small>
             </div>
             <div id="cashoutAction" class="aviator-cashout-action hidden">
-              <button id="cashoutBtn" class="button success large" type="button" aria-describedby="cashoutActionStatus" disabled>Cash-out</button>
+              <button id="cashoutBtn" class="button success large" type="button" aria-describedby="cashoutActionStatus" disabled>Sacar</button>
               <small id="cashoutActionStatus" class="aviator-cashout-action-status sr-only" aria-live="polite">Disponível durante o voo</small>
             </div>
           </div>
@@ -142,11 +141,11 @@
         <div id="activeBetPanel" class="aviator-ticket hidden">
           <div class="aviator-ticket-main">
             <span>APOSTA</span>
-            <strong id="activeBetStake">0,00 MZN</strong>
+            <strong id="activeBetStake">0,00</strong>
           </div>
           <div class="aviator-ticket-main aviator-ticket-return">
             <span>RETORNO</span>
-            <strong id="activeBetPayout">0,00 MZN</strong>
+            <strong id="activeBetPayout">0,00</strong>
           </div>
           <div class="aviator-ticket-meta">
             <span id="activeBetMultiplier">—</span>
@@ -168,7 +167,6 @@
             <div class="stake-stepper">
               <button id="aviatorAmountMinus2" class="stake-step" type="button" aria-label="Diminuir valor da aposta 2">−</button>
               <div class="money-input">
-                <span>MZN</span>
                 <input aria-label="Valor da aposta 2" id="aviatorAmount2" type="number" min="0.5" max="500" step="0.01" value="0.5" inputmode="decimal" required>
               </div>
               <button id="aviatorAmountPlus2" class="stake-step" type="button" aria-label="Aumentar valor da aposta 2">+</button>
@@ -192,7 +190,7 @@
               <small id="betActionStatus2" class="aviator-bet-action-status sr-only" aria-live="polite">Disponível</small>
             </div>
             <div id="cashoutAction2" class="aviator-cashout-action hidden">
-              <button id="cashoutBtn2" class="button success large" type="button" aria-describedby="cashoutActionStatus2" disabled>Cash-out</button>
+              <button id="cashoutBtn2" class="button success large" type="button" aria-describedby="cashoutActionStatus2" disabled>Sacar</button>
               <small id="cashoutActionStatus2" class="aviator-cashout-action-status sr-only" aria-live="polite">Disponível durante o voo</small>
             </div>
           </div>
@@ -215,11 +213,11 @@
         <div id="activeBetPanel2" class="aviator-ticket hidden">
           <div class="aviator-ticket-main">
             <span>APOSTA</span>
-            <strong id="activeBetStake2">0,00 MZN</strong>
+            <strong id="activeBetStake2">0,00</strong>
           </div>
           <div class="aviator-ticket-main aviator-ticket-return">
             <span>RETORNO</span>
-            <strong id="activeBetPayout2">0,00 MZN</strong>
+            <strong id="activeBetPayout2">0,00</strong>
           </div>
           <div class="aviator-ticket-meta">
             <span id="activeBetMultiplier2">—</span>
@@ -251,14 +249,15 @@
   <script src="./js/aviator/engine.js?v=20261001-2"></script>
   <script src="./js/aviator/ui.js?v=20261002-1"></script>
   <script src="./js/aviator/financial.js?v=20261002-5"></script>
-  <script src="./js/aviator/balance.js?v=20261002-2"></script>
+  <script src="./js/aviator/balance.js?v=20261002-3"></script>
   <script src="./js/aviator/amount-stepper.js?v=20261002-2"></script>
-  <script src="./js/aviator/bet-panel.js?v=20261002-8"></script>
+  <script src="./js/aviator/next-bet.js?v=20261002-4"></script>
+  <script src="./js/aviator/bet-panel.js?v=20261002-9"></script>
   <script src="./js/aviator/history.js?v=20261001-1"></script>
   <script src="./js/aviator/personal-history.js?v=20261002-1"></script>
   <script src="./js/aviator/sound.js?v=20261002-1"></script>
   <script src="./js/aviator/haptics.js?v=20261002-1"></script>
   <script src="./js/realtime/aviator.js?v=20260930-1"></script>
-  <script src="./aviator.js?v=20261002-13" defer></script>
+  <script src="./aviator.js?v=20261002-14" defer></script>
 </body>
 </html>
