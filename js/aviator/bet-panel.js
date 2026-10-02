@@ -37,6 +37,21 @@
     let betResultTimer=0;
 
     const round=()=>getRound?.()||null;
+    const nextBet=window.JLAviatorNextBet?.create({
+      slot,
+      $,
+      playerToken,
+      getRound:round,
+      isEnabled,
+      isOnline,
+      isBusy:()=>betting,
+      hasActiveBet:()=>Boolean(betId),
+      playerMessage,
+      form,
+      onMessage:text=>{
+        if(message)message.textContent=String(text||'');
+      }
+    })||null;
     const online=()=>Boolean(isOnline?.());
     const enabled=()=>Boolean(isEnabled?.());
 
@@ -261,6 +276,7 @@
         r?.status!=='OPEN'||
         r?.betting_open===false||
         betId||
+        nextBet?.hasQueued?.()||
         betting||
         autoBetAttemptedRoundId===roundId
       ) return;
@@ -276,6 +292,7 @@
           current?.status!=='OPEN'||
           current?.betting_open===false||
           betId||
+          nextBet?.hasQueued?.()||
           betting
         ) return;
 
@@ -304,21 +321,25 @@
 
       if(r.status==='OPEN'){
         const closed=r.betting_open===false||Number(secondsToClose?.())===0;
-        const inputsLocked=!enabled()||!online()||Boolean(betId)||betting||closed;
+        const queued=Boolean(nextBet?.hasQueued?.());
+        const inputsLocked=!enabled()||!online()||Boolean(betId)||queued||betting||closed;
         setInputsLocked(inputsLocked);
 
         renderBetAction({
           disabled:inputsLocked,
           status:betId
             ?'Aposta confirmada'
-            :closed?'Apostas fechadas':'Disponível',
-          label:betId?'Foi apostado':'Aguarde',
-          mode:betId?'confirmed':'locked'
+            :queued
+              ?'A enviar aposta'
+              :closed?'Apostas fechadas':'Disponível',
+          label:betId||queued?'Foi apostado':'Apostar',
+          mode:betId||queued?'confirmed':'bet'
         });
 
         resetCashout();
         renderTicket();
         renderConfirmation();
+        if(!closed)nextBet?.schedule?.();
         scheduleAutoBet();
         return;
       }
@@ -339,15 +360,21 @@
       }
 
       if(r.status==='FLYING'){
-        setInputsLocked(true);
+        const queued=Boolean(nextBet?.hasQueued?.());
+        const canQueue=enabled()&&online()&&!betId&&!queued&&!betting;
+        setInputsLocked(!canQueue);
         renderBetAction({
-          disabled:true,
-          status:betId?'Aposta em voo':'Voo em curso',
-          label:betId?'Foi apostado':'Aguarde',
-          mode:betId?'confirmed':'locked',
+          disabled:!canQueue,
+          status:betId
+            ?'Aposta em voo'
+            :queued
+              ?'Aposta registada para a próxima rodada'
+              :'Aposte para a próxima rodada',
+          label:betId||queued?'Foi apostado':'Apostar',
+          mode:betId||queued?'confirmed':'bet',
           hidden:Boolean(betId)
         });
-        if(!betId&&message&&/^Aposta confirmada/i.test(message.textContent||'')){
+        if(!betId&&!queued&&message&&/^Aposta confirmada/i.test(message.textContent||'')){
           message.textContent='';
         }
         renderCashout({
@@ -523,6 +550,7 @@
       autoCashout=null;
       autoRecoveryRoundId=null;
       autoBetAttemptedRoundId=null;
+      nextBet?.resetRound?.();
       resetCashout();
       renderTicket();
       renderConfirmation();
@@ -569,6 +597,18 @@
       event.preventDefault();
       if(betting)return;
 
+      if(round()?.status!=='OPEN'){
+        if(['FLYING','CRASHED','SETTLED'].includes(round()?.status)){
+          nextBet?.queue?.();
+          renderRound();
+          return;
+        }
+        if(message)message.textContent='Apostas fechadas.';
+        renderRound();
+        return;
+      }
+
+      const queuedTriggered=Boolean(nextBet?.isSubmitting?.(round()?.id));
       const autoTriggered=
         autoBetSubmittingRoundId===Number(round()?.id);
       betting=true;
@@ -618,12 +658,14 @@
         autoCashout=Number(result.auto_cashout_multiplier)||null;
         sound?.playBet?.();
 
+        if(queuedTriggered)nextBet?.consume?.(round()?.id);
         if(message){
           message.textContent=autoTriggered
             ?'Aposta automática confirmada para esta rodada.'
             :'Aposta confirmada. Aguarde o voo.';
         }
       }catch(error){
+        if(queuedTriggered)nextBet?.fail?.(round()?.id);
         if(message)message.textContent=playerMessage(
           error,
           'Não foi possível confirmar a aposta.'
