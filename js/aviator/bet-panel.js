@@ -14,7 +14,6 @@
     money,
     moneyCompact,
     playerMessage,
-    sound,
     personalHistory,
     createGestureGuard
   }) {
