@@ -17,7 +17,7 @@
       if(!button)return;
       button.hidden=!supported;
       button.disabled=!supported;
-      button.textContent=enabled?'📳 Vib.':'🚫 Vib.';
+      button.textContent=enabled?'📳':'🚫';
       button.setAttribute('aria-pressed',enabled?'true':'false');
       button.setAttribute(
         'aria-label',
