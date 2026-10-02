@@ -217,8 +217,7 @@ function scheduleAutoBetForOpenRound(){
     round?.betting_open===false||
     myBet||
     betting||
-    autoBetAttemptedRoundId===roundId||
-    Boolean(nextBet?.hasQueued())
+    autoBetAttemptedRoundId===roundId
   ){
     return;
   }
