@@ -30,7 +30,6 @@ let lastFlightHudAt=0;
 let autoBetEnabled=sessionStorage.getItem('jl_aviator_auto_bet_v1')==='1';
 let autoBetAttemptedRoundId=null;
 let autoBetSubmittingRoundId=null;
-try{sessionStorage.removeItem('jl_aviator_next_bet_v1_slot_1')}catch(_){}
 
 const playerToken=()=>JLSession.getPlayerToken();
 const fairness=window.JLAviatorFairness||null;
@@ -53,6 +52,12 @@ const financial=window.JLAviatorFinancial.create({
   getRoundId:()=>round?.id
 });
 const balance=window.JLAviatorBalance?.create({element:$('#aviatorBalance'),rpc:(n,a)=>JLApi.rpc(n,a),playerToken})||null;
+const nextBet=window.JLAviatorNextBet?.create({
+  slot:1,$,playerToken,getRound:()=>round,isEnabled:()=>enabled,
+  isOnline:()=>connectionOnline,isBusy:()=>betting,hasActiveBet:()=>Boolean(myBet),
+  playerMessage,form:$('#aviatorBetForm'),
+  onMessage:text=>{const el=$('#aviatorMessage');if(el)el.textContent=text}
+})||null;
 const history=window.JLAviatorHistory.create({
   $,
   rpc:(name,args)=>JLApi.rpc(name,args),
@@ -218,7 +223,8 @@ function scheduleAutoBetForOpenRound(){
     round?.betting_open===false||
     myBet||
     betting||
-    autoBetAttemptedRoundId===roundId
+    autoBetAttemptedRoundId===roundId||
+    Boolean(nextBet?.hasQueued())
   ){
     return;
   }
@@ -691,6 +697,7 @@ function renderOpen(){
   if(myBet&&!$('#aviatorMessage').textContent.trim()){
     $('#aviatorMessage').textContent='Aposta confirmada.';
   }
+  nextBet?.schedule();
   scheduleAutoBetForOpenRound();
 }
 
@@ -707,12 +714,13 @@ function renderLocked(){
   show('#multiplierWrap',false);
   show('#crashText',false);
 
-  setBetInputsLocked(true);
+  const queued=Boolean(nextBet?.hasQueued());
+  setBetInputsLocked(!connectionOnline||!enabled||queued);
   renderBetAction(
-    true,
-    'Apostas encerradas',
-    'Apostar',
-    'bet'
+    !connectionOnline||!enabled,
+    queued?'Aposta registada':'Disponível',
+    queued?'Cancelar':'Apostar',
+    queued?'cancel-next':'queue-next'
   );
 
   resetCashout();
@@ -737,13 +745,14 @@ function renderFlying(){
   show('#multiplierWrap',true);
   show('#crashText',false);
 
-  setBetInputsLocked(true);
+  const queued=Boolean(nextBet?.hasQueued());
+  setBetInputsLocked(!connectionOnline||!enabled||Boolean(myBet)||queued);
   renderAutoBetStatus();
   renderBetAction(
-    true,
-    'Apostas encerradas',
-    'Apostar',
-    'bet',
+    Boolean(myBet)||!connectionOnline||!enabled,
+    queued?'Aposta registada':'Disponível',
+    queued?'Cancelar':'Apostar',
+    queued?'cancel-next':'queue-next',
     Boolean(myBet)
   );
 
@@ -952,6 +961,7 @@ async function reconnectState(){
       ['CRASHED','SETTLED'].includes(round?.status);
 
     if(changedRound){
+      nextBet?.resetRound();
       fairnessProofRoundId=null;
       fairnessProofData=null;
       fairnessProofBusy=false;
@@ -1044,6 +1054,7 @@ async function state(){
       ['CRASHED','SETTLED'].includes(round?.status);
 
     if(changedRound){
+      nextBet?.resetRound();
       fairnessProofRoundId=null;
       fairnessProofData=null;
       fairnessProofBusy=false;
@@ -1117,7 +1128,10 @@ $('#aviatorBetForm').addEventListener('submit',async e=>{
   if(betting)return;
 
   const action=String($('#betBtn')?.dataset.action||'bet');
+  if(nextBet?.handleAction(action)){renderCurrentRound();return}
 
+  const queuedTriggered=
+    action==='bet'&&Boolean(nextBet?.isSubmitting(round?.id));
   const autoTriggered=
     action==='bet'&&
     autoBetSubmittingRoundId===Number(round?.id);
@@ -1181,7 +1195,7 @@ $('#aviatorBetForm').addEventListener('submit',async e=>{
 
     const amount=Number($('#aviatorAmount').value);
     if(!Number.isFinite(amount)||amount<0.5||amount>500){
-      throw new Error('Informe um valor entre 0,50 e 500 MZN.');
+      throw new Error('Informe um valor entre 0,50 e 500.');
     }
 
     const autoRaw=$('#aviatorAutoCashout').value.trim();
@@ -1209,6 +1223,7 @@ $('#aviatorBetForm').addEventListener('submit',async e=>{
     myStake=Number(r.stake);
     myAutoCashout=Number(r.auto_cashout_multiplier)||null;
     sound?.playBet();
+    if(queuedTriggered)nextBet?.consume(round?.id);
     lastRecoveredRoundId=round.id;
     renderTicket();
     renderBetConfirmation();
@@ -1223,6 +1238,7 @@ $('#aviatorBetForm').addEventListener('submit',async e=>{
     if(autoBetSubmittingRoundId===Number(round?.id)){
       autoBetSubmittingRoundId=null;
     }
+    nextBet?.clearSubmitting(round?.id);
     betting=false;
     renderCurrentRound();
   }
