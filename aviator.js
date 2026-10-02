@@ -1016,6 +1016,7 @@ async function reconnectState(){
       return;
     }
 
+    document.body.classList.remove('aviator-booting');
     renderCurrentRound();
 
     if(round?.status==='FLYING'&&myBet){
@@ -1118,6 +1119,7 @@ async function state(){
       return;
     }
 
+    document.body.classList.remove('aviator-booting');
     renderCurrentRound();
 
     if(
@@ -1405,6 +1407,7 @@ async function applyRealtimeSnapshot(x){
     return;
   }
 
+  document.body.classList.remove('aviator-booting');
   renderCurrentRound();
   clearTimeout(stateTimer);
   if(connectionOnline)scheduleState();
