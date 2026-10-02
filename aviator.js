@@ -475,6 +475,72 @@ function scheduleAutoBetForOpenRound(){
   });
 }
 
+function renderAutoBetStatus2(){
+  const toggle=$('#aviatorAutoBet2');
+  const status=$('#aviatorAutoBetStatus2');
+  if(toggle&&toggle.checked!==autoBetEnabled2)toggle.checked=autoBetEnabled2;
+  if(!status)return;
+
+  if(!autoBetEnabled2){
+    status.textContent='Desligado';
+    return;
+  }
+
+  if(!playerToken()){
+    status.textContent='Entre na conta';
+    return;
+  }
+
+  if(round?.status==='OPEN'&&myBet2){
+    status.textContent='Confirmada nesta rodada';
+    return;
+  }
+
+  status.textContent=round?.status==='OPEN'
+    ?'A preparar envio'
+    :'Próxima aposta preparada';
+}
+
+function scheduleAutoBetForOpenRound2(){
+  renderAutoBetStatus2();
+
+  const roundId=Number(round?.id);
+  if(
+    !autoBetEnabled2||
+    !enabled||
+    !connectionOnline||
+    !playerToken()||
+    !Number.isFinite(roundId)||
+    round?.status!=='OPEN'||
+    round?.betting_open===false||
+    myBet2||
+    betting2||
+    autoBetAttemptedRoundId2===roundId
+  ){
+    return;
+  }
+
+  autoBetAttemptedRoundId2=roundId;
+
+  queueMicrotask(()=>{
+    if(
+      !autoBetEnabled2||
+      !connectionOnline||
+      !playerToken()||
+      Number(round?.id)!==roundId||
+      round?.status!=='OPEN'||
+      round?.betting_open===false||
+      myBet2||
+      betting2
+    ){
+      return;
+    }
+
+    autoBetSubmittingRoundId2=roundId;
+    $('#aviatorBetForm2')?.requestSubmit?.();
+  });
+}
+
 function updateRoundClock(){
   if(!connectionOnline){
     stopOpenUiTick();
@@ -512,6 +578,32 @@ function updateRoundClock(){
       renderBetAction(
         inputsLocked,
         myBet
+          ?closed?'Apostas fechadas':'Aposta confirmada'
+          :closed
+            ?'Apostas fechadas'
+            :'Disponível',
+        'Apostar',
+        'bet'
+      );
+    }
+
+    const inputsLocked2=
+      !enabled||!connectionOnline||Boolean(myBet2)||betting2||closed;
+    const canCancel2=
+      enabled&&connectionOnline&&Boolean(myBet2)&&!betting2&&!closed;
+    setBetInputsLocked2(inputsLocked2);
+
+    if(canCancel2){
+      renderBetAction2(
+        false,
+        'Aposta confirmada · toque para cancelar',
+        'Cancelar',
+        'cancel'
+      );
+    }else{
+      renderBetAction2(
+        inputsLocked2,
+        myBet2
           ?closed?'Apostas fechadas':'Aposta confirmada'
           :closed
             ?'Apostas fechadas'
