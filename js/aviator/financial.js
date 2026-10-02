@@ -341,7 +341,7 @@
       return (auto?'Auto cash-out confirmado em ':'Cash-out confirmado em ')+
         Number(multiplier||1).toFixed(2)+'× · '+Number(payout||0).toLocaleString('pt-MZ',{
           minimumFractionDigits:2,maximumFractionDigits:2
-        })+' MZN';
+        });
     }
 
     return Object.freeze({
