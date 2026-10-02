@@ -171,7 +171,8 @@
 
       if(button){
         const nextDisabled=Boolean(disabled);
-        const nextText=pending?'Confirmando…':active?'Sacar':'Sacar';
+        const liveReturn=active&&hasMultiplier&&hasStake?money(s*m):null;
+        const nextText=pending?'Confirmando…':liveReturn||'Sacar';
         if(button.disabled!==nextDisabled)button.disabled=nextDisabled;
         if(button.textContent!==nextText)button.textContent=nextText;
       }
