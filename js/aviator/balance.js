@@ -11,7 +11,7 @@
       return n.toLocaleString('pt-MZ',{
         minimumFractionDigits:2,
         maximumFractionDigits:2
-      })+' MZN';
+      });
     }
 
     function render(next=value){
