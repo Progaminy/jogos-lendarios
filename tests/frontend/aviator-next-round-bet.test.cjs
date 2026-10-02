@@ -6,36 +6,35 @@ const fs=require('node:fs');
 
 const primary=fs.readFileSync('aviator.js','utf8');
 const secondary=fs.readFileSync('js/aviator/bet-panel.js','utf8');
+const nextBet=fs.readFileSync('js/aviator/next-bet.js','utf8');
 const html=fs.readFileSync('aviator.html','utf8');
 const manifest=JSON.parse(fs.readFileSync('games/manifest.json','utf8'));
 
-test('não existe aposta silenciosa preparada para a próxima rodada',()=>{
-  assert.doesNotMatch(html,/next-bet\.js/);
-  assert.doesNotMatch(primary,/queue-next|cancel-next|JLAviatorNextBet/);
-  assert.doesNotMatch(secondary,/queue-next|cancel-next|JLAviatorNextBet/);
+test('um clique durante FLYING regista a aposta para a próxima rodada',()=>{
+  assert.match(html,/js\/aviator\/next-bet\.js/);
+  assert.match(primary,/\['FLYING','CRASHED','SETTLED'\]\.includes\(round\?\.status\)/);
+  assert.match(primary,/nextBet\?\.queue\?\.\(\)/);
+  assert.match(secondary,/nextBet\?\.queue\?\.\(\)/);
+  assert.match(nextBet,/function queue\(\)/);
+  assert.doesNotMatch(nextBet,/Cancelar|cancel-next/);
   const game=manifest.games.find(x=>x.id==='aviator');
-  assert.ok(!game.assets.some(x=>/next-bet\.js$/.test(x)));
+  assert.ok(game.assets.includes('./js/aviator/next-bet.js'));
 });
 
-test('somente OPEN aceita clique de aposta',()=>{
-  const submit=primary.match(/\$\('#aviatorBetForm'\)\.addEventListener\('submit',[\s\S]*?\n\}\);/)?.[0]||'';
-  assert.match(submit,/round\.status!=='OPEN'\|\|round\.betting_open===false/);
-  assert.match(submit,/financial\.placeBetSlot/);
-
-  const renderFlying=primary.match(/function renderFlying\(\)[\s\S]*?function renderFinished/)?.[0]||'';
-  const renderFinished=primary.match(/function renderFinished\(\)[\s\S]*?function renderWaiting/)?.[0]||'';
-  const renderWaiting=primary.match(/function renderWaiting\(\)[\s\S]*?function renderCurrentRound/)?.[0]||'';
-  assert.match(renderFlying,/renderBetAction\(\s*true/);
-  assert.match(renderFlying,/myBet\?'Foi apostado':'Aguarde'/);
-  assert.match(renderFinished,/renderBetAction\(\s*true/);
-  assert.match(renderFinished,/'Aguarde a próxima rodada',[\s\S]*?'Aguarde'/);
-  assert.match(renderWaiting,/renderBetAction\(\s*true/);
-  assert.match(renderWaiting,/'Aguarde a próxima rodada',[\s\S]*?'Aguarde'/);
+test('aposta registada no voo é enviada automaticamente quando OPEN começa',()=>{
+  assert.match(nextBet,/r\?\.status!=='OPEN'/);
+  assert.match(nextBet,/current\?\.status!=='OPEN'/);
+  assert.match(nextBet,/form\.requestSubmit\(\)/);
+  assert.match(primary,/nextBet\?\.schedule\?\.\(\)/);
+  assert.match(secondary,/nextBet\?\.schedule\?\.\(\)/);
+  assert.match(primary,/nextBet\?\.consume\?\.\(round\?\.id\)/);
+  assert.match(secondary,/nextBet\?\.consume\?\.\(round\(\)\?\.id\)/);
 });
 
-test('aposta confirmada nunca vira Cancelar',()=>{
-  assert.match(primary,/myBet\?'Foi apostado':'Apostar'/);
-  assert.match(secondary,/label:betId\?'Foi apostado':'Apostar'/);
+test('LOCKED não recebe nova aposta e não existe Cancelar',()=>{
+  const locked=primary.match(/function renderLocked\(\)[\s\S]*?function renderFlying/)?.[0]||'';
+  assert.match(locked,/renderBetAction\(\s*true/);
   assert.doesNotMatch(primary,/['"`]Cancelar['"`]/);
   assert.doesNotMatch(secondary,/['"`]Cancelar['"`]/);
+  assert.doesNotMatch(nextBet,/['"`]Cancelar['"`]/);
 });
