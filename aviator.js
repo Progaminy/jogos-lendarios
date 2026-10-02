@@ -51,11 +51,7 @@ const financial=window.JLAviatorFinancial.create({
   playerToken,
   getRoundId:()=>round?.id
 });
-const balance=window.JLAviatorBalance?.create({
-  element:$('#aviatorBalance'),
-  rpc:(name,args)=>JLApi.rpc(name,args),
-  playerToken
-})||null;
+const balance=window.JLAviatorBalance?.create({element:$('#aviatorBalance'),rpc:(n,a)=>JLApi.rpc(n,a),playerToken})||null;
 const history=window.JLAviatorHistory.create({
   $,
   rpc:(name,args)=>JLApi.rpc(name,args),
@@ -76,7 +72,6 @@ const haptics=window.JLAviatorHaptics?.create({
 const p2=window.JLAviatorBetPanel?.create({$,financial,playerToken,
   getRound:()=>round,isEnabled:()=>enabled,isOnline:()=>connectionOnline,
   multiplier:mul,secondsToClose,money,moneyCompact,playerMessage,sound,personalHistory,
-  onFinancialChange:()=>balance?.refresh(),
   createGestureGuard:ui.createCashoutGestureGuard})||null;
 const nextBet=window.JLAviatorNextBet?.create({
   slot:1,$,playerToken,
@@ -1198,7 +1193,6 @@ $('#aviatorBetForm').addEventListener('submit',async e=>{
       renderBetConfirmation();
       $('#aviatorMessage').textContent=
         'Aposta cancelada. '+money(Number(result.refund)||stake)+' devolvidos.';
-      void balance?.refresh();
     }catch(error){
       $('#aviatorMessage').textContent=playerMessage(
         error,
@@ -1253,7 +1247,6 @@ $('#aviatorBetForm').addEventListener('submit',async e=>{
     myStake=Number(r.stake);
     myAutoCashout=Number(r.auto_cashout_multiplier)||null;
     sound?.playBet();
-    void balance?.refresh();
     lastRecoveredRoundId=round.id;
     renderTicket();
     renderBetConfirmation();
@@ -1311,7 +1304,6 @@ $('#cashoutBtn').addEventListener('click',async event=>{
       r.payout
     );
     sound?.playCashout();
-    void balance?.refresh();
     setBetResult({
       status:'CASHED_OUT',
       stake:myStake,
@@ -1497,10 +1489,6 @@ if(autoBetToggle){
 
 renderAutoBetStatus();
 renderHistory();
-window.addEventListener('jl-player-session-changed',()=>{
-  if(playerToken())void balance?.refresh();
-  else balance?.render(null);
-});
 setConnectionState(connectionOnline);
 startRealtime();
 if(connectionOnline){
