@@ -254,8 +254,7 @@
         r?.betting_open===false||
         betId||
         betting||
-        autoBetAttemptedRoundId===roundId||
-        Boolean(nextBet?.hasQueued())
+        autoBetAttemptedRoundId===roundId
       ) return;
 
       autoBetAttemptedRoundId=roundId;
