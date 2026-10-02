@@ -93,7 +93,8 @@
       }
       if(cashoutButton){
         cashoutButton.disabled=Boolean(disabled);
-        cashoutButton.textContent=pending?'Confirmando…':'Sacar';
+        const liveReturn=active&&hasMultiplier&&hasStake?money(stake*m):null;
+        cashoutButton.textContent=pending?'Confirmando…':liveReturn||'Sacar';
       }
       if(statusEl){
         statusEl.textContent=status
@@ -318,7 +319,9 @@
             disabled:inputsLocked,
             status:betId
               ?closed?'Apostas fechadas':'Aposta confirmada'
-              :closed?'Apostas fechadas':'Disponível'
+              :closed?'Apostas fechadas':'Disponível',
+            label:betId?'Foi apostado':'Apostar',
+            mode:betId?'confirmed':'bet'
           });
         }
 
@@ -332,12 +335,12 @@
 
       if(r.status==='LOCKED'){
         const queued=Boolean(nextBet?.hasQueued());
-        setInputsLocked(!online()||!enabled()||queued);
+        setInputsLocked(Boolean(betId)||!online()||!enabled()||queued);
         renderBetAction({
-          disabled:!online()||!enabled(),
-          status:queued?'Aposta registada':'Disponível',
-          label:queued?'Cancelar':'Apostar',
-          mode:queued?'cancel-next':'queue-next'
+          disabled:Boolean(betId)||!online()||!enabled(),
+          status:betId?'Aposta confirmada':queued?'Aposta registada':'Disponível',
+          label:betId?'Foi apostado':queued?'Cancelar':'Apostar',
+          mode:betId?'confirmed':queued?'cancel-next':'queue-next'
         });
         resetCashout();
         renderTicket();
