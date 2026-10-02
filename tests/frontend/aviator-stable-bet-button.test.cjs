@@ -19,30 +19,27 @@ test('ação principal vive num único slot estrutural fixo',()=>{
   assert.match(css,/\.aviator-primary-action-slot\{display:grid/);
 });
 
-test('botão de aposta não possui estado Cancelar fantasma',()=>{
+test('botão de aposta nunca possui estado Cancelar',()=>{
   assert.doesNotMatch(js,/['"`]Cancelar['"`]/);
-  assert.doesNotMatch(js,/queue-next|cancel-next/);
   assert.doesNotMatch(panel,/['"`]Cancelar['"`]/);
-  assert.doesNotMatch(panel,/queue-next|cancel-next/);
 });
 
-test('OPEN usa apenas Apostar ou Foi apostado conforme confirmação do servidor',()=>{
+test('OPEN usa Apostar ou Foi apostado e envia fila do voo automaticamente',()=>{
   const clock=js.match(/function updateRoundClock\(\)[\s\S]*?function startOpenUiTick/)?.[0]||'';
-  assert.match(clock,/myBet\?'Foi apostado':'Apostar'/);
-  assert.match(clock,/myBet\?'confirmed':'bet'/);
-  assert.doesNotMatch(clock,/canCancel|cancel-next|queue-next/);
+  assert.match(clock,/myBet\|\|queued\?'Foi apostado':'Apostar'/);
+  assert.match(clock,/nextBet\?\.schedule\?\.\(\)/);
 
   const secondary=panel.match(/function renderRound\(\)[\s\S]*?function betSlotOf/)?.[0]||'';
-  assert.match(secondary,/label:betId\?'Foi apostado':'Apostar'/);
-  assert.doesNotMatch(secondary,/queued|cancel-next|queue-next/);
+  assert.match(secondary,/label:betId\|\|queued\?'Foi apostado':'Apostar'/);
+  assert.match(secondary,/nextBet\?\.schedule\?\.\(\)/);
 });
 
-test('FLYING esconde aposta confirmada e mostra retorno monetário para sacar',()=>{
+test('FLYING permite Apostar quando não há aposta ativa nem fila',()=>{
   const flying=js.match(/function renderFlying\(\)[\s\S]*?function renderFinished/)?.[0]||'';
-  assert.match(flying,/renderBetAction\([\s\S]*?Boolean\(myBet\)/);
+  assert.match(flying,/const canQueue=enabled&&connectionOnline&&!myBet&&!queued&&!betting/);
+  assert.match(flying,/myBet\|\|queued\?'Foi apostado':'Apostar'/);
   assert.match(flying,/renderCashoutAction\([\s\S]*?active:Boolean\(myBet\)/);
   assert.match(ui,/liveReturn=active&&hasMultiplier&&hasStake\?money\(s\*m\):null/);
-  assert.match(panel,/liveReturn=active&&hasMultiplier&&hasStake\?money\(stake\*m\):null/);
 });
 
 test('Apostar é verde e cash-out prioritário é vermelho',()=>{
