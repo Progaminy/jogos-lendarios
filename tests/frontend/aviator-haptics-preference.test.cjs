@@ -13,11 +13,12 @@ const js=read('aviator.js');
 const haptics=read('js/aviator/haptics.js');
 const manifest=JSON.parse(read('games/manifest.json'));
 
-test('Aviator tem controlo de vibração claro e separado do som',()=>{
+test('Aviator tem controlo de vibração discreto, acessível e separado do som',()=>{
   assert.match(html,/id="aviatorVibrationToggle"/);
   assert.match(html,/aria-pressed="false"/);
   assert.match(html,/aria-label="Ativar vibração do Aviator"/);
-  assert.match(html,/>🚫 Vib\.<\/button>/);
+  assert.match(haptics,/button\.textContent=enabled\?'📳':'🚫'/);
+  assert.doesNotMatch(haptics,/📳 Vib\.|🚫 Vib\./);
 });
 
 test('vibração é compatível, persistente e desligada por padrão',()=>{
