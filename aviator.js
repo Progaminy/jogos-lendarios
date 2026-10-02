@@ -30,6 +30,7 @@ let lastFlightHudAt=0;
 let autoBetEnabled=sessionStorage.getItem('jl_aviator_auto_bet_v1')==='1';
 let autoBetAttemptedRoundId=null;
 let autoBetSubmittingRoundId=null;
+try{sessionStorage.removeItem('jl_aviator_next_bet_v1_slot_1')}catch(_){}
 
 const playerToken=()=>JLSession.getPlayerToken();
 const fairness=window.JLAviatorFairness||null;
@@ -140,7 +141,6 @@ function mul(){return engine.multiplier();}
 
 function secondsToClose(){return engine.secondsToClose();}
 
-function secondsToTakeoff(){return engine.secondsToTakeoff();}
 function secondsToNextRound(){return engine.secondsToNextRound();}
 
 function betKey(){return financial.betKey();}
@@ -252,9 +252,7 @@ function updateRoundClock(){
 
   if(round?.status==='OPEN'){
     const seconds=secondsToClose();
-    const takeoffSeconds=secondsToTakeoff();
     const display=seconds===null?'—':String(seconds);
-    const takeoffDisplay=takeoffSeconds===null?'—':String(takeoffSeconds);
     const closed=round?.betting_open===false||seconds===0;
 
     $('#roundState').textContent=closed?'APOSTAS FECHADAS':'APOSTAS ABERTAS';
@@ -691,7 +689,7 @@ function renderOpen(){
   renderBetConfirmation();
 
   if(myBet&&!$('#aviatorMessage').textContent.trim()){
-    $('#aviatorMessage').textContent='Aposta confirmada. Pode cancelar enquanto as apostas estiverem abertas.';
+    $('#aviatorMessage').textContent='Aposta confirmada.';
   }
   scheduleAutoBetForOpenRound();
 }
