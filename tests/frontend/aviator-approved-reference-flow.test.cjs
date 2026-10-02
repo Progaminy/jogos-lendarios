@@ -17,10 +17,11 @@ test('histórico recente de multiplicadores fica no topo do Aviator',()=>{
   assert.match(css,/\.aviator-history-top/);
 });
 
-test('jogador pode preparar valores da próxima aposta durante voo',()=>{
+test('durante voo não existe segunda etapa de preparação de aposta',()=>{
   const flying=js.match(/function renderFlying\(\)[\s\S]*?\n\}/)?.[0]||'';
-  assert.match(flying,/setBetInputsLocked\(!connectionOnline\|\|!enabled\)/);
+  assert.match(flying,/setBetInputsLocked\(true\)/);
   assert.match(flying,/renderAutoBetStatus\(\)/);
+  assert.doesNotMatch(flying,/queue-next|Prepare a próxima|Próxima aposta preparada/);
 });
 
 test('auto-bet só dispara quando servidor informa OPEN',()=>{
@@ -39,10 +40,10 @@ test('auto-bet usa o mesmo fluxo financeiro normal e não debita antecipadamente
   assert.doesNotMatch(fn,/jl_aviator_place_bet|JLApi\.rpc|financial\.placeBet/);
 });
 
-test('interface mostra preparação e confirmação da aposta automática',()=>{
+test('auto-bet aguarda OPEN e não cria etapa de preparação visível',()=>{
   assert.match(html,/id="aviatorAutoBet"/);
   assert.match(html,/id="aviatorAutoBetStatus"/);
-  assert.match(js,/Próxima aposta preparada/);
+  assert.doesNotMatch(js,/Próxima aposta preparada|Prepare a próxima rodada/);
   assert.match(js,/Aposta automática confirmada para esta rodada/);
 });
 
