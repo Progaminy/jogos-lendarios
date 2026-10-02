@@ -6,6 +6,8 @@
     const pendingMetricsKey='jl_aviator_metric_queue_v1';
     let metricFlushBusy=false;
 
+    function balanceChanged(){try{window.dispatchEvent(new Event('jl-player-finance-changed'))}catch(_){}}
+
     function uuid(){
       return cryptoRef.randomUUID?cryptoRef.randomUUID():Date.now()+'-'+Math.random().toString(36).slice(2);
     }
@@ -184,6 +186,7 @@
           result?.round_id,
           result?.bet_id
         );
+        balanceChanged();
         return result;
       }catch(error){
         void recordClientMetric(
@@ -217,6 +220,7 @@
           result?.round_id,
           result?.bet_id
         );
+        balanceChanged();
         return result;
       }catch(error){
         void recordClientMetric(
@@ -266,6 +270,7 @@
             result?.round_id||getRoundId?.(),
             id
           );
+          balanceChanged();
           return result;
         }catch(error){
           firstError=firstError||error;
@@ -320,6 +325,7 @@
         error.code=result?.error_code||'CANCEL_REJECTED';
         throw error;
       }
+      balanceChanged();
       return result;
     }
 
