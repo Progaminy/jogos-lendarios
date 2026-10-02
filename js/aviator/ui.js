@@ -62,8 +62,10 @@
 
     function multiplierTier(value){
       const n=Number(value);
-      if(!Number.isFinite(n)||n<2)return 'low';
-      if(n<=10)return 'medium';
+      if(!Number.isFinite(n))return 'low';
+      const shown=Math.round(n*100)/100;
+      if(shown<2)return 'low';
+      if(shown<=10)return 'medium';
       return 'high';
     }
 
