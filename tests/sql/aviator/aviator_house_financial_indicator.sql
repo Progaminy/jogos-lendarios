@@ -14,6 +14,7 @@ update public.jl_aviator_settings
 update public.jl_aviator_bank
    set balance=100,
        exposure_ratio=.5,
+       exposure_cycle_anchor=clock_timestamp()-interval '7 hours 1 minute',
        updated_at=clock_timestamp()
  where id=true;
 
