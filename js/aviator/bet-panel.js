@@ -323,17 +323,18 @@
         const closed=r.betting_open===false||Number(secondsToClose?.())===0;
         const queued=Boolean(nextBet?.hasQueued?.());
         const inputsLocked=!enabled()||!online()||Boolean(betId)||queued||betting||closed;
+        const actionDisabled=!enabled()||!online()||betting||closed;
         setInputsLocked(inputsLocked);
 
         renderBetAction({
-          disabled:inputsLocked,
+          disabled:actionDisabled,
           status:betId
-            ?'Aposta confirmada'
+            ?'Pode cancelar até fechar as apostas'
             :queued
-              ?'A enviar aposta'
+              ?'Pode cancelar antes da confirmação'
               :closed?'Apostas fechadas':'Disponível',
-          label:betId||queued?'Foi apostado':'Apostar',
-          mode:betId||queued?'confirmed':'bet'
+          label:betId||queued?'Cancelar':'Apostar',
+          mode:betId?'cancel':queued?'cancel-next':'bet'
         });
 
         resetCashout();
@@ -362,16 +363,17 @@
       if(r.status==='FLYING'){
         const queued=Boolean(nextBet?.hasQueued?.());
         const canQueue=enabled()&&online()&&!betId&&!queued&&!betting;
+        const canCancelQueued=enabled()&&online()&&!betId&&queued&&!betting;
         setInputsLocked(!canQueue);
         renderBetAction({
-          disabled:!canQueue,
+          disabled:queued?!canCancelQueued:!canQueue,
           status:betId
             ?'Aposta em voo'
             :queued
               ?'Aposta registada para a próxima rodada'
               :'Aposte para a próxima rodada',
-          label:betId||queued?'Foi apostado':'Apostar',
-          mode:betId||queued?'confirmed':'bet',
+          label:queued?'Cancelar':betId?'Foi apostado':'Apostar',
+          mode:queued?'cancel-next':betId?'confirmed':'bet',
           hidden:Boolean(betId)
         });
         if(!betId&&!queued&&message&&/^Aposta confirmada/i.test(message.textContent||'')){
@@ -389,12 +391,13 @@
         return;
       }
 
+      const queued=Boolean(nextBet?.hasQueued?.());
       setInputsLocked(true);
       renderBetAction({
-        disabled:true,
-        status:'Aguarde a próxima rodada',
-        label:'Aguarde',
-        mode:'locked'
+        disabled:!queued||!enabled()||!online(),
+        status:queued?'Aposta registada para a próxima rodada':'Aguarde a próxima rodada',
+        label:queued?'Cancelar':'Aguarde',
+        mode:queued?'cancel-next':'locked'
       });
       resetCashout();
       renderTicket();
@@ -593,9 +596,58 @@
       }
     }
 
+    async function cancelConfirmedBet(){
+      if(betting||!betId||round()?.status!=='OPEN'||round()?.betting_open===false)return;
+      betting=true;
+      const id=Number(betId);
+      const oldStake=stake;
+      renderBetAction({
+        disabled:true,
+        status:'Cancelando aposta…',
+        label:'Cancelar',
+        mode:'cancel'
+      });
+      try{
+        const result=await financial.cancelBet(id,financial.cancelBetRequestKey(id));
+        betId=null;
+        stake=0;
+        autoCashout=null;
+        autoBetAttemptedRoundId=Number(round()?.id);
+        financial.resetBetKeyForSlot(slot);
+        renderResult(null);
+        personalHistory?.invalidate?.();
+        renderConfirmation();
+        if(message){
+          message.textContent='Aposta cancelada. '+money(Number(result?.refund)||oldStake)+' devolvido ao saldo.';
+        }
+      }catch(error){
+        if(message)message.textContent=playerMessage(
+          error,
+          'Não foi possível cancelar a aposta.'
+        );
+      }finally{
+        betting=false;
+        renderRound();
+      }
+    }
+
     async function submit(event){
       event.preventDefault();
       if(betting)return;
+
+      const queuedTriggered=Boolean(nextBet?.isSubmitting?.(round()?.id));
+      const action=betButton?.dataset.action||'bet';
+
+      if(!queuedTriggered&&action==='cancel-next'){
+        nextBet?.cancel?.();
+        renderRound();
+        return;
+      }
+
+      if(!queuedTriggered&&action==='cancel'){
+        await cancelConfirmedBet();
+        return;
+      }
 
       if(round()?.status!=='OPEN'){
         if(['FLYING','CRASHED','SETTLED'].includes(round()?.status)){
@@ -608,7 +660,6 @@
         return;
       }
 
-      const queuedTriggered=Boolean(nextBet?.isSubmitting?.(round()?.id));
       const autoTriggered=
         autoBetSubmittingRoundId===Number(round()?.id);
       betting=true;
