@@ -119,7 +119,7 @@ test('controlador busca histórico em RPC separado do estado de voo',()=>{
 
 test('cash-out na fronteira do crash não mostra erro técnico cru',()=>{
   const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
-  assert.match(uiSource,/Confirmando cash-out/);
+  assert.match(uiSource,/Confirmando…/);
   assert.match(js,/Fim da rodada\. Cash-out não disponível\./);
   assert.match(js,/Crash ja atingido\|Aposta ja liquidada\|Voo nao esta ativo/);
 });
@@ -249,23 +249,26 @@ test('controlador usa display_seq e cancela estado antigo na reconexão',()=>{
 });
 
 
-test('UI do Aviator espelha limites 0.50 a 500 MZN sem ser autoridade financeira',()=>{
+test('UI do Aviator espelha limites 0.50 a 500 sem ser autoridade financeira',()=>{
   const html=fs.readFileSync(path.join(__dirname,'../../aviator.html'),'utf8');
   const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
   assert.match(html,/id="aviatorAmount"[^>]*min="0\.5"[^>]*max="500"/);
   assert.match(js,/amount<0\.5\|\|amount>500/);
-  assert.match(js,/entre 0,50 e 500 MZN/);
+  assert.match(js,/entre 0,50 e 500\./);
+  assert.doesNotMatch(html,/>MZN</);
+  assert.doesNotMatch(uiSource,/MZN/);
 });
 
 
-test('Aviator mostra LOCKED separado do voo e bloqueia novas apostas depois de zero',()=>{
+test('Aviator mostra LOCKED separado do voo e permite Apostar para a próxima sem texto preparar',()=>{
   const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
   assert.match(js,/function renderLocked\(\)/);
   assert.match(js,/round\.status==='LOCKED'/);
   assert.match(js,/APOSTAS FECHADAS/);
   assert.match(js,/AGUARDE/);
-  assert.match(js,/function renderLocked\(\)[\s\S]*?setBetInputsLocked\(true\)/);
-  assert.doesNotMatch(js,/queue-next|cancel-next|Prepare a próxima|Próxima aposta preparada/);
+  assert.match(js,/function renderLocked\(\)[\s\S]*?queue-next/);
+  assert.match(js,/queued\?'Cancelar':'Apostar'/);
+  assert.doesNotMatch(js,/Prepare a próxima|Próxima aposta preparada/);
   assert.equal(runtime.pollDelay('LOCKED',false,false),3000);
   assert.equal(runtime.phase('LOCKED'),'locked');
 });
@@ -300,7 +303,7 @@ test('confirmação visual usa o valor confirmado pelo servidor antes do voo',()
 });
 
 
-test('termos da aposta confirmada ficam imutáveis e campos bloqueiam após zero',()=>{
+test('termos da aposta confirmada ficam imutáveis e Apostar pode preparar silenciosamente a próxima',()=>{
   const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
   assert.match(js,/function setBetInputsLocked\(locked\)/);
   assert.match(js,/Boolean\(myBet\)\|\|betting\|\|closed/);
@@ -308,8 +311,8 @@ test('termos da aposta confirmada ficam imutáveis e campos bloqueiam após zero
   assert.match(uiSource,/if\(auto\)auto\.disabled=value/);
   assert.match(js,/myStake=Number\(r\.stake\);/);
   assert.match(js,/myAutoCashout=Number\(r\.auto_cashout_multiplier\)\|\|null/);
-  assert.match(js,/function renderLocked\(\)[\s\S]*?setBetInputsLocked\(true\)/);
-  assert.match(js,/function renderFlying\(\)[\s\S]*?setBetInputsLocked\(true\)/);
+  assert.match(js,/function renderLocked\(\)[\s\S]*?nextBet\?\.hasQueued/);
+  assert.match(js,/function renderFlying\(\)[\s\S]*?nextBet\?\.hasQueued/);
 });
 
 
@@ -399,7 +402,7 @@ test('multiplicadores baixos medios e altos usam tiers visuais sem animação ex
 
   assert.match(uiSource,/function multiplierTier\(value\)/);
   assert.match(uiSource,/if\(!Number\.isFinite\(n\)\|\|n<2\)return 'low'/);
-  assert.match(uiSource,/if\(n<10\)return 'medium'/);
+  assert.match(uiSource,/if\(n<=10\)return 'medium'/);
   assert.match(uiSource,/return 'high'/);
   assert.match(historySource,/tier-'\+multiplierTier\(item\.crash_multiplier\)/);
   assert.match(js,/applyMultiplierTier\(\$\('#crashMultiplier'\),result\)/);
