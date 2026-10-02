@@ -19,6 +19,8 @@
     let countdownRoundId=null;
     let lastCountdownSecond=null;
     let flightVoice=null;
+    let masterGain=null;
+    let masterCompressor=null;
 
     try{enabled=storage.getItem(STORAGE_KEY)==='1';}catch{}
 
@@ -35,7 +37,19 @@
       if(!enabled)return null;
       const AudioCtx=win.AudioContext||win.webkitAudioContext;
       if(!AudioCtx)return null;
-      if(!audioCtx)audioCtx=new AudioCtx();
+      if(!audioCtx){
+        audioCtx=new AudioCtx();
+        masterGain=audioCtx.createGain();
+        masterCompressor=audioCtx.createDynamicsCompressor();
+        masterGain.gain.setValueAtTime(.78,audioCtx.currentTime);
+        masterCompressor.threshold.setValueAtTime(-18,audioCtx.currentTime);
+        masterCompressor.knee.setValueAtTime(18,audioCtx.currentTime);
+        masterCompressor.ratio.setValueAtTime(2.4,audioCtx.currentTime);
+        masterCompressor.attack.setValueAtTime(.008,audioCtx.currentTime);
+        masterCompressor.release.setValueAtTime(.20,audioCtx.currentTime);
+        masterGain.connect(masterCompressor);
+        masterCompressor.connect(audioCtx.destination);
+      }
       if(audioCtx.state==='suspended')audioCtx.resume().catch(()=>{});
       return audioCtx;
     }
@@ -46,6 +60,10 @@
       const start=ctx.currentTime+Math.max(0,delay);
       const osc=ctx.createOscillator();
       const gain=ctx.createGain();
+      const filter=ctx.createBiquadFilter();
+      filter.type='lowpass';
+      filter.frequency.setValueAtTime(2200,start);
+      filter.Q.setValueAtTime(.55,start);
       osc.type=type;
       osc.frequency.setValueAtTime(Math.max(20,freq),start);
       if(Number.isFinite(Number(endFreq))){
@@ -54,8 +72,9 @@
       gain.gain.setValueAtTime(.0001,start);
       gain.gain.exponentialRampToValueAtTime(Math.max(.0002,volume),start+.008);
       gain.gain.exponentialRampToValueAtTime(.0001,start+duration);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(masterGain||ctx.destination);
       osc.start(start);
       osc.stop(start+duration+.03);
     }
@@ -64,14 +83,14 @@
       const s=Number(second);
       if(!Number.isFinite(s)||s<0||s>10)return;
       if(s===0){
-        tone(880,.10,.014,0,'sine');
-        tone(1040,.08,.009,.06,'triangle');
+        tone(780,.11,.055,0,'sine');
+        tone(980,.10,.032,.055,'triangle');
         return;
       }
       const urgent=s<=3;
-      const freq=urgent?760:620;
-      const duration=urgent?0.07:0.05;
-      const volume=urgent?0.012:0.008;
+      const freq=urgent?720:580;
+      const duration=urgent?0.085:0.06;
+      const volume=urgent?0.048:0.036;
       tone(freq,duration,volume,0,'sine');
     }
 
@@ -113,25 +132,38 @@
       const air=ctx.createOscillator();
       const gain=ctx.createGain();
       const airGain=ctx.createGain();
+      const filter=ctx.createBiquadFilter();
+      const airFilter=ctx.createBiquadFilter();
 
-      osc.type='sine';
-      air.type='triangle';
-      osc.frequency.setValueAtTime(96,ctx.currentTime);
-      air.frequency.setValueAtTime(188,ctx.currentTime);
+      osc.type='triangle';
+      air.type='sine';
+      osc.frequency.setValueAtTime(92,ctx.currentTime);
+      air.frequency.setValueAtTime(184,ctx.currentTime);
+      osc.detune.setValueAtTime(-3,ctx.currentTime);
+      air.detune.setValueAtTime(4,ctx.currentTime);
+
+      filter.type='lowpass';
+      filter.frequency.setValueAtTime(1200,ctx.currentTime);
+      filter.Q.setValueAtTime(.7,ctx.currentTime);
+      airFilter.type='lowpass';
+      airFilter.frequency.setValueAtTime(1600,ctx.currentTime);
+      airFilter.Q.setValueAtTime(.5,ctx.currentTime);
 
       gain.gain.setValueAtTime(.0001,ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(.0065,ctx.currentTime+.35);
+      gain.gain.exponentialRampToValueAtTime(.045,ctx.currentTime+.38);
       airGain.gain.setValueAtTime(.0001,ctx.currentTime);
-      airGain.gain.exponentialRampToValueAtTime(.0022,ctx.currentTime+.42);
+      airGain.gain.exponentialRampToValueAtTime(.018,ctx.currentTime+.44);
 
-      osc.connect(gain);
-      air.connect(airGain);
-      gain.connect(ctx.destination);
-      airGain.connect(ctx.destination);
+      osc.connect(filter);
+      filter.connect(gain);
+      air.connect(airFilter);
+      airFilter.connect(airGain);
+      gain.connect(masterGain||ctx.destination);
+      airGain.connect(masterGain||ctx.destination);
       osc.start();
       air.start();
 
-      flightVoice={osc,air,gain,airGain};
+      flightVoice={osc,air,gain,airGain,filter,airFilter};
       updateFlight(getMultiplier?.());
     }
 
@@ -143,23 +175,25 @@
       const m=Math.max(1,Math.min(500,Number(multiplier)||1));
       const progress=Math.log(m)/Math.log(500);
       const now=audioCtx.currentTime;
-      const base=96+(progress*86);
-      const overtone=188+(progress*180);
-      const volume=.0065+(progress*.0035);
+      const base=92+(progress*118);
+      const overtone=184+(progress*236);
+      const volume=.045+(progress*.020);
 
       try{
-        flightVoice.osc.frequency.setTargetAtTime(base,now,.22);
-        flightVoice.air.frequency.setTargetAtTime(overtone,now,.26);
-        flightVoice.gain.gain.setTargetAtTime(volume,now,.24);
-        flightVoice.airGain.gain.setTargetAtTime(.0022+(progress*.0018),now,.28);
+        flightVoice.osc.frequency.setTargetAtTime(base,now,.20);
+        flightVoice.air.frequency.setTargetAtTime(overtone,now,.24);
+        flightVoice.gain.gain.setTargetAtTime(volume,now,.22);
+        flightVoice.airGain.gain.setTargetAtTime(.018+(progress*.010),now,.26);
+        flightVoice.filter.frequency.setTargetAtTime(1200+(progress*900),now,.28);
+        flightVoice.airFilter.frequency.setTargetAtTime(1600+(progress*1100),now,.30);
       }catch(_){}
     }
 
     function playCrash(){
       stopFlight();
-      tone(280,.18,.016,0,'triangle',120);
-      tone(150,.24,.011,.02,'sine',72);
-      tone(520,.055,.006,.01,'sine',300);
+      tone(330,.18,.070,0,'triangle',150);
+      tone(180,.28,.055,.018,'sine',82);
+      tone(620,.065,.028,.012,'sine',360);
     }
 
     function setEnabled(next){
@@ -235,6 +269,8 @@
       stopFlight();
       try{audioCtx?.close?.()}catch(_){}
       audioCtx=null;
+      masterGain=null;
+      masterCompressor=null;
     }
 
     button?.addEventListener('click',toggle);
