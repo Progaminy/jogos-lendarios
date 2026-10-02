@@ -665,7 +665,7 @@ body>.topbar .brand{font-size:1rem}
 
 @media(max-width:650px){
   .aviator-controls form{
-    grid-template-columns:minmax(0,1.34fr) minmax(0,.62fr) minmax(118px,1.18fr)
+    grid-template-columns:minmax(0,1fr) minmax(0,.8fr) minmax(126px,1.2fr)
   }
   .stake-stepper{
     grid-template-columns:27px minmax(0,1fr) 27px;
@@ -683,7 +683,13 @@ body>.topbar .brand{font-size:1rem}
   .stake-stepper .money-input input{
     font-size:.82rem;
     padding-left:2px;
-    padding-right:2px
+    padding-right:2px;
+    text-align:center
+  }
+  .aviator-controls form>.field:nth-of-type(2) .money-input input{
+    padding-left:4px;
+    padding-right:4px;
+    text-align:center
   }
 }
 
