@@ -64,15 +64,15 @@
       const s=Number(second);
       if(!Number.isFinite(s)||s<0||s>10)return;
       if(s===0){
-        tone(1320,.12,.030,0,'square');
-        tone(1680,.08,.018,.07,'sine');
+        tone(880,.10,.014,0,'sine');
+        tone(1040,.08,.009,.06,'triangle');
         return;
       }
       const urgent=s<=3;
-      const freq=urgent?1120:860;
-      const duration=urgent?0.075:0.055;
-      const volume=urgent?0.026:0.019;
-      tone(freq,duration,volume,0,'square');
+      const freq=urgent?760:620;
+      const duration=urgent?0.07:0.05;
+      const volume=urgent?0.012:0.008;
+      tone(freq,duration,volume,0,'sine');
     }
 
     function syncCountdown(roundId,second){
@@ -114,15 +114,15 @@
       const gain=ctx.createGain();
       const airGain=ctx.createGain();
 
-      osc.type='sawtooth';
+      osc.type='sine';
       air.type='triangle';
-      osc.frequency.setValueAtTime(118,ctx.currentTime);
-      air.frequency.setValueAtTime(238,ctx.currentTime);
+      osc.frequency.setValueAtTime(96,ctx.currentTime);
+      air.frequency.setValueAtTime(188,ctx.currentTime);
 
       gain.gain.setValueAtTime(.0001,ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(.018,ctx.currentTime+.18);
+      gain.gain.exponentialRampToValueAtTime(.0065,ctx.currentTime+.35);
       airGain.gain.setValueAtTime(.0001,ctx.currentTime);
-      airGain.gain.exponentialRampToValueAtTime(.006,ctx.currentTime+.22);
+      airGain.gain.exponentialRampToValueAtTime(.0022,ctx.currentTime+.42);
 
       osc.connect(gain);
       air.connect(airGain);
@@ -143,23 +143,23 @@
       const m=Math.max(1,Math.min(500,Number(multiplier)||1));
       const progress=Math.log(m)/Math.log(500);
       const now=audioCtx.currentTime;
-      const base=118+(progress*250);
-      const overtone=238+(progress*520);
-      const volume=.018+(progress*.012);
+      const base=96+(progress*86);
+      const overtone=188+(progress*180);
+      const volume=.0065+(progress*.0035);
 
       try{
-        flightVoice.osc.frequency.setTargetAtTime(base,now,.09);
-        flightVoice.air.frequency.setTargetAtTime(overtone,now,.11);
-        flightVoice.gain.gain.setTargetAtTime(volume,now,.10);
-        flightVoice.airGain.gain.setTargetAtTime(.006+(progress*.005),now,.12);
+        flightVoice.osc.frequency.setTargetAtTime(base,now,.22);
+        flightVoice.air.frequency.setTargetAtTime(overtone,now,.26);
+        flightVoice.gain.gain.setTargetAtTime(volume,now,.24);
+        flightVoice.airGain.gain.setTargetAtTime(.0022+(progress*.0018),now,.28);
       }catch(_){}
     }
 
     function playCrash(){
       stopFlight();
-      tone(210,.22,.045,0,'sawtooth',58);
-      tone(92,.32,.038,.03,'square',34);
-      tone(420,.08,.018,.02,'triangle',120);
+      tone(280,.18,.016,0,'triangle',120);
+      tone(150,.24,.011,.02,'sine',72);
+      tone(520,.055,.006,.01,'sine',300);
     }
 
     function setEnabled(next){
