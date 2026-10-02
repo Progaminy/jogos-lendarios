@@ -20,12 +20,14 @@ set status='CANCELLED',
     settled_at=coalesce(settled_at,clock_timestamp())
 where status in ('OPEN','LOCKED','FLYING','CRASHED');
 
-delete from public.jl_aviator_bets
+-- Apagar primeiro o ledger: transactions.aviator_bet_id referencia jl_aviator_bets.
+-- A ordem inversa pode abortar o cleanup e deixar fixtures para o teste seguinte.
+delete from public.transactions
 where player_id in (
   select id from public.players where phone='$PHONE'
 );
 
-delete from public.transactions
+delete from public.jl_aviator_bets
 where player_id in (
   select id from public.players where phone='$PHONE'
 );
