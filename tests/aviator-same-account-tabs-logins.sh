@@ -38,7 +38,7 @@ cleanup
 
 "${PSQL[@]}" <<SQL
 update public.jl_aviator_settings
-set enabled=true,
+set enabled=false,
     one_round_test=false,
     updated_at=clock_timestamp()
 where id=true;
@@ -68,6 +68,14 @@ values(
 )
 returning id;
 ")
+
+"${PSQL[@]}" -c "
+update public.jl_aviator_settings
+set enabled=true,
+    one_round_test=false,
+    updated_at=clock_timestamp()
+where id=true;
+" >/dev/null
 
 # Duas abas da MESMA sessão tentam apostar simultaneamente na mesma rodada,
 # com chaves e valores diferentes. Apenas uma pode vencer.
