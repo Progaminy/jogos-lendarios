@@ -51,6 +51,11 @@ const financial=window.JLAviatorFinancial.create({
   playerToken,
   getRoundId:()=>round?.id
 });
+const balance=window.JLAviatorBalance?.create({
+  element:$('#aviatorBalance'),
+  rpc:(name,args)=>JLApi.rpc(name,args),
+  playerToken
+})||null;
 const history=window.JLAviatorHistory.create({
   $,
   rpc:(name,args)=>JLApi.rpc(name,args),
@@ -71,6 +76,7 @@ const haptics=window.JLAviatorHaptics?.create({
 const p2=window.JLAviatorBetPanel?.create({$,financial,playerToken,
   getRound:()=>round,isEnabled:()=>enabled,isOnline:()=>connectionOnline,
   multiplier:mul,secondsToClose,money,moneyCompact,playerMessage,sound,personalHistory,
+  onFinancialChange:()=>balance?.refresh(),
   createGestureGuard:ui.createCashoutGestureGuard})||null;
 const nextBet=window.JLAviatorNextBet?.create({
   slot:1,$,playerToken,
@@ -565,6 +571,7 @@ async function recover(force=false){
 
   try{
     const x=await JLApi.rpc('jl_aviator_player_state',{p_token:playerToken()});
+    balance?.applyPlayerState(x);
 
     if(Number(round?.id)!==requestedRoundId){
       return;
@@ -886,6 +893,7 @@ function scheduleState(delay=nextPollDelay()){
 }
 
 function applyReconnectPlayerState(player){
+  balance?.applyPlayerState(player);
   const bets=Array.isArray(player?.bets)?player.bets:[];
   const roundId=Number(round?.id);
   const current=Number.isFinite(roundId)?runtime.pickActiveBet(bets,roundId,1):null;
@@ -1190,6 +1198,7 @@ $('#aviatorBetForm').addEventListener('submit',async e=>{
       renderBetConfirmation();
       $('#aviatorMessage').textContent=
         'Aposta cancelada. '+money(Number(result.refund)||stake)+' devolvidos.';
+      void balance?.refresh();
     }catch(error){
       $('#aviatorMessage').textContent=playerMessage(
         error,
@@ -1244,6 +1253,7 @@ $('#aviatorBetForm').addEventListener('submit',async e=>{
     myStake=Number(r.stake);
     myAutoCashout=Number(r.auto_cashout_multiplier)||null;
     sound?.playBet();
+    void balance?.refresh();
     lastRecoveredRoundId=round.id;
     renderTicket();
     renderBetConfirmation();
@@ -1301,6 +1311,7 @@ $('#cashoutBtn').addEventListener('click',async event=>{
       r.payout
     );
     sound?.playCashout();
+    void balance?.refresh();
     setBetResult({
       status:'CASHED_OUT',
       stake:myStake,
@@ -1486,6 +1497,10 @@ if(autoBetToggle){
 
 renderAutoBetStatus();
 renderHistory();
+window.addEventListener('jl-player-session-changed',()=>{
+  if(playerToken())void balance?.refresh();
+  else balance?.render(null);
+});
 setConnectionState(connectionOnline);
 startRealtime();
 if(connectionOnline){
