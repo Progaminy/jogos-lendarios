@@ -52,12 +52,7 @@ const financial=window.JLAviatorFinancial.create({
   getRoundId:()=>round?.id
 });
 const balance=window.JLAviatorBalance?.create({element:$('#aviatorBalance'),rpc:(n,a)=>JLApi.rpc(n,a),playerToken})||null;
-const nextBet=window.JLAviatorNextBet?.create({
-  slot:1,$,playerToken,getRound:()=>round,isEnabled:()=>enabled,
-  isOnline:()=>connectionOnline,isBusy:()=>betting,hasActiveBet:()=>Boolean(myBet),
-  playerMessage,form:$('#aviatorBetForm'),
-  onMessage:text=>{const el=$('#aviatorMessage');if(el)el.textContent=text}
-})||null;
+const nextBet=null;
 const history=window.JLAviatorHistory.create({
   $,
   rpc:(name,args)=>JLApi.rpc(name,args),
@@ -270,29 +265,18 @@ function updateRoundClock(){
 
     const inputsLocked=
       !enabled||!connectionOnline||Boolean(myBet)||betting||closed;
-    const canCancel=
-      enabled&&connectionOnline&&Boolean(myBet)&&!betting&&!closed;
     setBetInputsLocked(inputsLocked);
 
-    if(canCancel){
-      renderBetAction(
-        false,
-        'Aposta confirmada · toque para cancelar',
-        'Cancelar',
-        'cancel'
-      );
-    }else{
-      renderBetAction(
-        inputsLocked,
-        myBet
-          ?closed?'Apostas fechadas':'Aposta confirmada'
-          :closed
-            ?'Apostas fechadas'
-            :'Disponível',
-        myBet?'Foi apostado':'Apostar',
-        myBet?'confirmed':'bet'
-      );
-    }
+    renderBetAction(
+      inputsLocked,
+      myBet
+        ?'Aposta confirmada'
+        :closed
+          ?'Apostas fechadas'
+          :'Disponível',
+      myBet?'Foi apostado':'Apostar',
+      myBet?'confirmed':'bet'
+    );
     return;
   }
 
@@ -697,7 +681,6 @@ function renderOpen(){
   if(myBet&&!$('#aviatorMessage').textContent.trim()){
     $('#aviatorMessage').textContent='Aposta confirmada.';
   }
-  nextBet?.schedule();
   scheduleAutoBetForOpenRound();
 }
 
@@ -714,13 +697,12 @@ function renderLocked(){
   show('#multiplierWrap',false);
   show('#crashText',false);
 
-  const queued=Boolean(nextBet?.hasQueued());
-  setBetInputsLocked(Boolean(myBet)||!connectionOnline||!enabled||queued);
+  setBetInputsLocked(true);
   renderBetAction(
-    Boolean(myBet)||!connectionOnline||!enabled,
-    myBet?'Aposta confirmada':queued?'Aposta registada':'Disponível',
-    myBet?'Foi apostado':queued?'Cancelar':'Apostar',
-    myBet?'confirmed':queued?'cancel-next':'queue-next'
+    true,
+    myBet?'Aposta confirmada':'Apostas fechadas',
+    myBet?'Foi apostado':'Apostar',
+    myBet?'confirmed':'bet'
   );
 
   resetCashout();
@@ -745,14 +727,13 @@ function renderFlying(){
   show('#multiplierWrap',true);
   show('#crashText',false);
 
-  const queued=Boolean(nextBet?.hasQueued());
-  setBetInputsLocked(!connectionOnline||!enabled||Boolean(myBet)||queued);
+  setBetInputsLocked(true);
   renderAutoBetStatus();
   renderBetAction(
-    Boolean(myBet)||!connectionOnline||!enabled,
-    queued?'Aposta registada':'Disponível',
-    queued?'Cancelar':'Apostar',
-    queued?'cancel-next':'queue-next',
+    true,
+    myBet?'Aposta em voo':'Voo em curso',
+    myBet?'Foi apostado':'Apostar',
+    myBet?'confirmed':'bet',
     Boolean(myBet)
   );
 
@@ -788,15 +769,13 @@ function renderFinished(){
   show('#multiplierWrap',false);
   show('#crashText',true);
 
-  const queued=Boolean(nextBet?.hasQueued());
-  setBetInputsLocked(!connectionOnline||!enabled||queued);
+  setBetInputsLocked(true);
   renderAutoBetStatus();
-
   renderBetAction(
-    !connectionOnline||!enabled,
-    queued?'Aposta registada':'Disponível',
-    queued?'Cancelar':'Apostar',
-    queued?'cancel-next':'queue-next'
+    true,
+    'Aguarde a próxima rodada',
+    'Apostar',
+    'bet'
   );
 
   myBet=null;
@@ -825,15 +804,14 @@ function renderWaiting(){
   show('#multiplierWrap',false);
   show('#crashText',false);
 
-  const queued=Boolean(nextBet?.hasQueued());
-  setBetInputsLocked(!connectionOnline||!enabled||queued);
+  setBetInputsLocked(true);
   renderAutoBetStatus();
 
   renderBetAction(
-    !connectionOnline||!enabled,
-    queued?'Aposta registada':'Disponível',
-    queued?'Cancelar':'Apostar',
-    queued?'cancel-next':'queue-next'
+    true,
+    'Aguarde a próxima rodada',
+    'Apostar',
+    'bet'
   );
 
   resetCashout();
@@ -1139,63 +1117,9 @@ $('#aviatorBetForm').addEventListener('submit',async e=>{
   e.preventDefault();
   if(betting)return;
 
-  const action=String($('#betBtn')?.dataset.action||'bet');
-  if(nextBet?.handleAction(action)){renderCurrentRound();return}
-
-  const queuedTriggered=
-    action==='bet'&&Boolean(nextBet?.isSubmitting(round?.id));
   const autoTriggered=
-    action==='bet'&&
     autoBetSubmittingRoundId===Number(round?.id);
   betting=true;
-
-  if(action==='cancel'){
-    const id=myBet;
-    const stake=myStake;
-    renderBetAction(true,'Cancelando aposta…','Cancelar','cancel');
-
-    try{
-      if(!connectionOnline)throw new Error('Sem ligação. Aguarde a reconexão.');
-      if(!playerToken())throw new Error('Entre na sua conta primeiro.');
-      if(!id||!round||round.status!=='OPEN'||round.betting_open===false){
-        throw new Error('Cancelamento encerrado para esta rodada.');
-      }
-
-      const result=await financial.cancelBet(
-        id,
-        financial.cancelBetRequestKey(id)
-      );
-
-      personalHistory?.invalidate();
-      setBetResult({
-        status:'REFUNDED',
-        stake,
-        payout:Number(result.refund)||stake
-      });
-
-      myBet=null;
-      myStake=0;
-      myAutoCashout=null;
-      lastRecoveredRoundId=round?.id??null;
-      renderTicket();
-      renderBetConfirmation();
-      $('#aviatorMessage').textContent=
-        'Aposta cancelada. '+money(Number(result.refund)||stake)+' devolvidos.';
-    }catch(error){
-      $('#aviatorMessage').textContent=playerMessage(
-        error,
-        'Não foi possível cancelar a aposta.'
-      );
-      if(/Cancelamento encerrado|Apostas fechadas/i.test(String(error?.message||error))){
-        lastRecoveredRoundId=null;
-        await reconnectState();
-      }
-    }finally{
-      betting=false;
-      renderCurrentRound();
-    }
-    return;
-  }
 
   renderBetAction(true,'Confirmando aposta…','Apostar','bet');
 
@@ -1235,7 +1159,6 @@ $('#aviatorBetForm').addEventListener('submit',async e=>{
     myStake=Number(r.stake);
     myAutoCashout=Number(r.auto_cashout_multiplier)||null;
     sound?.playBet();
-    if(queuedTriggered)nextBet?.consume(round?.id);
     lastRecoveredRoundId=round.id;
     renderTicket();
     renderBetConfirmation();
@@ -1250,7 +1173,6 @@ $('#aviatorBetForm').addEventListener('submit',async e=>{
     if(autoBetSubmittingRoundId===Number(round?.id)){
       autoBetSubmittingRoundId=null;
     }
-    nextBet?.clearSubmitting(round?.id);
     betting=false;
     renderCurrentRound();
   }
