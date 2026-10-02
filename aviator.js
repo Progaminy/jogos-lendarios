@@ -732,7 +732,7 @@ function renderLocked(){
   renderBetAction(
     !connectionOnline||!enabled,
     queued?'Próxima aposta preparada':'Prepare a próxima rodada',
-    queued?'Cancelar próxima':'Preparar próxima',
+    queued?'Cancelar próxima':'Apostar',
     queued?'cancel-next':'queue-next'
   );
 
@@ -769,7 +769,7 @@ function renderFlying(){
       :queued
         ?'Próxima aposta preparada'
         :'Prepare a próxima rodada',
-    queued?'Cancelar próxima':'Preparar próxima',
+    queued?'Cancelar próxima':'Apostar',
     queued?'cancel-next':'queue-next',
     Boolean(myBet)
   );
