@@ -702,3 +702,30 @@ body>.topbar .brand{font-size:1rem}
     font-size:clamp(4rem,22vw,6.8rem)
   }
 }
+
+
+/* Faixas do multiplicador e ações principais. */
+.multiplier.tier-low,.crash-text span.tier-low{color:#e5484d;text-shadow:0 8px 30px rgba(229,72,77,.16)}
+.multiplier.tier-medium,.crash-text span.tier-medium{color:#f4b51f;text-shadow:0 8px 30px rgba(244,181,31,.16)}
+.multiplier.tier-high,.crash-text span.tier-high{color:#36c979;text-shadow:0 8px 30px rgba(54,201,121,.18)}
+.aviator-history-value.tier-low{color:#e5484d}
+.aviator-history-value.tier-medium{color:#f4b51f}
+.aviator-history-value.tier-high{color:#36c979;font-weight:900}
+
+.aviator-bet-action:not(.is-cancel) button:not(:disabled){
+  background:#36c979!important;
+  border-color:#36c979!important;
+  color:#07130c!important;
+  box-shadow:0 0 0 1px rgba(54,201,121,.28),0 12px 30px rgba(54,201,121,.20)!important
+}
+.aviator-bet-action.is-cancel button:not(:disabled){
+  background:#c94444!important;
+  border-color:#c94444!important;
+  color:#fff!important
+}
+.aviator-cashout-action.is-priority button:not(:disabled){
+  background:#d83b42!important;
+  border-color:#d83b42!important;
+  color:#fff!important;
+  box-shadow:0 0 0 2px rgba(216,59,66,.25),0 14px 34px rgba(216,59,66,.22)!important
+}
