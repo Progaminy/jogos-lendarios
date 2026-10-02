@@ -291,7 +291,7 @@ begin
       and r.status in ('OPEN','LOCKED','FLYING','CRASHED','SETTLED')
       and b.created_at>clock_timestamp()-interval '1 day'
     order by b.id desc
-    limit 40
+    limit 20
   ) q;
 
   return jsonb_build_object(
