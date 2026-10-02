@@ -84,6 +84,13 @@
       return betKeyForSlot(1);
     }
 
+    function resetBetKeyForSlot(slot=1){
+      const roundId=Number(getRoundId?.());
+      if(!Number.isFinite(roundId)||roundId<=0)return;
+      const n=Number(slot)===2?2:1;
+      try{storage.removeItem('jl_aviator_bet_key_'+roundId+'_slot_'+n)}catch(_){}
+    }
+
     function metricPayload(operation,durationMs,success,errorCode=null,roundId=null,betId=null){
       return {
         operation:String(operation||'').toUpperCase(),
@@ -347,7 +354,7 @@
     return Object.freeze({
       cashoutRequestKey,cancelBetRequestKey,
       readPendingCashout,savePendingCashout,clearPendingCashout,
-      betKey,betKeyForSlot,placeBet,placeBetSlot,cancelBet,
+      betKey,betKeyForSlot,resetBetKeyForSlot,placeBet,placeBetSlot,cancelBet,
       requestFinancialCashout,fetchBetStatus,cashoutMessage,
       recordClientMetric,flushPendingMetrics
     });
