@@ -38,7 +38,7 @@ body{background:#070a10}
 .plane{position:absolute;z-index:2;font-size:56px;left:9%;bottom:17%;transform:translate3d(0,0,0) rotate(-13deg);opacity:.58;filter:drop-shadow(0 8px 14px rgba(0,0,0,.4))}
 .plane,.flight-grid,.flight-area::after{pointer-events:none}
 .aviator-stage.is-open .plane{animation:aviatorIdle 1.6s ease-in-out infinite}
-.aviator-stage.is-flying .plane{opacity:1;animation:aviatorFlight 4.4s cubic-bezier(.4,.05,.2,1) infinite}
+.aviator-stage.is-flying .plane{opacity:1;animation:none;transition:transform .16s linear;transform-origin:center center}
 .aviator-stage.is-flying .flight-area::after{animation:trailPulse 1.2s ease-in-out infinite}
 .aviator-stage.is-crashed .plane{opacity:0;animation:none}
 .aviator-stage.is-crashed .flight-area::after{opacity:0;animation:none}
@@ -154,7 +154,6 @@ body{background:#070a10}
 
 @keyframes aviatorCrashIn{0%{opacity:0;transform:scale(.94)}100%{opacity:1;transform:scale(1)}}
 @keyframes aviatorIdle{0%,100%{transform:translate3d(0,0,0) rotate(-13deg)}50%{transform:translate3d(0,-8px,0) rotate(-11deg)}}
-@keyframes aviatorFlight{0%{transform:translate3d(0,0,0) rotate(-13deg)}35%{transform:translate3d(18vw,-36px,0) rotate(-16deg)}70%{transform:translate3d(38vw,-104px,0) rotate(-20deg)}100%{transform:translate3d(58vw,-178px,0) rotate(-24deg)}}
 @keyframes trailPulse{0%,100%{opacity:.3;transform:scaleX(.45)}50%{opacity:.75;transform:scaleX(1)}}
 
 @media(max-width:650px){
@@ -203,7 +202,6 @@ body{background:#070a10}
   .aviator-my-history-field dd{font-size:.69rem}
   .aviator-ticket{grid-column:auto;grid-template-columns:1fr 1fr}
   .aviator-ticket-meta{grid-column:1/-1;justify-content:flex-start}
-  @keyframes aviatorFlight{0%{transform:translate3d(0,0,0) rotate(-13deg)}35%{transform:translate3d(22vw,-34px,0) rotate(-16deg)}70%{transform:translate3d(44vw,-86px,0) rotate(-20deg)}100%{transform:translate3d(64vw,-142px,0) rotate(-24deg)}}
 }
 
 
@@ -211,11 +209,12 @@ body{background:#070a10}
 .aviator-low-power .flight-area::after{display:none}
 .aviator-low-power .plane{filter:none}
 .aviator-low-power .aviator-stage.is-open .plane{animation:none}
-.aviator-low-power .aviator-stage.is-flying .plane{animation-duration:5.6s}
+.aviator-low-power .aviator-stage.is-flying .plane{transition-duration:.24s}
 .aviator-low-power .multiplier{transition:none}
 
 @media(prefers-reduced-motion:reduce){
   .plane,.aviator-stage.is-open .plane,.aviator-stage.is-flying .plane,.aviator-stage.is-flying .flight-area::after,.aviator-stage.is-crashed .crash-text:not(.hidden){animation:none!important}
+  .aviator-stage.is-flying .plane{transition:none!important}
 }
 
 /* Interface compacta: prioridade ao jogo, não a textos explicativos. */
