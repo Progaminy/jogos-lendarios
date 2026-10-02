@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0a0d14">
   <title>Aviator Lendário — Jogos Lendários</title>
   <link rel="stylesheet" href="./styles.css?v=20260929">
-  <link rel="stylesheet" href="./aviator.css?v=20261002-2">
+  <link rel="stylesheet" href="./aviator.css?v=20261002-3">
 </head>
 <body>
   <header class="topbar">
@@ -23,9 +23,9 @@
     <div id="aviatorConnectionBanner" class="aviator-connection-banner hidden" role="status" aria-live="polite">Sem ligação. Cash-out indisponível até reconectar.</div>
 
     <section id="aviatorHistoryCard" class="aviator-history aviator-history-top card" aria-label="Multiplicadores recentes">
-      <div class="aviator-history-summary">
-        <span>Últimos multiplicadores</span>
-        <small id="historyStatus">A carregar…</small>
+      <div class="aviator-history-summary aviator-visually-quiet">
+        <span class="sr-only">Últimos multiplicadores</span>
+        <small id="historyStatus" class="sr-only">A carregar…</small>
       </div>
       <div id="aviatorHistory" class="aviator-history-strip" aria-live="polite"></div>
     </section>
@@ -53,14 +53,14 @@
         <div id="preflight" class="preflight">
           <span id="preflightLabel">DESCOLAGEM EM</span>
           <strong id="preflightCountdown" class="countdown-value">—</strong>
-          <small id="preflightHint">Contagem em segundos</small>
+          <small id="preflightHint" class="sr-only">Contagem em segundos</small>
         </div>
 
         <div id="plane" class="plane" aria-hidden="true">✈</div>
 
         <div id="multiplierWrap" class="multiplier-wrap hidden">
           <strong id="multiplier" class="multiplier">1.00×</strong>
-          <small id="flightHint">RETIRE ANTES DO CRASH</small>
+          <small id="flightHint" class="sr-only">Retire antes do crash</small>
         </div>
 
         <div id="crashText" class="crash-text hidden">
@@ -81,38 +81,38 @@
 
     <section class="aviator-controls">
       <div class="aviator-bet-panel" data-slot="1">
-        <div class="aviator-bet-panel-head">
+        <div class="aviator-bet-panel-head sr-only">
           <strong>Aposta 1</strong>
         </div>
 
         <form id="aviatorBetForm">
           <label class="field">
-            <span>Valor da aposta</span>
+            <span class="sr-only">Valor da aposta</span>
             <div class="money-input">
               <span>MZN</span>
-              <input id="aviatorAmount" type="number" min="0.5" max="500" step="0.01" value="10" inputmode="decimal" required>
+              <input aria-label="Valor da aposta 1" id="aviatorAmount" type="number" min="0.5" max="500" step="0.01" value="10" inputmode="decimal" required>
             </div>
           </label>
           <label class="field">
-            <span>Cash-out automático <small>(opcional)</small></span>
+            <span class="sr-only">Cash-out automático</span>
             <div class="money-input">
               <span>×</span>
-              <input id="aviatorAutoCashout" type="number" min="1.01" step="0.01" placeholder="1.50" inputmode="decimal">
+              <input aria-label="Cash-out automático da aposta 1" id="aviatorAutoCashout" type="number" min="1.01" step="0.01" placeholder="1.50" inputmode="decimal">
             </div>
           </label>
           <label class="aviator-auto-bet-toggle">
             <input id="aviatorAutoBet" type="checkbox">
             <span>Auto apostar</span>
-            <small id="aviatorAutoBetStatus">Desligado</small>
+            <small id="aviatorAutoBetStatus" class="sr-only">Desligado</small>
           </label>
           <div class="aviator-primary-action-slot">
             <div class="aviator-bet-action">
               <button id="betBtn" class="button primary large" type="submit" aria-describedby="betActionStatus">Apostar</button>
-              <small id="betActionStatus" class="aviator-bet-action-status" aria-live="polite">Disponível</small>
+              <small id="betActionStatus" class="aviator-bet-action-status sr-only" aria-live="polite">Disponível</small>
             </div>
             <div id="cashoutAction" class="aviator-cashout-action hidden">
               <button id="cashoutBtn" class="button success large" type="button" aria-describedby="cashoutActionStatus" disabled>Cash-out</button>
-              <small id="cashoutActionStatus" class="aviator-cashout-action-status" aria-live="polite">Disponível durante o voo</small>
+              <small id="cashoutActionStatus" class="aviator-cashout-action-status sr-only" aria-live="polite">Disponível durante o voo</small>
             </div>
           </div>
         </form>
@@ -150,38 +150,38 @@
       </div>
 
       <div class="aviator-bet-panel" data-slot="2">
-        <div class="aviator-bet-panel-head">
+        <div class="aviator-bet-panel-head sr-only">
           <strong>Aposta 2</strong>
         </div>
 
         <form id="aviatorBetForm2">
           <label class="field">
-            <span>Valor da aposta</span>
+            <span class="sr-only">Valor da aposta</span>
             <div class="money-input">
               <span>MZN</span>
-              <input id="aviatorAmount2" type="number" min="0.5" max="500" step="0.01" value="10" inputmode="decimal" required>
+              <input aria-label="Valor da aposta 2" id="aviatorAmount2" type="number" min="0.5" max="500" step="0.01" value="10" inputmode="decimal" required>
             </div>
           </label>
           <label class="field">
-            <span>Cash-out automático <small>(opcional)</small></span>
+            <span class="sr-only">Cash-out automático</span>
             <div class="money-input">
               <span>×</span>
-              <input id="aviatorAutoCashout2" type="number" min="1.01" step="0.01" placeholder="1.50" inputmode="decimal">
+              <input aria-label="Cash-out automático da aposta 2" id="aviatorAutoCashout2" type="number" min="1.01" step="0.01" placeholder="1.50" inputmode="decimal">
             </div>
           </label>
           <label class="aviator-auto-bet-toggle">
             <input id="aviatorAutoBet2" type="checkbox">
             <span>Auto apostar</span>
-            <small id="aviatorAutoBetStatus2">Desligado</small>
+            <small id="aviatorAutoBetStatus2" class="sr-only">Desligado</small>
           </label>
           <div class="aviator-primary-action-slot">
             <div class="aviator-bet-action aviator-bet-action-2">
               <button id="betBtn2" class="button primary large" type="submit" aria-describedby="betActionStatus2">Apostar</button>
-              <small id="betActionStatus2" class="aviator-bet-action-status" aria-live="polite">Disponível</small>
+              <small id="betActionStatus2" class="aviator-bet-action-status sr-only" aria-live="polite">Disponível</small>
             </div>
             <div id="cashoutAction2" class="aviator-cashout-action hidden">
               <button id="cashoutBtn2" class="button success large" type="button" aria-describedby="cashoutActionStatus2" disabled>Cash-out</button>
-              <small id="cashoutActionStatus2" class="aviator-cashout-action-status" aria-live="polite">Disponível durante o voo</small>
+              <small id="cashoutActionStatus2" class="aviator-cashout-action-status sr-only" aria-live="polite">Disponível durante o voo</small>
             </div>
           </div>
         </form>
