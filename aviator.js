@@ -69,6 +69,22 @@ const sound=window.JLAviatorSound?.create({
 const haptics=window.JLAviatorHaptics?.create({
   button:$('#aviatorVibrationToggle')
 })||null;
+const nextBet=window.JLAviatorNextBet?.create({
+  slot:1,
+  $,
+  playerToken,
+  getRound:()=>round,
+  isEnabled:()=>enabled,
+  isOnline:()=>connectionOnline,
+  isBusy:()=>betting,
+  hasActiveBet:()=>Boolean(myBet),
+  playerMessage,
+  form:$('#aviatorBetForm'),
+  onMessage:text=>{
+    const el=$('#aviatorMessage');
+    if(el)el.textContent=String(text||'');
+  }
+})||null;
 const p2=window.JLAviatorBetPanel?.create({$,financial,playerToken,
   getRound:()=>round,isEnabled:()=>enabled,isOnline:()=>connectionOnline,
   multiplier:mul,secondsToClose,money,moneyCompact,playerMessage,sound,personalHistory,
@@ -254,47 +270,49 @@ function updateRoundClock(){
     const display=seconds===null?'—':String(seconds);
     const closed=round?.betting_open===false||seconds===0;
 
+    const queued=Boolean(nextBet?.hasQueued?.());
     $('#roundState').textContent=closed?'APOSTAS FECHADAS':'APOSTAS ABERTAS';
     $('#clockLabel').textContent=closed?'AGUARDE':'APOSTE';
-    $('#roundCountdown').textContent=display;
+    $('#roundCountdown').textContent=closed?'FECHADO':'ABERTO';
     $('#preflightLabel').textContent=closed?'AGUARDE':'APOSTE';
     $('#preflightCountdown').textContent=display;
     $('#preflightHint').textContent='Contagem em segundos';
 
     const inputsLocked=
-      !enabled||!connectionOnline||Boolean(myBet)||betting||closed;
+      !enabled||!connectionOnline||Boolean(myBet)||queued||betting||closed;
     setBetInputsLocked(inputsLocked);
 
     renderBetAction(
       inputsLocked,
       myBet
         ?'Aposta confirmada'
-        :closed
-          ?'Apostas fechadas'
-          :'Disponível',
-      myBet?'Foi apostado':'Apostar',
-      myBet?'confirmed':'bet'
+        :queued
+          ?'A enviar aposta'
+          :closed
+            ?'Apostas fechadas'
+            :'Disponível',
+      myBet||queued?'Foi apostado':'Apostar',
+      myBet||queued?'confirmed':'bet'
     );
+    if(!closed)nextBet?.schedule?.();
     return;
   }
 
   if(round?.status==='LOCKED'){
     $('#roundState').textContent='APOSTAS FECHADAS';
-    $('#clockLabel').textContent='AGUARDE';
-    $('#roundCountdown').textContent='0';
-    $('#preflightLabel').textContent='AGUARDE';
-    $('#preflightCountdown').textContent='0';
-    $('#preflightHint').textContent='Bloqueio de segurança';
+    $('#clockLabel').textContent='PREPARANDO';
+    $('#roundCountdown').textContent='—';
+    $('#preflightLabel').textContent='PREPARANDO';
+    $('#preflightCountdown').textContent='';
+    $('#preflightHint').textContent='Preparação segura do voo';
     return;
   }
 
   if(round?.status==='CRASHED'||round?.status==='SETTLED'){
-    const seconds=secondsToNextRound();
-    const display=seconds===null?'—':String(seconds)+'s';
-    $('#clockLabel').textContent='NOVA RODADA EM';
-    $('#roundCountdown').textContent=display;
+    $('#clockLabel').textContent='AGUARDE';
+    $('#roundCountdown').textContent='—';
     const next=$('#nextRoundSeconds');
-    if(next)next.textContent=display;
+    if(next)next.textContent='';
     return;
   }
 
@@ -679,6 +697,7 @@ function renderOpen(){
   if(myBet&&!$('#aviatorMessage').textContent.trim()){
     $('#aviatorMessage').textContent='Aposta confirmada.';
   }
+  nextBet?.schedule?.();
   scheduleAutoBetForOpenRound();
 }
 
@@ -691,7 +710,7 @@ function renderLocked(){
   updateRoundClock();
   startOpenUiTick();
 
-  show('#preflight',true);
+  show('#preflight',false);
   show('#multiplierWrap',false);
   show('#crashText',false);
 
@@ -725,17 +744,23 @@ function renderFlying(){
   show('#multiplierWrap',true);
   show('#crashText',false);
 
-  setBetInputsLocked(true);
+  const queued=Boolean(nextBet?.hasQueued?.());
+  const canQueue=enabled&&connectionOnline&&!myBet&&!queued&&!betting;
+  setBetInputsLocked(!canQueue);
   renderAutoBetStatus();
   renderBetAction(
-    true,
-    myBet?'Aposta em voo':'Voo em curso',
-    myBet?'Foi apostado':'Aguarde',
-    myBet?'confirmed':'locked',
+    !canQueue,
+    myBet
+      ?'Aposta em voo'
+      :queued
+        ?'Aposta registada para a próxima rodada'
+        :'Aposte para a próxima rodada',
+    myBet||queued?'Foi apostado':'Apostar',
+    myBet||queued?'confirmed':'bet',
     Boolean(myBet)
   );
 
-  if(!myBet&&/^Aposta confirmada/i.test($('#aviatorMessage')?.textContent||'')){
+  if(!myBet&&!queued&&/^Aposta confirmada/i.test($('#aviatorMessage')?.textContent||'')){
     $('#aviatorMessage').textContent='';
   }
 
@@ -770,6 +795,7 @@ function renderFinished(){
   show('#preflight',false);
   show('#multiplierWrap',false);
   show('#crashText',true);
+  show('#nextRoundCountdown',false);
 
   setBetInputsLocked(true);
   renderAutoBetStatus();
@@ -1049,6 +1075,7 @@ async function state(){
       fairnessProofData=null;
       fairnessProofBusy=false;
       p2?.onRoundChanged();
+      nextBet?.resetRound?.();
       myBet=null;
       myStake=0;
       myAutoCashout=null;
@@ -1117,6 +1144,18 @@ $('#aviatorBetForm').addEventListener('submit',async e=>{
   e.preventDefault();
   if(betting)return;
 
+  if(round?.status!=='OPEN'){
+    if(['FLYING','CRASHED','SETTLED'].includes(round?.status)){
+      nextBet?.queue?.();
+      renderCurrentRound();
+      return;
+    }
+    $('#aviatorMessage').textContent='Apostas fechadas.';
+    renderCurrentRound();
+    return;
+  }
+
+  const queuedTriggered=Boolean(nextBet?.isSubmitting?.(round?.id));
   const autoTriggered=
     autoBetSubmittingRoundId===Number(round?.id);
   betting=true;
@@ -1163,11 +1202,13 @@ $('#aviatorBetForm').addEventListener('submit',async e=>{
     renderTicket();
     renderBetConfirmation();
 
+    if(queuedTriggered)nextBet?.consume?.(round?.id);
     $('#aviatorMessage').textContent=autoTriggered
       ?'Aposta automática confirmada para esta rodada.'
       :'Aposta confirmada. Aguarde o voo.';
     renderAutoBetStatus();
   }catch(e){
+    if(queuedTriggered)nextBet?.fail?.(round?.id);
     $('#aviatorMessage').textContent=playerMessage(e,'Não foi possível confirmar a aposta.');
   }finally{
     if(autoBetSubmittingRoundId===Number(round?.id)){
