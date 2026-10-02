@@ -4,6 +4,7 @@ set -euo pipefail
 : "${JL_TEST_DATABASE_URL:?Defina JL_TEST_DATABASE_URL para uma base descartavel.}"
 
 PSQL=(psql "$JL_TEST_DATABASE_URL" -X -qAt -v ON_ERROR_STOP=1)
+
 PHONE_LOW='25899061261'
 TOKEN_LOW='aviator-point61-low'
 PHONE_EXACT='25899061262'
@@ -18,20 +19,27 @@ where status in ('OPEN','LOCKED','FLYING','CRASHED');
 
 delete from public.jl_aviator_bets
 where player_id in (
-  select id from public.players where phone in ('$PHONE_LOW','$PHONE_EXACT')
+  select id
+  from public.players
+  where phone in ('$PHONE_LOW','$PHONE_EXACT')
 );
 
 delete from public.transactions
 where player_id in (
-  select id from public.players where phone in ('$PHONE_LOW','$PHONE_EXACT')
+  select id
+  from public.players
+  where phone in ('$PHONE_LOW','$PHONE_EXACT')
 );
 
 delete from public.player_sessions
 where player_id in (
-  select id from public.players where phone in ('$PHONE_LOW','$PHONE_EXACT')
+  select id
+  from public.players
+  where phone in ('$PHONE_LOW','$PHONE_EXACT')
 );
 
-delete from public.players where phone in ('$PHONE_LOW','$PHONE_EXACT');
+delete from public.players
+where phone in ('$PHONE_LOW','$PHONE_EXACT');
 SQL
 }
 trap cleanup EXIT
@@ -45,11 +53,12 @@ set enabled=true,
 where id=true;
 
 insert into public.players(name,phone,pin_hash,balance)
-values('AVIATOR POINT61 INSUFFICIENT','$PHONE','ci-only',9);
+values('AVIATOR POINT61 INSUFFICIENT','$PHONE_LOW','ci-only',9);
 
 insert into public.player_sessions(player_id,token_hash,expires_at)
-select id,public.jl_token_hash('$TOKEN'),now()+interval '1 hour'
-from public.players where phone in ('$PHONE_LOW','$PHONE_EXACT');
+select id,public.jl_token_hash('$TOKEN_LOW'),now()+interval '1 hour'
+from public.players
+where phone='$PHONE_LOW';
 SQL
 
 round_1=$("${PSQL[@]}" -c "
@@ -65,7 +74,7 @@ returning id;
 ")
 
 # Fase A: saldo 9 MZN; duas apostas simultâneas de 10 MZN.
-# Ambas precisam falhar por saldo insuficiente e não deixar efeitos parciais.
+# Ambas precisam falhar e nenhuma pode produzir débito/aposta parcial.
 set +e
 "${PSQL[@]}" -c "
 select public.jl_aviator_place_bet(
@@ -106,13 +115,18 @@ grep -q "Saldo insuficiente" /tmp/aviator-point61-b.err || {
 
 phase_a=$("${PSQL[@]}" -c "
 select
-  (select balance::text from public.players where phone in ('$PHONE_LOW','$PHONE_EXACT'))||':'||
-  (select count(*) from public.jl_aviator_bets b
-    join public.players p on p.id=b.player_id
-    where p.phone in ('$PHONE_LOW','$PHONE_EXACT'))||':'||
-  (select count(*) from public.transactions t
-    join public.players p on p.id=t.player_id
-    where p.phone in ('$PHONE_LOW','$PHONE_EXACT') and t.kind='aviator_bet');
+  (select balance::text
+     from public.players
+    where phone='$PHONE_LOW')||':'||
+  (select count(*)
+     from public.jl_aviator_bets b
+     join public.players p on p.id=b.player_id
+    where p.phone='$PHONE_LOW')||':'||
+  (select count(*)
+     from public.transactions t
+     join public.players p on p.id=t.player_id
+    where p.phone='$PHONE_LOW'
+      and t.kind='aviator_bet');
 ")
 
 [[ "$phase_a" == "9.00:0:0" || "$phase_a" == "9:0:0" ]] || {
@@ -120,9 +134,10 @@ select
   exit 1
 }
 
-# Fecha a rodada sem apostas e usa outro jogador que já nasce com saldo
-# exato de 10 MZN, mantendo cache e ledger reconciliados.
-"${PSQL[@]}" -c "
+# Encerra a primeira rodada e cria outro jogador que nasce com exatamente
+# 10 MZN. O próprio insert do jogador cria o lançamento inicial reconciliado
+# no ledger, sem ajuste artificial de balance.
+"${PSQL[@]}" <<SQL
 update public.jl_aviator_rounds
 set status='CANCELLED',
     settled_at=clock_timestamp()
@@ -133,8 +148,9 @@ values('AVIATOR POINT61 EXACT','$PHONE_EXACT','ci-only',10);
 
 insert into public.player_sessions(player_id,token_hash,expires_at)
 select id,public.jl_token_hash('$TOKEN_EXACT'),now()+interval '1 hour'
-from public.players where phone='$PHONE_EXACT';
-" >/dev/null
+from public.players
+where phone='$PHONE_EXACT';
+SQL
 
 round_2=$("${PSQL[@]}" -c "
 insert into public.jl_aviator_rounds(
@@ -149,7 +165,7 @@ returning id;
 ")
 
 # Fase B: saldo exatamente 10 MZN; duas apostas simultâneas de 10 MZN.
-# Só uma pode consumir o saldo. A outra deve ser bloqueada, e o saldo nunca < 0.
+# O lock da carteira deve permitir um único débito.
 set +e
 "${PSQL[@]}" -c "
 select public.jl_aviator_place_bet(
@@ -198,29 +214,36 @@ fi
 
 phase_b=$("${PSQL[@]}" -c "
 select
-  (select balance::text from public.players where phone in ('$PHONE_LOW','$PHONE_EXACT'))||':'||
-  (select count(*) from public.jl_aviator_bets b
-    join public.players p on p.id=b.player_id
-    where p.phone in ('$PHONE_LOW','$PHONE_EXACT') and b.round_id='$round_2')||':'||
-  (select count(*) from public.transactions t
-    join public.players p on p.id=t.player_id
-    where p.phone in ('$PHONE_LOW','$PHONE_EXACT')
+  (select balance::text
+     from public.players
+    where phone='$PHONE_EXACT')||':'||
+  (select count(*)
+     from public.jl_aviator_bets b
+     join public.players p on p.id=b.player_id
+    where p.phone='$PHONE_EXACT'
+      and b.round_id='$round_2')||':'||
+  (select count(*)
+     from public.transactions t
+     join public.players p on p.id=t.player_id
+    where p.phone='$PHONE_EXACT'
       and t.kind='aviator_bet'
       and t.aviator_operation='BET')||':'||
-  (select (balance>=0)::text from public.players where phone in ('$PHONE_LOW','$PHONE_EXACT'))||':'||
-  (select (
-      exists(
-        select 1
-        from public.jl_aviator_bets b
-        join public.players p on p.id=b.player_id
-        join public.transactions t
-          on t.aviator_bet_id=b.id
-         and t.aviator_operation='BET'
-        where p.phone in ('$PHONE_LOW','$PHONE_EXACT')
-          and b.round_id='$round_2'
-          and t.amount=-b.stake
-      )
-    )::text);
+  (select (balance>=0)::text
+     from public.players
+    where phone='$PHONE_EXACT')||':'||
+  (
+    select exists(
+      select 1
+      from public.jl_aviator_bets b
+      join public.players p on p.id=b.player_id
+      join public.transactions t
+        on t.aviator_bet_id=b.id
+       and t.aviator_operation='BET'
+      where p.phone='$PHONE_EXACT'
+        and b.round_id='$round_2'
+        and t.amount=-b.stake
+    )::text
+  );
 ")
 
 [[ "$phase_b" == "0.00:1:1:true:true" || "$phase_b" == "0:1:1:true:true" ]] || {
