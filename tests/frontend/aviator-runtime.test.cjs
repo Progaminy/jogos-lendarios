@@ -295,15 +295,15 @@ test('UI do Aviator espelha limites 0.50 a 500 sem ser autoridade financeira',()
 });
 
 
-test('Aviator mostra LOCKED separado do voo e permite Apostar para a próxima sem texto preparar',()=>{
+test('Aviator mostra LOCKED separado do voo e não aceita nova aposta',()=>{
   const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
   assert.match(js,/function renderLocked\(\)/);
   assert.match(js,/round\.status==='LOCKED'/);
   assert.match(js,/APOSTAS FECHADAS/);
   assert.match(js,/AGUARDE/);
-  assert.match(js,/function renderLocked\(\)[\s\S]*?queue-next/);
-  assert.match(js,/queued\?'Cancelar':'Apostar'/);
-  assert.doesNotMatch(js,/Prepare a próxima|Próxima aposta preparada/);
+  const locked=js.match(/function renderLocked\(\)[\s\S]*?function renderFlying/)?.[0]||'';
+  assert.match(locked,/renderBetAction\(\s*true/);
+  assert.doesNotMatch(locked,/nextBet|queue-next|cancel-next|Cancelar/);
   assert.equal(runtime.pollDelay('LOCKED',false,false),1000);
   assert.equal(runtime.phase('LOCKED'),'locked');
 });
@@ -338,7 +338,7 @@ test('confirmação visual usa o valor confirmado pelo servidor antes do voo',()
 });
 
 
-test('termos da aposta confirmada ficam imutáveis e Apostar pode preparar silenciosamente a próxima',()=>{
+test('termos da aposta confirmada ficam imutáveis e não existe fila oculta',()=>{
   const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
   assert.match(js,/function setBetInputsLocked\(locked\)/);
   assert.match(js,/Boolean\(myBet\)\|\|betting\|\|closed/);
@@ -346,8 +346,7 @@ test('termos da aposta confirmada ficam imutáveis e Apostar pode preparar silen
   assert.match(uiSource,/if\(auto\)auto\.disabled=value/);
   assert.match(js,/myStake=Number\(r\.stake\);/);
   assert.match(js,/myAutoCashout=Number\(r\.auto_cashout_multiplier\)\|\|null/);
-  assert.match(js,/function renderLocked\(\)[\s\S]*?nextBet\?\.hasQueued/);
-  assert.match(js,/function renderFlying\(\)[\s\S]*?nextBet\?\.hasQueued/);
+  assert.doesNotMatch(js,/nextBet|queue-next|cancel-next/);
 });
 
 
