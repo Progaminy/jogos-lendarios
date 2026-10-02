@@ -43,3 +43,11 @@ test('painel 2 mantém preparação independente da próxima aposta',()=>{
   assert.match(secondary,/scheduleQueuedNextBet\(\)/);
   assert.match(secondary,/Próxima aposta preparada/);
 });
+
+
+test('botão da próxima rodada continua escrito Apostar',()=>{
+  assert.match(primary,/queued\?'Cancelar próxima':'Apostar'/);
+  assert.match(secondary,/label:queuedNextBet\?'Cancelar próxima':'Apostar'/);
+  assert.doesNotMatch(primary,/'Preparar próxima'/);
+  assert.doesNotMatch(secondary,/'Preparar próxima'/);
+});
