@@ -9,6 +9,12 @@ TOKEN="aviator-point63-restart"
 
 cleanup() {
   "${PSQL[@]}" <<'SQL' >/dev/null 2>&1 || true
+update public.jl_aviator_settings
+set enabled=false,
+    one_round_test=false,
+    updated_at=clock_timestamp()
+where id=true;
+
 update public.jl_aviator_rounds
 set status='CANCELLED',
     settled_at=coalesce(settled_at,clock_timestamp())
@@ -37,7 +43,7 @@ cleanup
 
 "${PSQL[@]}" <<'SQL'
 update public.jl_aviator_settings
-set enabled=true,
+set enabled=false,
     one_round_test=false,
     updated_at=clock_timestamp()
 where id=true;
@@ -58,12 +64,23 @@ from public.players where phone='25899061263';
 SQL
 
 round_id=$("${PSQL[@]}" -c "
+with engine_lock as (
+  select pg_advisory_xact_lock(hashtext('jl_aviator_engine_tick'))
+),
+enabled as (
+  update public.jl_aviator_settings
+  set enabled=true,
+      one_round_test=false,
+      updated_at=clock_timestamp()
+  where id=true
+  returning 1
+)
 insert into public.jl_aviator_rounds(status,betting_closes_at,takeoff_at)
-values(
+select
   'OPEN',
   clock_timestamp()+interval '30 seconds',
   clock_timestamp()+interval '33 seconds'
-)
+from engine_lock,enabled
 returning id;
 ")
 
