@@ -14,6 +14,7 @@ const admin=read('admin.js');
 const engine=read('js/aviator/engine.js');
 const ui=read('js/aviator/ui.js');
 const financial=read('js/aviator/financial.js');
+const betPanel=read('js/aviator/bet-panel.js');
 const history=read('js/aviator/history.js');
 const aviatorAdmin=read('js/aviator/admin.js');
 const manifest=JSON.parse(read('games/manifest.json'));
@@ -23,6 +24,7 @@ test('Aviator carrega módulos próprios antes do orquestrador',()=>{
     'js/aviator/engine.js',
     'js/aviator/ui.js',
     'js/aviator/financial.js',
+    'js/aviator/bet-panel.js',
     'js/aviator/history.js',
     'aviator.js'
   ].map(x=>html.indexOf(x));
@@ -51,6 +53,14 @@ test('financeiro contém cash-out/idempotência e não renderiza DOM',()=>{
   assert.match(financial,/jl_aviator_bet_status/);
   assert.match(financial,/cashoutRequestKey/);
   assert.doesNotMatch(financial,/querySelector|innerHTML|textContent|classList/);
+});
+
+test('painel secundário é módulo próprio e usa financeiro sem duplicar RPC bruto',()=>{
+  assert.match(betPanel,/JLAviatorBetPanel/);
+  assert.match(betPanel,/financial\.placeBetSlot/);
+  assert.match(betPanel,/financial\.requestFinancialCashout/);
+  assert.match(betPanel,/financial\.cancelBet/);
+  assert.doesNotMatch(betPanel,/JLApi\.rpc|jl_aviator_cashout|jl_aviator_place_bet_slot/);
 });
 
 test('histórico é módulo próprio e isolado do financeiro',()=>{
@@ -86,6 +96,7 @@ test('manifesto registra bundles e admin próprios do Aviator',()=>{
     './js/aviator/engine.js',
     './js/aviator/ui.js',
     './js/aviator/financial.js',
+    './js/aviator/bet-panel.js',
     './js/aviator/history.js'
   ]) assert.ok(game.assets.includes(asset));
   assert.deepEqual(game.adminAssets,['./js/aviator/admin.js']);
