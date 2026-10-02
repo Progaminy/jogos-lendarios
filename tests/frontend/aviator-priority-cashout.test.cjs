@@ -30,12 +30,12 @@ test('voo com aposta ativa recebe prioridade visual forte',()=>{
   assert.match(ui,/const priority=Boolean\(active\)&&!disabled&&!pending/);
   assert.match(ui,/wrap\.classList\.toggle\('is-priority',priority\)/);
   assert.match(css,/\.aviator-cashout-action\.is-priority #cashoutBtn:not\(:disabled\)/);
-  assert.match(css,/background:#36c979/);
-  assert.match(css,/box-shadow:0 0 0 2px rgba\(78,213,138,\.28\),0 14px 34px rgba\(78,213,138,\.24\)/);
+  assert.match(css,/background:#d83b42!important/);
+  assert.match(css,/box-shadow:0 0 0 2px rgba\(216,59,66,\.25\),0 14px 34px rgba\(216,59,66,\.22\)!important/);
 });
 
-test('cash-out mostra multiplicador e retorno estimado apenas como apresentação',()=>{
-  assert.match(ui,/'Cash-out · '\+money\(s\*m\)/);
+test('Sacar mantém cálculo estimado fora do texto principal do botão',()=>{
+  assert.match(ui,/active\?'Sacar':'Sacar'/);
   assert.match(ui,/moneyCompact\(s\)\+' × '\+m\.toFixed\(2\)\+' = '\+money\(s\*m\)/);
   assert.doesNotMatch(ui,/JLApi\.rpc|jl_aviator_cashout|payout_transaction/);
 });
