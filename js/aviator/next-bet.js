@@ -70,7 +70,7 @@
 
       if(action==='cancel-next'){
         save(null);
-        onMessage?.('Próxima aposta cancelada.');
+        onMessage?.('');
         return true;
       }
 
