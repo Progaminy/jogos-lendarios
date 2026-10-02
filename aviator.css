@@ -686,3 +686,19 @@ body>.topbar .brand{font-size:1rem}
     padding-right:2px
   }
 }
+
+
+/* Contagem principal: número puro, grande e estável de 10 a 0. */
+.preflight .countdown-value{
+  font-size:clamp(4rem,15vw,7rem);
+  font-weight:950;
+  line-height:.92;
+  letter-spacing:-.04em;
+  font-variant-numeric:tabular-nums;
+  text-align:center
+}
+@media(max-width:650px){
+  .preflight .countdown-value{
+    font-size:clamp(4rem,22vw,6.8rem)
+  }
+}
