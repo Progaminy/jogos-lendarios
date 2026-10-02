@@ -25,17 +25,18 @@ test('cliente Supabase está fixado e carrega antes do controlador',()=>{
   assert.ok(controller>realtime);
 });
 
-test('Realtime saudável reduz polling a 30s/60s',()=>{
-  assert.equal(runtime.pollDelay('FLYING',false,true),120000);
-  assert.equal(runtime.pollDelay('OPEN',false,true),120000);
+test('Realtime saudável mantém fallback rápido nas transições críticas',()=>{
+  assert.equal(runtime.pollDelay('FLYING',false,true),15000);
+  assert.equal(runtime.pollDelay('OPEN',false,true),750);
+  assert.equal(runtime.pollDelay('SETTLED',false,true),750);
   assert.equal(runtime.pollDelay('FLYING',true,true),300000);
 });
 
-test('fallback sem WebSocket não volta ao polling agressivo antigo',()=>{
+test('fallback sem WebSocket não perde a janela curta de apostas',()=>{
   assert.equal(runtime.pollDelay('FLYING',false,false),3000);
-  assert.equal(runtime.pollDelay('LOCKED',false,false),3000);
-  assert.equal(runtime.pollDelay('OPEN',false,false),5000);
-  assert.equal(runtime.pollDelay('SETTLED',false,false),15000);
+  assert.equal(runtime.pollDelay('LOCKED',false,false),1000);
+  assert.equal(runtime.pollDelay('OPEN',false,false),750);
+  assert.equal(runtime.pollDelay('SETTLED',false,false),750);
 });
 
 test('multiplicador visual interpola fórmula do servidor sem decidir cash-out',()=>{
@@ -59,6 +60,6 @@ test('controller recebe estado Realtime e mantém polling somente como reconcili
   const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
   assert.match(js,/async function applyRealtimeSnapshot\(x\)/);
   assert.match(js,/startRealtime\(\)/);
-  assert.match(js,/scheduleState\(120000\)/);
+  assert.match(js,/if\(connected\)[\s\S]*?scheduleState\(\)/);
   assert.match(js,/syncServerClock\(x\)/);
 });
