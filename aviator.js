@@ -169,6 +169,7 @@ function stopFlight(){
   }
   lastFlightPaintAt=0;
   lastFlightHudAt=0;
+  ui.resetPlaneFlight?.();
 }
 
 function multiplierTier(value){return ui.multiplierTier(value);}
@@ -366,6 +367,7 @@ function paintFlight(timestamp=performance.now()){
 
   const m=mul();
   renderMultiplier(m);
+  ui.renderPlaneFlight?.(m,timestamp);
 
   if(timestamp-lastFlightHudAt<visualPerformance.hudIntervalMs)return;
   lastFlightHudAt=timestamp;
