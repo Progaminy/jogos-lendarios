@@ -51,7 +51,7 @@
     if(status==='OPEN')return 750;
     if(status==='LOCKED')return 1000;
     if(status==='CRASHED'||status==='SETTLED'||!status)return 750;
-    if(status==='FLYING')return realtimeConnected?15000:3000;
+    if(status==='FLYING')return 250;
     return 1000;
   }
 
