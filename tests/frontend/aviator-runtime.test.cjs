@@ -93,18 +93,15 @@ test('controlador usa Broadcast como caminho principal e polling apenas como fal
   assert.match(js,/if\(connected\)[\s\S]*?scheduleState\(\)/);
 });
 
-test('HTML mantém histórico e bilhete ao vivo com ids estáveis',()=>{
+test('HTML mantém histórico e remove a fileira redundante de aposta/retorno',()=>{
   const html=fs.readFileSync(path.join(__dirname,'../../aviator.html'),'utf8');
-  for(const id of [
-    'aviatorHistory',
-    'historyStatus',
-    'activeBetPanel',
-    'activeBetStake',
-    'activeBetMultiplier',
-    'activeBetPayout'
-  ]){
-    assert.match(html,new RegExp('id="'+id+'"'));
-  }
+  assert.match(html,/id="aviatorHistory"/);
+  assert.match(html,/id="historyStatus"/);
+  assert.doesNotMatch(html,/id="activeBetPanel2?"/);
+  assert.doesNotMatch(html,/id="activeBetStake2?"/);
+  assert.doesNotMatch(html,/id="activeBetMultiplier2?"/);
+  assert.doesNotMatch(html,/id="activeBetPayout2?"/);
+  assert.doesNotMatch(html,/id="activeBetAuto2?"/);
 });
 
 test('controlador busca histórico em RPC separado do estado de voo',()=>{
@@ -313,7 +310,7 @@ test('auto cash-out e opcional na UI mas executado pelo servidor',()=>{
   const html=fs.readFileSync(path.join(__dirname,'../../aviator.html'),'utf8');
   const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
   assert.match(html,/id="aviatorAutoCashout"[^>]*min="1\.01"[^>]*step="0\.01"/);
-  assert.match(html,/id="activeBetAuto"/);
+  assert.doesNotMatch(html,/id="activeBetAuto"/);
   assert.match(financialSource,/p_auto_cashout_multiplier:autoCashoutMultiplier/);
   assert.match(js,/myAutoCashout=Number\(r\.auto_cashout_multiplier\)\|\|null/);
   assert.match(js,/Cash-out automático/);
