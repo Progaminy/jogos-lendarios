@@ -34,6 +34,7 @@
     let autoBetEnabled=sessionStorage.getItem('jl_aviator_auto_bet_v1_slot_'+slot)==='1';
     let autoBetAttemptedRoundId=null;
     let autoBetSubmittingRoundId=null;
+    let betResultTimer=0;
 
     const round=()=>getRound?.()||null;
     const online=()=>Boolean(isOnline?.());
@@ -152,6 +153,8 @@
     }
 
     function renderResult(result=null){
+      clearTimeout(betResultTimer);
+      betResultTimer=0;
       const panel=$('#betResultPanel'+suffix);
       const icon=$('#betResultIcon'+suffix);
       const label=$('#betResultLabel'+suffix);
@@ -181,6 +184,11 @@
         detail.textContent=Number.isFinite(payout)
           ?'Recebido '+money(payout)+(Number.isFinite(resultMultiplier)?' · '+resultMultiplier.toFixed(2)+'×':'')
           :'Cash-out confirmado';
+        betResultTimer=setTimeout(()=>{
+          panel.classList.add('hidden');
+          panel.removeAttribute('data-result');
+          betResultTimer=0;
+        },3000);
       }else if(status==='LOST'){
         panel.classList.add('is-lost');
         panel.dataset.result='lost';
