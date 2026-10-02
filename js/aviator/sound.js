@@ -14,7 +14,7 @@
 
     function updateButton(){
       if(!button)return;
-      button.textContent=enabled?'🔊 Som':'🔇 Som';
+      button.textContent=enabled?'🔊':'🔇';
       button.setAttribute('aria-pressed',enabled?'true':'false');
       button.setAttribute('aria-label',enabled?'Desativar som do Aviator':'Ativar som do Aviator');
       button.title=enabled?'Desativar som':'Ativar som';
