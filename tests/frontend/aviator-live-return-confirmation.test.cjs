@@ -24,7 +24,9 @@ test('confirmed bet no longer falls back to Apostar after the window closes',()=
 });
 
 
-test('browser display cannot exceed the 500x server ceiling',()=>{
-  assert.match(runtime,/Math\.min\(500,Math\.max\(1,Math\.pow\(1\.06,seconds\)\)\)/);
+test('browser never advances the multiplier ahead of the server',()=>{
+  assert.match(engine,/round\?\.current_multiplier/);
   assert.match(engine,/Math\.min\(500,value\)/);
+  assert.doesNotMatch(engine,/runtime\.liveMultiplier\(/);
+  assert.match(runtime,/if\(status==='FLYING'\)return 250/);
 });
