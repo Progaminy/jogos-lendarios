@@ -144,6 +144,13 @@ body {
 
 .game-nav a[href*="catalogo"]::before { content: "🎮"; }
 .game-nav a[href*="sorteios"]::before { content: "🎯"; }
+.game-nav a.nav-aviator-symbol::before { content: none; }
+.game-nav a.nav-aviator-symbol > span {
+  display: block;
+  font-size: 1.55rem;
+  line-height: 1;
+  transform: rotate(-8deg);
+}
 .game-nav a[href*="ludo"]::before { content: "🎲"; }
 .game-nav a[href*="playerArea"]::before { content: "👤"; }
 
@@ -197,6 +204,10 @@ body {
 
   .game-nav a::before {
     font-size: 1rem;
+  }
+
+  .game-nav a.nav-aviator-symbol > span {
+    font-size: 1.3rem;
   }
 }
 
