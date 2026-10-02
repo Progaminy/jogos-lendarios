@@ -45,3 +45,11 @@ test('FLYING esconde ação de aposta quando existe cash-out',()=>{
   assert.match(flying,/renderBetAction\([\s\S]*?Boolean\(myBet\)/);
   assert.match(flying,/renderCashoutAction\([\s\S]*?active:Boolean\(myBet\)/);
 });
+
+
+test('mobile mantém os botões dos dois slots dentro da largura disponível',()=>{
+  assert.match(css,/\.aviator-bet-action button,[\s\S]*?\.aviator-cashout-action button\{[\s\S]*?min-width:0;[\s\S]*?max-width:100%;[\s\S]*?white-space:normal/);
+  assert.match(css,/#betBtn2,#cashoutBtn2\{[\s\S]*?min-height:91px/);
+  assert.match(css,/@media\(max-width:650px\)[\s\S]*?#betBtn2,#cashoutBtn2\{[\s\S]*?min-height:77px/);
+  assert.match(css,/overflow-wrap:anywhere/);
+});
