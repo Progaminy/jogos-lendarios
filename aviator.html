@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0a0d14">
   <title>Aviator Lendário — Jogos Lendários</title>
   <link rel="stylesheet" href="./styles.css?v=20260929">
-  <link rel="stylesheet" href="./aviator.css?v=20261002-1">
+  <link rel="stylesheet" href="./aviator.css?v=20261002-2">
 </head>
 <body>
   <header class="topbar">
@@ -80,68 +80,143 @@
     </section>
 
     <section class="aviator-controls">
-      <form id="aviatorBetForm">
-        <label class="field">
-          <span>Valor da aposta</span>
-          <div class="money-input">
-            <span>MZN</span>
-            <input id="aviatorAmount" type="number" min="0.5" max="500" step="0.01" value="10" inputmode="decimal" required>
+      <div class="aviator-bet-panel" data-slot="1">
+        <div class="aviator-bet-panel-head">
+          <strong>Aposta 1</strong>
+        </div>
+
+        <form id="aviatorBetForm">
+          <label class="field">
+            <span>Valor da aposta</span>
+            <div class="money-input">
+              <span>MZN</span>
+              <input id="aviatorAmount" type="number" min="0.5" max="500" step="0.01" value="10" inputmode="decimal" required>
+            </div>
+          </label>
+          <label class="field">
+            <span>Cash-out automático <small>(opcional)</small></span>
+            <div class="money-input">
+              <span>×</span>
+              <input id="aviatorAutoCashout" type="number" min="1.01" step="0.01" placeholder="1.50" inputmode="decimal">
+            </div>
+          </label>
+          <label class="aviator-auto-bet-toggle">
+            <input id="aviatorAutoBet" type="checkbox">
+            <span>Auto apostar</span>
+            <small id="aviatorAutoBetStatus">Desligado</small>
+          </label>
+          <div class="aviator-primary-action-slot">
+            <div class="aviator-bet-action">
+              <button id="betBtn" class="button primary large" type="submit" aria-describedby="betActionStatus">Apostar</button>
+              <small id="betActionStatus" class="aviator-bet-action-status" aria-live="polite">Disponível</small>
+            </div>
+            <div id="cashoutAction" class="aviator-cashout-action hidden">
+              <button id="cashoutBtn" class="button success large" type="button" aria-describedby="cashoutActionStatus" disabled>Cash-out</button>
+              <small id="cashoutActionStatus" class="aviator-cashout-action-status" aria-live="polite">Disponível durante o voo</small>
+            </div>
           </div>
-        </label>
-        <label class="field">
-          <span>Cash-out automático <small>(opcional)</small></span>
-          <div class="money-input">
-            <span>×</span>
-            <input id="aviatorAutoCashout" type="number" min="1.01" step="0.01" placeholder="1.50" inputmode="decimal">
-          </div>
-        </label>
-        <label class="aviator-auto-bet-toggle">
-          <input id="aviatorAutoBet" type="checkbox">
-          <span>Auto apostar</span>
-          <small id="aviatorAutoBetStatus">Desligado</small>
-        </label>
-        <div class="aviator-primary-action-slot">
-          <div class="aviator-bet-action">
-            <button id="betBtn" class="button primary large" type="submit" aria-describedby="betActionStatus">Apostar</button>
-            <small id="betActionStatus" class="aviator-bet-action-status" aria-live="polite">Disponível</small>
-          </div>
-          <div id="cashoutAction" class="aviator-cashout-action hidden">
-            <button id="cashoutBtn" class="button success large" type="button" aria-describedby="cashoutActionStatus" disabled>Cash-out</button>
-            <small id="cashoutActionStatus" class="aviator-cashout-action-status" aria-live="polite">Disponível durante o voo</small>
+        </form>
+
+        <div id="betConfirmation" class="aviator-bet-confirmation hidden" role="status" aria-live="polite">
+          <strong id="betConfirmationText">Aposta confirmada</strong>
+          <small id="betConfirmationAuto" class="hidden"></small>
+        </div>
+
+        <div id="betResultPanel" class="aviator-bet-result hidden" role="status" aria-live="polite" aria-atomic="true">
+          <span id="betResultIcon" class="aviator-bet-result-icon" aria-hidden="true">✓</span>
+          <div class="aviator-bet-result-copy">
+            <small>APOSTA 1</small>
+            <strong id="betResultLabel">GANHA</strong>
+            <span id="betResultDetail"></span>
           </div>
         </div>
-      </form>
 
-      <div id="betConfirmation" class="aviator-bet-confirmation hidden" role="status" aria-live="polite">
-        <strong id="betConfirmationText">Aposta confirmada</strong>
-        <small id="betConfirmationAuto" class="hidden"></small>
+        <div id="activeBetPanel" class="aviator-ticket hidden">
+          <div class="aviator-ticket-main">
+            <span>APOSTA</span>
+            <strong id="activeBetStake">0,00 MZN</strong>
+          </div>
+          <div class="aviator-ticket-main aviator-ticket-return">
+            <span>RETORNO</span>
+            <strong id="activeBetPayout">0,00 MZN</strong>
+          </div>
+          <div class="aviator-ticket-meta">
+            <span id="activeBetMultiplier">—</span>
+            <span id="activeBetAuto">Auto desligado</span>
+          </div>
+        </div>
+
+        <p id="aviatorMessage" class="form-message" aria-live="polite"></p>
       </div>
 
-      <div id="betResultPanel" class="aviator-bet-result hidden" role="status" aria-live="polite" aria-atomic="true">
-        <span id="betResultIcon" class="aviator-bet-result-icon" aria-hidden="true">✓</span>
-        <div class="aviator-bet-result-copy">
-          <small>APOSTA</small>
-          <strong id="betResultLabel">GANHA</strong>
-          <span id="betResultDetail"></span>
+      <div class="aviator-bet-panel" data-slot="2">
+        <div class="aviator-bet-panel-head">
+          <strong>Aposta 2</strong>
         </div>
-      </div>
 
-      <div id="activeBetPanel" class="aviator-ticket hidden">
-        <div class="aviator-ticket-main">
-          <span>APOSTA</span>
-          <strong id="activeBetStake">0,00 MZN</strong>
-        </div>
-        <div class="aviator-ticket-main aviator-ticket-return">
-          <span>RETORNO</span>
-          <strong id="activeBetPayout">0,00 MZN</strong>
-        </div>
-        <div class="aviator-ticket-meta">
-          <span id="activeBetMultiplier">—</span>
-          <span id="activeBetAuto">Auto desligado</span>
-        </div>
-      </div>
+        <form id="aviatorBetForm2">
+          <label class="field">
+            <span>Valor da aposta</span>
+            <div class="money-input">
+              <span>MZN</span>
+              <input id="aviatorAmount2" type="number" min="0.5" max="500" step="0.01" value="10" inputmode="decimal" required>
+            </div>
+          </label>
+          <label class="field">
+            <span>Cash-out automático <small>(opcional)</small></span>
+            <div class="money-input">
+              <span>×</span>
+              <input id="aviatorAutoCashout2" type="number" min="1.01" step="0.01" placeholder="1.50" inputmode="decimal">
+            </div>
+          </label>
+          <label class="aviator-auto-bet-toggle">
+            <input id="aviatorAutoBet2" type="checkbox">
+            <span>Auto apostar</span>
+            <small id="aviatorAutoBetStatus2">Desligado</small>
+          </label>
+          <div class="aviator-primary-action-slot">
+            <div class="aviator-bet-action aviator-bet-action-2">
+              <button id="betBtn2" class="button primary large" type="submit" aria-describedby="betActionStatus2">Apostar</button>
+              <small id="betActionStatus2" class="aviator-bet-action-status" aria-live="polite">Disponível</small>
+            </div>
+            <div id="cashoutAction2" class="aviator-cashout-action hidden">
+              <button id="cashoutBtn2" class="button success large" type="button" aria-describedby="cashoutActionStatus2" disabled>Cash-out</button>
+              <small id="cashoutActionStatus2" class="aviator-cashout-action-status" aria-live="polite">Disponível durante o voo</small>
+            </div>
+          </div>
+        </form>
 
-      <p id="aviatorMessage" class="form-message" aria-live="polite"></p>
+        <div id="betConfirmation2" class="aviator-bet-confirmation hidden" role="status" aria-live="polite">
+          <strong id="betConfirmationText2">Aposta confirmada</strong>
+          <small id="betConfirmationAuto2" class="hidden"></small>
+        </div>
+
+        <div id="betResultPanel2" class="aviator-bet-result hidden" role="status" aria-live="polite" aria-atomic="true">
+          <span id="betResultIcon2" class="aviator-bet-result-icon" aria-hidden="true">✓</span>
+          <div class="aviator-bet-result-copy">
+            <small>APOSTA 2</small>
+            <strong id="betResultLabel2">GANHA</strong>
+            <span id="betResultDetail2"></span>
+          </div>
+        </div>
+
+        <div id="activeBetPanel2" class="aviator-ticket hidden">
+          <div class="aviator-ticket-main">
+            <span>APOSTA</span>
+            <strong id="activeBetStake2">0,00 MZN</strong>
+          </div>
+          <div class="aviator-ticket-main aviator-ticket-return">
+            <span>RETORNO</span>
+            <strong id="activeBetPayout2">0,00 MZN</strong>
+          </div>
+          <div class="aviator-ticket-meta">
+            <span id="activeBetMultiplier2">—</span>
+            <span id="activeBetAuto2">Auto desligado</span>
+          </div>
+        </div>
+
+        <p id="aviatorMessage2" class="form-message" aria-live="polite"></p>
+      </div>
     </section>
 
     <details id="aviatorMyHistoryCard" class="aviator-history aviator-my-history">
@@ -163,12 +238,12 @@
   <script src="./js/aviator/runtime.js?v=20260930-2"></script>
   <script src="./js/aviator/engine.js?v=20261001-2"></script>
   <script src="./js/aviator/ui.js?v=20261002-1"></script>
-  <script src="./js/aviator/financial.js?v=20261002-3"></script>
+  <script src="./js/aviator/financial.js?v=20261002-4"></script>
   <script src="./js/aviator/history.js?v=20261001-1"></script>
   <script src="./js/aviator/personal-history.js?v=20261001-3"></script>
   <script src="./js/aviator/sound.js?v=20261001-1"></script>
   <script src="./js/aviator/haptics.js?v=20261001-1"></script>
   <script src="./js/realtime/aviator.js?v=20260930-1"></script>
-  <script src="./aviator.js?v=20261002-3" defer></script>
+  <script src="./aviator.js?v=20261002-4" defer></script>
 </body>
 </html>
