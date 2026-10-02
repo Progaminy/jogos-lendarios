@@ -281,4 +281,25 @@ select
   exit 1
 }
 
+# A aposta vencedora da fase B precisa ser reembolsada antes de a rodada ser
+# finalizada pelo cleanup, para não contaminar a certificação financeira seguinte.
+bet_id=$("${PSQL[@]}" -c "
+select b.id
+from public.jl_aviator_bets b
+join public.players p on p.id=b.player_id
+where p.phone='$PHONE_EXACT'
+  and b.round_id='$round_2'
+  and b.status='ACTIVE'
+limit 1;
+")
+
+if [[ -n "$bet_id" ]]; then
+  "${PSQL[@]}" -c "
+  select public.jl_aviator_cancel_bet(
+    '$TOKEN_EXACT',
+    $bet_id,
+    'point61-final-refund-'||'$round_2'
+  );
+  " >/dev/null
+fi
 echo "PASS aviator point 61: insufficient simultaneous bets leave no effects; exact-balance race permits one debit only and never goes negative"
