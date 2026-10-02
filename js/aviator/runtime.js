@@ -60,7 +60,7 @@
     const now=Number(serverNowMs);
     if(!Number.isFinite(start)||!Number.isFinite(now))return 1;
     const seconds=Math.max(0,(now-start)/1000);
-    return Math.max(1,Math.pow(1.06,seconds));
+    return Math.min(500,Math.max(1,Math.pow(1.06,seconds)));
   }
 
   function secondsUntil(isoTime,serverNowMs){
