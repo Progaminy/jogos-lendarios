@@ -4,7 +4,7 @@ const test=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 
-test('Aviator aceita valor minimo de 0,50 MZN no cliente',()=>{
+test('Aviator aceita valor minimo de 0,50 no cliente',()=>{
   const html=fs.readFileSync('aviator.html','utf8');
   const js=fs.readFileSync('aviator.js','utf8');
 
@@ -14,11 +14,11 @@ test('Aviator aceita valor minimo de 0,50 MZN no cliente',()=>{
   assert.match(html,/inputmode="decimal"/);
   assert.match(js,/amount<0\.5/);
   assert.match(js,/amount>500/);
-  assert.match(js,/entre 0,50 e 500 MZN/);
+  assert.match(js,/entre 0,50 e 500\./);
+  assert.doesNotMatch(html,/>MZN</);
 });
 
-test('Aviator nao volta silenciosamente ao minimo antigo de 1 MZN',()=>{
+test('Aviator nao volta silenciosamente ao minimo antigo de 1',()=>{
   const js=fs.readFileSync('aviator.js','utf8');
   assert.doesNotMatch(js,/amount<1\)/);
-  assert.doesNotMatch(js,/a partir de 1 MZN/);
 });
