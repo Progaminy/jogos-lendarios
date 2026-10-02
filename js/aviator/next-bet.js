@@ -8,8 +8,8 @@
     const suffix=Number(slot)===1?'':String(slot);
     const key='jl_aviator_next_bet_v1_slot_'+slot;
     let queued=read();
-    let attemptedRoundId=null;
     let submittingRoundId=null;
+    let retryAfter=0;
 
     function read(){
       try{
@@ -78,10 +78,10 @@
       if(
         !queued||!isEnabled?.()||!isOnline?.()||!playerToken?.()||
         !Number.isFinite(roundId)||r?.status!=='OPEN'||r?.betting_open===false||
-        hasActiveBet?.()||isBusy?.()||attemptedRoundId===roundId
+        hasActiveBet?.()||isBusy?.()||
+        submittingRoundId===roundId||Date.now()<retryAfter
       )return;
 
-      attemptedRoundId=roundId;
       queueMicrotask(()=>{
         const current=getRound?.();
         if(
@@ -96,8 +96,12 @@
         if(auto)auto.value=queued.auto_cashout===null?'':String(queued.auto_cashout);
         if(button)button.dataset.action='bet';
         submittingRoundId=roundId;
-        attemptedRoundId=roundId;
-        form?.requestSubmit?.();
+        if(typeof form?.requestSubmit==='function'){
+          form.requestSubmit();
+        }else{
+          submittingRoundId=null;
+          retryAfter=Date.now()+250;
+        }
       });
     }
 
@@ -105,15 +109,19 @@
     function consume(roundId){
       if(!isSubmitting(roundId))return false;
       save(null);
-      attemptedRoundId=Number(roundId);
+      submittingRoundId=null;
+      retryAfter=0;
       return true;
     }
     function clearSubmitting(roundId){
-      if(isSubmitting(roundId))submittingRoundId=null;
+      if(isSubmitting(roundId)){
+        submittingRoundId=null;
+        if(queued)retryAfter=Date.now()+250;
+      }
     }
     function resetRound(){
-      attemptedRoundId=null;
       submittingRoundId=null;
+      retryAfter=0;
     }
 
     return Object.freeze({
