@@ -963,6 +963,11 @@ async function reconnectState(){
 
     applyReconnectPlayerState(x?.player);
 
+    if(justFinished&&playerToken()){
+      if(myBet)await refreshCurrentBetLight();
+      if(p2?.hasActiveBet())await p2.refreshOnStatusChange();
+    }
+
     if(justFinished)rememberCurrentResult();
 
     if(changedRound||justFinished){
