@@ -36,15 +36,20 @@ test('contagem 10 a 0 toca um único bip por segundo',()=>{
   assert.match(js,/sound\?\.syncCountdown\?\.\(round\?\.id,seconds\)/);
 });
 
-test('voo tem som contínuo agradável e presente cuja frequência sobe com o multiplicador',()=>{
+test('voo tem textura ambiente envolvente sem técnicas subliminares',()=>{
   assert.match(sound,/function startFlight\(\)/);
   assert.match(sound,/function updateFlight\(multiplier\)/);
   assert.match(sound,/Math\.log\(m\)\/Math\.log\(500\)/);
   assert.match(sound,/osc\.type='triangle'/);
   assert.match(sound,/air\.type='sine'/);
+  assert.match(sound,/shimmer\.type='sine'/);
+  assert.match(sound,/pulse\.frequency\.setValueAtTime\(\.18/);
+  assert.match(sound,/drift\.frequency\.setValueAtTime\(\.11/);
+  assert.match(sound,/createStereoPanner/);
   assert.match(sound,/createBiquadFilter\(\)/);
   assert.match(sound,/createDynamicsCompressor\(\)/);
   assert.match(sound,/setTargetAtTime\(base,now,\.20\)/);
+  assert.doesNotMatch(sound,/binaural|subliminal|hypnot/i);
   assert.match(js,/sound\?\.updateFlight\?\.\(m\)/);
 });
 
