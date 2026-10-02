@@ -50,8 +50,30 @@
         masterGain.connect(masterCompressor);
         masterCompressor.connect(audioCtx.destination);
       }
-      if(audioCtx.state==='suspended')audioCtx.resume().catch(()=>{});
       return audioCtx;
+    }
+
+    function audioRunning(){
+      return audioCtx?.state==='running';
+    }
+
+    async function activateAudio(){
+      if(!enabled)return false;
+      const ctx=ensureAudio();
+      if(!ctx)return false;
+
+      if(ctx.state!=='running'){
+        try{await ctx.resume()}catch(_){}
+      }
+
+      if(ctx.state!=='running')return false;
+
+      const current=getRound?.();
+      if(String(current?.status||'').toUpperCase()==='FLYING'){
+        startFlight();
+        updateFlight(getMultiplier?.());
+      }
+      return true;
     }
 
     function tone(freq,duration=.08,volume=.025,delay=0,type='sine',endFreq=null){
@@ -133,7 +155,7 @@
     function startFlight(){
       if(!enabled||flightVoice)return;
       const ctx=ensureAudio();
-      if(!ctx)return;
+      if(!ctx||ctx.state!=='running')return;
 
       const osc=ctx.createOscillator();
       const air=ctx.createOscillator();
@@ -276,17 +298,20 @@
         return enabled;
       }
 
-      ensureAudio();
-
-      const current=getRound?.();
-      if(String(current?.status||'').toUpperCase()==='FLYING'){
-        startFlight();
-        updateFlight(getMultiplier?.());
-      }
+      void activateAudio();
       return enabled;
     }
 
     function toggle(){return setEnabled(!enabled);}
+
+    async function handleButtonClick(event){
+      if(enabled&&!audioRunning()){
+        event?.preventDefault?.();
+        await activateAudio();
+        return enabled;
+      }
+      return toggle();
+    }
 
     function syncRound(round){
       if(!round?.id||!round?.status)return;
@@ -331,8 +356,9 @@
       }
     }
 
-    function unlock(){
-      if(enabled)ensureAudio();
+    function unlock(event){
+      if(button&&event?.target&&button.contains?.(event.target))return;
+      if(enabled)void activateAudio();
     }
 
     function destroy(){
@@ -343,15 +369,17 @@
       masterCompressor=null;
     }
 
-    button?.addEventListener('click',toggle);
-    win.addEventListener?.('pointerdown',unlock,{once:true,passive:true});
-    win.addEventListener?.('keydown',unlock,{once:true});
+    button?.addEventListener('click',handleButtonClick);
+    win.addEventListener?.('pointerdown',unlock,{passive:true});
+    win.addEventListener?.('keydown',unlock);
     updateButton();
 
     return Object.freeze({
       isEnabled:()=>enabled,
       setEnabled,
       toggle,
+      activateAudio,
+      audioRunning,
       syncRound,
       syncCountdown,
       updateFlight,
