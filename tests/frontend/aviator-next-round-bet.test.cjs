@@ -6,47 +6,46 @@ const fs=require('node:fs');
 
 const primary=fs.readFileSync('aviator.js','utf8');
 const secondary=fs.readFileSync('js/aviator/bet-panel.js','utf8');
+const nextBet=fs.readFileSync('js/aviator/next-bet.js','utf8');
 const html=fs.readFileSync('aviator.html','utf8');
 const manifest=JSON.parse(fs.readFileSync('games/manifest.json','utf8'));
 
-test('Aviator não carrega etapa de preparar próxima aposta',()=>{
-  assert.doesNotMatch(html,/js\/aviator\/next-bet\.js/);
-  assert.doesNotMatch(primary,/JLAviatorNextBet|queue-next|cancel-next|Prepare a próxima|Próxima aposta preparada/);
-  assert.doesNotMatch(secondary,/queue-next|cancel-next|Prepare a próxima|Próxima aposta preparada/);
+test('Aviator usa Apostar sem expor etapa preparar aposta',()=>{
+  assert.match(html,/js\/aviator\/next-bet\.js/);
+  assert.doesNotMatch(primary,/Prepare a próxima|Próxima aposta preparada/);
+  assert.doesNotMatch(secondary,/Prepare a próxima|Próxima aposta preparada/);
+  assert.doesNotMatch(nextBet,/Prepare a próxima|Próxima aposta preparada/);
   const game=manifest.games.find(x=>x.id==='aviator');
-  assert.ok(game);
-  assert.ok(!game.assets.includes('./js/aviator/next-bet.js'));
+  assert.ok(game?.assets.includes('./js/aviator/next-bet.js'));
 });
 
-test('durante OPEN Apostar envia diretamente a aposta da rodada atual',()=>{
+test('durante OPEN Apostar envia imediatamente para a rodada atual',()=>{
   assert.match(primary,/round\.status!=='OPEN'\|\|round\.betting_open===false/);
   assert.match(primary,/financial\.placeBetSlot\(\{[\s\S]*?slot:1/);
   assert.match(secondary,/financial\.placeBetSlot\(\{[\s\S]*?slot,/);
 });
 
-test('depois de zero LOCKED bloqueia novas apostas e apenas aguarda o voo',()=>{
-  const locked=primary.match(/function renderLocked\(\)[\s\S]*?\n\}/)?.[0]||'';
-  assert.match(locked,/setBetInputsLocked\(true\)/);
-  assert.match(locked,/renderBetAction\([\s\S]*?true,[\s\S]*?'Apostas encerradas',[\s\S]*?'Apostar'/);
-  assert.doesNotMatch(locked,/queue-next|cancel-next|Próxima/);
-
-  const locked2=secondary.match(/if\(r\.status==='LOCKED'\)\{[\s\S]*?return;\n      \}/)?.[0]||'';
-  assert.match(locked2,/setInputsLocked\(true\)/);
-  assert.match(locked2,/disabled:true/);
-  assert.match(locked2,/label:'Apostar'/);
+test('durante LOCKED ou FLYING Apostar guarda silenciosamente para a próxima rodada',()=>{
+  assert.match(nextBet,/\['LOCKED','FLYING'\]\.includes\(r\.status\)/);
+  assert.match(primary,/queued\?'Cancelar':'Apostar'/);
+  assert.match(primary,/queued\?'cancel-next':'queue-next'/);
+  assert.match(secondary,/label:queued\?'Cancelar':'Apostar'/);
+  assert.match(secondary,/mode:queued\?'cancel-next':'queue-next'/);
+  assert.doesNotMatch(nextBet,/prepar/i);
 });
 
-test('durante voo não existe preparação da próxima aposta',()=>{
-  const flying=primary.match(/function renderFlying\(\)[\s\S]*?\n\}/)?.[0]||'';
-  assert.match(flying,/setBetInputsLocked\(true\)/);
-  assert.doesNotMatch(flying,/queue-next|cancel-next|Próxima aposta|Prepare/);
-
-  const flying2=secondary.match(/if\(r\.status==='FLYING'\)\{[\s\S]*?return;\n      \}/)?.[0]||'';
-  assert.match(flying2,/setInputsLocked\(true\)/);
-  assert.doesNotMatch(flying2,/queue-next|cancel-next|Próxima aposta|Prepare/);
+test('aposta silenciosa é enviada automaticamente quando a nova rodada fica OPEN',()=>{
+  assert.match(nextBet,/function schedule\(\)/);
+  assert.match(nextBet,/r\?\.status!=='OPEN'/);
+  assert.match(nextBet,/current\?\.status!=='OPEN'/);
+  assert.match(nextBet,/form\?\.requestSubmit\?\.\(\)/);
+  assert.match(primary,/nextBet\?\.schedule\(\)/);
+  assert.match(secondary,/nextBet\?\.schedule\(\)/);
 });
 
-test('estado antigo de fila é descartado ao abrir a nova interface',()=>{
-  assert.match(primary,/removeItem\('jl_aviator_next_bet_v1_slot_1'\)/);
-  assert.match(secondary,/removeItem\('jl_aviator_next_bet_v1_slot_'\+slot\)/);
+test('fila manual tem prioridade sobre auto-bet',()=>{
+  assert.match(primary,/Boolean\(nextBet\?\.hasQueued\(\)\)/);
+  assert.match(secondary,/Boolean\(nextBet\?\.hasQueued\(\)\)/);
+  assert.match(primary,/if\(queuedTriggered\)nextBet\?\.consume/);
+  assert.match(secondary,/if\(queuedTriggered\)nextBet\?\.consume/);
 });
