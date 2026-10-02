@@ -32,7 +32,7 @@ test('OPEN alterna entre Apostar e Cancelar até o fecho',()=>{
 test('FLYING permite Apostar e depois Cancelar a fila da próxima rodada',()=>{
   const flying=js.match(/function renderFlying\(\)[\s\S]*?function renderFinished/)?.[0]||'';
   assert.match(flying,/const canQueue=enabled&&connectionOnline&&!myBet&&!queued&&!betting/);
-  assert.match(flying,/queued\?'Cancelar':myBet\?'Foi apostado':'Apostar'/);
+  assert.match(flying,/queued\?'Cancelar':myBet\?'Apostado':'Apostar'/);
   assert.match(flying,/queued\?'cancel-next':myBet\?'confirmed':'bet'/);
   assert.match(ui,/liveReturn=active&&hasMultiplier&&hasStake\?money\(s\*m\):null/);
 });
