@@ -69,6 +69,10 @@ begin
     raise exception 'token A não recebeu sua própria aposta';
   end if;
 
+  if coalesce((v_bets->0->>'bet_slot')::integer,0)<>1 then
+    raise exception 'historico pessoal não expõe bet_slot da aposta';
+  end if;
+
   if exists(
     select 1
     from jsonb_array_elements(v_bets) x
