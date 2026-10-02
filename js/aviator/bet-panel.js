@@ -34,6 +34,10 @@
     let autoBetEnabled=sessionStorage.getItem('jl_aviator_auto_bet_v1_slot_'+slot)==='1';
     let autoBetAttemptedRoundId=null;
     let autoBetSubmittingRoundId=null;
+    const queuedNextBetStorageKey='jl_aviator_next_bet_v1_slot_'+slot;
+    let queuedNextBet=readQueuedNextBet();
+    let queuedBetAttemptedRoundId=null;
+    let queuedBetSubmittingRoundId=null;
 
     const round=()=>getRound?.()||null;
     const online=()=>Boolean(isOnline?.());
@@ -225,6 +229,66 @@
       });
     }
 
+    function readQueuedNextBet(){
+      try{
+        const parsed=JSON.parse(sessionStorage.getItem(queuedNextBetStorageKey)||'null');
+        const amount=Number(parsed?.amount);
+        const auto=parsed?.auto_cashout===null?null:Number(parsed?.auto_cashout);
+        if(!Number.isFinite(amount)||amount<0.5||amount>500)return null;
+        if(auto!==null&&(!Number.isFinite(auto)||auto<1.01))return null;
+        return {amount,auto_cashout:auto};
+      }catch(_){
+        return null;
+      }
+    }
+
+    function saveQueuedNextBet(value){
+      queuedNextBet=value||null;
+      try{
+        if(queuedNextBet)sessionStorage.setItem(queuedNextBetStorageKey,JSON.stringify(queuedNextBet));
+        else sessionStorage.removeItem(queuedNextBetStorageKey);
+      }catch(_){}
+    }
+
+    function scheduleQueuedNextBet(){
+      const r=round();
+      const roundId=Number(r?.id);
+      if(
+        !queuedNextBet||
+        !enabled()||
+        !online()||
+        !playerToken()||
+        !Number.isFinite(roundId)||
+        r?.status!=='OPEN'||
+        r?.betting_open===false||
+        betId||
+        betting||
+        queuedBetAttemptedRoundId===roundId
+      ) return;
+
+      queuedBetAttemptedRoundId=roundId;
+      queueMicrotask(()=>{
+        const current=round();
+        if(
+          !queuedNextBet||
+          !online()||
+          !playerToken()||
+          Number(current?.id)!==roundId||
+          current?.status!=='OPEN'||
+          current?.betting_open===false||
+          betId||
+          betting
+        ) return;
+
+        const amount=$('#aviatorAmount'+suffix);
+        const auto=$('#aviatorAutoCashout'+suffix);
+        if(amount)amount.value=String(queuedNextBet.amount);
+        if(auto)auto.value=queuedNextBet.auto_cashout===null?'':String(queuedNextBet.auto_cashout);
+        queuedBetSubmittingRoundId=roundId;
+        form?.requestSubmit?.();
+      });
+    }
+
     function renderAutoBetStatus(){
       const toggle=$('#aviatorAutoBet'+suffix);
       const status=$('#aviatorAutoBetStatus'+suffix);
@@ -259,7 +323,8 @@
         r?.betting_open===false||
         betId||
         betting||
-        autoBetAttemptedRoundId===roundId
+        autoBetAttemptedRoundId===roundId||
+        Boolean(queuedNextBet)
       ) return;
 
       autoBetAttemptedRoundId=roundId;
@@ -319,13 +384,19 @@
         resetCashout();
         renderTicket();
         renderConfirmation();
+        scheduleQueuedNextBet();
         scheduleAutoBet();
         return;
       }
 
       if(r.status==='LOCKED'){
-        setInputsLocked(!online()||!enabled());
-        renderBetAction({disabled:true,status:'Apostas fechadas'});
+        setInputsLocked(!online()||!enabled()||Boolean(queuedNextBet));
+        renderBetAction({
+          disabled:!online()||!enabled(),
+          status:queuedNextBet?'Próxima aposta preparada':'Prepare a próxima rodada',
+          label:queuedNextBet?'Cancelar próxima':'Preparar próxima',
+          mode:queuedNextBet?'cancel-next':'queue-next'
+        });
         resetCashout();
         renderTicket();
         renderConfirmation();
@@ -334,10 +405,16 @@
       }
 
       if(r.status==='FLYING'){
-        setInputsLocked(!online()||!enabled());
+        setInputsLocked(!online()||!enabled()||Boolean(betId)||Boolean(queuedNextBet));
         renderBetAction({
-          disabled:true,
-          status:'Apostas fechadas',
+          disabled:Boolean(betId)||!online()||!enabled(),
+          status:betId
+            ?'Apostas fechadas'
+            :queuedNextBet
+              ?'Próxima aposta preparada'
+              :'Prepare a próxima rodada',
+          label:queuedNextBet?'Cancelar próxima':'Preparar próxima',
+          mode:queuedNextBet?'cancel-next':'queue-next',
           hidden:Boolean(betId)
         });
         renderCashout({
@@ -508,6 +585,8 @@
       autoCashout=null;
       autoRecoveryRoundId=null;
       autoBetAttemptedRoundId=null;
+      queuedBetAttemptedRoundId=null;
+      queuedBetSubmittingRoundId=null;
       resetCashout();
       renderTicket();
       renderConfirmation();
@@ -555,8 +634,56 @@
       if(betting)return;
 
       const action=String(betButton?.dataset.action||'bet');
+
+      if(action==='queue-next'||action==='cancel-next'){
+        if(action==='cancel-next'){
+          saveQueuedNextBet(null);
+          if(message)message.textContent='Próxima aposta cancelada.';
+          renderRound();
+          return;
+        }
+
+        try{
+          if(!online())throw new Error('Sem ligação. Aguarde a reconexão.');
+          if(!playerToken())throw new Error('Entre na sua conta primeiro.');
+          if(!enabled())throw new Error('Aviator brevemente.');
+          if(!round()||!['LOCKED','FLYING'].includes(round().status)){
+            throw new Error('Aguarde a rodada em curso.');
+          }
+
+          const amount=Number($('#aviatorAmount'+suffix)?.value);
+          if(!Number.isFinite(amount)||amount<0.5||amount>500){
+            throw new Error('Informe um valor entre 0,50 e 500 MZN.');
+          }
+
+          const autoRaw=String($('#aviatorAutoCashout'+suffix)?.value||'').trim();
+          const auto=autoRaw===''?null:Number(autoRaw);
+          if(
+            auto!==null&&(
+              !Number.isFinite(auto)||
+              auto<1.01||
+              Math.abs(auto*100-Math.round(auto*100))>1e-8
+            )
+          ){
+            throw new Error('Cash-out automático deve ser 1,01x ou maior, com até 2 casas decimais.');
+          }
+
+          saveQueuedNextBet({amount,auto_cashout:auto});
+          if(message)message.textContent='Próxima aposta preparada. Será enviada quando as apostas abrirem.';
+        }catch(error){
+          if(message)message.textContent=playerMessage(
+            error,
+            'Não foi possível preparar a próxima aposta.'
+          );
+        }
+        renderRound();
+        return;
+      }
+
       const autoTriggered=
         action==='bet'&&autoBetSubmittingRoundId===Number(round()?.id);
+      const queuedTriggered=
+        action==='bet'&&queuedBetSubmittingRoundId===Number(round()?.id);
       betting=true;
 
       if(action==='cancel'){
@@ -648,10 +775,17 @@
         autoCashout=Number(result.auto_cashout_multiplier)||null;
         sound?.playBet?.();
 
+        if(queuedTriggered){
+          saveQueuedNextBet(null);
+          queuedBetAttemptedRoundId=Number(round()?.id);
+        }
+
         if(message){
-          message.textContent=autoTriggered
-            ?'Aposta automática confirmada para esta rodada.'
-            :'Aposta confirmada. Aguarde a descolagem.';
+          message.textContent=queuedTriggered
+            ?'Aposta preparada confirmada nesta rodada.'
+            :autoTriggered
+              ?'Aposta automática confirmada para esta rodada.'
+              :'Aposta confirmada. Aguarde a descolagem.';
         }
       }catch(error){
         if(message)message.textContent=playerMessage(
@@ -661,6 +795,9 @@
       }finally{
         if(autoBetSubmittingRoundId===Number(round()?.id)){
           autoBetSubmittingRoundId=null;
+        }
+        if(queuedBetSubmittingRoundId===Number(round()?.id)){
+          queuedBetSubmittingRoundId=null;
         }
         betting=false;
         renderRound();
