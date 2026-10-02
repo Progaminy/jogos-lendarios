@@ -17,7 +17,7 @@ test('contagem e multiplicador têm superfícies distintas',()=>{
   assert.match(html,/id="preflightCountdown" class="countdown-value"/);
   assert.match(html,/id="multiplier" class="multiplier">1\.00×/);
   assert.match(html,/id="nextRoundSeconds"/);
-  assert.match(html,/NOVA RODADA EM/);
+  assert.match(html,/class="sr-only">Nova rodada em<\/small>/);
 });
 
 test('contagem usa segundos e multiplicador usa vezes',()=>{
