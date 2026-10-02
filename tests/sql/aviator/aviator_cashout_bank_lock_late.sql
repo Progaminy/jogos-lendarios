@@ -42,7 +42,7 @@ begin
       'Point 64: bank optimization removed the atomic reserve guard';
   end if;
 
-  if position('raiseexception''Reservadabancainconsistente.''' in v_compact)=0 then
+  if position('raiseexception''reservadabancainconsistente.''' in v_compact)=0 then
     raise exception
       'Point 64: bank optimization removed rollback-on-insufficient-reserve';
   end if;
