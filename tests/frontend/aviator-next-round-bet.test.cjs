@@ -70,3 +70,9 @@ test("botão de aposta preparada mostra apenas Cancelar",()=>{
   assert.doesNotMatch(primary,/'Cancelar próxima'/);
   assert.doesNotMatch(secondary,/'Cancelar próxima'/);
 });
+
+
+test('cancelamento da aposta preparada também é silencioso',()=>{
+  assert.doesNotMatch(nextBet,/Próxima aposta cancelada\./);
+  assert.doesNotMatch(secondary,/message\.textContent='Próxima aposta cancelada\.'/);
+});
