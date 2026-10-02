@@ -286,8 +286,14 @@
       renderAutoBetStatus();
 
       if(!r){
-        setInputsLocked(!online()||!enabled());
-        renderBetAction({disabled:true,status:'Aguarde a próxima rodada'});
+        const queued=Boolean(nextBet?.hasQueued());
+        setInputsLocked(!online()||!enabled()||queued);
+        renderBetAction({
+          disabled:!online()||!enabled(),
+          status:queued?'Aposta registada':'Disponível',
+          label:queued?'Cancelar':'Apostar',
+          mode:queued?'cancel-next':'queue-next'
+        });
         resetCashout();
         renderTicket();
         renderConfirmation();
@@ -362,8 +368,14 @@
         return;
       }
 
-      setInputsLocked(!online()||!enabled());
-      renderBetAction({disabled:true,status:'Aguarde a próxima rodada'});
+      const queued=Boolean(nextBet?.hasQueued());
+      setInputsLocked(!online()||!enabled()||queued);
+      renderBetAction({
+        disabled:!online()||!enabled(),
+        status:queued?'Aposta registada':'Disponível',
+        label:queued?'Cancelar':'Apostar',
+        mode:queued?'cancel-next':'queue-next'
+      });
       resetCashout();
       renderTicket();
       renderConfirmation();
