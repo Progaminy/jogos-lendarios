@@ -85,7 +85,7 @@
         }
 
         save(parseCurrent());
-        onMessage?.('Próxima aposta preparada.');
+        onMessage?.('');
       }catch(error){
         onMessage?.(playerMessage?.(
           error,
