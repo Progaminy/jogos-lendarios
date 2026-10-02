@@ -707,7 +707,6 @@
         betId=result.bet_id;
         stake=Number(result.stake);
         autoCashout=Number(result.auto_cashout_multiplier)||null;
-        sound?.playBet?.();
 
         if(queuedTriggered)nextBet?.consume?.(round()?.id);
         if(message){
@@ -764,7 +763,6 @@
           payout:Number(result.payout),
           cashout_multiplier:Number(result.multiplier)
         });
-        sound?.playCashout?.();
         betId=null;
         stake=0;
         autoCashout=null;
