@@ -4,8 +4,10 @@ set -euo pipefail
 : "${JL_TEST_DATABASE_URL:?Defina JL_TEST_DATABASE_URL para uma base descartavel.}"
 
 PSQL=(psql "$JL_TEST_DATABASE_URL" -X -qAt -v ON_ERROR_STOP=1)
-PHONE='25899061261'
-TOKEN='aviator-point61'
+PHONE_LOW='25899061261'
+TOKEN_LOW='aviator-point61-low'
+PHONE_EXACT='25899061262'
+TOKEN_EXACT='aviator-point61-exact'
 
 cleanup() {
   "${PSQL[@]}" <<SQL >/dev/null 2>&1 || true
@@ -16,20 +18,20 @@ where status in ('OPEN','LOCKED','FLYING','CRASHED');
 
 delete from public.jl_aviator_bets
 where player_id in (
-  select id from public.players where phone='$PHONE'
+  select id from public.players where phone in ('$PHONE_LOW','$PHONE_EXACT')
 );
 
 delete from public.transactions
 where player_id in (
-  select id from public.players where phone='$PHONE'
+  select id from public.players where phone in ('$PHONE_LOW','$PHONE_EXACT')
 );
 
 delete from public.player_sessions
 where player_id in (
-  select id from public.players where phone='$PHONE'
+  select id from public.players where phone in ('$PHONE_LOW','$PHONE_EXACT')
 );
 
-delete from public.players where phone='$PHONE';
+delete from public.players where phone in ('$PHONE_LOW','$PHONE_EXACT');
 SQL
 }
 trap cleanup EXIT
@@ -47,7 +49,7 @@ values('AVIATOR POINT61 INSUFFICIENT','$PHONE','ci-only',9);
 
 insert into public.player_sessions(player_id,token_hash,expires_at)
 select id,public.jl_token_hash('$TOKEN'),now()+interval '1 hour'
-from public.players where phone='$PHONE';
+from public.players where phone in ('$PHONE_LOW','$PHONE_EXACT');
 SQL
 
 round_1=$("${PSQL[@]}" -c "
@@ -67,14 +69,14 @@ returning id;
 set +e
 "${PSQL[@]}" -c "
 select public.jl_aviator_place_bet(
-  '$TOKEN',10,'point61-insufficient-a-'||'$round_1'
+  '$TOKEN_LOW',10,'point61-insufficient-a-'||'$round_1'
 );
 " >/tmp/aviator-point61-a.out 2>/tmp/aviator-point61-a.err &
 pid_a=$!
 
 "${PSQL[@]}" -c "
 select public.jl_aviator_place_bet(
-  '$TOKEN',10,'point61-insufficient-b-'||'$round_1'
+  '$TOKEN_LOW',10,'point61-insufficient-b-'||'$round_1'
 );
 " >/tmp/aviator-point61-b.out 2>/tmp/aviator-point61-b.err &
 pid_b=$!
@@ -104,13 +106,13 @@ grep -q "Saldo insuficiente" /tmp/aviator-point61-b.err || {
 
 phase_a=$("${PSQL[@]}" -c "
 select
-  (select balance::text from public.players where phone='$PHONE')||':'||
+  (select balance::text from public.players where phone in ('$PHONE_LOW','$PHONE_EXACT'))||':'||
   (select count(*) from public.jl_aviator_bets b
     join public.players p on p.id=b.player_id
-    where p.phone='$PHONE')||':'||
+    where p.phone in ('$PHONE_LOW','$PHONE_EXACT'))||':'||
   (select count(*) from public.transactions t
     join public.players p on p.id=t.player_id
-    where p.phone='$PHONE' and t.kind='aviator_bet');
+    where p.phone in ('$PHONE_LOW','$PHONE_EXACT') and t.kind='aviator_bet');
 ")
 
 [[ "$phase_a" == "9.00:0:0" || "$phase_a" == "9:0:0" ]] || {
@@ -118,17 +120,20 @@ select
   exit 1
 }
 
-# Fecha a rodada sem apostas e prepara nova fronteira.
+# Fecha a rodada sem apostas e usa outro jogador que já nasce com saldo
+# exato de 10 MZN, mantendo cache e ledger reconciliados.
 "${PSQL[@]}" -c "
 update public.jl_aviator_rounds
 set status='CANCELLED',
     settled_at=clock_timestamp()
 where id='$round_1';
 
-update public.players
-set balance=10,
-    updated_at=clock_timestamp()
-where phone='$PHONE';
+insert into public.players(name,phone,pin_hash,balance)
+values('AVIATOR POINT61 EXACT','$PHONE_EXACT','ci-only',10);
+
+insert into public.player_sessions(player_id,token_hash,expires_at)
+select id,public.jl_token_hash('$TOKEN_EXACT'),now()+interval '1 hour'
+from public.players where phone='$PHONE_EXACT';
 " >/dev/null
 
 round_2=$("${PSQL[@]}" -c "
@@ -148,14 +153,14 @@ returning id;
 set +e
 "${PSQL[@]}" -c "
 select public.jl_aviator_place_bet(
-  '$TOKEN',10,'point61-exact-a-'||'$round_2'
+  '$TOKEN_EXACT',10,'point61-exact-a-'||'$round_2'
 );
 " >/tmp/aviator-point61-c.out 2>/tmp/aviator-point61-c.err &
 pid_c=$!
 
 "${PSQL[@]}" -c "
 select public.jl_aviator_place_bet(
-  '$TOKEN',10,'point61-exact-b-'||'$round_2'
+  '$TOKEN_EXACT',10,'point61-exact-b-'||'$round_2'
 );
 " >/tmp/aviator-point61-d.out 2>/tmp/aviator-point61-d.err &
 pid_d=$!
@@ -193,16 +198,16 @@ fi
 
 phase_b=$("${PSQL[@]}" -c "
 select
-  (select balance::text from public.players where phone='$PHONE')||':'||
+  (select balance::text from public.players where phone in ('$PHONE_LOW','$PHONE_EXACT'))||':'||
   (select count(*) from public.jl_aviator_bets b
     join public.players p on p.id=b.player_id
-    where p.phone='$PHONE' and b.round_id='$round_2')||':'||
+    where p.phone in ('$PHONE_LOW','$PHONE_EXACT') and b.round_id='$round_2')||':'||
   (select count(*) from public.transactions t
     join public.players p on p.id=t.player_id
-    where p.phone='$PHONE'
+    where p.phone in ('$PHONE_LOW','$PHONE_EXACT')
       and t.kind='aviator_bet'
       and t.aviator_operation='BET')||':'||
-  (select (balance>=0)::text from public.players where phone='$PHONE')||':'||
+  (select (balance>=0)::text from public.players where phone in ('$PHONE_LOW','$PHONE_EXACT'))||':'||
   (select (
       exists(
         select 1
@@ -211,7 +216,7 @@ select
         join public.transactions t
           on t.aviator_bet_id=b.id
          and t.aviator_operation='BET'
-        where p.phone='$PHONE'
+        where p.phone in ('$PHONE_LOW','$PHONE_EXACT')
           and b.round_id='$round_2'
           and t.amount=-b.stake
       )
