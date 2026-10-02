@@ -236,7 +236,9 @@
         const bankBalance=Number(d.bank?.balance)||0,exposure=Number(d.bank?.exposure_ratio)||0.5;
         $('aviatorBankBalance').textContent=money(bankBalance);
         $('aviatorRound').textContent=r.id?'#'+r.id:'—'; $('aviatorStatus').textContent=r.status||'—';
-        $('aviatorCeiling').textContent=r.financial_ceiling?Number(r.financial_ceiling).toFixed(2)+'×':'Sem exposição';
+        $('aviatorCeiling').textContent=r.financial_ceiling
+          ?Number(r.financial_ceiling).toFixed(2)+'×'
+          :Number(roundExposure.active_bets)>0?'Reservada':'Sem exposição';
         $('aviatorReserve').textContent=money(r.risk_reserve);
         $('aviatorStaked').textContent=money(roundExposure.total_staked??d.stake_sum);
         $('aviatorPotentialPayout').textContent=money(roundExposure.potential_payment);
