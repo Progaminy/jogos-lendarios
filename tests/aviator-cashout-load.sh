@@ -26,7 +26,7 @@ set status='CANCELLED',
 where status in ('OPEN','LOCKED','FLYING','CRASHED');
 
 update public.jl_aviator_settings
-set enabled=true,
+set enabled=false,
     one_round_test=false,
     updated_at=clock_timestamp()
 where id=true;
@@ -39,12 +39,23 @@ where id=true;
 SQL
 
 round_id=$("${PSQL[@]}" -c "
+with engine_lock as (
+  select pg_advisory_xact_lock(hashtext('jl_aviator_engine_tick'))
+),
+enabled as (
+  update public.jl_aviator_settings
+  set enabled=true,
+      one_round_test=false,
+      updated_at=clock_timestamp()
+  where id=true
+  returning 1
+)
 insert into public.jl_aviator_rounds(status,betting_closes_at,takeoff_at)
-values(
+select
   'OPEN',
   clock_timestamp()+interval '5 minutes',
-  clock_timestamp()+interval '5 minutes 3 seconds'
-)
+  null
+from engine_lock,enabled
 returning id;
 ")
 
