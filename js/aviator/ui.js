@@ -2,6 +2,7 @@
   'use strict';
 
   function create({$,getRound,getBetState,multiplier}) {
+    let betResultTimer=0;
     function money(value){
       const n=Number(value);
       return (Number.isFinite(n)?n:0).toLocaleString('pt-MZ',{
@@ -285,6 +286,8 @@
     }
 
     function renderBetResult(result=null){
+      clearTimeout(betResultTimer);
+      betResultTimer=0;
       const panel=$('#betResultPanel');
       const icon=$('#betResultIcon');
       const label=$('#betResultLabel');
@@ -314,6 +317,11 @@
         detail.textContent=Number.isFinite(payout)
           ?'Recebido '+money(payout)+(Number.isFinite(multiplier)?' · '+multiplier.toFixed(2)+'×':'')
           :'Cash-out confirmado';
+        betResultTimer=setTimeout(()=>{
+          panel.classList.add('hidden');
+          panel.removeAttribute('data-result');
+          betResultTimer=0;
+        },3000);
         return;
       }
 
