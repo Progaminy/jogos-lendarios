@@ -37,7 +37,9 @@ declare
   v_balance numeric;
   v_status text;
   v_active_bet jsonb;
-  v_tx_count integer;
+  v_tx_before integer;
+  v_tx_after integer;
+  v_bet_tx_count integer;
 begin
   insert into public.players(name,phone,pin_hash,balance)
   values(
@@ -88,6 +90,10 @@ begin
          visual_extension=false
    where id=v_round
   returning started_at into v_started_at;
+
+  select count(*) into v_tx_before
+  from public.transactions
+  where player_id=v_player;
 
   -- Primeiro carregamento depois do refresh.
   v_first:=public.jl_aviator_reconnect(v_token);
@@ -159,12 +165,25 @@ begin
     raise exception 'Ponto 58: refresh alterou saldo do jogador: %',v_balance;
   end if;
 
-  select count(*) into v_tx_count
+  select count(*) into v_tx_after
   from public.transactions
   where player_id=v_player;
 
-  if v_tx_count<>1 then
-    raise exception 'Ponto 58: refresh criou transação financeira extra: %',v_tx_count;
+  if v_tx_after<>v_tx_before then
+    raise exception 'Ponto 58: refresh criou transação financeira extra: % -> %',
+      v_tx_before,v_tx_after;
+  end if;
+
+  select count(*) into v_bet_tx_count
+  from public.transactions
+  where player_id=v_player
+    and aviator_bet_id=(v_bet->>'bet_id')::bigint
+    and aviator_operation='BET'
+    and kind='aviator_bet';
+
+  if v_bet_tx_count<>1 then
+    raise exception 'Ponto 58: aposta deveria manter exatamente um débito, encontrou %',
+      v_bet_tx_count;
   end if;
 end
 $point58$;
