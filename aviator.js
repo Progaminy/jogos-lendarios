@@ -103,7 +103,7 @@ const sound=window.JLAviatorSound?.create({
 const haptics=window.JLAviatorHaptics?.create({
   button:$('#aviatorVibrationToggle')
 })||null;
-const secondPanel=window.JLAviatorBetPanel?.create({slot:2,$,financial,playerToken,
+const panel2=window.JLAviatorBetPanel?.create({$,financial,playerToken,
   getRound:()=>round,isEnabled:()=>enabled,isOnline:()=>connectionOnline,
   multiplier:mul,secondsToClose,money,moneyCompact,playerMessage,sound,personalHistory,
   createGestureGuard:ui.createCashoutGestureGuard})||null;
@@ -132,7 +132,7 @@ function setConnectionState(online){
   const banner=$('#aviatorConnectionBanner');
   if(banner)banner.classList.toggle('hidden',connectionOnline);
 
-  secondPanel?.setConnectionState(connectionOnline);
+  panel2?.setConnectionState(connectionOnline);
   if(connectionOnline)return;
 
   clearTimeout(stateTimer);
@@ -410,7 +410,7 @@ function paintFlight(timestamp=performance.now()){
     stake:myStake
   });
 
-  secondPanel?.paintFlight(m);
+  panel2?.paintFlight(m);
 }
 
 function flightPaintLoop(timestamp){
@@ -606,7 +606,7 @@ async function recover(force=false){
     lastRecoveredRoundId=requestedRoundId;
     renderTicket();
     renderBetConfirmation();
-    secondPanel?.applyPlayerState(x);
+    panel2?.applyPlayerState(x);
 
     if(myBet&&round.status==='FLYING'){
       setBetResult(null);
@@ -703,7 +703,7 @@ function renderProof(){
 function renderMaintenanceView(){
   const protectedFlight=
     !enabled&&['LOCKED','FLYING'].includes(round?.status)&&
-    Boolean(myBet||secondPanel?.hasActiveBet());
+    Boolean(myBet||panel2?.hasActiveBet());
   const maintenanceOnly=!enabled&&!protectedFlight;
 
   document.body.classList.toggle('aviator-maintenance',!enabled);
@@ -879,7 +879,7 @@ function renderCurrentRound(){
     renderWaiting();
   }
 
-  secondPanel?.renderRound();
+  panel2?.renderRound();
 }
 
 function nextPollDelay(){
@@ -888,7 +888,7 @@ function nextPollDelay(){
     hidden:document.hidden,
     realtimeConnected,
     enabled,
-    hasBet:Boolean(myBet||secondPanel?.hasActiveBet())
+    hasBet:Boolean(myBet||panel2?.hasActiveBet())
   });
 }
 
@@ -949,7 +949,7 @@ function applyReconnectPlayerState(player){
   renderTicket();
   renderBetConfirmation();
   renderAutoBetStatus();
-  secondPanel?.applyPlayerState(player);
+  panel2?.applyPlayerState(player);
 }
 
 async function reconnectState(){
@@ -1087,7 +1087,7 @@ async function state(){
       fairnessProofRoundId=null;
       fairnessProofData=null;
       fairnessProofBusy=false;
-      secondPanel?.onRoundChanged();
+      panel2?.onRoundChanged();
       myBet=null;
       myStake=0;
       myAutoCashout=null;
@@ -1370,7 +1370,7 @@ async function applyRealtimeSnapshot(x){
     fairnessProofRoundId=null;
     fairnessProofData=null;
     fairnessProofBusy=false;
-    secondPanel?.onRoundChanged();
+    panel2?.onRoundChanged();
     myBet=null;
     myStake=0;
     myAutoCashout=null;
@@ -1391,8 +1391,8 @@ async function applyRealtimeSnapshot(x){
     await refreshCurrentBetLight();
   }
 
-  if(round&&playerToken()&&changedStatus&&secondPanel?.hasActiveBet()){
-    await secondPanel.refreshOnStatusChange();
+  if(round&&playerToken()&&changedStatus&&panel2?.hasActiveBet()){
+    await panel2.refreshOnStatusChange();
   }
 
   if(justFinished){
@@ -1448,7 +1448,7 @@ window.addEventListener('online',async()=>{
   if(message)message.textContent='Ligação restabelecida. A sincronizar…';
   await reconnectState();
   await reconcilePendingCashout();
-  await secondPanel?.reconcilePendingCashout?.();
+  await panel2?.reconcilePendingCashout?.();
 });
 
 document.addEventListener('visibilitychange',()=>{
