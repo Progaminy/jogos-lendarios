@@ -147,7 +147,7 @@ body {
 .game-nav a.nav-aviator-symbol::before { content: none; }
 .game-nav a.nav-aviator-symbol > span {
   display: block;
-  font-size: 1.55rem;
+  font-size: 2rem;
   line-height: 1;
   transform: rotate(-8deg);
 }
@@ -207,7 +207,7 @@ body {
   }
 
   .game-nav a.nav-aviator-symbol > span {
-    font-size: 1.3rem;
+    font-size: 1.7rem;
   }
 }
 
