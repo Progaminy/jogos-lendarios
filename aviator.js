@@ -201,9 +201,7 @@ function renderAutoBetStatus(){
     return;
   }
 
-  status.textContent=round?.status==='OPEN'
-    ?'A preparar envio'
-    :'Próxima aposta preparada';
+  status.textContent=round?.status==='OPEN'?'Ativo':'Aguardando';
 }
 
 function scheduleAutoBetForOpenRound(){
@@ -220,8 +218,7 @@ function scheduleAutoBetForOpenRound(){
     round?.betting_open===false||
     myBet||
     betting||
-    autoBetAttemptedRoundId===roundId||
-    Boolean(nextBet?.hasQueued())
+    autoBetAttemptedRoundId===roundId
   ){
     return;
   }
