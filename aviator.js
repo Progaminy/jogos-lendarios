@@ -233,6 +233,7 @@ function renderMultiplier(value){return ui.renderMultiplier(value);}
 function resetCashout(){return ui.resetCashout();}
 function renderCashoutAction(options){return ui.renderCashoutAction(options);}
 const cashoutGestureGuard=ui.createCashoutGestureGuard($('#cashoutBtn'));
+const cashoutGestureGuard2=ui.createCashoutGestureGuard($('#cashoutBtn2'));
 
 function renderRoundNumber(){return ui.renderRoundNumber();}
 
@@ -1744,7 +1745,8 @@ $('#aviatorBetForm').addEventListener('submit',async e=>{
       throw new Error('Cash-out automático deve ser 1,01x ou maior, com até 2 casas decimais.');
     }
 
-    const r=await financial.placeBet({
+    const r=await financial.placeBetSlot({
+      slot:1,
       amount,
       requestKey:betKey(),
       autoCashoutMultiplier:auto
@@ -1771,6 +1773,124 @@ $('#aviatorBetForm').addEventListener('submit',async e=>{
       autoBetSubmittingRoundId=null;
     }
     betting=false;
+    renderCurrentRound();
+  }
+});
+
+$('#aviatorBetForm2').addEventListener('submit',async e=>{
+  e.preventDefault();
+  if(betting2)return;
+
+  const action=String($('#betBtn2')?.dataset.action||'bet');
+  const autoTriggered=
+    action==='bet'&&
+    autoBetSubmittingRoundId2===Number(round?.id);
+  betting2=true;
+
+  if(action==='cancel'){
+    const id=myBet2;
+    const stake=myStake2;
+    renderBetAction2(true,'Cancelando aposta…','Cancelar','cancel');
+
+    try{
+      if(!connectionOnline)throw new Error('Sem ligação. Aguarde a reconexão.');
+      if(!playerToken())throw new Error('Entre na sua conta primeiro.');
+      if(!id||!round||round.status!=='OPEN'||round.betting_open===false){
+        throw new Error('Cancelamento encerrado para esta rodada.');
+      }
+
+      const result=await financial.cancelBet(
+        id,
+        financial.cancelBetRequestKey(id)
+      );
+
+      personalHistory?.invalidate();
+      setBetResult2({
+        status:'REFUNDED',
+        stake,
+        payout:Number(result.refund)||stake
+      });
+
+      myBet2=null;
+      myStake2=0;
+      myAutoCashout2=null;
+      lastRecoveredRoundId=round?.id??null;
+      renderTicket2();
+      renderBetConfirmation2();
+      $('#aviatorMessage2').textContent=
+        'Aposta cancelada. '+money(Number(result.refund)||stake)+' devolvidos.';
+    }catch(error){
+      $('#aviatorMessage2').textContent=playerMessage(
+        error,
+        'Não foi possível cancelar a aposta.'
+      );
+      if(/Cancelamento encerrado|Apostas fechadas/i.test(String(error?.message||error))){
+        lastRecoveredRoundId=null;
+        await reconnectState();
+      }
+    }finally{
+      betting2=false;
+      renderCurrentRound();
+    }
+    return;
+  }
+
+  renderBetAction2(true,'Confirmando aposta…','Apostar','bet');
+
+  try{
+    if(!connectionOnline)throw new Error('Sem ligação. Aguarde a reconexão.');
+    if(!playerToken())throw new Error('Entre na sua conta primeiro.');
+    if(!enabled)throw new Error('Aviator brevemente.');
+    if(!round||round.status!=='OPEN'||round.betting_open===false)throw new Error('Apostas fechadas.');
+
+    const amount=Number($('#aviatorAmount2').value);
+    if(!Number.isFinite(amount)||amount<0.5||amount>500){
+      throw new Error('Informe um valor entre 0,50 e 500 MZN.');
+    }
+
+    const autoRaw=$('#aviatorAutoCashout2').value.trim();
+    const auto=autoRaw===''?null:Number(autoRaw);
+    if(
+      auto!==null&&(
+        !Number.isFinite(auto)||
+        auto<1.01||
+        Math.abs(auto*100-Math.round(auto*100))>1e-8
+      )
+    ){
+      throw new Error('Cash-out automático deve ser 1,01x ou maior, com até 2 casas decimais.');
+    }
+
+    const r=await financial.placeBetSlot({
+      slot:2,
+      amount,
+      requestKey:betKey2(),
+      autoCashoutMultiplier:auto
+    });
+
+    setBetResult2(null);
+    personalHistory?.invalidate();
+    myBet2=r.bet_id;
+    myStake2=Number(r.stake);
+    myAutoCashout2=Number(r.auto_cashout_multiplier)||null;
+    sound?.playBet();
+    lastRecoveredRoundId=round.id;
+    renderTicket2();
+    renderBetConfirmation2();
+
+    $('#aviatorMessage2').textContent=autoTriggered
+      ?'Aposta automática confirmada para esta rodada.'
+      :'Aposta confirmada. Aguarde a descolagem.';
+    renderAutoBetStatus2();
+  }catch(error){
+    $('#aviatorMessage2').textContent=playerMessage(
+      error,
+      'Não foi possível confirmar a aposta.'
+    );
+  }finally{
+    if(autoBetSubmittingRoundId2===Number(round?.id)){
+      autoBetSubmittingRoundId2=null;
+    }
+    betting2=false;
     renderCurrentRound();
   }
 });
@@ -1853,6 +1973,89 @@ $('#cashoutBtn').addEventListener('click',async event=>{
     }
   }finally{
     cashingOut=false;
+    renderMaintenanceView();
+    renderCurrentRound();
+  }
+});
+
+$('#cashoutBtn2').addEventListener('click',async event=>{
+  event.preventDefault();
+  if(!cashoutGestureGuard2.shouldAcceptClick(event))return;
+  if(!connectionOnline){
+    $('#aviatorMessage2').textContent='Sem ligação. Cash-out indisponível até reconectar.';
+    return;
+  }
+  if(cashingOut2||!myBet2||round?.status!=='FLYING')return;
+
+  cashingOut2=true;
+  const id=myBet2;
+  const cashoutRoundId=Number(round.id);
+  const requestKey=cashoutRequestKey(id);
+  savePendingCashout2(id,cashoutRoundId,requestKey);
+  renderCashoutAction2({
+    active:true,
+    disabled:true,
+    pending:true,
+    multiplier:mul(),
+    stake:myStake2,
+    status:'A confirmar no servidor'
+  });
+
+  try{
+    const r=await requestFinancialCashout(id,requestKey);
+
+    clearPendingCashout2();
+    $('#aviatorMessage2').textContent=cashoutMessage(
+      r.source,
+      r.multiplier,
+      r.payout
+    );
+    sound?.playCashout();
+    setBetResult2({
+      status:'CASHED_OUT',
+      stake:myStake2,
+      payout:Number(r.payout),
+      cashout_multiplier:Number(r.multiplier)
+    });
+
+    myBet2=null;
+    myStake2=0;
+    myAutoCashout2=null;
+    resetCashout2();
+    renderTicket2();
+    lastRecoveredRoundId=round?.id??null;
+  }catch(error){
+    const raw=String(error?.message||'');
+    const reconciled=await reconcilePendingCashout2();
+    if(reconciled)return;
+
+    const roundEnded=/Crash ja atingido|Aposta ja liquidada|Voo nao esta ativo/i.test(raw);
+
+    if(roundEnded){
+      clearPendingCashout2();
+      myBet2=null;
+      myStake2=0;
+      myAutoCashout2=null;
+      lastRecoveredRoundId=round?.id??null;
+      resetCashout2();
+      renderTicket2();
+      $('#aviatorMessage2').textContent='Fim da rodada. Cash-out não disponível.';
+      clearTimeout(stateTimer);
+      await state();
+    }else if(!connectionOnline||navigator.onLine===false){
+      setConnectionState(false);
+      $('#aviatorMessage2').textContent='Sem ligação. A confirmar o cash-out quando reconectar.';
+    }else{
+      clearPendingCashout2();
+      $('#aviatorMessage2').textContent=playerMessage(
+        raw,
+        'Não foi possível confirmar o cash-out.'
+      );
+      lastRecoveredRoundId=null;
+      await recover(true);
+    }
+  }finally{
+    cashingOut2=false;
     renderMaintenanceView();
     renderCurrentRound();
   }
