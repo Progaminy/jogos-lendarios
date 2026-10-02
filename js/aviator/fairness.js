@@ -10,7 +10,8 @@
 
   const VERSION_V2='JL-AVIATOR-PF-v2';
   const VERSION_V3='JL-AVIATOR-PF-v3';
-  const VERSION=VERSION_V3;
+  const VERSION_V4='JL-AVIATOR-PF-v4';
+  const VERSION=VERSION_V4;
 
   async function sha256Hex(text){
     const bytes=new TextEncoder().encode(String(text));
@@ -34,8 +35,8 @@
       return Number(targetScaled)/1e6;
     }
 
-    if(version===VERSION_V3){
-      // Novas rodadas: round(10 + 490*u, 6), intervalo 10x..500x.
+    if(version===VERSION_V3||version===VERSION_V4){
+      // v3/v4: round(10 + 490*u, 6), intervalo 10x..500x.
       const variableScaled=(490000000n*n + den/2n)/den;
       const targetScaled=10000000n+variableScaled;
       return Number(targetScaled)/1e6;
@@ -55,7 +56,7 @@
     if(!proof?.available)return Object.freeze({valid:false,reason:proof?.reason||'unavailable'});
 
     const version=String(proof.fairness_version||'');
-    if(version!==VERSION_V2&&version!==VERSION_V3){
+    if(version!==VERSION_V2&&version!==VERSION_V3&&version!==VERSION_V4){
       return Object.freeze({valid:false,reason:'version'});
     }
 
@@ -72,9 +73,11 @@
     const locked=Number(proof.inputs?.locked_effective_target);
     const visual=Number(proof.inputs?.visual_target);
     const zero=Number(proof.inputs?.zero_exposure_at_multiplier);
-    const expectedCrash=visualExtension
-      ? Math.max(visual,Number.isFinite(zero)?zero:visual)
-      : locked;
+    const expectedCrash=version===VERSION_V4
+      ? visual
+      : visualExtension
+        ? Math.max(visual,Number.isFinite(zero)?zero:visual)
+        : locked;
     const resultValid=nearlyEqual(expectedCrash,proof.result?.actual_crash_multiplier);
 
     return Object.freeze({
@@ -93,6 +96,7 @@
     VERSION,
     VERSION_V2,
     VERSION_V3,
+    VERSION_V4,
     sha256Hex,
     visualTarget,
     verify
