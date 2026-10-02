@@ -16,8 +16,8 @@ declare
   v_result jsonb;
   r public.jl_aviator_rounds;
   v_open_seconds numeric;
-  v_total_seconds numeric;
-  v_locked_seconds numeric;
+  v_locked_at timestamptz;
+  v_wait_seconds numeric;
 begin
   v_result:=public.jl_aviator_open_next_if_due();
 
@@ -30,19 +30,35 @@ begin
   where id=(v_result->>'round_id')::bigint;
 
   v_open_seconds:=extract(epoch from (r.betting_closes_at-r.opened_at));
-  v_total_seconds:=extract(epoch from (r.takeoff_at-r.opened_at));
-  v_locked_seconds:=extract(epoch from (r.takeoff_at-r.betting_closes_at));
-
-  if v_open_seconds<6.8 or v_open_seconds>7.2 then
-    raise exception 'janela OPEN esperada 7s: %',v_open_seconds;
+  if v_open_seconds<9.8 or v_open_seconds>10.2 then
+    raise exception 'janela de apostas esperada 10s: %',v_open_seconds;
   end if;
 
-  if v_total_seconds<9.8 or v_total_seconds>10.2 then
-    raise exception 'contagem total esperada 10s: %',v_total_seconds;
+  if r.takeoff_at is not null then
+    raise exception 'takeoff_at deve ser definido somente depois do lock: %',r.takeoff_at;
   end if;
 
-  if v_locked_seconds<2.9 or v_locked_seconds>3.1 then
-    raise exception 'janela LOCKED esperada 3s: %',v_locked_seconds;
+  update public.jl_aviator_rounds
+     set betting_closes_at=clock_timestamp()-interval '1 millisecond',
+         engine_due_at=clock_timestamp()-interval '1 millisecond'
+   where id=r.id;
+
+  perform public.jl_aviator_engine_tick();
+
+  select locked_at into v_locked_at
+  from public.jl_aviator_rounds
+  where id=r.id;
+
+  if v_locked_at is null then
+    raise exception 'rodada deveria estar LOCKED depois de 0';
+  end if;
+
+  v_wait_seconds:=extract(epoch from (
+    public.jl_aviator_schedule_next_engine_event(r.id)-v_locked_at
+  ));
+
+  if v_wait_seconds<2.8 or v_wait_seconds>3.2 then
+    raise exception 'janela de segurança esperada ~3s apos lock: %',v_wait_seconds;
   end if;
 end
 $countdown$;
