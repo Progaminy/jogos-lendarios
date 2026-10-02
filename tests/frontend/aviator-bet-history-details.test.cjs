@@ -12,14 +12,16 @@ const personal=read('js/aviator/personal-history.js');
 const css=read('aviator.css');
 const html=read('aviator.html');
 
-test('cada aposta mostra os seis detalhes pedidos',()=>{
-  for(const label of ['Rodada','Apostado','Cash-out','Crash','Pagamento','Horário']){
+test('cada aposta mostra painel e os detalhes financeiros pedidos',()=>{
+  for(const label of ['Painel','Rodada','Apostado','Cash-out','Crash','Pagamento','Horário']){
     assert.ok(personal.includes("['"+label+"'"),label+' ausente');
   }
   assert.match(personal,/row\?\.cashout_multiplier/);
   assert.match(personal,/row\?\.crash_multiplier/);
   assert.match(personal,/row\?\.payout/);
   assert.match(personal,/row\?\.created_at/);
+  assert.match(personal,/row\?\.bet_slot/);
+  assert.match(personal,/\['Painel','Aposta '\+slot\]/);
 });
 
 test('valores desconhecidos aparecem como traço em vez de zero ou data inventada',()=>{
