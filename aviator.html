@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0a0d14">
   <title>Aviator Lendário — Jogos Lendários</title>
   <link rel="stylesheet" href="./styles.css?v=20260929">
-  <link rel="stylesheet" href="./aviator.css?v=20261002-3">
+  <link rel="stylesheet" href="./aviator.css?v=20261002-4">
 </head>
 <body>
   <header class="topbar">
@@ -38,8 +38,8 @@
         </div>
         <div id="roundState" class="aviator-state">A carregar…</div>
         <div class="aviator-head-tools">
-          <button id="aviatorSoundToggle" class="aviator-sound-toggle" type="button" aria-pressed="false" aria-label="Ativar som do Aviator" title="Ativar som">🔇 Som</button>
-          <button id="aviatorVibrationToggle" class="aviator-vibration-toggle" type="button" aria-pressed="false" aria-label="Ativar vibração do Aviator" title="Ativar vibração" hidden>🚫 Vib.</button>
+          <button id="aviatorSoundToggle" class="aviator-sound-toggle" type="button" aria-pressed="false" aria-label="Ativar som do Aviator" title="Ativar som"><span aria-hidden="true">🔇</span></button>
+          <button id="aviatorVibrationToggle" class="aviator-vibration-toggle" type="button" aria-pressed="false" aria-label="Ativar vibração do Aviator" title="Ativar vibração" hidden><span aria-hidden="true">📳</span></button>
           <div class="aviator-clock">
             <span id="clockLabel">AGUARDANDO</span>
             <strong id="roundCountdown">—</strong>
@@ -67,13 +67,13 @@
           <strong>VOOU!</strong>
           <span id="crashMultiplier">1.00×</span>
           <div id="nextRoundCountdown" class="next-round-countdown">
-            <small>NOVA RODADA EM</small>
+            <small class="sr-only">Nova rodada em</small>
             <strong id="nextRoundSeconds">—</strong>
           </div>
         </div>
       </div>
 
-      <details id="proofWrap" class="proof" hidden>
+      <details id="proofWrap" class="proof sr-only" hidden>
         <summary>Verificação da rodada</summary>
         <span id="proof" class="proof-status"></span>
       </details>
