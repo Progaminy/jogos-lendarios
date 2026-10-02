@@ -46,13 +46,12 @@ test('request keys e cash-out pendente são separados por slot',()=>{
   assert.match(panel,/financial\.clearPendingCashout\(slot\)/);
 });
 
-test('painel 2 tem auto-bet, cancelamento e cash-out próprios',()=>{
+test('painel 2 tem auto-bet e cash-out próprios sem Cancelar fantasma',()=>{
   assert.match(panel,/aviatorAutoBet'\+suffix/);
-  assert.match(panel,/financial\.cancelBet\(/);
   assert.match(panel,/financial\.requestFinancialCashout\(/);
   assert.match(panel,/Aposta automática confirmada para esta rodada/);
   assert.match(panel,/liveReturn=active&&hasMultiplier&&hasStake\?money\(stake\*m\):null/);
-  assert.match(panel,/cashoutButton\.textContent=pending\?'Confirmando…':liveReturn\|\|'Sacar'/);
+  assert.match(panel,/cashoutButton\.textContent=pending\?'Confirmando…':liveReturn\|\|'Sacar'/);\n  assert.doesNotMatch(panel,/[\"'\`]Cancelar[\"'\`]/);
 });
 
 test('reconexão do painel 2 escolhe apenas bet_slot 2',()=>{
