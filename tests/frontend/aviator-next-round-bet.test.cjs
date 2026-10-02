@@ -38,7 +38,7 @@ test('aposta silenciosa é enviada automaticamente quando a nova rodada fica OPE
   assert.match(nextBet,/function schedule\(\)/);
   assert.match(nextBet,/r\?\.status!=='OPEN'/);
   assert.match(nextBet,/current\?\.status!=='OPEN'/);
-  assert.match(nextBet,/form\?\.requestSubmit\?\.\(\)/);
+  assert.match(nextBet,/typeof form\?\.requestSubmit==='function'[\s\S]*?form\.requestSubmit\(\)/);
   assert.match(primary,/nextBet\?\.schedule\(\)/);
   assert.match(secondary,/nextBet\?\.schedule\(\)/);
 });
@@ -54,7 +54,7 @@ test('fila manual tem prioridade sobre auto-bet',()=>{
 test('fila força submit como aposta real quando OPEN chega',()=>{
   assert.match(nextBet,/if\(button\)button\.dataset\.action='bet'/);
   assert.match(nextBet,/submittingRoundId=roundId/);
-  assert.match(nextBet,/form\?\.requestSubmit\?\.\(\)/);
+  assert.match(nextBet,/typeof form\?\.requestSubmit==='function'[\s\S]*?form\.requestSubmit\(\)/);
 });
 
 test('entre rodadas Apostar continua disponível para os dois painéis',()=>{
