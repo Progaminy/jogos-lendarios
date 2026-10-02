@@ -178,7 +178,7 @@ test('confirmação reconciliada sobrevive à primeira sincronização de rodada
 test('provably fair v2 verifica seed, lock e resultado sem confiar no controlador',async()=>{
   const seed='0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
   const seedCommit=await fairness.sha256Hex(seed);
-  const visual=fairness.visualTarget(seedCommit);
+  const visual=fairness.visualTarget(seedCommit,fairness.VERSION_V2);
   const payload=[
     fairness.VERSION_V2,
     '42',
