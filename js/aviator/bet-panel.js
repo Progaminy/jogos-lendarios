@@ -669,7 +669,7 @@
           }
 
           saveQueuedNextBet({amount,auto_cashout:auto});
-          if(message)message.textContent='Próxima aposta preparada. Será enviada quando as apostas abrirem.';
+          if(message)message.textContent='';
         }catch(error){
           if(message)message.textContent=playerMessage(
             error,
