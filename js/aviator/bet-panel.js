@@ -38,7 +38,6 @@
     const round=()=>getRound?.()||null;
     const online=()=>Boolean(isOnline?.());
     const enabled=()=>Boolean(isEnabled?.());
-    const nextBet=null;
 
     function setInputsLocked(locked){
       const amount=$('#aviatorAmount'+suffix);
@@ -58,7 +57,7 @@
       const statusEl=$('#betActionStatus'+suffix);
       if(wrap){
         wrap.classList.toggle('hidden',Boolean(hidden));
-        wrap.classList.toggle('is-cancel',mode==='cancel'||mode==='cancel-next');
+        wrap.classList.remove('is-cancel');
       }
       if(betButton){
         betButton.textContent=String(label||'Apostar');
@@ -509,7 +508,6 @@
     }
 
     function onRoundChanged(){
-      nextBet?.resetRound();
       betId=null;
       stake=0;
       autoCashout=null;
