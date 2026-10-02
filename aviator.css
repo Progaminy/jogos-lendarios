@@ -621,3 +621,68 @@ body>.topbar .brand{font-size:1rem}
   .aviator-top-balance span{font-size:.56rem}
   .aviator-top-balance strong{font-size:.82rem}
 }
+
+
+/* Ajuste rápido do valor da aposta. */
+.stake-stepper{
+  display:grid;
+  grid-template-columns:30px minmax(0,1fr) 30px;
+  gap:3px;
+  align-items:stretch;
+  min-width:0;
+  width:100%
+}
+.stake-stepper .money-input{
+  min-width:0;
+  width:100%
+}
+.stake-step{
+  display:grid;
+  place-items:center;
+  min-width:0;
+  width:30px;
+  height:100%;
+  min-height:38px;
+  padding:0;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:9px;
+  background:rgba(255,255,255,.025);
+  color:#eef2f7;
+  font:inherit;
+  font-size:1.15rem;
+  font-weight:950;
+  line-height:1;
+  cursor:pointer;
+  touch-action:manipulation
+}
+.stake-step:disabled{
+  opacity:.34;
+  cursor:not-allowed
+}
+.stake-step:active:not(:disabled){
+  transform:scale(.96)
+}
+
+@media(max-width:650px){
+  .aviator-controls form{
+    grid-template-columns:minmax(0,1.34fr) minmax(0,.62fr) minmax(118px,1.18fr)
+  }
+  .stake-stepper{
+    grid-template-columns:27px minmax(0,1fr) 27px;
+    gap:2px
+  }
+  .stake-step{
+    width:27px;
+    min-height:38px;
+    border-radius:8px;
+    font-size:1.05rem
+  }
+  .stake-stepper .money-input span{
+    font-size:.56rem
+  }
+  .stake-stepper .money-input input{
+    font-size:.82rem;
+    padding-left:2px;
+    padding-right:2px
+  }
+}
