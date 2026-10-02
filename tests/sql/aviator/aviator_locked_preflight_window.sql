@@ -49,10 +49,8 @@ begin
     raise exception 'rodada nova deve iniciar internamente OPEN/BETTING: %',r.status;
   end if;
 
-  gap_seconds:=extract(epoch from (r.takeoff_at-r.betting_closes_at));
-
-  if gap_seconds<>3 then
-    raise exception 'LOCKED deve durar 3 segundos; recebeu %',gap_seconds;
+  if r.takeoff_at is not null then
+    raise exception 'descolagem nao deve ser pre-agendada antes de 0: %',r.takeoff_at;
   end if;
 
   state:=public.jl_aviator_public_state();
@@ -84,7 +82,8 @@ begin
 
   update public.jl_aviator_rounds
      set betting_closes_at=clock_timestamp()-interval '5 seconds',
-         takeoff_at=clock_timestamp()+interval '3 seconds'
+         takeoff_at=null,
+         engine_due_at=clock_timestamp()-interval '1 millisecond'
    where id=rid;
 
   tick:=public.jl_aviator_engine_tick();
@@ -136,11 +135,12 @@ begin
   tick:=public.jl_aviator_engine_tick();
 
   if tick->>'action'<>'WAIT_LOCKED' then
-    raise exception 'engine nao deveria descolar antes de takeoff_at: %',tick;
+    raise exception 'engine nao deveria descolar durante janela segura: %',tick;
   end if;
 
   update public.jl_aviator_rounds
-     set takeoff_at=clock_timestamp()-interval '1 second'
+     set locked_at=clock_timestamp()-interval '4 seconds',
+         engine_due_at=clock_timestamp()-interval '1 millisecond'
    where id=rid;
 
   tick:=public.jl_aviator_engine_tick();
