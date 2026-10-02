@@ -38,11 +38,7 @@
     const round=()=>getRound?.()||null;
     const online=()=>Boolean(isOnline?.());
     const enabled=()=>Boolean(isEnabled?.());
-    const nextBet=window.JLAviatorNextBet?.create({
-      slot,$,playerToken,getRound:round,isEnabled:enabled,isOnline:online,
-      isBusy:()=>betting,hasActiveBet:()=>Boolean(betId),playerMessage,form,
-      onMessage:text=>{if(message)message.textContent=text}
-    })||null;
+    const nextBet=null;
 
     function setInputsLocked(locked){
       const amount=$('#aviatorAmount'+suffix);
@@ -287,13 +283,12 @@
       renderAutoBetStatus();
 
       if(!r){
-        const queued=Boolean(nextBet?.hasQueued());
-        setInputsLocked(!online()||!enabled()||queued);
+        setInputsLocked(true);
         renderBetAction({
-          disabled:!online()||!enabled(),
-          status:queued?'Aposta registada':'Disponível',
-          label:queued?'Cancelar':'Apostar',
-          mode:queued?'cancel-next':'queue-next'
+          disabled:true,
+          status:'A carregar',
+          label:'Apostar',
+          mode:'bet'
         });
         resetCashout();
         renderTicket();
@@ -304,43 +299,31 @@
       if(r.status==='OPEN'){
         const closed=r.betting_open===false||Number(secondsToClose?.())===0;
         const inputsLocked=!enabled()||!online()||Boolean(betId)||betting||closed;
-        const canCancel=enabled()&&online()&&Boolean(betId)&&!betting&&!closed;
         setInputsLocked(inputsLocked);
 
-        if(canCancel){
-          renderBetAction({
-            disabled:false,
-            status:'Aposta confirmada · toque para cancelar',
-            label:'Cancelar',
-            mode:'cancel'
-          });
-        }else{
-          renderBetAction({
-            disabled:inputsLocked,
-            status:betId
-              ?closed?'Apostas fechadas':'Aposta confirmada'
-              :closed?'Apostas fechadas':'Disponível',
-            label:betId?'Foi apostado':'Apostar',
-            mode:betId?'confirmed':'bet'
-          });
-        }
+        renderBetAction({
+          disabled:inputsLocked,
+          status:betId
+            ?'Aposta confirmada'
+            :closed?'Apostas fechadas':'Disponível',
+          label:betId?'Foi apostado':'Apostar',
+          mode:betId?'confirmed':'bet'
+        });
 
         resetCashout();
         renderTicket();
         renderConfirmation();
-        nextBet?.schedule();
         scheduleAutoBet();
         return;
       }
 
       if(r.status==='LOCKED'){
-        const queued=Boolean(nextBet?.hasQueued());
-        setInputsLocked(Boolean(betId)||!online()||!enabled()||queued);
+        setInputsLocked(true);
         renderBetAction({
-          disabled:Boolean(betId)||!online()||!enabled(),
-          status:betId?'Aposta confirmada':queued?'Aposta registada':'Disponível',
-          label:betId?'Foi apostado':queued?'Cancelar':'Apostar',
-          mode:betId?'confirmed':queued?'cancel-next':'queue-next'
+          disabled:true,
+          status:betId?'Aposta confirmada':'Apostas fechadas',
+          label:betId?'Foi apostado':'Apostar',
+          mode:betId?'confirmed':'bet'
         });
         resetCashout();
         renderTicket();
@@ -350,13 +333,12 @@
       }
 
       if(r.status==='FLYING'){
-        const queued=Boolean(nextBet?.hasQueued());
-        setInputsLocked(!online()||!enabled()||Boolean(betId)||queued);
+        setInputsLocked(true);
         renderBetAction({
-          disabled:Boolean(betId)||!online()||!enabled(),
-          status:queued?'Aposta registada':'Disponível',
-          label:queued?'Cancelar':'Apostar',
-          mode:queued?'cancel-next':'queue-next',
+          disabled:true,
+          status:betId?'Aposta em voo':'Voo em curso',
+          label:betId?'Foi apostado':'Apostar',
+          mode:betId?'confirmed':'bet',
           hidden:Boolean(betId)
         });
         renderCashout({
@@ -371,13 +353,12 @@
         return;
       }
 
-      const queued=Boolean(nextBet?.hasQueued());
-      setInputsLocked(!online()||!enabled()||queued);
+      setInputsLocked(true);
       renderBetAction({
-        disabled:!online()||!enabled(),
-        status:queued?'Aposta registada':'Disponível',
-        label:queued?'Cancelar':'Apostar',
-        mode:queued?'cancel-next':'queue-next'
+        disabled:true,
+        status:'Aguarde a próxima rodada',
+        label:'Apostar',
+        mode:'bet'
       });
       resetCashout();
       renderTicket();
@@ -580,64 +561,15 @@
       event.preventDefault();
       if(betting)return;
 
-      const action=String(betButton?.dataset.action||'bet');
-      if(nextBet?.handleAction(action)){renderRound();return}
-
-      const queuedTriggered=
-        action==='bet'&&Boolean(nextBet?.isSubmitting(round()?.id));
       const autoTriggered=
-        action==='bet'&&autoBetSubmittingRoundId===Number(round()?.id);
+        autoBetSubmittingRoundId===Number(round()?.id);
       betting=true;
-
-      if(action==='cancel'){
-        const id=betId;
-        const oldStake=stake;
-        renderBetAction({
-          disabled:true,
-          status:'Cancelando aposta…',
-          label:'Cancelar',
-          mode:'cancel'
-        });
-
-        try{
-          if(!online())throw new Error('Sem ligação. Aguarde a reconexão.');
-          if(!playerToken())throw new Error('Entre na sua conta primeiro.');
-          if(!id||round()?.status!=='OPEN'||round()?.betting_open===false){
-            throw new Error('Cancelamento encerrado para esta rodada.');
-          }
-
-          const result=await financial.cancelBet(
-            id,
-            financial.cancelBetRequestKey(id)
-          );
-
-          renderResult({
-            status:'REFUNDED',
-            stake:oldStake,
-            payout:Number(result.refund)||oldStake
-          });
-          betId=null;
-          stake=0;
-          autoCashout=null;
-          if(message){
-            message.textContent='Aposta cancelada. '+
-              money(Number(result.refund)||oldStake)+' devolvidos.';
-          }
-        }catch(error){
-          if(message)message.textContent=playerMessage(
-            error,
-            'Não foi possível cancelar a aposta.'
-          );
-        }finally{
-          betting=false;
-          renderRound();
-        }
-        return;
-      }
 
       renderBetAction({
         disabled:true,
-        status:'Confirmando aposta…'
+        status:'Confirmando aposta…',
+        label:'Apostar',
+        mode:'bet'
       });
 
       try{
@@ -677,7 +609,6 @@
         stake=Number(result.stake);
         autoCashout=Number(result.auto_cashout_multiplier)||null;
         sound?.playBet?.();
-        if(queuedTriggered)nextBet?.consume(round()?.id);
 
         if(message){
           message.textContent=autoTriggered
@@ -693,7 +624,6 @@
         if(autoBetSubmittingRoundId===Number(round()?.id)){
           autoBetSubmittingRoundId=null;
         }
-        nextBet?.clearSubmitting(round()?.id);
         betting=false;
         renderRound();
       }
