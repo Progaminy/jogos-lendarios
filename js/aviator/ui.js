@@ -171,9 +171,11 @@
         const nextDisabled=Boolean(disabled);
         const nextText=pending
           ?'Confirmando cash-out…'
-          :active&&hasMultiplier
-            ?'Cash-out · '+m.toFixed(2)+'×'
-            :'Cash-out';
+          :active&&hasMultiplier&&hasStake
+            ?'Cash-out · '+money(s*m)
+            :active&&hasMultiplier
+              ?'Cash-out · '+m.toFixed(2)+'×'
+              :'Cash-out';
         if(button.disabled!==nextDisabled)button.disabled=nextDisabled;
         if(button.textContent!==nextText)button.textContent=nextText;
       }
