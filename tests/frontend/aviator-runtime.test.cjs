@@ -90,7 +90,7 @@ test('controlador usa Broadcast como caminho principal e polling apenas como fal
   assert.match(realtime,/\.on\('broadcast',\{event:'state'\}/);
   assert.match(js,/applyRealtimeSnapshot/);
   assert.match(js,/realtimeConnected/);
-  assert.match(js,/scheduleState\(120000\)/);
+  assert.match(js,/if\(connected\)[\s\S]*?scheduleState\(\)/);
 });
 
 test('HTML mantém histórico e bilhete ao vivo com ids estáveis',()=>{
