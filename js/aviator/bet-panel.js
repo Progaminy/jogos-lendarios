@@ -638,7 +638,7 @@
       if(action==='queue-next'||action==='cancel-next'){
         if(action==='cancel-next'){
           saveQueuedNextBet(null);
-          if(message)message.textContent='Próxima aposta cancelada.';
+          if(message)message.textContent='';
           renderRound();
           return;
         }
