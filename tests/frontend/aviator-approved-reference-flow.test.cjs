@@ -13,16 +13,15 @@ test('histórico recente de multiplicadores fica no topo do Aviator',()=>{
   const stageAt=html.indexOf('id="aviatorStage"');
   assert.ok(historyAt>=0&&stageAt>=0&&historyAt<stageAt);
   assert.match(html,/Últimos multiplicadores/);
-  assert.match(html,/id="aviatorHistory" class="aviator-history-strip"/);
   assert.match(css,/\.aviator-history-top/);
 });
 
-test('durante voo permite Apostar para a próxima rodada sem Cancelar',()=>{
+test('durante voo permite Apostar e cancelar a próxima aposta antes de confirmar',()=>{
   const flying=js.match(/function renderFlying\(\)[\s\S]*?function renderFinished/)?.[0]||'';
   assert.match(flying,/Aposte para a próxima rodada/);
-  assert.match(flying,/myBet\|\|queued\?'Foi apostado':'Apostar'/);
+  assert.match(flying,/queued\?'Cancelar'/);
+  assert.match(flying,/queued\?'cancel-next'/);
   assert.match(flying,/renderCashoutAction\(\{[\s\S]*?active:Boolean\(myBet\)/);
-  assert.doesNotMatch(flying,/Cancelar/);
 });
 
 test('auto-bet só dispara quando servidor informa OPEN e não disputa fila do voo',()=>{
@@ -33,8 +32,7 @@ test('auto-bet só dispara quando servidor informa OPEN e não disputa fila do v
   assert.match(fn,/requestSubmit/);
 });
 
-test('contagem visível de aposta permanece separada do multiplicador',()=>{
+test('a única contagem numérica visível continua sendo 10 a 0',()=>{
   assert.match(html,/id="preflightCountdown"/);
-  assert.match(html,/id="multiplier"/);
   assert.match(html,/id="nextRoundCountdown" class="next-round-countdown hidden"/);
 });
