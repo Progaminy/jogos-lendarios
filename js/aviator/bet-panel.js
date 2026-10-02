@@ -350,7 +350,7 @@
         renderBetAction({
           disabled:true,
           status:betId?'Aposta confirmada':'Apostas fechadas',
-          label:betId?'Foi apostado':'Aguarde',
+          label:betId?'Apostado':'Aguarde',
           mode:betId?'confirmed':'locked'
         });
         resetCashout();
@@ -372,7 +372,7 @@
             :queued
               ?'Aposta registada para a próxima rodada'
               :'Aposte para a próxima rodada',
-          label:queued?'Cancelar':betId?'Foi apostado':'Apostar',
+          label:queued?'Cancelar':betId?'Apostado':'Apostar',
           mode:queued?'cancel-next':betId?'confirmed':'bet',
           hidden:Boolean(betId)
         });
