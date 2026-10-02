@@ -21,7 +21,7 @@ test('contagem e multiplicador têm superfícies distintas',()=>{
 });
 
 test('contagem usa segundos e multiplicador usa vezes',()=>{
-  assert.match(js,/String\(takeoffSeconds\)\+'s'/);
+  assert.match(js,/const takeoffDisplay=takeoffSeconds===null\?'—':String\(takeoffSeconds\);/);
   assert.match(js,/String\(seconds\)\+'s'/);
   assert.match(js,/toFixed\(2\)\+'×'/);
   assert.doesNotMatch(html,/countdown-value[^>]*>[^<]*×/);
@@ -46,4 +46,11 @@ test('estilo da contagem é menor que o multiplicador e semanticamente separado'
   assert.match(css,/\.preflight \.countdown-value\{font-size:clamp\(2\.7rem,11vw,5\.2rem\)/);
   assert.match(css,/\.multiplier\{font-size:clamp\(72px,16vw,145px\)/);
   assert.match(css,/\.next-round-countdown/);
+});
+
+
+test('contagem principal de descolagem é número puro e destacada',()=>{
+  assert.match(js,/const takeoffDisplay=takeoffSeconds===null\?'—':String\(takeoffSeconds\);/);
+  assert.match(css,/Contagem principal: número puro, grande e estável de 10 a 0/);
+  assert.match(css,/\.preflight \.countdown-value\{[\s\S]*?font-size:clamp\(4rem,15vw,7rem\)/);
 });
