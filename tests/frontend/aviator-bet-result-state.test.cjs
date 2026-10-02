@@ -36,10 +36,13 @@ test('estados não dependem apenas de cor',()=>{
   assert.match(ui,/panel\.dataset\.result='refunded'/);
 });
 
-test('ganha mostra payout confirmado e multiplicador',()=>{
+test('ganha mostra payout confirmado e desaparece automaticamente',()=>{
   assert.match(ui,/status==='CASHED_OUT'/);
   assert.match(ui,/'Recebido '\+money\(payout\)/);
   assert.match(ui,/multiplier\.toFixed\(2\)\+'×'/);
+  assert.match(ui,/betResultTimer=setTimeout\(\(\)=>\{[\s\S]*?panel\.classList\.add\('hidden'\)[\s\S]*?\},3000\)/);
+  const panel=read('js/aviator/bet-panel.js');
+  assert.match(panel,/betResultTimer=setTimeout\(\(\)=>\{[\s\S]*?panel\.classList\.add\('hidden'\)[\s\S]*?\},3000\)/);
 });
 
 test('perdida e reembolsada mostram valor textual quando disponível',()=>{
