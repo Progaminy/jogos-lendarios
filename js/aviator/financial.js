@@ -2,7 +2,7 @@
   'use strict';
 
   function create({rpc,playerToken,getRoundId,storage=sessionStorage,cryptoRef=crypto}) {
-    const pendingCashoutKey='jl_aviator_pending_cashout_v1';
+    const pendingCashoutPrefix='jl_aviator_pending_cashout_v1';
     const pendingMetricsKey='jl_aviator_metric_queue_v1';
     let metricFlushBusy=false;
 
@@ -30,13 +30,19 @@
       return requestKeyFor('cancel',betId);
     }
 
-    function readPendingCashout(){
+    function pendingCashoutKey(slot=1){
+      const n=Number(slot)===2?2:1;
+      return pendingCashoutPrefix+'_slot_'+n;
+    }
+
+    function readPendingCashout(slot=1){
       try{
-        const value=JSON.parse(storage.getItem(pendingCashoutKey)||'null');
+        const key=pendingCashoutKey(slot);
+        const value=JSON.parse(storage.getItem(key)||'null');
         const betId=Number(value?.bet_id),roundId=Number(value?.round_id),createdAt=Number(value?.created_at);
         if(!Number.isFinite(betId)||!Number.isFinite(roundId)||!Number.isFinite(createdAt))return null;
         if(Date.now()-createdAt>6*60*60*1000){
-          storage.removeItem(pendingCashoutKey);
+          storage.removeItem(key);
           return null;
         }
         const requestKey=String(value?.request_key||cashoutRequestKey(betId)||'');
@@ -44,9 +50,9 @@
       }catch(_){ return null; }
     }
 
-    function savePendingCashout(betId,roundId,requestKey){
+    function savePendingCashout(betId,roundId,requestKey,slot=1){
       try{
-        storage.setItem(pendingCashoutKey,JSON.stringify({
+        storage.setItem(pendingCashoutKey(slot),JSON.stringify({
           bet_id:Number(betId),
           round_id:Number(roundId),
           request_key:String(requestKey||cashoutRequestKey(betId)||''),
@@ -55,20 +61,25 @@
       }catch(_){}
     }
 
-    function clearPendingCashout(){
-      try{storage.removeItem(pendingCashoutKey)}catch(_){}
+    function clearPendingCashout(slot=1){
+      try{storage.removeItem(pendingCashoutKey(slot))}catch(_){}
     }
 
-    function betKey(){
+    function betKeyForSlot(slot=1){
       const roundId=Number(getRoundId?.());
       if(!Number.isFinite(roundId)||roundId<=0)return null;
-      const key='jl_aviator_bet_key_'+roundId;
+      const n=Number(slot)===2?2:1;
+      const key='jl_aviator_bet_key_'+roundId+'_slot_'+n;
       let value=storage.getItem(key);
       if(!value){
         value=uuid();
         storage.setItem(key,value);
       }
       return value;
+    }
+
+    function betKey(){
+      return betKeyForSlot(1);
     }
 
     function metricPayload(operation,durationMs,success,errorCode=null,roundId=null,betId=null){
@@ -149,6 +160,41 @@
         void flushPendingMetrics();
       }catch(_){
         queueMetric(metric);
+      }
+    }
+
+    async function placeBetSlot({slot,amount,requestKey,autoCashoutMultiplier}){
+      const n=Number(slot)===2?2:1;
+      const started=Date.now();
+      try{
+        const result=await rpc('jl_aviator_place_bet_slot',{
+          p_token:playerToken(),
+          p_amount:Number(amount),
+          p_request_key:String(requestKey||betKeyForSlot(n)||''),
+          p_auto_cashout_multiplier:autoCashoutMultiplier===null
+            ?null
+            :Number(autoCashoutMultiplier),
+          p_bet_slot:n
+        });
+        void recordClientMetric(
+          'BET',
+          Date.now()-started,
+          true,
+          null,
+          result?.round_id,
+          result?.bet_id
+        );
+        return result;
+      }catch(error){
+        void recordClientMetric(
+          'BET',
+          Date.now()-started,
+          false,
+          error?.code||error?.message||'BET_FAILED',
+          getRoundId?.(),
+          null
+        );
+        throw error;
       }
     }
 
@@ -295,7 +341,8 @@
     return Object.freeze({
       cashoutRequestKey,cancelBetRequestKey,
       readPendingCashout,savePendingCashout,clearPendingCashout,
-      betKey,placeBet,cancelBet,requestFinancialCashout,fetchBetStatus,cashoutMessage,
+      betKey,betKeyForSlot,placeBet,placeBetSlot,cancelBet,
+      requestFinancialCashout,fetchBetStatus,cashoutMessage,
       recordClientMetric,flushPendingMetrics
     });
   }
