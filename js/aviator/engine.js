@@ -45,7 +45,7 @@
         return runtime.liveMultiplier(round.started_at,serverNowMs());
       }
       const value=Number(round?.current_multiplier);
-      return Number.isFinite(value)&&value>=1?value:1;
+      return Number.isFinite(value)&&value>=1?Math.min(500,value):1;
     }
 
     function secondsUntil(field,fallbackField){
