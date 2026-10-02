@@ -25,12 +25,13 @@ test('mobile mantém o mesmo slot grande sem deslocamento',()=>{
   assert.match(css,/\.aviator-cashout-action #cashoutBtn\{height:72px;min-height:72px;font-size:1\.28rem\}/);
 });
 
-test('ação muda Apostar -> Cancelar -> Cash-out conforme estado',()=>{
+test('ação muda Apostar -> Cancelar -> Sacar conforme estado',()=>{
   assert.match(ui,/label='Apostar'/);
   assert.match(ui,/mode='bet'/);
-  assert.match(ui,/wrap\.classList\.toggle\('is-cancel',mode==='cancel'\)/);
+  assert.match(ui,/mode==='cancel'\|\|mode==='cancel-next'/);
   assert.match(js,/'Cancelar',[\s\S]*?'cancel'/);
   assert.match(js,/renderCashoutAction\(\{[\s\S]*?active:Boolean\(myBet\)/);
+  assert.match(ui,/active\?'Sacar':'Sacar'/);
 });
 
 test('OPEN com aposta confirmada disponibiliza cancelamento real',()=>{
@@ -52,4 +53,10 @@ test('mobile mantém os botões dos dois slots dentro da largura disponível',()
   assert.match(css,/#betBtn2,#cashoutBtn2\{[\s\S]*?min-height:91px/);
   assert.match(css,/@media\(max-width:650px\)[\s\S]*?#betBtn2,#cashoutBtn2\{[\s\S]*?min-height:77px/);
   assert.match(css,/overflow-wrap:anywhere/);
+});
+
+
+test('Apostar é verde e Sacar é vermelho',()=>{
+  assert.match(css,/\.aviator-bet-action:not\(\.is-cancel\) button:not\(:disabled\)\{[\s\S]*?background:#36c979!important/);
+  assert.match(css,/\.aviator-cashout-action\.is-priority button:not\(:disabled\)\{[\s\S]*?background:#d83b42!important/);
 });
