@@ -67,6 +67,14 @@
       }
     }
 
+    function cancel(){
+      if(!queued)return false;
+      save(null);
+      submittingRoundId=null;
+      onMessage?.('Aposta cancelada.');
+      return true;
+    }
+
     function schedule(){
       const r=getRound?.();
       const roundId=Number(r?.id);
@@ -123,6 +131,7 @@
     return Object.freeze({
       hasQueued:()=>Boolean(queued),
       queue,
+      cancel,
       schedule,
       isSubmitting,
       consume,
