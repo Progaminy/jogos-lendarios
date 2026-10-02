@@ -6,11 +6,7 @@ let round=null;
 let myBet=null;
 let myStake=0;
 let myAutoCashout=null;
-let myBet2=null;
-let myStake2=0;
-let myAutoCashout2=null;
 let lastBetResult=null;
-let lastBetResult2=null;
 let recovering=false;
 let lastRecoveredRoundId=null;
 let enabled=true;
@@ -19,9 +15,7 @@ let stateController=null;
 let lastDisplaySeq=null;
 let stateTimer=0;
 let betting=false;
-let betting2=false;
 let cashingOut=false;
-let cashingOut2=false;
 let openUiTimer=0;
 let connectionOnline=navigator.onLine!==false;
 let preserveMessageOnNextRoundSync=false;
@@ -32,14 +26,10 @@ let realtimeConnected=false;
 let flightFrame=0;
 let lastFlightPaintAt=0;
 let autoRecoveryRoundId=null;
-let autoRecoveryRoundId2=null;
 let lastFlightHudAt=0;
 let autoBetEnabled=sessionStorage.getItem('jl_aviator_auto_bet_v1')==='1';
-let autoBetEnabled2=sessionStorage.getItem('jl_aviator_auto_bet_v1_slot_2')==='1';
 let autoBetAttemptedRoundId=null;
-let autoBetAttemptedRoundId2=null;
 let autoBetSubmittingRoundId=null;
-let autoBetSubmittingRoundId2=null;
 
 const playerToken=()=>JLSession.getPlayerToken();
 const fairness=window.JLAviatorFairness||null;
@@ -80,31 +70,6 @@ const runtime=window.JLAviatorRuntime||{
   }
 };
 
-function betSlotOf(bet){
-  return Number(bet?.bet_slot)===2?2:1;
-}
-
-function activeBetForSlot(bets,roundId,slot){
-  if(!Array.isArray(bets))return null;
-  return bets
-    .filter(b=>
-      Number(b?.round_id)===Number(roundId)&&
-      String(b?.status)==='ACTIVE'&&
-      betSlotOf(b)===Number(slot)
-    )
-    .sort((a,b)=>Number(b?.id)-Number(a?.id))[0]||null;
-}
-
-function latestBetForSlot(bets,roundId,slot){
-  if(!Array.isArray(bets))return null;
-  return bets
-    .filter(b=>
-      Number(b?.round_id)===Number(roundId)&&
-      betSlotOf(b)===Number(slot)
-    )
-    .sort((a,b)=>Number(b?.id)-Number(a?.id))[0]||null;
-}
-
 const engine=window.JLAviatorEngine.create({
   runtime,
   getRound:()=>round
@@ -138,17 +103,31 @@ const sound=window.JLAviatorSound?.create({
 const haptics=window.JLAviatorHaptics?.create({
   button:$('#aviatorVibrationToggle')
 })||null;
+const secondPanel=window.JLAviatorBetPanel?.create({
+  slot:2,
+  $,
+  financial,
+  playerToken,
+  getRound:()=>round,
+  isEnabled:()=>enabled,
+  isOnline:()=>connectionOnline,
+  multiplier:()=>mul(),
+  secondsToClose:()=>secondsToClose(),
+  money:(value)=>money(value),
+  moneyCompact:(value)=>moneyCompact(value),
+  playerMessage:(error,fallback)=>playerMessage(error,fallback),
+  sound,
+  personalHistory,
+  createGestureGuard:(button)=>ui.createCashoutGestureGuard(button)
+})||null;
 
 function cashoutRequestKey(betId){return financial.cashoutRequestKey(betId);}
 
-function readPendingCashout(){return financial.readPendingCashout(1);}
-function readPendingCashout2(){return financial.readPendingCashout(2);}
+function readPendingCashout(){return financial.readPendingCashout();}
 
-function savePendingCashout(betId,roundId,requestKey){return financial.savePendingCashout(betId,roundId,requestKey,1);}
-function savePendingCashout2(betId,roundId,requestKey){return financial.savePendingCashout(betId,roundId,requestKey,2);}
+function savePendingCashout(betId,roundId,requestKey){return financial.savePendingCashout(betId,roundId,requestKey);}
 
-function clearPendingCashout(){return financial.clearPendingCashout(1);}
-function clearPendingCashout2(){return financial.clearPendingCashout(2);}
+function clearPendingCashout(){return financial.clearPendingCashout();}
 
 function cancelStateRequest(){
   const controller=stateController;
@@ -166,6 +145,7 @@ function setConnectionState(online){
   const banner=$('#aviatorConnectionBanner');
   if(banner)banner.classList.toggle('hidden',connectionOnline);
 
+  secondPanel?.setConnectionState(connectionOnline);
   if(connectionOnline)return;
 
   clearTimeout(stateTimer);
@@ -174,7 +154,6 @@ function setConnectionState(online){
   stopFlight();
 
   renderBetAction(true,'Sem ligação');
-  renderBetAction2(true,'Sem ligação');
 
   renderCashoutAction({
     active:Boolean(myBet)&&round?.status==='FLYING',
@@ -183,14 +162,6 @@ function setConnectionState(online){
     multiplier:mul(),
     stake:myStake,
     status:myBet?'Sem ligação — cash-out indisponível':'Disponível durante o voo'
-  });
-  renderCashoutAction2({
-    active:Boolean(myBet2)&&round?.status==='FLYING',
-    disabled:true,
-    pending:false,
-    multiplier:mul(),
-    stake:myStake2,
-    status:myBet2?'Sem ligação — cash-out indisponível':'Disponível durante o voo'
   });
 
   if(round?.status==='FLYING'){
@@ -219,8 +190,7 @@ function secondsToClose(){return engine.secondsToClose();}
 function secondsToTakeoff(){return engine.secondsToTakeoff();}
 function secondsToNextRound(){return engine.secondsToNextRound();}
 
-function betKey(){return financial.betKeyForSlot(1);}
-function betKey2(){return financial.betKeyForSlot(2);}
+function betKey(){return financial.betKey();}
 
 function setStagePhase(phase){return ui.setStagePhase(phase);}
 
@@ -242,7 +212,6 @@ function renderMultiplier(value){return ui.renderMultiplier(value);}
 function resetCashout(){return ui.resetCashout();}
 function renderCashoutAction(options){return ui.renderCashoutAction(options);}
 const cashoutGestureGuard=ui.createCashoutGestureGuard($('#cashoutBtn'));
-const cashoutGestureGuard2=ui.createCashoutGestureGuard($('#cashoutBtn2'));
 
 function renderRoundNumber(){return ui.renderRoundNumber();}
 
@@ -256,192 +225,6 @@ function stopOpenUiTick(){
 function setBetInputsLocked(locked){return ui.setBetInputsLocked(locked);}
 function renderBetAction(disabled,status,label='Apostar',mode='bet',hidden=false){
   return ui.renderBetAction({disabled,status,label,mode,hidden});
-}
-
-function setBetInputsLocked2(locked){
-  const amount=$('#aviatorAmount2');
-  const auto=$('#aviatorAutoCashout2');
-  if(amount)amount.disabled=Boolean(locked);
-  if(auto)auto.disabled=Boolean(locked);
-}
-
-function renderBetAction2(disabled,status,label='Apostar',mode='bet',hidden=false){
-  const wrap=$('.aviator-bet-action-2');
-  const button=$('#betBtn2');
-  const statusEl=$('#betActionStatus2');
-  if(wrap){
-    wrap.classList.toggle('hidden',Boolean(hidden));
-    wrap.classList.toggle('is-cancel',mode==='cancel');
-  }
-  if(button){
-    button.textContent=String(label||'Apostar');
-    button.disabled=Boolean(disabled);
-    button.dataset.action=String(mode||'bet');
-  }
-  if(statusEl)statusEl.textContent=String(status||'');
-}
-
-function renderCashoutAction2({
-  active=false,
-  disabled=true,
-  pending=false,
-  multiplier=null,
-  stake=0,
-  status=''
-}={}){
-  const wrap=$('#cashoutAction2');
-  const button=$('#cashoutBtn2');
-  const statusEl=$('#cashoutActionStatus2');
-  const m=Number(multiplier);
-  const s=Number(stake);
-  const hasMultiplier=Number.isFinite(m)&&m>=1;
-  const hasStake=Number.isFinite(s)&&s>0;
-  const priority=Boolean(active)&&!disabled&&!pending;
-
-  if(wrap){
-    wrap.classList.toggle('hidden',!active&&!pending);
-    wrap.classList.toggle('is-priority',priority);
-    wrap.classList.toggle('is-pending',Boolean(pending));
-  }
-  if(button){
-    button.disabled=Boolean(disabled);
-    button.textContent=pending
-      ?'Confirmando cash-out…'
-      :active&&hasMultiplier&&hasStake
-        ?'Cash-out · '+money(s*m)
-        :'Cash-out';
-  }
-  if(statusEl){
-    statusEl.textContent=status
-      ?String(status)
-      :active&&hasMultiplier&&hasStake
-        ?moneyCompact(s)+' × '+m.toFixed(2)+' = '+money(s*m)
-        :'Disponível durante o voo';
-  }
-}
-
-function resetCashout2(){
-  renderCashoutAction2({
-    active:false,
-    disabled:true,
-    pending:false,
-    multiplier:null,
-    stake:0,
-    status:'Disponível durante o voo'
-  });
-}
-
-function renderTicket2(multiplierValue=null){
-  const panel=$('#activeBetPanel2');
-  if(!panel)return;
-  const active=Boolean(myBet2)&&myStake2>0;
-  panel.classList.toggle('hidden',!active);
-  if(!active)return;
-
-  $('#activeBetStake2').textContent=money(myStake2);
-  $('#activeBetAuto2').textContent=myAutoCashout2
-    ?'Auto '+Number(myAutoCashout2).toFixed(2)+'×'
-    :'Auto desligado';
-
-  if(round?.status==='FLYING'){
-    const m=Number(multiplierValue??mul());
-    const safe=Number.isFinite(m)&&m>=1?m:1;
-    $('#activeBetMultiplier2').textContent=safe.toFixed(2)+'×';
-    $('#activeBetPayout2').textContent=money(myStake2*safe);
-  }else{
-    $('#activeBetMultiplier2').textContent='A aguardar';
-    $('#activeBetPayout2').textContent=money(myStake2);
-  }
-}
-
-function renderBetConfirmation2(){
-  const box=$('#betConfirmation2');
-  const text=$('#betConfirmationText2');
-  const auto=$('#betConfirmationAuto2');
-  if(!box||!text)return;
-
-  const visible=
-    Boolean(myBet2)&&
-    myStake2>0&&
-    ['OPEN','LOCKED'].includes(round?.status);
-
-  box.classList.toggle('hidden',!visible);
-  if(!visible)return;
-
-  text.textContent='Aposta confirmada: '+moneyCompact(myStake2);
-  if(auto){
-    const hasAuto=Number.isFinite(Number(myAutoCashout2))&&Number(myAutoCashout2)>=1.01;
-    auto.classList.toggle('hidden',!hasAuto);
-    auto.textContent=hasAuto?'Auto cash-out: '+Number(myAutoCashout2).toFixed(2)+'×':'';
-  }
-}
-
-function setBetResult2(result=null){
-  lastBetResult2=result||null;
-  const panel=$('#betResultPanel2');
-  const icon=$('#betResultIcon2');
-  const label=$('#betResultLabel2');
-  const detail=$('#betResultDetail2');
-  if(!panel||!icon||!label||!detail)return;
-
-  const status=String(result?.status||'').toUpperCase();
-  const stake=Number(result?.stake);
-  const payout=Number(result?.payout);
-  const multiplier=Number(result?.cashout_multiplier);
-
-  panel.classList.remove('is-won','is-lost','is-refunded');
-
-  if(!['CASHED_OUT','LOST','REFUNDED'].includes(status)){
-    panel.classList.add('hidden');
-    panel.removeAttribute('data-result');
-    return;
-  }
-
-  panel.classList.remove('hidden');
-  if(status==='CASHED_OUT'){
-    panel.classList.add('is-won');
-    panel.dataset.result='won';
-    icon.textContent='✓';
-    label.textContent='GANHA';
-    detail.textContent=Number.isFinite(payout)
-      ?'Recebido '+money(payout)+(Number.isFinite(multiplier)?' · '+multiplier.toFixed(2)+'×':'')
-      :'Cash-out confirmado';
-  }else if(status==='LOST'){
-    panel.classList.add('is-lost');
-    panel.dataset.result='lost';
-    icon.textContent='✕';
-    label.textContent='PERDIDA';
-    detail.textContent=Number.isFinite(stake)&&stake>0
-      ?'Valor perdido '+money(stake)
-      :'Rodada encerrada sem cash-out';
-  }else{
-    panel.classList.add('is-refunded');
-    panel.dataset.result='refunded';
-    icon.textContent='↩';
-    label.textContent='REEMBOLSADA';
-    detail.textContent=Number.isFinite(payout)&&payout>0
-      ?'Devolvido '+money(payout)
-      :Number.isFinite(stake)&&stake>0?'Devolvido '+money(stake):'Valor devolvido';
-  }
-  personalHistory?.invalidate();
-}
-
-function setBetResultFromBet2(bet){
-  if(!bet){
-    setBetResult2(null);
-    return;
-  }
-  const status=String(bet.status||'').toUpperCase();
-  if(!['CASHED_OUT','LOST','REFUNDED'].includes(status)){
-    if(status==='ACTIVE')setBetResult2(null);
-    return;
-  }
-  setBetResult2({
-    status,
-    stake:Number(bet.stake),
-    payout:Number(bet.payout),
-    cashout_multiplier:Number(bet.cashout_multiplier)
-  });
 }
 
 function renderAutoBetStatus(){
@@ -510,72 +293,6 @@ function scheduleAutoBetForOpenRound(){
   });
 }
 
-function renderAutoBetStatus2(){
-  const toggle=$('#aviatorAutoBet2');
-  const status=$('#aviatorAutoBetStatus2');
-  if(toggle&&toggle.checked!==autoBetEnabled2)toggle.checked=autoBetEnabled2;
-  if(!status)return;
-
-  if(!autoBetEnabled2){
-    status.textContent='Desligado';
-    return;
-  }
-
-  if(!playerToken()){
-    status.textContent='Entre na conta';
-    return;
-  }
-
-  if(round?.status==='OPEN'&&myBet2){
-    status.textContent='Confirmada nesta rodada';
-    return;
-  }
-
-  status.textContent=round?.status==='OPEN'
-    ?'A preparar envio'
-    :'Próxima aposta preparada';
-}
-
-function scheduleAutoBetForOpenRound2(){
-  renderAutoBetStatus2();
-
-  const roundId=Number(round?.id);
-  if(
-    !autoBetEnabled2||
-    !enabled||
-    !connectionOnline||
-    !playerToken()||
-    !Number.isFinite(roundId)||
-    round?.status!=='OPEN'||
-    round?.betting_open===false||
-    myBet2||
-    betting2||
-    autoBetAttemptedRoundId2===roundId
-  ){
-    return;
-  }
-
-  autoBetAttemptedRoundId2=roundId;
-
-  queueMicrotask(()=>{
-    if(
-      !autoBetEnabled2||
-      !connectionOnline||
-      !playerToken()||
-      Number(round?.id)!==roundId||
-      round?.status!=='OPEN'||
-      round?.betting_open===false||
-      myBet2||
-      betting2
-    ){
-      return;
-    }
-
-    autoBetSubmittingRoundId2=roundId;
-    $('#aviatorBetForm2')?.requestSubmit?.();
-  });
-}
-
 function updateRoundClock(){
   if(!connectionOnline){
     stopOpenUiTick();
@@ -613,32 +330,6 @@ function updateRoundClock(){
       renderBetAction(
         inputsLocked,
         myBet
-          ?closed?'Apostas fechadas':'Aposta confirmada'
-          :closed
-            ?'Apostas fechadas'
-            :'Disponível',
-        'Apostar',
-        'bet'
-      );
-    }
-
-    const inputsLocked2=
-      !enabled||!connectionOnline||Boolean(myBet2)||betting2||closed;
-    const canCancel2=
-      enabled&&connectionOnline&&Boolean(myBet2)&&!betting2&&!closed;
-    setBetInputsLocked2(inputsLocked2);
-
-    if(canCancel2){
-      renderBetAction2(
-        false,
-        'Aposta confirmada · toque para cancelar',
-        'Cancelar',
-        'cancel'
-      );
-    }else{
-      renderBetAction2(
-        inputsLocked2,
-        myBet2
           ?closed?'Apostas fechadas':'Aposta confirmada'
           :closed
             ?'Apostas fechadas'
@@ -723,7 +414,6 @@ function paintFlight(timestamp=performance.now()){
   if(timestamp-lastFlightHudAt<visualPerformance.hudIntervalMs)return;
   lastFlightHudAt=timestamp;
   renderTicket(m);
-  renderTicket2(m);
 
   renderCashoutAction({
     active:Boolean(myBet),
@@ -733,13 +423,7 @@ function paintFlight(timestamp=performance.now()){
     stake:myStake
   });
 
-  renderCashoutAction2({
-    active:Boolean(myBet2),
-    disabled:!connectionOnline||!myBet2||cashingOut2,
-    pending:cashingOut2,
-    multiplier:m,
-    stake:myStake2
-  });
+  secondPanel?.paintFlight(m);
 }
 
 function flightPaintLoop(timestamp){
@@ -760,16 +444,6 @@ function flightPaintLoop(timestamp){
     ){
       autoRecoveryRoundId=Number(round.id);
       void refreshCurrentBetLight();
-    }
-
-    if(
-      myBet2&&
-      myAutoCashout2&&
-      Number(round?.id)!==Number(autoRecoveryRoundId2)&&
-      mul()>=myAutoCashout2
-    ){
-      autoRecoveryRoundId2=Number(round.id);
-      void refreshCurrentBetLight2();
     }
   }
 
@@ -835,63 +509,6 @@ async function refreshCurrentBetLight(){
     if(bet.status==='REFUNDED'){
       setBetResultFromBet(bet);
       $('#aviatorMessage').textContent='A aposta foi reembolsada pelo servidor.';
-      preserveMessageOnNextRoundSync=true;
-      return true;
-    }
-
-    return false;
-  }catch(_){
-    return false;
-  }
-}
-
-async function refreshCurrentBetLight2(){
-  if(!myBet2||!playerToken()||!round)return false;
-
-  const requestedBetId=Number(myBet2);
-  const requestedRoundId=Number(round.id);
-
-  try{
-    const bet=await fetchBetStatus(requestedBetId);
-    if(!bet||Number(round?.id)!==requestedRoundId)return false;
-
-    if(bet.status==='ACTIVE'){
-      setBetResult2(null);
-      myStake2=Number(bet.stake)||myStake2;
-      myAutoCashout2=Number(bet.auto_cashout_multiplier)||null;
-      renderTicket2();
-      return true;
-    }
-
-    myBet2=null;
-    myStake2=0;
-    myAutoCashout2=null;
-    lastRecoveredRoundId=requestedRoundId;
-    resetCashout2();
-    renderTicket2();
-    renderBetConfirmation2();
-
-    if(bet.status==='CASHED_OUT'){
-      setBetResultFromBet2(bet);
-      $('#aviatorMessage2').textContent=cashoutMessage(
-        bet.cashout_source,
-        bet.cashout_multiplier,
-        bet.payout
-      );
-      preserveMessageOnNextRoundSync=true;
-      return true;
-    }
-
-    if(bet.status==='LOST'){
-      setBetResultFromBet2(bet);
-      $('#aviatorMessage2').textContent='Fim da rodada. Cash-out não disponível.';
-      preserveMessageOnNextRoundSync=true;
-      return true;
-    }
-
-    if(bet.status==='REFUNDED'){
-      setBetResultFromBet2(bet);
-      $('#aviatorMessage2').textContent='A aposta foi reembolsada pelo servidor.';
       preserveMessageOnNextRoundSync=true;
       return true;
     }
@@ -975,78 +592,6 @@ async function reconcilePendingCashout(){
   }
 }
 
-async function reconcilePendingCashout2(){
-  const pending=readPendingCashout2();
-  if(!pending||!connectionOnline||!playerToken())return false;
-
-  try{
-    const bet=await fetchBetStatus(pending.bet_id);
-    if(!bet)return false;
-
-    if(bet.status==='CASHED_OUT'){
-      clearPendingCashout2();
-      setBetResultFromBet2(bet);
-      myBet2=null;
-      myStake2=0;
-      myAutoCashout2=null;
-      lastRecoveredRoundId=pending.round_id;
-      resetCashout2();
-      renderTicket2();
-      $('#aviatorMessage2').textContent=cashoutMessage(
-        bet.cashout_source,
-        bet.cashout_multiplier,
-        bet.payout
-      );
-      preserveMessageOnNextRoundSync=true;
-      return true;
-    }
-
-    if(bet.status==='ACTIVE'){
-      clearPendingCashout2();
-      setBetResult2(null);
-      if(Number(round?.id)===pending.round_id){
-        myBet2=bet.id;
-        myStake2=Number(bet.stake)||0;
-        myAutoCashout2=Number(bet.auto_cashout_multiplier)||null;
-        lastRecoveredRoundId=pending.round_id;
-        renderTicket2();
-      }
-      $('#aviatorMessage2').textContent='Cash-out não foi confirmado. A aposta continua ativa.';
-      return true;
-    }
-
-    if(bet.status==='LOST'){
-      clearPendingCashout2();
-      setBetResultFromBet2(bet);
-      myBet2=null;
-      myStake2=0;
-      myAutoCashout2=null;
-      resetCashout2();
-      renderTicket2();
-      $('#aviatorMessage2').textContent='Fim da rodada. Cash-out não disponível.';
-      preserveMessageOnNextRoundSync=true;
-      return true;
-    }
-
-    if(bet.status==='REFUNDED'){
-      clearPendingCashout2();
-      setBetResultFromBet2(bet);
-      myBet2=null;
-      myStake2=0;
-      myAutoCashout2=null;
-      resetCashout2();
-      renderTicket2();
-      $('#aviatorMessage2').textContent='A aposta foi reembolsada pelo servidor.';
-      preserveMessageOnNextRoundSync=true;
-      return true;
-    }
-
-    return false;
-  }catch(_){
-    return false;
-  }
-}
-
 async function recover(force=false){
   if(recovering||!playerToken()||!round)return;
   if(!force&&lastRecoveredRoundId===round.id)return;
@@ -1056,15 +601,44 @@ async function recover(force=false){
 
   try{
     const x=await JLApi.rpc('jl_aviator_player_state',{p_token:playerToken()});
-    if(Number(round?.id)!==requestedRoundId)return;
 
-    applyReconnectPlayerState(x);
+    if(Number(round?.id)!==requestedRoundId){
+      return;
+    }
+
+    const bets=Array.isArray(x?.bets)?x.bets:[];
+    const current=runtime.pickActiveBet(bets,requestedRoundId);
+    const latest=bets
+      .filter(b=>Number(b?.round_id)===requestedRoundId)
+      .sort((a,b)=>Number(b?.id)-Number(a?.id))[0]||null;
+
+    myBet=current?.id??null;
+    myStake=current?Number(current.stake)||0:0;
+    myAutoCashout=current?Number(current.auto_cashout_multiplier)||null:null;
+    if(current)setBetResult(null);
+    lastRecoveredRoundId=requestedRoundId;
+    renderTicket();
+    renderBetConfirmation();
+    secondPanel?.applyPlayerState(x);
 
     if(myBet&&round.status==='FLYING'){
-      $('#aviatorMessage').textContent='Aposta 1 ativa recuperada.';
-    }
-    if(myBet2&&round.status==='FLYING'){
-      $('#aviatorMessage2').textContent='Aposta 2 ativa recuperada.';
+      setBetResult(null);
+      $('#aviatorMessage').textContent='Aposta ativa recuperada.';
+    }else if(latest?.status==='CASHED_OUT'){
+      setBetResultFromBet(latest);
+      myAutoCashout=null;
+      resetCashout();
+      $('#aviatorMessage').textContent=cashoutMessage(
+        latest.cashout_source,
+        latest.cashout_multiplier,
+        latest.payout
+      );
+    }else if(latest?.status==='LOST'){
+      setBetResultFromBet(latest);
+      $('#aviatorMessage').textContent='Fim da rodada. A aposta foi perdida.';
+    }else if(latest?.status==='REFUNDED'){
+      setBetResultFromBet(latest);
+      $('#aviatorMessage').textContent='A aposta foi reembolsada pelo servidor.';
     }
   }catch(_){
     lastRecoveredRoundId=null;
@@ -1141,7 +715,8 @@ function renderProof(){
 
 function renderMaintenanceView(){
   const protectedFlight=
-    !enabled&&['LOCKED','FLYING'].includes(round?.status)&&Boolean(myBet||myBet2);
+    !enabled&&['LOCKED','FLYING'].includes(round?.status)&&
+    Boolean(myBet||secondPanel?.hasActiveBet());
   const maintenanceOnly=!enabled&&!protectedFlight;
 
   document.body.classList.toggle('aviator-maintenance',!enabled);
@@ -1165,23 +740,14 @@ function renderOpen(){
   show('#crashText',false);
 
   resetCashout();
-  resetCashout2();
   renderTicket();
-  renderTicket2();
   renderBetConfirmation();
-  renderBetConfirmation2();
-  renderAutoBetStatus();
-  renderAutoBetStatus2();
 
   if(myBet&&!$('#aviatorMessage').textContent.trim()){
     $('#aviatorMessage').textContent='Aposta confirmada. Pode cancelar enquanto as apostas estiverem abertas.';
   }
-  if(myBet2&&!$('#aviatorMessage2').textContent.trim()){
-    $('#aviatorMessage2').textContent='Aposta confirmada. Pode cancelar enquanto as apostas estiverem abertas.';
-  }
 
   scheduleAutoBetForOpenRound();
-  scheduleAutoBetForOpenRound2();
 }
 
 function renderLocked(){
@@ -1198,25 +764,15 @@ function renderLocked(){
   show('#crashText',false);
 
   setBetInputsLocked(!connectionOnline||!enabled);
-  setBetInputsLocked2(!connectionOnline||!enabled);
-  renderAutoBetStatus();
-  renderAutoBetStatus2();
 
   renderBetAction(true,'Apostas fechadas');
-  renderBetAction2(true,'Apostas fechadas');
 
   resetCashout();
-  resetCashout2();
   renderTicket();
-  renderTicket2();
   renderBetConfirmation();
-  renderBetConfirmation2();
 
   if(myBet){
     $('#aviatorMessage').textContent='Aposta confirmada. Aguardando descolagem.';
-  }
-  if(myBet2){
-    $('#aviatorMessage2').textContent='Aposta confirmada. Aguardando descolagem.';
   }
 }
 
@@ -1234,9 +790,7 @@ function renderFlying(){
   show('#crashText',false);
 
   setBetInputsLocked(!connectionOnline||!enabled);
-  setBetInputsLocked2(!connectionOnline||!enabled);
   renderAutoBetStatus();
-  renderAutoBetStatus2();
 
   renderBetAction(
     true,
@@ -1244,13 +798,6 @@ function renderFlying(){
     'Apostar',
     'bet',
     Boolean(myBet)
-  );
-  renderBetAction2(
-    true,
-    'Apostas fechadas',
-    'Apostar',
-    'bet',
-    Boolean(myBet2)
   );
 
   renderCashoutAction({
@@ -1260,18 +807,9 @@ function renderFlying(){
     multiplier:mul(),
     stake:myStake
   });
-  renderCashoutAction2({
-    active:Boolean(myBet2),
-    disabled:!connectionOnline||!myBet2||cashingOut2,
-    pending:cashingOut2,
-    multiplier:mul(),
-    stake:myStake2
-  });
 
   renderTicket(mul());
-  renderTicket2(mul());
   renderBetConfirmation();
-  renderBetConfirmation2();
   startFlightPaint();
 }
 
@@ -1295,25 +833,16 @@ function renderFinished(){
   show('#crashText',true);
 
   setBetInputsLocked(!connectionOnline||!enabled);
-  setBetInputsLocked2(!connectionOnline||!enabled);
   renderAutoBetStatus();
-  renderAutoBetStatus2();
 
   renderBetAction(true,'Aguarde a próxima rodada');
-  renderBetAction2(true,'Aguarde a próxima rodada');
 
   myBet=null;
   myStake=0;
   myAutoCashout=null;
-  myBet2=null;
-  myStake2=0;
-  myAutoCashout2=null;
   resetCashout();
-  resetCashout2();
   renderTicket();
-  renderTicket2();
   renderBetConfirmation();
-  renderBetConfirmation2();
   rememberCurrentResult();
 }
 
@@ -1335,19 +864,13 @@ function renderWaiting(){
   show('#crashText',false);
 
   setBetInputsLocked(!connectionOnline||!enabled);
-  setBetInputsLocked2(!connectionOnline||!enabled);
   renderAutoBetStatus();
-  renderAutoBetStatus2();
 
   renderBetAction(true,'Aguarde a próxima rodada');
-  renderBetAction2(true,'Aguarde a próxima rodada');
 
   resetCashout();
-  resetCashout2();
   renderTicket();
-  renderTicket2();
   renderBetConfirmation();
-  renderBetConfirmation2();
 }
 
 function renderCurrentRound(){
@@ -1357,30 +880,19 @@ function renderCurrentRound(){
 
   if(!round){
     renderWaiting();
-    return;
-  }
-
-  if(round.status==='OPEN'){
+  }else if(round.status==='OPEN'){
     renderOpen();
-    return;
-  }
-
-  if(round.status==='LOCKED'){
+  }else if(round.status==='LOCKED'){
     renderLocked();
-    return;
-  }
-
-  if(round.status==='FLYING'){
+  }else if(round.status==='FLYING'){
     renderFlying();
-    return;
-  }
-
-  if(round.status==='CRASHED'||round.status==='SETTLED'){
+  }else if(round.status==='CRASHED'||round.status==='SETTLED'){
     renderFinished();
-    return;
+  }else{
+    renderWaiting();
   }
 
-  renderWaiting();
+  secondPanel?.renderRound();
 }
 
 function nextPollDelay(){
@@ -1389,7 +901,7 @@ function nextPollDelay(){
     hidden:document.hidden,
     realtimeConnected,
     enabled,
-    hasBet:Boolean(myBet||myBet2)
+    hasBet:Boolean(myBet||secondPanel?.hasActiveBet())
   });
 }
 
@@ -1402,74 +914,55 @@ function scheduleState(delay=nextPollDelay()){
 function applyReconnectPlayerState(player){
   const bets=Array.isArray(player?.bets)?player.bets:[];
   const roundId=Number(round?.id);
-  const current1=Number.isFinite(roundId)?activeBetForSlot(bets,roundId,1):null;
-  const current2=Number.isFinite(roundId)?activeBetForSlot(bets,roundId,2):null;
-  const latest1=Number.isFinite(roundId)?latestBetForSlot(bets,roundId,1):null;
-  const latest2=Number.isFinite(roundId)?latestBetForSlot(bets,roundId,2):null;
+  const current=Number.isFinite(roundId)
+    ?runtime.pickActiveBet(bets,roundId)
+    :null;
+  const latest=Number.isFinite(roundId)
+    ?bets
+      .filter(b=>Number(b?.round_id)===roundId)
+      .sort((a,b)=>Number(b?.id)-Number(a?.id))[0]||null
+    :null;
 
-  myBet=current1?.id??null;
-  myStake=current1?Number(current1.stake)||0:0;
-  myAutoCashout=current1?Number(current1.auto_cashout_multiplier)||null:null;
-  myBet2=current2?.id??null;
-  myStake2=current2?Number(current2.stake)||0:0;
-  myAutoCashout2=current2?Number(current2.auto_cashout_multiplier)||null:null;
-
-  if(current1)setBetResult(null);
-  if(current2)setBetResult2(null);
+  myBet=current?.id??null;
+  myStake=current?Number(current.stake)||0:0;
+  myAutoCashout=current?Number(current.auto_cashout_multiplier)||null:null;
+  if(current)setBetResult(null);
   lastRecoveredRoundId=round?.id??null;
 
-  if(!current1&&latest1){
-    if(latest1.status==='CASHED_OUT'){
-      clearPendingCashout();
-      setBetResultFromBet(latest1);
-      $('#aviatorMessage').textContent=cashoutMessage(
-        latest1.cashout_source,
-        latest1.cashout_multiplier,
-        latest1.payout
-      );
-      preserveMessageOnNextRoundSync=true;
-    }else if(latest1.status==='LOST'){
-      clearPendingCashout();
-      setBetResultFromBet(latest1);
-      $('#aviatorMessage').textContent='Fim da rodada. A aposta foi perdida.';
-      preserveMessageOnNextRoundSync=true;
-    }else if(latest1.status==='REFUNDED'){
-      clearPendingCashout();
-      setBetResultFromBet(latest1);
-      $('#aviatorMessage').textContent='A aposta foi reembolsada pelo servidor.';
-      preserveMessageOnNextRoundSync=true;
-    }
-  }
-
-  if(!current2&&latest2){
-    if(latest2.status==='CASHED_OUT'){
-      clearPendingCashout2();
-      setBetResultFromBet2(latest2);
-      $('#aviatorMessage2').textContent=cashoutMessage(
-        latest2.cashout_source,
-        latest2.cashout_multiplier,
-        latest2.payout
-      );
-      preserveMessageOnNextRoundSync=true;
-    }else if(latest2.status==='LOST'){
-      clearPendingCashout2();
-      setBetResultFromBet2(latest2);
-      $('#aviatorMessage2').textContent='Fim da rodada. A aposta foi perdida.';
-      preserveMessageOnNextRoundSync=true;
-    }else if(latest2.status==='REFUNDED'){
-      clearPendingCashout2();
-      setBetResultFromBet2(latest2);
-      $('#aviatorMessage2').textContent='A aposta foi reembolsada pelo servidor.';
-      preserveMessageOnNextRoundSync=true;
-    }
+  if(latest?.status==='CASHED_OUT'){
+    clearPendingCashout();
+    setBetResultFromBet(latest);
+    myBet=null;
+    myStake=0;
+    myAutoCashout=null;
+    $('#aviatorMessage').textContent=cashoutMessage(
+      latest.cashout_source,
+      latest.cashout_multiplier,
+      latest.payout
+    );
+    preserveMessageOnNextRoundSync=true;
+  }else if(latest?.status==='LOST'){
+    clearPendingCashout();
+    setBetResultFromBet(latest);
+    myBet=null;
+    myStake=0;
+    myAutoCashout=null;
+    $('#aviatorMessage').textContent='Fim da rodada. A aposta foi perdida.';
+    preserveMessageOnNextRoundSync=true;
+  }else if(latest?.status==='REFUNDED'){
+    clearPendingCashout();
+    setBetResultFromBet(latest);
+    myBet=null;
+    myStake=0;
+    myAutoCashout=null;
+    $('#aviatorMessage').textContent='A aposta foi reembolsada pelo servidor.';
+    preserveMessageOnNextRoundSync=true;
   }
 
   renderTicket();
-  renderTicket2();
   renderBetConfirmation();
-  renderBetConfirmation2();
   renderAutoBetStatus();
-  renderAutoBetStatus2();
+  secondPanel?.applyPlayerState(player);
 }
 
 async function reconnectState(){
@@ -1538,7 +1031,6 @@ async function reconnectState(){
       stopOpenUiTick();
       stopFlight();
       resetCashout();
-      resetCashout2();
       return;
     }
 
@@ -1549,14 +1041,6 @@ async function reconnectState(){
         'Ligação restabelecida. Voo atual: '+mul().toFixed(2)+'× · Aposta ativa.';
     }else if(round?.status==='LOCKED'&&myBet){
       $('#aviatorMessage').textContent=
-        'Ligação restabelecida. Aposta confirmada; aguardando descolagem.';
-    }
-
-    if(round?.status==='FLYING'&&myBet2){
-      $('#aviatorMessage2').textContent=
-        'Ligação restabelecida. Voo atual: '+mul().toFixed(2)+'× · Aposta ativa.';
-    }else if(round?.status==='LOCKED'&&myBet2){
-      $('#aviatorMessage2').textContent=
         'Ligação restabelecida. Aposta confirmada; aguardando descolagem.';
     }
   }catch(e){
@@ -1616,6 +1100,7 @@ async function state(){
       fairnessProofRoundId=null;
       fairnessProofData=null;
       fairnessProofBusy=false;
+      secondPanel?.onRoundChanged();
       myBet=null;
       myStake=0;
       myAutoCashout=null;
@@ -1647,7 +1132,6 @@ async function state(){
       stopOpenUiTick();
       stopFlight();
       resetCashout();
-      resetCashout2();
       return;
     }
 
@@ -1796,124 +1280,6 @@ $('#aviatorBetForm').addEventListener('submit',async e=>{
   }
 });
 
-$('#aviatorBetForm2').addEventListener('submit',async e=>{
-  e.preventDefault();
-  if(betting2)return;
-
-  const action=String($('#betBtn2')?.dataset.action||'bet');
-  const autoTriggered=
-    action==='bet'&&
-    autoBetSubmittingRoundId2===Number(round?.id);
-  betting2=true;
-
-  if(action==='cancel'){
-    const id=myBet2;
-    const stake=myStake2;
-    renderBetAction2(true,'Cancelando aposta…','Cancelar','cancel');
-
-    try{
-      if(!connectionOnline)throw new Error('Sem ligação. Aguarde a reconexão.');
-      if(!playerToken())throw new Error('Entre na sua conta primeiro.');
-      if(!id||!round||round.status!=='OPEN'||round.betting_open===false){
-        throw new Error('Cancelamento encerrado para esta rodada.');
-      }
-
-      const result=await financial.cancelBet(
-        id,
-        financial.cancelBetRequestKey(id)
-      );
-
-      personalHistory?.invalidate();
-      setBetResult2({
-        status:'REFUNDED',
-        stake,
-        payout:Number(result.refund)||stake
-      });
-
-      myBet2=null;
-      myStake2=0;
-      myAutoCashout2=null;
-      lastRecoveredRoundId=round?.id??null;
-      renderTicket2();
-      renderBetConfirmation2();
-      $('#aviatorMessage2').textContent=
-        'Aposta cancelada. '+money(Number(result.refund)||stake)+' devolvidos.';
-    }catch(error){
-      $('#aviatorMessage2').textContent=playerMessage(
-        error,
-        'Não foi possível cancelar a aposta.'
-      );
-      if(/Cancelamento encerrado|Apostas fechadas/i.test(String(error?.message||error))){
-        lastRecoveredRoundId=null;
-        await reconnectState();
-      }
-    }finally{
-      betting2=false;
-      renderCurrentRound();
-    }
-    return;
-  }
-
-  renderBetAction2(true,'Confirmando aposta…','Apostar','bet');
-
-  try{
-    if(!connectionOnline)throw new Error('Sem ligação. Aguarde a reconexão.');
-    if(!playerToken())throw new Error('Entre na sua conta primeiro.');
-    if(!enabled)throw new Error('Aviator brevemente.');
-    if(!round||round.status!=='OPEN'||round.betting_open===false)throw new Error('Apostas fechadas.');
-
-    const amount=Number($('#aviatorAmount2').value);
-    if(!Number.isFinite(amount)||amount<0.5||amount>500){
-      throw new Error('Informe um valor entre 0,50 e 500 MZN.');
-    }
-
-    const autoRaw=$('#aviatorAutoCashout2').value.trim();
-    const auto=autoRaw===''?null:Number(autoRaw);
-    if(
-      auto!==null&&(
-        !Number.isFinite(auto)||
-        auto<1.01||
-        Math.abs(auto*100-Math.round(auto*100))>1e-8
-      )
-    ){
-      throw new Error('Cash-out automático deve ser 1,01x ou maior, com até 2 casas decimais.');
-    }
-
-    const r=await financial.placeBetSlot({
-      slot:2,
-      amount,
-      requestKey:betKey2(),
-      autoCashoutMultiplier:auto
-    });
-
-    setBetResult2(null);
-    personalHistory?.invalidate();
-    myBet2=r.bet_id;
-    myStake2=Number(r.stake);
-    myAutoCashout2=Number(r.auto_cashout_multiplier)||null;
-    sound?.playBet();
-    lastRecoveredRoundId=round.id;
-    renderTicket2();
-    renderBetConfirmation2();
-
-    $('#aviatorMessage2').textContent=autoTriggered
-      ?'Aposta automática confirmada para esta rodada.'
-      :'Aposta confirmada. Aguarde a descolagem.';
-    renderAutoBetStatus2();
-  }catch(error){
-    $('#aviatorMessage2').textContent=playerMessage(
-      error,
-      'Não foi possível confirmar a aposta.'
-    );
-  }finally{
-    if(autoBetSubmittingRoundId2===Number(round?.id)){
-      autoBetSubmittingRoundId2=null;
-    }
-    betting2=false;
-    renderCurrentRound();
-  }
-});
-
 $('#cashoutBtn').addEventListener('click',async event=>{
   event.preventDefault();
   if(!cashoutGestureGuard.shouldAcceptClick(event))return;
@@ -1997,89 +1363,6 @@ $('#cashoutBtn').addEventListener('click',async event=>{
   }
 });
 
-$('#cashoutBtn2').addEventListener('click',async event=>{
-  event.preventDefault();
-  if(!cashoutGestureGuard2.shouldAcceptClick(event))return;
-  if(!connectionOnline){
-    $('#aviatorMessage2').textContent='Sem ligação. Cash-out indisponível até reconectar.';
-    return;
-  }
-  if(cashingOut2||!myBet2||round?.status!=='FLYING')return;
-
-  cashingOut2=true;
-  const id=myBet2;
-  const cashoutRoundId=Number(round.id);
-  const requestKey=cashoutRequestKey(id);
-  savePendingCashout2(id,cashoutRoundId,requestKey);
-  renderCashoutAction2({
-    active:true,
-    disabled:true,
-    pending:true,
-    multiplier:mul(),
-    stake:myStake2,
-    status:'A confirmar no servidor'
-  });
-
-  try{
-    const r=await requestFinancialCashout(id,requestKey);
-
-    clearPendingCashout2();
-    $('#aviatorMessage2').textContent=cashoutMessage(
-      r.source,
-      r.multiplier,
-      r.payout
-    );
-    sound?.playCashout();
-    setBetResult2({
-      status:'CASHED_OUT',
-      stake:myStake2,
-      payout:Number(r.payout),
-      cashout_multiplier:Number(r.multiplier)
-    });
-
-    myBet2=null;
-    myStake2=0;
-    myAutoCashout2=null;
-    resetCashout2();
-    renderTicket2();
-    lastRecoveredRoundId=round?.id??null;
-  }catch(error){
-    const raw=String(error?.message||'');
-    const reconciled=await reconcilePendingCashout2();
-    if(reconciled)return;
-
-    const roundEnded=/Crash ja atingido|Aposta ja liquidada|Voo nao esta ativo/i.test(raw);
-
-    if(roundEnded){
-      clearPendingCashout2();
-      myBet2=null;
-      myStake2=0;
-      myAutoCashout2=null;
-      lastRecoveredRoundId=round?.id??null;
-      resetCashout2();
-      renderTicket2();
-      $('#aviatorMessage2').textContent='Fim da rodada. Cash-out não disponível.';
-      clearTimeout(stateTimer);
-      await state();
-    }else if(!connectionOnline||navigator.onLine===false){
-      setConnectionState(false);
-      $('#aviatorMessage2').textContent='Sem ligação. A confirmar o cash-out quando reconectar.';
-    }else{
-      clearPendingCashout2();
-      $('#aviatorMessage2').textContent=playerMessage(
-        raw,
-        'Não foi possível confirmar o cash-out.'
-      );
-      lastRecoveredRoundId=null;
-      await recover(true);
-    }
-  }finally{
-    cashingOut2=false;
-    renderMaintenanceView();
-    renderCurrentRound();
-  }
-});
-
 async function applyRealtimeSnapshot(x){
   if(!x||!runtime.shouldAcceptSnapshot(lastDisplaySeq,x?.display_seq))return;
 
@@ -2100,27 +1383,29 @@ async function applyRealtimeSnapshot(x){
     fairnessProofRoundId=null;
     fairnessProofData=null;
     fairnessProofBusy=false;
+    secondPanel?.onRoundChanged();
     myBet=null;
     myStake=0;
     myAutoCashout=null;
-    myBet2=null;
-    myStake2=0;
-    myAutoCashout2=null;
     autoRecoveryRoundId=null;
-    autoRecoveryRoundId2=null;
     lastRecoveredRoundId=null;
     stopFlight();
     resetCashout();
-    resetCashout2();
     renderTicket();
-    renderTicket2();
     renderBetConfirmation();
-    renderBetConfirmation2();
   }
 
-  if(round&&playerToken()&&changedStatus){
-    if(myBet)await refreshCurrentBetLight();
-    if(myBet2)await refreshCurrentBetLight2();
+  if(
+    round&&
+    playerToken()&&
+    Boolean(myBet)&&
+    changedStatus
+  ){
+    await refreshCurrentBetLight();
+  }
+
+  if(round&&playerToken()&&changedStatus&&secondPanel?.hasActiveBet()){
+    await secondPanel.refreshOnStatusChange();
   }
 
   if(justFinished){
@@ -2176,7 +1461,7 @@ window.addEventListener('online',async()=>{
   if(message)message.textContent='Ligação restabelecida. A sincronizar…';
   await reconnectState();
   await reconcilePendingCashout();
-  await reconcilePendingCashout2();
+  await secondPanel?.reconcilePendingCashout?.();
 });
 
 document.addEventListener('visibilitychange',()=>{
@@ -2211,28 +1496,7 @@ if(autoBetToggle){
   });
 }
 
-const autoBetToggle2=$('#aviatorAutoBet2');
-if(autoBetToggle2){
-  autoBetToggle2.checked=autoBetEnabled2;
-  autoBetToggle2.addEventListener('change',()=>{
-    autoBetEnabled2=Boolean(autoBetToggle2.checked);
-    try{
-      sessionStorage.setItem(
-        'jl_aviator_auto_bet_v1_slot_2',
-        autoBetEnabled2?'1':'0'
-      );
-    }catch(_){}
-    if(!autoBetEnabled2){
-      autoBetSubmittingRoundId2=null;
-      autoBetAttemptedRoundId2=null;
-    }
-    renderAutoBetStatus2();
-    if(autoBetEnabled2)scheduleAutoBetForOpenRound2();
-  });
-}
-
 renderAutoBetStatus();
-renderAutoBetStatus2();
 renderHistory();
 setConnectionState(connectionOnline);
 startRealtime();
