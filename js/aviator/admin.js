@@ -22,6 +22,7 @@
     function aviatorBankMovementLabel(type){
       if(type==='cashout')return 'Lucro pago no cash-out';
       if(type==='lost_stake')return 'Stake perdido creditado';
+      if(type==='house_profit')return 'Lucro reservado da casa';
       return 'Ajuste manual';
     }
     
@@ -81,6 +82,7 @@
         'aviator.admin.reopened':'Reabriu o Aviator',
         'aviator.admin.bank_adjusted':'Ajustou a banca',
         'aviator.admin.risk_limit_changed':'Alterou limite de risco',
+        'aviator.admin.house_profit_rate_changed':'Alterou lucro por minuto',
         'aviator.admin.one_round_test_started':'Iniciou rodada de teste',
         'aviator.round_admin_cancelled':'Cancelou rodada e reembolsou',
         'aviator.maintenance_changed':'Alterou manutenção',
@@ -112,6 +114,11 @@
         parts.push(
           'Limite de risco: '+(Number(d.previous)*100).toFixed(0)+'% → '+
           (Number(d.current)*100).toFixed(0)+'%'
+        );
+      }
+      if(d.field==='house_profit_per_minute'&&d.previous!==undefined&&d.current!==undefined){
+        parts.push(
+          'Lucro por minuto: '+money(d.previous)+' MT → '+money(d.current)+' MT'
         );
       }
       if(d.refundedBets!==undefined)parts.push('Reembolsos: '+String(d.refundedBets));
@@ -189,7 +196,7 @@
         // Métricas/certificação são auxiliares e nunca podem congelar Abrir/Fechar
         // quando produção ainda não recebeu uma migration opcional.
         const d=await rpc('jl_aviator_admin_state',{p_token:state.token});
-        const [engineTest,releaseGate,observability]=await Promise.all([
+        const [engineTest,releaseGate,observability,houseProfit]=await Promise.all([
           optionalAdminRpc(
             'jl_aviator_admin_engine_test_state',
             {p_token:state.token},
@@ -210,6 +217,17 @@
               failures_15m:{},
               financial_consistency:{ok:true},
               alerts:[]
+            }
+          ),
+          optionalAdminRpc(
+            'jl_aviator_admin_house_profit_state',
+            {p_token:state.token},
+            {
+              enabled:true,
+              rate_per_minute:1,
+              reserved_profit:0,
+              bank_balance:0,
+              last_accrued_at:null
             }
           )
         ]),r=d.round||{};
@@ -245,6 +263,12 @@
             ?'+'+money(house.round_realized_result)+' MZN'
             :money(house.round_realized_result)+' MZN';
         $('aviatorHouseUpdated').textContent='Atualizado agora';
+        $('aviatorHouseReservedProfit').textContent=money(houseProfit?.reserved_profit)+' MT';
+        $('aviatorHouseProfitRate').textContent=money(houseProfit?.rate_per_minute)+' MT';
+        const houseProfitInput=$('aviatorHouseProfitPerMinute');
+        if(houseProfitInput&&document.activeElement!==houseProfitInput){
+          houseProfitInput.value=Number(houseProfit?.rate_per_minute??1).toFixed(2);
+        }
         const referenceStake=10,referenceCeiling=1+(bankBalance*exposure/referenceStake),bankWarning=$('aviatorBankWarning');
         const readiness=$('aviatorReadiness'),referenceCeilings=$('aviatorReferenceCeilings');
         const enginePassed=engineTest?.passed===true;
@@ -632,6 +656,38 @@
       }catch(e){$('aviatorAdminMessage').textContent=e.message}
     });
     
+    $('aviatorHouseProfitSave')?.addEventListener('click',async()=>{
+      const button=$('aviatorHouseProfitSave');
+      try{
+        const input=$('aviatorHouseProfitPerMinute');
+        const rate=Number(input?.value);
+        if(!Number.isFinite(rate)||rate<0||rate>1000000||Math.round(rate*100)!==rate*100){
+          throw new Error('Informe um valor válido por minuto, com no máximo 2 casas decimais.');
+        }
+        if(button){
+          button.disabled=true;
+          button.textContent='Guardando…';
+        }
+        const result=await rpc('jl_aviator_admin_set_house_profit_rate',{
+          p_token:state.token,
+          p_rate:rate
+        });
+        $('aviatorAdminMessage').textContent=
+          'Lucro da casa definido para '+money(result?.rate_per_minute??rate)+' MT por minuto.';
+        await refreshAviatorAdmin();
+        if($('aviatorAuditWrap')?.open){
+          await refreshAviatorAudit(true);
+        }
+      }catch(e){
+        $('aviatorAdminMessage').textContent=e.message;
+      }finally{
+        if(button){
+          button.disabled=false;
+          button.textContent='Guardar valor/minuto';
+        }
+      }
+    });
+
     $('aviatorBankAdjust')?.addEventListener('click',async()=>{
       try{
         const delta=Number($('aviatorBankDelta').value),reason=$('aviatorBankReason').value.trim();
