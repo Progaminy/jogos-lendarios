@@ -661,7 +661,7 @@
       try{
         const input=$('aviatorHouseProfitPerMinute');
         const rate=Number(input?.value);
-        if(!Number.isFinite(rate)||rate<0||rate>1000000||Math.round(rate*100)!==rate*100){
+        if(!Number.isFinite(rate)||rate<0||rate>1000000||Math.abs(rate*100-Math.round(rate*100))>1e-8){
           throw new Error('Informe um valor válido por minuto, com no máximo 2 casas decimais.');
         }
         if(button){
