@@ -269,7 +269,7 @@ test('Aviator mostra LOCKED separado do voo e permite Apostar para a próxima se
   assert.match(js,/function renderLocked\(\)[\s\S]*?queue-next/);
   assert.match(js,/queued\?'Cancelar':'Apostar'/);
   assert.doesNotMatch(js,/Prepare a próxima|Próxima aposta preparada/);
-  assert.equal(runtime.pollDelay('LOCKED',false,false),3000);
+  assert.equal(runtime.pollDelay('LOCKED',false,false),1000);
   assert.equal(runtime.phase('LOCKED'),'locked');
 });
 
