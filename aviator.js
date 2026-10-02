@@ -232,6 +232,7 @@ function scheduleAutoBetForOpenRound(){
     round?.status!=='OPEN'||
     round?.betting_open===false||
     myBet||
+    nextBet?.hasQueued?.()||
     betting||
     autoBetAttemptedRoundId===roundId
   ){
@@ -249,6 +250,7 @@ function scheduleAutoBetForOpenRound(){
       round?.status!=='OPEN'||
       round?.betting_open===false||
       myBet||
+      nextBet?.hasQueued?.()||
       betting
     ){
       return;
