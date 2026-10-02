@@ -46,4 +46,5 @@
   }
 
   window.JLAviatorAmountStepper=Object.freeze({create,attachAll});
+  attachAll();
 })();
