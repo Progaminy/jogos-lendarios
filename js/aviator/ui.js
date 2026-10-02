@@ -38,7 +38,9 @@
         [/voo nao esta ativo/i,'O voo já terminou.'],
         [/crash ja atingido/i,'Fim da rodada. Cash-out não disponível.'],
         [/sem liga[cç][aã]o|failed to fetch|network/i,'Sem ligação. Verifique a internet.'],
-        [/reserva da banca inconsistente/i,'Não foi possível concluir agora. Tente novamente.']
+        [/limite seguro da rodada atingido/i,'Limite seguro atingido. Esta aposta não foi aceite.'],
+        [/rodada em transicao de seguranca/i,'Aguarde a próxima rodada.'],
+        [/reserva da banca inconsistente|capacidade segura da rodada inconsistente/i,'Não foi possível concluir agora. Tente novamente.']
       ];
       for(const [pattern,message] of rules){
         if(pattern.test(raw))return message;
