@@ -721,7 +721,7 @@ function renderLocked(){
   renderBetAction(
     true,
     myBet?'Aposta confirmada':'Apostas fechadas',
-    myBet?'Foi apostado':'Aguarde',
+    myBet?'Apostado':'Aguarde',
     myBet?'confirmed':'locked'
   );
 
@@ -759,7 +759,7 @@ function renderFlying(){
       :queued
         ?'Aposta registada para a próxima rodada'
         :'Aposte para a próxima rodada',
-    queued?'Cancelar':myBet?'Foi apostado':'Apostar',
+    queued?'Cancelar':myBet?'Apostado':'Apostar',
     queued?'cancel-next':myBet?'confirmed':'bet',
     Boolean(myBet)
   );
