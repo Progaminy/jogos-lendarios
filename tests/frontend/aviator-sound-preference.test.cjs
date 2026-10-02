@@ -13,11 +13,12 @@ const js=read('aviator.js');
 const sound=read('js/aviator/sound.js');
 const manifest=JSON.parse(read('games/manifest.json'));
 
-test('Aviator tem botão de som claro e acessível',()=>{
+test('Aviator tem controlo de som discreto e acessível',()=>{
   assert.match(html,/id="aviatorSoundToggle"/);
   assert.match(html,/aria-pressed="false"/);
   assert.match(html,/aria-label="Ativar som do Aviator"/);
-  assert.match(html,/>🔇 Som<\/button>/);
+  assert.match(sound,/button\.textContent=enabled\?'🔊':'🔇'/);
+  assert.doesNotMatch(sound,/🔊 Som|🔇 Som/);
 });
 
 test('preferência de som é persistente e silenciosa por padrão',()=>{
