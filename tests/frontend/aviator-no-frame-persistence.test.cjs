@@ -22,3 +22,18 @@ test('multiplicador visual usa somente frame confirmado pelo servidor, sem hist�
   assert.doesNotMatch(engine,/runtime\.liveMultiplier\(/);
   assert.doesNotMatch(js,/multiplier_history|frame_history|visual_history|tick_history/);
 });
+
+
+test('avião avança continuamente e nunca reinicia em loop CSS',()=>{
+  const ui=fs.readFileSync(path.join(__dirname,'../../js/aviator/ui.js'),'utf8');
+  const css=fs.readFileSync(path.join(__dirname,'../../aviator.css'),'utf8');
+
+  assert.match(ui,/function renderPlaneFlight\(multiplierValue,timestamp=performance\.now\(\)\)/);
+  assert.match(ui,/progress=Math\.max\(lastPlaneProgress,progress\)/);
+  assert.match(ui,/lastPlaneProgress=progress/);
+  assert.match(ui,/Math\.log\(safe\)\/Math\.log\(500\)/);
+  assert.match(ui,/Math\.sin\(Number\(timestamp\)\/210\)\*2/);
+  assert.match(js,/ui\.renderPlaneFlight\?\.\(m,timestamp\)/);
+  assert.doesNotMatch(css,/animation:aviatorFlight[^;]*infinite/);
+  assert.doesNotMatch(css,/@keyframes aviatorFlight/);
+});
