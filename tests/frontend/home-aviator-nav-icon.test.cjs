@@ -20,6 +20,6 @@ test('menu principal mostra símbolo de avião no lugar da palavra Aviator',()=>
 
 test('símbolo do avião mantém tamanho próprio no menu',()=>{
   assert.match(css,/\.game-nav a\.nav-aviator-symbol::before \{ content: none; \}/);
-  assert.match(css,/\.game-nav a\.nav-aviator-symbol > span \{[\s\S]*?font-size: 1\.55rem/);
-  assert.match(css,/@media \(max-width: 900px\)[\s\S]*?\.game-nav a\.nav-aviator-symbol > span \{[\s\S]*?font-size: 1\.3rem/);
+  assert.match(css,/\.game-nav a\.nav-aviator-symbol > span \{[\s\S]*?font-size: 2rem/);
+  assert.match(css,/@media \(max-width: 900px\)[\s\S]*?\.game-nav a\.nav-aviator-symbol > span \{[\s\S]*?font-size: 1\.7rem/);
 });
