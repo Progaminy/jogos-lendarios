@@ -12,6 +12,7 @@
   }={}) {
     let enabled=false;
     let audioCtx=null;
+    let initialized=false;
     let lastRoundId=null;
     let lastStatus=null;
     let terminalRoundId=null;
@@ -59,10 +60,6 @@
       osc.stop(start+duration+.03);
     }
 
-    function playEnable(){
-      tone(620,.05,.016,0,'sine');
-    }
-
     function playCountdown(second){
       const s=Number(second);
       if(!Number.isFinite(s)||s<0||s>10)return;
@@ -73,8 +70,8 @@
       }
       const urgent=s<=3;
       const freq=urgent?1120:860;
-      const duration=urgent?.075:.055;
-      const volume=urgent?.026:.019;
+      const duration=urgent?0.075:0.055;
+      const volume=urgent?0.026:0.019;
       tone(freq,duration,volume,0,'square');
     }
 
@@ -176,7 +173,6 @@
       }
 
       ensureAudio();
-      playEnable();
 
       const current=getRound?.();
       if(String(current?.status||'').toUpperCase()==='FLYING'){
@@ -192,6 +188,18 @@
       if(!round?.id||!round?.status)return;
       const roundId=Number(round.id);
       const status=String(round.status).toUpperCase();
+
+      if(!initialized){
+        initialized=true;
+        lastRoundId=roundId;
+        lastStatus=status;
+        if(status==='CRASHED'||status==='SETTLED')terminalRoundId=roundId;
+        if(enabled&&status==='FLYING'){
+          startFlight();
+          updateFlight(getMultiplier?.());
+        }
+        return;
+      }
 
       if(lastRoundId===roundId&&lastStatus===status){
         if(enabled&&status==='FLYING'&&!flightVoice)startFlight();
