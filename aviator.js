@@ -566,7 +566,6 @@ async function recover(force=false){
 
   try{
     const x=await JLApi.rpc('jl_aviator_player_state',{p_token:playerToken()});
-    balance?.applyPlayerState(x);
 
     if(Number(round?.id)!==requestedRoundId){
       return;
