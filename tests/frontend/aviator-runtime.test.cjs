@@ -22,15 +22,19 @@ test('runtime mantém apenas relógio visual derivado do snapshot autoritativo',
   assert.equal(runtime.secondsUntil('2026-09-30T10:00:05.000Z',Date.parse(started)),5);
 });
 
-test('recuperação escolhe apenas aposta ACTIVE da rodada pedida',()=>{
+test('recuperação escolhe aposta ACTIVE por rodada e, quando pedido, por slot',()=>{
   const bets=[
-    {id:4,round_id:10,status:'ACTIVE',stake:20},
-    {id:7,round_id:11,status:'ACTIVE',stake:30},
-    {id:8,round_id:11,status:'CASHED_OUT',stake:40},
-    {id:9,round_id:11,status:'ACTIVE',stake:50}
+    {id:4,round_id:10,status:'ACTIVE',stake:20,bet_slot:1},
+    {id:7,round_id:11,status:'ACTIVE',stake:30,bet_slot:1},
+    {id:8,round_id:11,status:'CASHED_OUT',stake:40,bet_slot:2},
+    {id:9,round_id:11,status:'ACTIVE',stake:50,bet_slot:2}
   ];
   assert.equal(runtime.pickActiveBet(bets,10).id,4);
   assert.equal(runtime.pickActiveBet(bets,11).id,9);
+  assert.equal(runtime.pickActiveBet(bets,11,1).id,7);
+  assert.equal(runtime.pickActiveBet(bets,11,2).id,9);
+  assert.equal(runtime.latestBet(bets,11,1).id,7);
+  assert.equal(runtime.latestBet(bets,11,2).id,9);
   assert.equal(runtime.pickActiveBet(bets,12),null);
 });
 
@@ -144,7 +148,8 @@ test('resposta de recuperação antiga é descartada se a rodada mudou',()=>{
   const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
   assert.match(js,/const requestedRoundId=Number\(round\.id\)/);
   assert.match(js,/if\(Number\(round\?\.id\)!==requestedRoundId\)/);
-  assert.match(js,/runtime\.pickActiveBet\(bets,requestedRoundId\)/);
+  assert.match(js,/runtime\.pickActiveBet\(bets,requestedRoundId,1\)/);
+  assert.match(js,/runtime\.latestBet\(bets,requestedRoundId,1\)/);
 });
 
 
