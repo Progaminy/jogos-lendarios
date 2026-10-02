@@ -27,6 +27,7 @@ declare
   blocked_stake boolean:=false;
   blocked_auto boolean:=false;
   blocked_key boolean:=false;
+  blocked_slot boolean:=false;
   row_after public.jl_aviator_bets;
   tick jsonb;
 begin
@@ -70,6 +71,23 @@ begin
     raise exception 'stake confirmada pôde ser alterada';
   end if;
 
+  begin
+    update public.jl_aviator_bets
+       set bet_slot=2
+     where id=bet_id;
+  exception
+    when others then
+      if position('Termos da aposta Aviator ja confirmada sao imutaveis.' in sqlerrm)>0 then
+        blocked_slot:=true;
+      else
+        raise;
+      end if;
+  end;
+
+  if not blocked_slot then
+    raise exception 'bet_slot confirmado pôde ser alterado';
+  end if;
+
   perform public.jl_aviator_lock_round(rid);
 
   begin
@@ -108,6 +126,7 @@ begin
   where id=bet_id;
 
   if row_after.stake<>10
+     or row_after.bet_slot<>1
      or row_after.auto_cashout_multiplier<>1.50
      or row_after.request_key<>'immut-bet-'||rid::text then
     raise exception 'termos mudaram apesar do bloqueio: %',row_to_json(row_after);
