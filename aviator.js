@@ -699,8 +699,8 @@ function renderLocked(){
   renderBetAction(
     true,
     myBet?'Aposta confirmada':'Apostas fechadas',
-    myBet?'Foi apostado':'Apostar',
-    myBet?'confirmed':'bet'
+    myBet?'Foi apostado':'Aguarde',
+    myBet?'confirmed':'locked'
   );
 
   resetCashout();
@@ -730,10 +730,14 @@ function renderFlying(){
   renderBetAction(
     true,
     myBet?'Aposta em voo':'Voo em curso',
-    myBet?'Foi apostado':'Apostar',
-    myBet?'confirmed':'bet',
+    myBet?'Foi apostado':'Aguarde',
+    myBet?'confirmed':'locked',
     Boolean(myBet)
   );
+
+  if(!myBet&&/^Aposta confirmada/i.test($('#aviatorMessage')?.textContent||'')){
+    $('#aviatorMessage').textContent='';
+  }
 
   renderCashoutAction({
     active:Boolean(myBet),
@@ -772,8 +776,8 @@ function renderFinished(){
   renderBetAction(
     true,
     'Aguarde a próxima rodada',
-    'Apostar',
-    'bet'
+    'Aguarde',
+    'locked'
   );
 
   myBet=null;
