@@ -22,6 +22,12 @@ test('desktop usa dois cartões e mobile empilha os painéis',()=>{
   assert.match(css,/@media\(max-width:650px\)[\s\S]*?\.aviator-controls\{grid-template-columns:1fr/);
 });
 
+test('mobile distribui espaço sem esmagar cash-out automático nem desperdiçar no valor',()=>{
+  assert.match(css,/grid-template-columns:minmax\(0,1fr\) minmax\(0,\.8fr\) minmax\(126px,1\.2fr\)/);
+  assert.match(css,/\.stake-stepper \.money-input input\{[\s\S]*?text-align:center/);
+  assert.match(css,/field:nth-of-type\(2\) \.money-input input\{[\s\S]*?text-align:center/);
+});
+
 test('cada painel usa slot financeiro próprio',()=>{
   assert.match(player,/financial\.placeBetSlot\(\{[\s\S]*?slot:1/);
   assert.match(panel,/slot=2/);
