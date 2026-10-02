@@ -25,13 +25,13 @@ test('mobile mantém o mesmo slot grande sem deslocamento',()=>{
   assert.match(css,/\.aviator-cashout-action #cashoutBtn\{height:72px;min-height:72px;font-size:1\.28rem\}/);
 });
 
-test('ação muda Apostar -> Cancelar -> Sacar conforme estado',()=>{
+test('ação muda Apostar -> Cancelar -> retorno de cash-out conforme estado',()=>{
   assert.match(ui,/label='Apostar'/);
   assert.match(ui,/mode='bet'/);
   assert.match(ui,/mode==='cancel'\|\|mode==='cancel-next'/);
   assert.match(js,/'Cancelar',[\s\S]*?'cancel'/);
   assert.match(js,/renderCashoutAction\(\{[\s\S]*?active:Boolean\(myBet\)/);
-  assert.match(ui,/active\?'Sacar':'Sacar'/);
+  assert.match(ui,/liveReturn=active&&hasMultiplier&&hasStake\?money\(s\*m\):null/);
 });
 
 test('OPEN com aposta confirmada disponibiliza cancelamento real',()=>{
