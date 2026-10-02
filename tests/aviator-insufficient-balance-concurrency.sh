@@ -7,7 +7,7 @@ PSQL=(psql "$JL_TEST_DATABASE_URL" -X -qAt -v ON_ERROR_STOP=1)
 
 PHONE_LOW='25899061261'
 TOKEN_LOW='aviator-point61-low'
-PHONE_EXACT='25899061262'
+PHONE_EXACT='25899061264'
 TOKEN_EXACT='aviator-point61-exact'
 
 cleanup() {
@@ -23,14 +23,16 @@ set status='CANCELLED',
     settled_at=coalesce(settled_at,clock_timestamp())
 where status in ('OPEN','LOCKED','FLYING','CRASHED');
 
-delete from public.jl_aviator_bets
+-- Apagar primeiro o ledger: transactions.aviator_bet_id referencia jl_aviator_bets.
+-- A ordem inversa pode abortar o cleanup e deixar fixtures para o teste seguinte.
+delete from public.transactions
 where player_id in (
   select id
   from public.players
   where phone in ('$PHONE_LOW','$PHONE_EXACT')
 );
 
-delete from public.transactions
+delete from public.jl_aviator_bets
 where player_id in (
   select id
   from public.players
