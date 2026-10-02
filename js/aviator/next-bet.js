@@ -6,10 +6,9 @@
     hasActiveBet,playerMessage,form,onMessage
   }={}) {
     const suffix=Number(slot)===1?'':String(slot);
-    const key='jl_aviator_next_bet_v1_slot_'+slot;
+    const key='jl_aviator_next_bet_v2_slot_'+slot;
     let queued=read();
     let submittingRoundId=null;
-    let retryAfter=0;
 
     function read(){
       try{
@@ -46,30 +45,26 @@
       return {amount,auto_cashout:auto};
     }
 
-    function handleAction(action){
-      if(action!=='queue-next'&&action!=='cancel-next')return false;
-      if(action==='cancel-next'){
-        save(null);
-        onMessage?.('');
-        return true;
-      }
+    function queue(){
       try{
         if(!isOnline?.())throw new Error('Sem ligação. Aguarde a reconexão.');
         if(!playerToken?.())throw new Error('Entre na sua conta primeiro.');
         if(!isEnabled?.())throw new Error('Aviator brevemente.');
+        if(hasActiveBet?.())throw new Error('Aposta em voo.');
         const r=getRound?.();
-        if(r?.status==='OPEN'){
-          throw new Error('Apostas abertas.');
-        }
-        if(r&&!['LOCKED','FLYING','CRASHED','SETTLED','CANCELLED'].includes(r.status)){
-          throw new Error('Aguarde a rodada em curso.');
+        if(!r||!['FLYING','CRASHED','SETTLED'].includes(r.status)){
+          throw new Error('Apostas fechadas.');
         }
         save(parse());
-        onMessage?.('');
+        onMessage?.('Aposta registada para a próxima rodada.');
+        return true;
       }catch(error){
-        onMessage?.(playerMessage?.(error,'Não foi possível apostar agora.')||'Não foi possível apostar agora.');
+        onMessage?.(
+          playerMessage?.(error,'Não foi possível registar a aposta.')||
+          'Não foi possível registar a aposta.'
+        );
+        return false;
       }
-      return true;
     }
 
     function schedule(){
@@ -78,8 +73,7 @@
       if(
         !queued||!isEnabled?.()||!isOnline?.()||!playerToken?.()||
         !Number.isFinite(roundId)||r?.status!=='OPEN'||r?.betting_open===false||
-        hasActiveBet?.()||isBusy?.()||
-        submittingRoundId===roundId||Date.now()<retryAfter
+        hasActiveBet?.()||isBusy?.()||submittingRoundId===roundId
       )return;
 
       queueMicrotask(()=>{
@@ -89,44 +83,51 @@
           Number(current?.id)!==roundId||current?.status!=='OPEN'||
           current?.betting_open===false||hasActiveBet?.()||isBusy?.()
         )return;
+
         const amount=$('#aviatorAmount'+suffix);
         const auto=$('#aviatorAutoCashout'+suffix);
-        const button=$('#betBtn'+suffix);
         if(amount)amount.value=String(queued.amount);
         if(auto)auto.value=queued.auto_cashout===null?'':String(queued.auto_cashout);
-        if(button)button.dataset.action='bet';
+
         submittingRoundId=roundId;
         if(typeof form?.requestSubmit==='function'){
           form.requestSubmit();
         }else{
           submittingRoundId=null;
-          retryAfter=Date.now()+250;
         }
       });
     }
 
-    function isSubmitting(roundId){return submittingRoundId===Number(roundId)}
+    function isSubmitting(roundId){
+      return submittingRoundId===Number(roundId);
+    }
+
     function consume(roundId){
       if(!isSubmitting(roundId))return false;
       save(null);
       submittingRoundId=null;
-      retryAfter=0;
       return true;
     }
-    function clearSubmitting(roundId){
-      if(isSubmitting(roundId)){
-        submittingRoundId=null;
-        if(queued)retryAfter=Date.now()+250;
-      }
+
+    function fail(roundId){
+      if(!isSubmitting(roundId))return false;
+      save(null);
+      submittingRoundId=null;
+      return true;
     }
+
     function resetRound(){
       submittingRoundId=null;
-      retryAfter=0;
     }
 
     return Object.freeze({
-      hasQueued:()=>Boolean(queued),handleAction,schedule,isSubmitting,
-      consume,clearSubmitting,resetRound
+      hasQueued:()=>Boolean(queued),
+      queue,
+      schedule,
+      isSubmitting,
+      consume,
+      fail,
+      resetRound
     });
   }
 
