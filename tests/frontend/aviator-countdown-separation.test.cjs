@@ -20,9 +20,9 @@ test('contagem e multiplicador têm superfícies distintas',()=>{
   assert.match(html,/class="sr-only">Nova rodada em<\/small>/);
 });
 
-test('contagem usa segundos e multiplicador usa vezes',()=>{
-  assert.match(js,/const takeoffDisplay=takeoffSeconds===null\?'—':String\(takeoffSeconds\);/);
-  assert.match(js,/String\(seconds\)\+'s'/);
+test('contagem de aposta usa número puro e multiplicador usa vezes',()=>{
+  assert.match(js,/const display=seconds===null\?'—':String\(seconds\);/);
+  assert.match(js,/\$\('#preflightCountdown'\)\.textContent=display/);
   assert.match(js,/toFixed\(2\)\+'×'/);
   assert.doesNotMatch(html,/countdown-value[^>]*>[^<]*×/);
 });
@@ -49,8 +49,10 @@ test('estilo da contagem é menor que o multiplicador e semanticamente separado'
 });
 
 
-test('contagem principal de descolagem é número puro e destacada',()=>{
-  assert.match(js,/const takeoffDisplay=takeoffSeconds===null\?'—':String\(takeoffSeconds\);/);
+test('contagem principal de apostas é 10 a 0 e depois fica em AGUARDE',()=>{
+  assert.match(js,/const display=seconds===null\?'—':String\(seconds\);/);
+  assert.match(js,/\$\('#preflightLabel'\)\.textContent=closed\?'AGUARDE':'APOSTE'/);
+  assert.match(js,/if\(round\?\.status==='LOCKED'\)[\s\S]*?preflightCountdown'\)\.textContent='0'/);
   assert.match(css,/Contagem principal: número puro, grande e estável de 10 a 0/);
   assert.match(css,/\.preflight \.countdown-value\{[\s\S]*?font-size:clamp\(4rem,15vw,7rem\)/);
 });
