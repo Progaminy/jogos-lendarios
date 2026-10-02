@@ -17,13 +17,11 @@ test('histórico recente de multiplicadores fica no topo do Aviator',()=>{
   assert.match(css,/\.aviator-history-top/);
 });
 
-test('durante voo botão Apostar pode guardar a próxima sem texto preparar',()=>{
-  const flying=js.match(/function renderFlying\(\)[\s\S]*?\n\}/)?.[0]||'';
-  assert.match(flying,/nextBet\?\.hasQueued/);
-  assert.match(flying,/queue-next/);
-  assert.match(flying,/queued\?'Cancelar':'Apostar'/);
-  assert.match(flying,/renderAutoBetStatus\(\)/);
-  assert.doesNotMatch(flying,/Prepare a próxima|Próxima aposta preparada/);
+test('durante voo não existe fila silenciosa nem Cancelar fantasma',()=>{
+  const flying=js.match(/function renderFlying\(\)[\s\S]*?function renderFinished/)?.[0]||'';
+  assert.match(flying,/renderBetAction\(\s*true/);
+  assert.match(flying,/renderCashoutAction\(\{[\s\S]*?active:Boolean\(myBet\)/);
+  assert.doesNotMatch(flying,/nextBet|queue-next|cancel-next|Cancelar/);
 });
 
 test('auto-bet só dispara quando servidor informa OPEN',()=>{
@@ -42,7 +40,7 @@ test('auto-bet usa o mesmo fluxo financeiro normal e não debita antecipadamente
   assert.doesNotMatch(fn,/jl_aviator_place_bet|JLApi\.rpc|financial\.placeBet/);
 });
 
-test('auto-bet aguarda OPEN e fila manual continua sem etapa de preparação visível',()=>{
+test('auto-bet aguarda OPEN sem criar fila manual oculta',()=>{
   assert.match(html,/id="aviatorAutoBet"/);
   assert.match(html,/id="aviatorAutoBetStatus"/);
   assert.doesNotMatch(js,/Próxima aposta preparada|Prepare a próxima rodada/);
