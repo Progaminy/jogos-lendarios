@@ -16,6 +16,7 @@ declare
   v_admin uuid;
   v_token text:='preopen-gate-'||gen_random_uuid()::text;
   v_result jsonb;
+  v_release jsonb;
   v_open jsonb;
   v_blocked boolean:=false;
   v_enabled boolean;
@@ -39,6 +40,12 @@ begin
 
   if (v_result->>'total')::integer<18 then
     raise exception 'suite preopen encolheu abaixo de 18 checks: %',v_result;
+  end if;
+
+  v_release:=public.jl_aviator_admin_release_gate(v_token);
+
+  if coalesce((v_release->>'ok')::boolean,false) is distinct from true then
+    raise exception 'certificação completa limpa deveria passar: %',v_release;
   end if;
 
   v_open:=public.jl_aviator_admin_reopen(v_token);
