@@ -1,4 +1,21 @@
 body{background:#070a10}
+.aviator-booting .aviator-history-top,
+.aviator-booting .aviator-controls,
+.aviator-booting .aviator-top-balance{visibility:hidden!important}
+.aviator-booting #flightArea>*{visibility:hidden!important}
+.aviator-booting #flightArea::before{
+  content:"A carregar…";
+  position:absolute;
+  inset:0;
+  z-index:8;
+  display:grid;
+  place-items:center;
+  color:#8f9bad;
+  font-size:.78rem;
+  font-weight:900;
+  letter-spacing:.08em;
+  text-transform:uppercase
+}
 .aviator-shell{max-width:980px;margin:auto;padding:14px 18px 22px;display:grid;gap:10px}
 .aviator-stage{overflow:hidden;min-height:500px;padding:14px}
 .aviator-focus{border-color:rgba(244,181,31,.14);box-shadow:0 22px 60px rgba(0,0,0,.28)}
