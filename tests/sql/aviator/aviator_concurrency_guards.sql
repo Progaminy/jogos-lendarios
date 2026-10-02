@@ -15,7 +15,11 @@ begin
  if public.jl_aviator_financial_ceiling(100000,0,.5) is not null then raise exception 'zero stakes must be visual-only'; end if;
  insert into public.players(id,name,phone,pin_hash,balance) values(p,'AVIATOR REGRESSION','__aviator_reg__'||substr(p::text,1,8),'x',300000);
  insert into public.player_sessions(player_id,token_hash,expires_at) values(p,public.jl_token_hash(tok),now()+interval '1 hour');
- update public.jl_aviator_bank set balance=100000 where id=true;
+ update public.jl_aviator_bank
+    set balance=100000,
+        exposure_ratio=.5,
+        exposure_cycle_anchor=clock_timestamp()-interval '7 hours 1 minute'
+  where id=true;
  update public.jl_aviator_rounds set status='CANCELLED' where status in ('OPEN','LOCKED','FLYING');
  insert into public.jl_aviator_rounds(status,betting_closes_at) values('OPEN',now()+interval '1 minute') returning id into rid;
  b:=public.jl_aviator_place_bet(tok,500,'aviator-regression-request');
