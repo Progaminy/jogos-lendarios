@@ -103,23 +103,10 @@ const sound=window.JLAviatorSound?.create({
 const haptics=window.JLAviatorHaptics?.create({
   button:$('#aviatorVibrationToggle')
 })||null;
-const secondPanel=window.JLAviatorBetPanel?.create({
-  slot:2,
-  $,
-  financial,
-  playerToken,
-  getRound:()=>round,
-  isEnabled:()=>enabled,
-  isOnline:()=>connectionOnline,
-  multiplier:()=>mul(),
-  secondsToClose:()=>secondsToClose(),
-  money:(value)=>money(value),
-  moneyCompact:(value)=>moneyCompact(value),
-  playerMessage:(error,fallback)=>playerMessage(error,fallback),
-  sound,
-  personalHistory,
-  createGestureGuard:(button)=>ui.createCashoutGestureGuard(button)
-})||null;
+const secondPanel=window.JLAviatorBetPanel?.create({slot:2,$,financial,playerToken,
+  getRound:()=>round,isEnabled:()=>enabled,isOnline:()=>connectionOnline,
+  multiplier:mul,secondsToClose,money,moneyCompact,playerMessage,sound,personalHistory,
+  createGestureGuard:ui.createCashoutGestureGuard})||null;
 
 function cashoutRequestKey(betId){return financial.cashoutRequestKey(betId);}
 
