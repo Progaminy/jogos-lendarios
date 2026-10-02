@@ -75,3 +75,16 @@ test('som é módulo próprio e manifesto mantém apenas sound',()=>{
   assert.ok(game.assets.includes('./js/aviator/sound.js'));
   assert.ok(!game.assets.includes('./js/aviator/haptics.js'));
 });
+
+
+test('som persistido após refresh desbloqueia no primeiro gesto sem inverter para desligado',()=>{
+  assert.match(sound,/async function activateAudio\(\)/);
+  assert.match(sound,/if\(ctx\.state!=='running'\)\{/);
+  assert.match(sound,/await ctx\.resume\(\)/);
+  assert.match(sound,/async function handleButtonClick\(event\)/);
+  assert.match(sound,/if\(enabled&&!audioRunning\(\)\)/);
+  assert.match(sound,/await activateAudio\(\)/);
+  assert.match(sound,/button\?\.addEventListener\('click',handleButtonClick\)/);
+  assert.match(sound,/if\(button&&event\?\.target&&button\.contains\?\.\(event\.target\)\)return/);
+  assert.doesNotMatch(sound,/button\?\.addEventListener\('click',toggle\)/);
+});
