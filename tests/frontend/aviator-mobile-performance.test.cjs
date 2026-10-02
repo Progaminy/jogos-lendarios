@@ -42,11 +42,12 @@ test('mobile remove efeitos de pintura caros',()=>{
   assert.match(css,/#cashoutBtn:not\(:disabled\)\{box-shadow:0 0 0 1px/);
 });
 
-test('modo low power mantém animação transform mas corta decoração',()=>{
+test('modo low power mantém voo contínuo mas corta decoração',()=>{
   assert.match(css,/\.aviator-low-power \.flight-grid\{display:none\}/);
   assert.match(css,/\.aviator-low-power \.flight-area::after\{display:none\}/);
   assert.match(css,/\.aviator-low-power \.plane\{filter:none\}/);
   assert.match(css,/\.aviator-low-power \.aviator-stage\.is-open \.plane\{animation:none\}/);
+  assert.match(css,/\.aviator-low-power \.aviator-stage\.is-flying \.plane\{transition-duration:\.24s\}/);
 });
 
 test('assets mobile otimizados têm cache-bust dedicado',()=>{
