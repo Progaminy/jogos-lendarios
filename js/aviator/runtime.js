@@ -8,13 +8,33 @@
 })(typeof globalThis!=='undefined'?globalThis:this,function(){
   'use strict';
 
-  function pickActiveBet(bets,roundId){
+  function betSlot(bet){
+    return Number(bet?.bet_slot)===2?2:1;
+  }
+
+  function pickActiveBet(bets,roundId,slot=null){
     const target=Number(roundId);
+    const wanted=slot===null?null:Number(slot);
     if(!Array.isArray(bets)||!Number.isFinite(target))return null;
 
     let selected=null;
     for(const bet of bets){
       if(Number(bet?.round_id)!==target||bet?.status!=='ACTIVE')continue;
+      if(wanted!==null&&betSlot(bet)!==wanted)continue;
+      if(!selected||Number(bet?.id)>Number(selected?.id))selected=bet;
+    }
+    return selected;
+  }
+
+  function latestBet(bets,roundId,slot=null){
+    const target=Number(roundId);
+    const wanted=slot===null?null:Number(slot);
+    if(!Array.isArray(bets)||!Number.isFinite(target))return null;
+
+    let selected=null;
+    for(const bet of bets){
+      if(Number(bet?.round_id)!==target)continue;
+      if(wanted!==null&&betSlot(bet)!==wanted)continue;
       if(!selected||Number(bet?.id)>Number(selected?.id))selected=bet;
     }
     return selected;
@@ -67,6 +87,7 @@
 
   return Object.freeze({
     pickActiveBet,
+    latestBet,
     findBetById,
     pollDelay,
     liveMultiplier,
