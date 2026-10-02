@@ -51,7 +51,8 @@ test('painel 2 tem auto-bet e cash-out próprios sem Cancelar fantasma',()=>{
   assert.match(panel,/financial\.requestFinancialCashout\(/);
   assert.match(panel,/Aposta automática confirmada para esta rodada/);
   assert.match(panel,/liveReturn=active&&hasMultiplier&&hasStake\?money\(stake\*m\):null/);
-  assert.match(panel,/cashoutButton\.textContent=pending\?'Confirmando…':liveReturn\|\|'Sacar'/);\n  assert.doesNotMatch(panel,/[\"'\`]Cancelar[\"'\`]/);
+  assert.match(panel,/cashoutButton\.textContent=pending\?'Confirmando…':liveReturn\|\|'Sacar'/);
+  assert.doesNotMatch(panel,/Cancelar|queue-next|cancel-next/);
 });
 
 test('reconexão do painel 2 escolhe apenas bet_slot 2',()=>{
