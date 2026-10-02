@@ -26,8 +26,11 @@ test('somente OPEN aceita clique de aposta',()=>{
   const renderFinished=primary.match(/function renderFinished\(\)[\s\S]*?function renderWaiting/)?.[0]||'';
   const renderWaiting=primary.match(/function renderWaiting\(\)[\s\S]*?function renderCurrentRound/)?.[0]||'';
   assert.match(renderFlying,/renderBetAction\(\s*true/);
+  assert.match(renderFlying,/myBet\?'Foi apostado':'Aguarde'/);
   assert.match(renderFinished,/renderBetAction\(\s*true/);
+  assert.match(renderFinished,/'Aguarde a próxima rodada',[\s\S]*?'Aguarde'/);
   assert.match(renderWaiting,/renderBetAction\(\s*true/);
+  assert.match(renderWaiting,/'Aguarde a próxima rodada',[\s\S]*?'Aguarde'/);
 });
 
 test('aposta confirmada nunca vira Cancelar',()=>{
