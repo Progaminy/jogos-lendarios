@@ -25,30 +25,27 @@ test('cliente Supabase está fixado e carrega antes do controlador',()=>{
   assert.ok(controller>realtime);
 });
 
-test('Realtime saudável mantém fallback rápido nas transições críticas',()=>{
-  assert.equal(runtime.pollDelay('FLYING',false,true),15000);
+test('Realtime saudável reconcilia o voo a cada frame autoritativo',()=>{
+  assert.equal(runtime.pollDelay('FLYING',false,true),250);
   assert.equal(runtime.pollDelay('OPEN',false,true),750);
   assert.equal(runtime.pollDelay('SETTLED',false,true),750);
   assert.equal(runtime.pollDelay('FLYING',true,true),300000);
 });
 
-test('fallback sem WebSocket não perde a janela curta de apostas',()=>{
-  assert.equal(runtime.pollDelay('FLYING',false,false),3000);
+test('fallback sem WebSocket mantém o voo preso ao servidor',()=>{
+  assert.equal(runtime.pollDelay('FLYING',false,false),250);
   assert.equal(runtime.pollDelay('LOCKED',false,false),1000);
   assert.equal(runtime.pollDelay('OPEN',false,false),750);
   assert.equal(runtime.pollDelay('SETTLED',false,false),750);
 });
 
-test('multiplicador visual interpola fórmula do servidor sem decidir cash-out',()=>{
-  const started='2026-09-30T10:00:00.000Z';
-  const now=Date.parse(started)+10_000;
-  assert.ok(Math.abs(runtime.liveMultiplier(started,now)-Math.pow(1.06,10))<1e-10);
-
+test('multiplicador visual não extrapola além do frame confirmado pelo servidor',()=>{
   const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
   const engine=fs.readFileSync(path.join(__dirname,'../../js/aviator/engine.js'),'utf8');
   const finance=fs.readFileSync(path.join(__dirname,'../../js/aviator/financial.js'),'utf8');
   assert.match(js,/requestAnimationFrame\(flightPaintLoop\)/);
-  assert.match(engine,/runtime\.liveMultiplier\(round\.started_at,serverNowMs\(\)\)/);
+  assert.match(engine,/round\?\.current_multiplier/);
+  assert.doesNotMatch(engine,/runtime\.liveMultiplier\(/);
 
   const financial=finance.match(/async function requestFinancialCashout\(betId,requestKey\)[\s\S]*?\n    \}/)?.[0]||'';
   assert.match(financial,/jl_aviator_cashout/);
