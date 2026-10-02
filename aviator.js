@@ -33,49 +33,7 @@ let autoBetSubmittingRoundId=null;
 
 const playerToken=()=>JLSession.getPlayerToken();
 const fairness=window.JLAviatorFairness||null;
-const runtime=window.JLAviatorRuntime||{
-  pickActiveBet:(bets,roundId,slot=null)=>{
-    if(!Array.isArray(bets))return null;
-    return bets.filter(b=>Number(b?.round_id)===Number(roundId)&&b?.status==='ACTIVE'&&
-      (slot===null||(Number(b?.bet_slot)===2?2:1)===Number(slot)))
-      .sort((a,b)=>Number(b?.id)-Number(a?.id))[0]||null;
-  },
-  latestBet:(bets,roundId,slot=null)=>{
-    if(!Array.isArray(bets))return null;
-    return bets.filter(b=>Number(b?.round_id)===Number(roundId)&&
-      (slot===null||(Number(b?.bet_slot)===2?2:1)===Number(slot)))
-      .sort((a,b)=>Number(b?.id)-Number(a?.id))[0]||null;
-  },
-  findBetById:(bets,betId)=>{
-    if(!Array.isArray(bets))return null;
-    return bets.find(b=>Number(b?.id)===Number(betId))||null;
-  },
-  pollDelay:(status,hidden,realtimeConnected=false)=>{
-    if(realtimeConnected)return hidden?300000:120000;
-    if(hidden)return 30000;
-    if(status==='FLYING'||status==='LOCKED')return 3000;
-    if(status==='OPEN')return 5000;
-    return 15000;
-  },
-  liveMultiplier:(startedAt,serverNowMs)=>{
-    const start=Date.parse(startedAt);
-    const now=Number(serverNowMs);
-    if(!Number.isFinite(start)||!Number.isFinite(now))return 1;
-    return Math.max(1,Math.pow(1.06,Math.max(0,(now-start)/1000)));
-  },
-  secondsUntil:(isoTime,serverNowMs)=>{
-    const target=Date.parse(isoTime);
-    const now=Number(serverNowMs);
-    if(!Number.isFinite(target)||!Number.isFinite(now))return null;
-    return Math.max(0,Math.ceil((target-now)/1000));
-  },
-  shouldAcceptSnapshot:(previousSeq,nextSeq)=>{
-    const next=Number(nextSeq);
-    if(!Number.isFinite(next))return false;
-    const previous=Number(previousSeq);
-    return !Number.isFinite(previous)||next>=previous;
-  }
-};
+const runtime=window.JLAviatorRuntime;
 
 const engine=window.JLAviatorEngine.create({
   runtime,
