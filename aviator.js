@@ -34,9 +34,16 @@ let autoBetSubmittingRoundId=null;
 const playerToken=()=>JLSession.getPlayerToken();
 const fairness=window.JLAviatorFairness||null;
 const runtime=window.JLAviatorRuntime||{
-  pickActiveBet:(bets,roundId)=>{
+  pickActiveBet:(bets,roundId,slot=null)=>{
     if(!Array.isArray(bets))return null;
-    return bets.filter(b=>Number(b?.round_id)===Number(roundId)&&b?.status==='ACTIVE')
+    return bets.filter(b=>Number(b?.round_id)===Number(roundId)&&b?.status==='ACTIVE'&&
+      (slot===null||(Number(b?.bet_slot)===2?2:1)===Number(slot)))
+      .sort((a,b)=>Number(b?.id)-Number(a?.id))[0]||null;
+  },
+  latestBet:(bets,roundId,slot=null)=>{
+    if(!Array.isArray(bets))return null;
+    return bets.filter(b=>Number(b?.round_id)===Number(roundId)&&
+      (slot===null||(Number(b?.bet_slot)===2?2:1)===Number(slot)))
       .sort((a,b)=>Number(b?.id)-Number(a?.id))[0]||null;
   },
   findBetById:(bets,betId)=>{
@@ -594,10 +601,8 @@ async function recover(force=false){
     }
 
     const bets=Array.isArray(x?.bets)?x.bets:[];
-    const current=runtime.pickActiveBet(bets,requestedRoundId);
-    const latest=bets
-      .filter(b=>Number(b?.round_id)===requestedRoundId)
-      .sort((a,b)=>Number(b?.id)-Number(a?.id))[0]||null;
+    const current=runtime.pickActiveBet(bets,requestedRoundId,1);
+    const latest=runtime.latestBet(bets,requestedRoundId,1);
 
     myBet=current?.id??null;
     myStake=current?Number(current.stake)||0:0;
@@ -901,14 +906,8 @@ function scheduleState(delay=nextPollDelay()){
 function applyReconnectPlayerState(player){
   const bets=Array.isArray(player?.bets)?player.bets:[];
   const roundId=Number(round?.id);
-  const current=Number.isFinite(roundId)
-    ?runtime.pickActiveBet(bets,roundId)
-    :null;
-  const latest=Number.isFinite(roundId)
-    ?bets
-      .filter(b=>Number(b?.round_id)===roundId)
-      .sort((a,b)=>Number(b?.id)-Number(a?.id))[0]||null
-    :null;
+  const current=Number.isFinite(roundId)?runtime.pickActiveBet(bets,roundId,1):null;
+  const latest=Number.isFinite(roundId)?runtime.latestBet(bets,roundId,1):null;
 
   myBet=current?.id??null;
   myStake=current?Number(current.stake)||0:0;
