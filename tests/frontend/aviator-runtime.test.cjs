@@ -258,15 +258,14 @@ test('UI do Aviator espelha limites 0.50 a 500 MZN sem ser autoridade financeira
 });
 
 
-test('Aviator mostra LOCKED separado do voo e só permite preparar a próxima aposta',()=>{
+test('Aviator mostra LOCKED separado do voo e bloqueia novas apostas depois de zero',()=>{
   const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
-  assert.match(js,/function secondsToTakeoff\(\)/);
   assert.match(js,/function renderLocked\(\)/);
   assert.match(js,/round\.status==='LOCKED'/);
   assert.match(js,/APOSTAS FECHADAS/);
-  assert.match(js,/DESCOLAGEM EM/);
-  assert.match(js,/function renderLocked\(\)[\s\S]*?setBetInputsLocked\(!connectionOnline\|\|!enabled\)/);
-  assert.match(js,/function renderLocked\(\)[\s\S]*?'queue-next'/);
+  assert.match(js,/AGUARDE/);
+  assert.match(js,/function renderLocked\(\)[\s\S]*?setBetInputsLocked\(true\)/);
+  assert.doesNotMatch(js,/queue-next|cancel-next|Prepare a próxima|Próxima aposta preparada/);
   assert.equal(runtime.pollDelay('LOCKED',false,false),3000);
   assert.equal(runtime.phase('LOCKED'),'locked');
 });
@@ -301,7 +300,7 @@ test('confirmação visual usa o valor confirmado pelo servidor antes do voo',()
 });
 
 
-test('termos da aposta confirmada ficam imutáveis e campos podem preparar a próxima',()=>{
+test('termos da aposta confirmada ficam imutáveis e campos bloqueiam após zero',()=>{
   const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
   assert.match(js,/function setBetInputsLocked\(locked\)/);
   assert.match(js,/Boolean\(myBet\)\|\|betting\|\|closed/);
@@ -309,8 +308,8 @@ test('termos da aposta confirmada ficam imutáveis e campos podem preparar a pr�
   assert.match(uiSource,/if\(auto\)auto\.disabled=value/);
   assert.match(js,/myStake=Number\(r\.stake\);/);
   assert.match(js,/myAutoCashout=Number\(r\.auto_cashout_multiplier\)\|\|null/);
-  assert.match(js,/function renderLocked\(\)[\s\S]*?setBetInputsLocked\(!connectionOnline\|\|!enabled\)/);
-  assert.match(js,/function renderFlying\(\)[\s\S]*?setBetInputsLocked\(!connectionOnline\|\|!enabled\)/);
+  assert.match(js,/function renderLocked\(\)[\s\S]*?setBetInputsLocked\(true\)/);
+  assert.match(js,/function renderFlying\(\)[\s\S]*?setBetInputsLocked\(true\)/);
 });
 
 
