@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  function create({element,rpc,playerToken}={}) {
+  function create({element,rpc,playerToken,win=window}={}) {
     let value=null;
     let busy=false;
 
@@ -50,6 +50,12 @@
     }
 
     render(null);
+    win.addEventListener?.('jl-player-session-changed',()=>{
+      if(playerToken?.())void refresh();
+      else render(null);
+    });
+    win.addEventListener?.('jl-player-finance-changed',()=>{ void refresh(); });
+    if(playerToken?.())void refresh();
 
     return Object.freeze({
       render,
