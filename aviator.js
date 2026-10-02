@@ -86,7 +86,7 @@ const nextBet=window.JLAviatorNextBet?.create({
 })||null;
 const p2=window.JLAviatorBetPanel?.create({$,financial,playerToken,
   getRound:()=>round,isEnabled:()=>enabled,isOnline:()=>connectionOnline,
-  multiplier:mul,secondsToClose,money,moneyCompact,playerMessage,sound,personalHistory,
+  multiplier:mul,secondsToClose,money,moneyCompact,playerMessage,personalHistory,
   createGestureGuard:ui.createCashoutGestureGuard})||null;
 
 function cashoutRequestKey(betId){return financial.cashoutRequestKey(betId);}
