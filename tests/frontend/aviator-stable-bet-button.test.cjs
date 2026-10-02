@@ -19,30 +19,26 @@ test('ação principal vive num único slot estrutural fixo',()=>{
   assert.match(css,/\.aviator-primary-action-slot\{display:grid/);
 });
 
-test('botão de aposta nunca possui estado Cancelar',()=>{
-  assert.doesNotMatch(js,/['"`]Cancelar['"`]/);
-  assert.doesNotMatch(panel,/['"`]Cancelar['"`]/);
-});
-
-test('OPEN usa Apostar ou Foi apostado e envia fila do voo automaticamente',()=>{
+test('OPEN alterna entre Apostar e Cancelar até o fecho',()=>{
   const clock=js.match(/function updateRoundClock\(\)[\s\S]*?function startOpenUiTick/)?.[0]||'';
-  assert.match(clock,/myBet\|\|queued\?'Foi apostado':'Apostar'/);
-  assert.match(clock,/nextBet\?\.schedule\?\.\(\)/);
+  assert.match(clock,/myBet\|\|queued\?'Cancelar':'Apostar'/);
+  assert.match(clock,/myBet\?'cancel':queued\?'cancel-next':'bet'/);
 
   const secondary=panel.match(/function renderRound\(\)[\s\S]*?function betSlotOf/)?.[0]||'';
-  assert.match(secondary,/label:betId\|\|queued\?'Foi apostado':'Apostar'/);
-  assert.match(secondary,/nextBet\?\.schedule\?\.\(\)/);
+  assert.match(secondary,/label:betId\|\|queued\?'Cancelar':'Apostar'/);
+  assert.match(secondary,/mode:betId\?'cancel':queued\?'cancel-next':'bet'/);
 });
 
-test('FLYING permite Apostar quando não há aposta ativa nem fila',()=>{
+test('FLYING permite Apostar e depois Cancelar a fila da próxima rodada',()=>{
   const flying=js.match(/function renderFlying\(\)[\s\S]*?function renderFinished/)?.[0]||'';
   assert.match(flying,/const canQueue=enabled&&connectionOnline&&!myBet&&!queued&&!betting/);
-  assert.match(flying,/myBet\|\|queued\?'Foi apostado':'Apostar'/);
-  assert.match(flying,/renderCashoutAction\([\s\S]*?active:Boolean\(myBet\)/);
+  assert.match(flying,/queued\?'Cancelar':myBet\?'Foi apostado':'Apostar'/);
+  assert.match(flying,/queued\?'cancel-next':myBet\?'confirmed':'bet'/);
   assert.match(ui,/liveReturn=active&&hasMultiplier&&hasStake\?money\(s\*m\):null/);
 });
 
-test('Apostar é verde e cash-out prioritário é vermelho',()=>{
+test('Cancelar é vermelho, Apostar verde e cash-out prioritário vermelho',()=>{
+  assert.match(css,/\.aviator-bet-action\.is-cancel #betBtn:not\(:disabled\)/);
   assert.match(css,/\.aviator-bet-action:not\(\.is-cancel\) button:not\(:disabled\)\{[\s\S]*?background:#36c979!important/);
   assert.match(css,/\.aviator-cashout-action\.is-priority button:not\(:disabled\)\{[\s\S]*?background:#d83b42!important/);
 });
