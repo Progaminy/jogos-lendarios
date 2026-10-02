@@ -3,6 +3,7 @@
 
   function create({$,getRound,getBetState,multiplier}) {
     let betResultTimer=0;
+    let lastPlaneProgress=0;
     function money(value){
       const n=Number(value);
       return (Number.isFinite(n)?n:0).toLocaleString('pt-MZ',{
@@ -90,6 +91,44 @@
       const isLong=text.length>=8;
       if(el.classList.contains('long')!==isLong)el.classList.toggle('long',isLong);
       applyMultiplierTier(el,safe);
+    }
+
+    function renderPlaneFlight(multiplierValue,timestamp=performance.now()){
+      const plane=$('#plane');
+      if(!plane)return;
+
+      const n=Number(multiplierValue);
+      const safe=Number.isFinite(n)&&n>=1?Math.min(500,n):1;
+      let progress=Math.log(safe)/Math.log(500);
+      progress=Math.max(0,Math.min(1,progress));
+
+      // O avião nunca recua dentro do mesmo voo.
+      if(getRound?.()?.status==='FLYING'){
+        progress=Math.max(lastPlaneProgress,progress);
+        lastPlaneProgress=progress;
+      }
+
+      const mobile=globalThis.matchMedia?.('(max-width: 650px)').matches===true;
+      const reduced=globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches===true;
+      const maxX=mobile?64:58;
+      const maxY=mobile?142:178;
+      const climb=Math.pow(progress,1.12);
+      const wobble=reduced?0:
+        Math.sin(Number(timestamp)/210)*2+
+        Math.sin(Number(timestamp)/470)*1.1;
+      const tiltWobble=reduced?0:Math.sin(Number(timestamp)/280)*0.9;
+      const x=maxX*progress;
+      const y=-(maxY*climb)+wobble;
+      const rotation=-13-(11*climb)+tiltWobble;
+
+      plane.style.transform=
+        'translate3d('+x.toFixed(2)+'vw,'+y.toFixed(2)+'px,0) rotate('+rotation.toFixed(2)+'deg)';
+    }
+
+    function resetPlaneFlight(){
+      lastPlaneProgress=0;
+      const plane=$('#plane');
+      if(plane)plane.style.removeProperty('transform');
     }
 
     function resetCashout(){
@@ -349,7 +388,8 @@
     return Object.freeze({
       money,moneyCompact,playerMessage,show,setStagePhase,multiplierTier,
       applyMultiplierTier,renderMultiplier,resetCashout,createCashoutGestureGuard,renderCashoutAction,renderRoundNumber,
-      setBetInputsLocked,renderBetAction,renderTicket,renderBetConfirmation,renderBetResult
+      setBetInputsLocked,renderBetAction,renderTicket,renderBetConfirmation,renderBetResult,
+      renderPlaneFlight,resetPlaneFlight
     });
   }
 
