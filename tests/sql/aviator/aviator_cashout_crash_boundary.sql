@@ -124,6 +124,11 @@ begin
     raise exception 'Ponto 56: payout antes do crash incorreto; saldo=%',bal;
   end if;
 
+  update public.jl_aviator_rounds
+     set status='SETTLED',
+         settled_at=clock_timestamp()
+   where id=r_before;
+
   -- 2) Exatamente no crash: deve perder. Nenhum payout pode nascer.
   insert into public.players(name,phone,pin_hash,balance)
   values(
@@ -207,6 +212,16 @@ begin
   if tx_count<>0 then
     raise exception 'Ponto 56: cash-out no crash deixou payout órfão: %',tx_count;
   end if;
+
+  update public.jl_aviator_bets
+     set status='LOST',
+         payout=0
+   where id=b_equal;
+
+  update public.jl_aviator_rounds
+     set status='SETTLED',
+         settled_at=clock_timestamp()
+   where id=r_equal;
 
   -- 3) Depois do crash: também deve ser rejeitado sem efeitos financeiros.
   insert into public.players(name,phone,pin_hash,balance)
