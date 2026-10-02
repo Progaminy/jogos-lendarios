@@ -300,7 +300,7 @@ test('Aviator mostra LOCKED separado do voo e não aceita nova aposta',()=>{
   assert.match(js,/AGUARDE/);
   const locked=js.match(/function renderLocked\(\)[\s\S]*?function renderFlying/)?.[0]||'';
   assert.match(locked,/renderBetAction\(\s*true/);
-  assert.doesNotMatch(locked,/nextBet|queue-next|cancel-next|Cancelar/);
+  assert.doesNotMatch(locked,/'Cancelar'/);
   assert.equal(runtime.pollDelay('LOCKED',false,false),1000);
   assert.equal(runtime.phase('LOCKED'),'locked');
 });
@@ -344,7 +344,9 @@ test('termos confirmados ficam imutáveis e a fila do voo é explícita',()=>{
   assert.match(js,/myStake=Number\(r\.stake\);/);
   assert.match(js,/myAutoCashout=Number\(r\.auto_cashout_multiplier\)\|\|null/);
   assert.match(js,/nextBet\?\.queue\?\.\(\)/);
-  assert.doesNotMatch(js,/cancel-next|Cancelar/);
+  assert.match(js,/action==='cancel-next'/);
+  assert.match(js,/action==='cancel'/);
+  assert.match(js,/financial\.cancelBet\(/);
 });
 
 
