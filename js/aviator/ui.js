@@ -7,7 +7,7 @@
       return (Number.isFinite(n)?n:0).toLocaleString('pt-MZ',{
         minimumFractionDigits:2,
         maximumFractionDigits:2
-      })+' MZN';
+      });
     }
 
     function moneyCompact(value){
@@ -15,7 +15,7 @@
       return (Number.isFinite(n)?n:0).toLocaleString('pt-MZ',{
         minimumFractionDigits:0,
         maximumFractionDigits:2
-      })+' MZN';
+      });
     }
 
     function playerMessage(error,fallback='Não foi possível concluir. Tente novamente.'){
@@ -63,7 +63,7 @@
     function multiplierTier(value){
       const n=Number(value);
       if(!Number.isFinite(n)||n<2)return 'low';
-      if(n<10)return 'medium';
+      if(n<=10)return 'medium';
       return 'high';
     }
 
@@ -169,13 +169,7 @@
 
       if(button){
         const nextDisabled=Boolean(disabled);
-        const nextText=pending
-          ?'Confirmando cash-out…'
-          :active&&hasMultiplier&&hasStake
-            ?'Cash-out · '+money(s*m)
-            :active&&hasMultiplier
-              ?'Cash-out · '+m.toFixed(2)+'×'
-              :'Cash-out';
+        const nextText=pending?'Confirmando…':active?'Sacar':'Sacar';
         if(button.disabled!==nextDisabled)button.disabled=nextDisabled;
         if(button.textContent!==nextText)button.textContent=nextText;
       }
@@ -222,7 +216,7 @@
 
       if(wrap){
         wrap.classList.toggle('hidden',Boolean(hidden));
-        wrap.classList.toggle('is-cancel',mode==='cancel');
+        wrap.classList.toggle('is-cancel',mode==='cancel'||mode==='cancel-next');
       }
 
       if(button){
