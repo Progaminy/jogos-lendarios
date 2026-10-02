@@ -74,7 +74,9 @@
 
     function fields(row){
       const roundNo=Number(row?.round_no)||Number(row?.round_id)||0;
+      const slot=Number(row?.bet_slot)===2?2:1;
       return [
+        ['Painel','Aposta '+slot],
         ['Rodada','#'+String(roundNo||'—')],
         ['Apostado',valueOrDash(row?.stake,money)],
         ['Cash-out',valueOrDash(row?.cashout_multiplier,n=>n.toFixed(2)+'×')],
