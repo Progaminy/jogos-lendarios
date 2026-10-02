@@ -48,12 +48,12 @@ test('reconciliação encontra uma aposta específica pelo bet_id',()=>{
 });
 
 test('Realtime reduz polling a fallback de baixa frequência',()=>{
-  assert.equal(runtime.pollDelay('FLYING',false,true),120000);
-  assert.equal(runtime.pollDelay('OPEN',false,true),120000);
+  assert.equal(runtime.pollDelay('FLYING',false,true),15000);
+  assert.equal(runtime.pollDelay('OPEN',false,true),750);
   assert.equal(runtime.pollDelay('FLYING',true,true),300000);
   assert.equal(runtime.pollDelay('FLYING',false,false),3000);
-  assert.equal(runtime.pollDelay('OPEN',false,false),5000);
-  assert.equal(runtime.pollDelay('SETTLED',false,false),15000);
+  assert.equal(runtime.pollDelay('OPEN',false,false),750);
+  assert.equal(runtime.pollDelay('SETTLED',false,false),750);
 });
 
 test('fases públicas mapeiam para estados visuais estáveis',()=>{
@@ -465,4 +465,12 @@ test('Aviator fechado mostra somente a mensagem definida',()=>{
     css,
     /\.aviator-maintenance-only \.aviator-maintenance-notice\{display:block!important\}/
   );
+});
+
+
+test('janela de 10 segundos nunca pode ser perdida pelo fallback visível',()=>{
+  assert.ok(runtime.pollDelay('SETTLED',false,false)<1000);
+  assert.ok(runtime.pollDelay('CRASHED',false,false)<1000);
+  assert.ok(runtime.pollDelay('OPEN',false,false)<1000);
+  assert.ok(runtime.pollDelay('OPEN',false,true)<1000);
 });
