@@ -354,3 +354,186 @@ body{background:#070a10}
   .aviator-ticket{grid-template-columns:1fr 1fr auto}
   .aviator-ticket-meta{grid-column:auto;justify-content:flex-end}
 }
+
+
+/* Segunda limpeza visual: remover tudo o que não é ação ou resultado. */
+body>.topbar{
+  max-width:980px;
+  margin:0 auto;
+  padding:8px 12px;
+  min-height:44px
+}
+body>.topbar .game-nav{display:none}
+body>.topbar .brand{font-size:1rem}
+
+.aviator-history-top{
+  border:0;
+  background:transparent;
+  border-radius:0
+}
+.aviator-history-top .aviator-history-strip{
+  padding:5px 0;
+  gap:8px
+}
+
+.aviator-stage{
+  position:relative;
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  padding:0!important
+}
+.aviator-head{
+  position:absolute;
+  z-index:8;
+  top:8px;
+  right:8px;
+  left:auto;
+  min-height:0;
+  margin:0;
+  pointer-events:none
+}
+.aviator-head .aviator-round,
+.aviator-head .aviator-state,
+.aviator-head .aviator-clock{display:none!important}
+.aviator-head-tools{
+  gap:5px;
+  pointer-events:auto
+}
+.aviator-sound-toggle,
+.aviator-vibration-toggle{
+  display:grid;
+  place-items:center;
+  width:32px;
+  height:32px;
+  min-height:32px;
+  padding:0;
+  border:0;
+  background:rgba(0,0,0,.26);
+  font-size:.9rem;
+  color:#d7deea
+}
+.aviator-sound-toggle span,
+.aviator-vibration-toggle span{line-height:1}
+.aviator-sound-toggle.is-on,
+.aviator-vibration-toggle.is-on{
+  background:rgba(0,0,0,.34);
+  border:0
+}
+
+.flight-area{
+  border:0;
+  border-radius:14px;
+  background:
+    radial-gradient(circle at 50% 88%,rgba(244,181,31,.07),transparent 42%),
+    linear-gradient(180deg,#09101b 0%,#080c13 100%)
+}
+.flight-area::after{opacity:.18}
+.preflight{
+  min-width:0;
+  border:0;
+  background:transparent;
+  padding:0
+}
+.preflight span{font-size:.55rem;opacity:.72}
+.next-round-countdown{
+  margin-top:2px;
+  padding:0;
+  border:0;
+  background:transparent
+}
+.next-round-countdown strong{
+  font-size:1.2rem;
+  opacity:.82
+}
+.crash-text{gap:5px}
+
+.proof{display:none!important}
+
+.aviator-controls{
+  gap:5px;
+  padding-top:0
+}
+.aviator-bet-panel{
+  padding:5px;
+  border:0;
+  background:transparent;
+  border-radius:0
+}
+.aviator-controls form{
+  gap:4px
+}
+.aviator-auto-bet-toggle{
+  border-color:rgba(255,255,255,.05);
+  background:rgba(255,255,255,.018)
+}
+.aviator-controls .field .money-input{
+  border-color:rgba(255,255,255,.08);
+  background:rgba(255,255,255,.018)
+}
+.aviator-bet-action #betBtn,
+.aviator-cashout-action #cashoutBtn{
+  border:0
+}
+.aviator-bet-confirmation,
+.aviator-bet-result,
+.aviator-ticket{
+  border-width:1px;
+  background:rgba(255,255,255,.018)
+}
+
+.aviator-my-history{
+  border-color:rgba(255,255,255,.04);
+  background:transparent
+}
+.aviator-my-history .aviator-history-summary{
+  padding:7px 4px
+}
+.aviator-my-history .aviator-history-summary small{display:none}
+
+@media(max-width:650px){
+  body>.topbar{
+    min-height:40px;
+    padding:6px 8px
+  }
+  body>.topbar .brand{font-size:.92rem}
+  .aviator-shell{padding:4px 6px 10px;gap:4px}
+  .aviator-history-top .aviator-history-strip{padding:4px 0}
+  .aviator-stage{padding:0!important}
+  .flight-area{height:230px;border-radius:12px}
+  .aviator-head{top:6px;right:6px}
+  .aviator-sound-toggle,
+  .aviator-vibration-toggle{
+    width:28px;
+    height:28px;
+    min-height:28px;
+    max-width:none;
+    padding:0
+  }
+  .aviator-controls{gap:3px}
+  .aviator-bet-panel{padding:3px}
+  .aviator-controls form{
+    grid-template-columns:minmax(0,1.12fr) minmax(0,.78fr) minmax(126px,1.22fr);
+    grid-template-rows:38px 36px;
+    gap:3px
+  }
+  .aviator-controls form .aviator-auto-bet-toggle{
+    height:36px;
+    min-height:36px;
+    padding:3px 6px
+  }
+  .aviator-controls form .aviator-primary-action-slot{min-height:77px}
+  .aviator-bet-action,
+  .aviator-cashout-action{height:77px}
+  .aviator-bet-action #betBtn,
+  .aviator-cashout-action #cashoutBtn{
+    height:77px;
+    min-height:77px;
+    border-radius:10px
+  }
+  .aviator-controls .field .money-input{
+    height:38px;
+    min-height:38px
+  }
+  .aviator-my-history{margin-top:2px}
+}
