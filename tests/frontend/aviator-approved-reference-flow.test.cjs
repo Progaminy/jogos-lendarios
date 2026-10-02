@@ -17,11 +17,13 @@ test('histórico recente de multiplicadores fica no topo do Aviator',()=>{
   assert.match(css,/\.aviator-history-top/);
 });
 
-test('durante voo não existe segunda etapa de preparação de aposta',()=>{
+test('durante voo botão Apostar pode guardar a próxima sem texto preparar',()=>{
   const flying=js.match(/function renderFlying\(\)[\s\S]*?\n\}/)?.[0]||'';
-  assert.match(flying,/setBetInputsLocked\(true\)/);
+  assert.match(flying,/nextBet\?\.hasQueued/);
+  assert.match(flying,/queue-next/);
+  assert.match(flying,/queued\?'Cancelar':'Apostar'/);
   assert.match(flying,/renderAutoBetStatus\(\)/);
-  assert.doesNotMatch(flying,/queue-next|Prepare a próxima|Próxima aposta preparada/);
+  assert.doesNotMatch(flying,/Prepare a próxima|Próxima aposta preparada/);
 });
 
 test('auto-bet só dispara quando servidor informa OPEN',()=>{
@@ -40,7 +42,7 @@ test('auto-bet usa o mesmo fluxo financeiro normal e não debita antecipadamente
   assert.doesNotMatch(fn,/jl_aviator_place_bet|JLApi\.rpc|financial\.placeBet/);
 });
 
-test('auto-bet aguarda OPEN e não cria etapa de preparação visível',()=>{
+test('auto-bet aguarda OPEN e fila manual continua sem etapa de preparação visível',()=>{
   assert.match(html,/id="aviatorAutoBet"/);
   assert.match(html,/id="aviatorAutoBetStatus"/);
   assert.doesNotMatch(js,/Próxima aposta preparada|Prepare a próxima rodada/);
