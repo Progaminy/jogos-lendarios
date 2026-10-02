@@ -174,14 +174,44 @@
       }
     }
     
+    async function optionalAdminRpc(name,args,fallback){
+      try{
+        return await rpc(name,args);
+      }catch(_){
+        return fallback;
+      }
+    }
+
     async function refreshAviatorAdmin(){
       if(!state.token||!$('aviatorAdmin')) return;
       try{
-        const [d,engineTest,releaseGate,observability]=await Promise.all([
-          rpc('jl_aviator_admin_state',{p_token:state.token}),
-          rpc('jl_aviator_admin_engine_test_state',{p_token:state.token}),
-          rpc('jl_aviator_admin_release_gate_state',{p_token:state.token}),
-          rpc('jl_aviator_admin_observability',{p_token:state.token})
+        // O estado principal controla os botões e é obrigatório.
+        // Métricas/certificação são auxiliares e nunca podem congelar Abrir/Fechar
+        // quando produção ainda não recebeu uma migration opcional.
+        const d=await rpc('jl_aviator_admin_state',{p_token:state.token});
+        const [engineTest,releaseGate,observability]=await Promise.all([
+          optionalAdminRpc(
+            'jl_aviator_admin_engine_test_state',
+            {p_token:state.token},
+            {passed:false,checks:[],tested_at:null}
+          ),
+          optionalAdminRpc(
+            'jl_aviator_admin_release_gate_state',
+            {p_token:state.token},
+            {passed:false,tested_at:null,result:{}}
+          ),
+          optionalAdminRpc(
+            'jl_aviator_admin_observability',
+            {p_token:state.token},
+            {
+              round:{},
+              throughput:{},
+              latency_p95_ms_15m:{},
+              failures_15m:{},
+              financial_consistency:{ok:true},
+              alerts:[]
+            }
+          )
         ]),r=d.round||{};
         const roundExposure=d.exposure||{};
         const house=d.house||{};
