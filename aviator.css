@@ -7,7 +7,7 @@ body{background:#070a10}
 .aviator-offline #cashoutBtn,.aviator-offline #betBtn{pointer-events:none}
 .aviator-head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin:0 2px 8px}
 .aviator-head-tools{display:flex;align-items:center;justify-content:flex-end;gap:8px;min-width:0}
-.aviator-sound-toggle,.aviator-vibration-toggle{min-height:30px;border:1px solid rgba(255,255,255,.08);border-radius:999px;background:rgba(255,255,255,.04);color:#9aa8bd;font:inherit;font-size:.68rem;font-weight:900;padding:5px 9px;cursor:pointer;white-space:nowrap}
+.aviator-sound-toggle{min-height:30px;border:1px solid rgba(255,255,255,.08);border-radius:999px;background:rgba(255,255,255,.04);color:#9aa8bd;font:inherit;font-size:.68rem;font-weight:900;padding:5px 9px;cursor:pointer;white-space:nowrap}
 .aviator-sound-toggle:hover,.aviator-vibration-toggle:hover{background:rgba(255,255,255,.07)}
 .aviator-sound-toggle.is-on,.aviator-vibration-toggle.is-on{color:#d9f7e6;border-color:rgba(78,213,138,.24);background:rgba(78,213,138,.08)}
 .aviator-sound-toggle:focus-visible,.aviator-vibration-toggle:focus-visible{outline:2px solid currentColor;outline-offset:2px}
@@ -162,7 +162,7 @@ body{background:#070a10}
   .aviator-focus{box-shadow:0 10px 24px rgba(0,0,0,.18)}
   .aviator-head{gap:7px;margin-bottom:6px}
   .aviator-head-tools{gap:5px}
-  .aviator-sound-toggle,.aviator-vibration-toggle{min-height:28px;padding:4px 7px;font-size:.62rem}
+  .aviator-sound-toggle{min-height:28px;padding:4px 7px;font-size:.62rem}
   .aviator-round span,.aviator-clock span{display:none}
   .aviator-round strong,.aviator-clock strong{font-size:.78rem}
   .aviator-state{font-size:.56rem;padding:5px 7px}
@@ -303,7 +303,7 @@ body{background:#070a10}
   .aviator-stage{padding:6px;min-height:0}
   .aviator-head{min-height:27px;margin-bottom:4px}
   .aviator-head-tools{gap:3px}
-  .aviator-sound-toggle,.aviator-vibration-toggle{
+  .aviator-sound-toggle{
     min-height:26px;
     max-width:34px;
     overflow:hidden;
