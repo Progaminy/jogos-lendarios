@@ -34,11 +34,15 @@
     let autoBetEnabled=sessionStorage.getItem('jl_aviator_auto_bet_v1_slot_'+slot)==='1';
     let autoBetAttemptedRoundId=null;
     let autoBetSubmittingRoundId=null;
-    try{sessionStorage.removeItem('jl_aviator_next_bet_v1_slot_'+slot)}catch(_){}
 
     const round=()=>getRound?.()||null;
     const online=()=>Boolean(isOnline?.());
     const enabled=()=>Boolean(isEnabled?.());
+    const nextBet=window.JLAviatorNextBet?.create({
+      slot,$,playerToken,getRound:round,isEnabled:enabled,isOnline:online,
+      isBusy:()=>betting,hasActiveBet:()=>Boolean(betId),playerMessage,form,
+      onMessage:text=>{if(message)message.textContent=text}
+    })||null;
 
     function setInputsLocked(locked){
       const amount=$('#aviatorAmount'+suffix);
@@ -58,7 +62,7 @@
       const statusEl=$('#betActionStatus'+suffix);
       if(wrap){
         wrap.classList.toggle('hidden',Boolean(hidden));
-        wrap.classList.toggle('is-cancel',mode==='cancel');
+        wrap.classList.toggle('is-cancel',mode==='cancel'||mode==='cancel-next');
       }
       if(betButton){
         betButton.textContent=String(label||'Apostar');
@@ -89,11 +93,7 @@
       }
       if(cashoutButton){
         cashoutButton.disabled=Boolean(disabled);
-        cashoutButton.textContent=pending
-          ?'Confirmando cash-out…'
-          :active&&hasMultiplier&&hasStake
-            ?'Cash-out · '+money(stake*m)
-            :'Cash-out';
+        cashoutButton.textContent=pending?'Confirmando…':'Sacar';
       }
       if(statusEl){
         statusEl.textContent=status
@@ -258,7 +258,8 @@
         r?.betting_open===false||
         betId||
         betting||
-        autoBetAttemptedRoundId===roundId
+        autoBetAttemptedRoundId===roundId||
+        Boolean(nextBet?.hasQueued())
       ) return;
 
       autoBetAttemptedRoundId=roundId;
@@ -318,17 +319,19 @@
         resetCashout();
         renderTicket();
         renderConfirmation();
+        nextBet?.schedule();
         scheduleAutoBet();
         return;
       }
 
       if(r.status==='LOCKED'){
-        setInputsLocked(true);
+        const queued=Boolean(nextBet?.hasQueued());
+        setInputsLocked(!online()||!enabled()||queued);
         renderBetAction({
-          disabled:true,
-          status:'Apostas encerradas',
-          label:'Apostar',
-          mode:'bet'
+          disabled:!online()||!enabled(),
+          status:queued?'Aposta registada':'Disponível',
+          label:queued?'Cancelar':'Apostar',
+          mode:queued?'cancel-next':'queue-next'
         });
         resetCashout();
         renderTicket();
@@ -338,12 +341,13 @@
       }
 
       if(r.status==='FLYING'){
-        setInputsLocked(true);
+        const queued=Boolean(nextBet?.hasQueued());
+        setInputsLocked(!online()||!enabled()||Boolean(betId)||queued);
         renderBetAction({
-          disabled:true,
-          status:'Apostas encerradas',
-          label:'Apostar',
-          mode:'bet',
+          disabled:Boolean(betId)||!online()||!enabled(),
+          status:queued?'Aposta registada':'Disponível',
+          label:queued?'Cancelar':'Apostar',
+          mode:queued?'cancel-next':'queue-next',
           hidden:Boolean(betId)
         });
         renderCashout({
@@ -509,6 +513,7 @@
     }
 
     function onRoundChanged(){
+      nextBet?.resetRound();
       betId=null;
       stake=0;
       autoCashout=null;
@@ -561,7 +566,10 @@
       if(betting)return;
 
       const action=String(betButton?.dataset.action||'bet');
+      if(nextBet?.handleAction(action)){renderRound();return}
 
+      const queuedTriggered=
+        action==='bet'&&Boolean(nextBet?.isSubmitting(round()?.id));
       const autoTriggered=
         action==='bet'&&autoBetSubmittingRoundId===Number(round()?.id);
       betting=true;
@@ -627,7 +635,7 @@
 
         const amount=Number($('#aviatorAmount'+suffix)?.value);
         if(!Number.isFinite(amount)||amount<0.5||amount>500){
-          throw new Error('Informe um valor entre 0,50 e 500 MZN.');
+          throw new Error('Informe um valor entre 0,50 e 500.');
         }
 
         const autoRaw=String($('#aviatorAutoCashout'+suffix)?.value||'').trim();
@@ -654,6 +662,7 @@
         stake=Number(result.stake);
         autoCashout=Number(result.auto_cashout_multiplier)||null;
         sound?.playBet?.();
+        if(queuedTriggered)nextBet?.consume(round()?.id);
 
         if(message){
           message.textContent=autoTriggered
@@ -669,6 +678,7 @@
         if(autoBetSubmittingRoundId===Number(round()?.id)){
           autoBetSubmittingRoundId=null;
         }
+        nextBet?.clearSubmitting(round()?.id);
         betting=false;
         renderRound();
       }
