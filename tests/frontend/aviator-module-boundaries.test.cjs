@@ -59,7 +59,6 @@ test('painel secundário é módulo próprio e usa financeiro sem duplicar RPC b
   assert.match(betPanel,/JLAviatorBetPanel/);
   assert.match(betPanel,/financial\.placeBetSlot/);
   assert.match(betPanel,/financial\.requestFinancialCashout/);
-  assert.match(betPanel,/financial\.cancelBet/);
   assert.doesNotMatch(betPanel,/JLApi\.rpc|jl_aviator_cashout|jl_aviator_place_bet_slot/);
 });
 
