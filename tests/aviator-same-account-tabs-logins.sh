@@ -215,4 +215,25 @@ where p.phone='$PHONE'
   exit 1
 }
 
+# Deixar o banco financeiramente consistente para o gate pré-abertura:
+# a aposta vencedora deste teste ainda está ACTIVE e a rodada será finalizada no cleanup.
+bet_id=$("${PSQL[@]}" -c "
+select b.id
+from public.jl_aviator_bets b
+join public.players p on p.id=b.player_id
+where p.phone='$PHONE'
+  and b.round_id='$round_id'
+  and b.status='ACTIVE'
+limit 1;
+")
+
+if [[ -n "$bet_id" ]]; then
+  "${PSQL[@]}" -c "
+  select public.jl_aviator_cancel_bet(
+    '$TOKEN_NEW',
+    $bet_id,
+    'point60-final-refund-'||'$round_id'
+  );
+  " >/dev/null
+fi
 echo "PASS aviator point 60: two tabs cannot double-bet; newest login invalidates the previous session"
