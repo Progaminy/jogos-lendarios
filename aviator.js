@@ -688,6 +688,7 @@ function paintFlight(timestamp=performance.now()){
   if(timestamp-lastFlightHudAt<visualPerformance.hudIntervalMs)return;
   lastFlightHudAt=timestamp;
   renderTicket(m);
+  renderTicket2(m);
 
   renderCashoutAction({
     active:Boolean(myBet),
@@ -695,6 +696,14 @@ function paintFlight(timestamp=performance.now()){
     pending:cashingOut,
     multiplier:m,
     stake:myStake
+  });
+
+  renderCashoutAction2({
+    active:Boolean(myBet2),
+    disabled:!connectionOnline||!myBet2||cashingOut2,
+    pending:cashingOut2,
+    multiplier:m,
+    stake:myStake2
   });
 }
 
@@ -716,6 +725,16 @@ function flightPaintLoop(timestamp){
     ){
       autoRecoveryRoundId=Number(round.id);
       void refreshCurrentBetLight();
+    }
+
+    if(
+      myBet2&&
+      myAutoCashout2&&
+      Number(round?.id)!==Number(autoRecoveryRoundId2)&&
+      mul()>=myAutoCashout2
+    ){
+      autoRecoveryRoundId2=Number(round.id);
+      void refreshCurrentBetLight2();
     }
   }
 
@@ -986,7 +1005,7 @@ function renderProof(){
 
 function renderMaintenanceView(){
   const protectedFlight=
-    !enabled&&['LOCKED','FLYING'].includes(round?.status)&&Boolean(myBet);
+    !enabled&&['LOCKED','FLYING'].includes(round?.status)&&Boolean(myBet||myBet2);
   const maintenanceOnly=!enabled&&!protectedFlight;
 
   document.body.classList.toggle('aviator-maintenance',!enabled);
@@ -1010,14 +1029,23 @@ function renderOpen(){
   show('#crashText',false);
 
   resetCashout();
+  resetCashout2();
   renderTicket();
+  renderTicket2();
   renderBetConfirmation();
+  renderBetConfirmation2();
+  renderAutoBetStatus();
+  renderAutoBetStatus2();
 
   if(myBet&&!$('#aviatorMessage').textContent.trim()){
     $('#aviatorMessage').textContent='Aposta confirmada. Pode cancelar enquanto as apostas estiverem abertas.';
   }
+  if(myBet2&&!$('#aviatorMessage2').textContent.trim()){
+    $('#aviatorMessage2').textContent='Aposta confirmada. Pode cancelar enquanto as apostas estiverem abertas.';
+  }
 
   scheduleAutoBetForOpenRound();
+  scheduleAutoBetForOpenRound2();
 }
 
 function renderLocked(){
@@ -1034,15 +1062,25 @@ function renderLocked(){
   show('#crashText',false);
 
   setBetInputsLocked(!connectionOnline||!enabled);
+  setBetInputsLocked2(!connectionOnline||!enabled);
+  renderAutoBetStatus();
+  renderAutoBetStatus2();
 
   renderBetAction(true,'Apostas fechadas');
+  renderBetAction2(true,'Apostas fechadas');
 
   resetCashout();
+  resetCashout2();
   renderTicket();
+  renderTicket2();
   renderBetConfirmation();
+  renderBetConfirmation2();
 
   if(myBet){
     $('#aviatorMessage').textContent='Aposta confirmada. Aguardando descolagem.';
+  }
+  if(myBet2){
+    $('#aviatorMessage2').textContent='Aposta confirmada. Aguardando descolagem.';
   }
 }
 
@@ -1060,7 +1098,9 @@ function renderFlying(){
   show('#crashText',false);
 
   setBetInputsLocked(!connectionOnline||!enabled);
+  setBetInputsLocked2(!connectionOnline||!enabled);
   renderAutoBetStatus();
+  renderAutoBetStatus2();
 
   renderBetAction(
     true,
@@ -1068,6 +1108,13 @@ function renderFlying(){
     'Apostar',
     'bet',
     Boolean(myBet)
+  );
+  renderBetAction2(
+    true,
+    'Apostas fechadas',
+    'Apostar',
+    'bet',
+    Boolean(myBet2)
   );
 
   renderCashoutAction({
@@ -1077,9 +1124,18 @@ function renderFlying(){
     multiplier:mul(),
     stake:myStake
   });
+  renderCashoutAction2({
+    active:Boolean(myBet2),
+    disabled:!connectionOnline||!myBet2||cashingOut2,
+    pending:cashingOut2,
+    multiplier:mul(),
+    stake:myStake2
+  });
 
   renderTicket(mul());
+  renderTicket2(mul());
   renderBetConfirmation();
+  renderBetConfirmation2();
   startFlightPaint();
 }
 
@@ -1103,16 +1159,25 @@ function renderFinished(){
   show('#crashText',true);
 
   setBetInputsLocked(!connectionOnline||!enabled);
+  setBetInputsLocked2(!connectionOnline||!enabled);
   renderAutoBetStatus();
+  renderAutoBetStatus2();
 
   renderBetAction(true,'Aguarde a próxima rodada');
+  renderBetAction2(true,'Aguarde a próxima rodada');
 
   myBet=null;
   myStake=0;
   myAutoCashout=null;
+  myBet2=null;
+  myStake2=0;
+  myAutoCashout2=null;
   resetCashout();
+  resetCashout2();
   renderTicket();
+  renderTicket2();
   renderBetConfirmation();
+  renderBetConfirmation2();
   rememberCurrentResult();
 }
 
@@ -1134,13 +1199,19 @@ function renderWaiting(){
   show('#crashText',false);
 
   setBetInputsLocked(!connectionOnline||!enabled);
+  setBetInputsLocked2(!connectionOnline||!enabled);
   renderAutoBetStatus();
+  renderAutoBetStatus2();
 
   renderBetAction(true,'Aguarde a próxima rodada');
+  renderBetAction2(true,'Aguarde a próxima rodada');
 
   resetCashout();
+  resetCashout2();
   renderTicket();
+  renderTicket2();
   renderBetConfirmation();
+  renderBetConfirmation2();
 }
 
 function renderCurrentRound(){
@@ -1182,7 +1253,7 @@ function nextPollDelay(){
     hidden:document.hidden,
     realtimeConnected,
     enabled,
-    hasBet:Boolean(myBet)
+    hasBet:Boolean(myBet||myBet2)
   });
 }
 
