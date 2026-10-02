@@ -64,10 +64,9 @@ const personalHistory=window.JLAviatorPersonalHistory?.create({
   money:(value)=>ui.money(value)
 })||null;
 const sound=window.JLAviatorSound?.create({
-  button:$('#aviatorSoundToggle')
-})||null;
-const haptics=window.JLAviatorHaptics?.create({
-  button:$('#aviatorVibrationToggle')
+  button:$('#aviatorSoundToggle'),
+  getRound:()=>round,
+  getMultiplier:()=>mul()
 })||null;
 const nextBet=window.JLAviatorNextBet?.create({
   slot:1,
@@ -280,6 +279,7 @@ function updateRoundClock(){
     $('#preflightLabel').textContent=closed?'AGUARDE':'APOSTE';
     $('#preflightCountdown').textContent=display;
     $('#preflightHint').textContent='Contagem em segundos';
+    if(seconds!==null)sound?.syncCountdown?.(round?.id,seconds);
 
     const inputsLocked=
       !enabled||!connectionOnline||Boolean(myBet)||queued||betting||closed;
@@ -368,6 +368,7 @@ function paintFlight(timestamp=performance.now()){
   const m=mul();
   renderMultiplier(m);
   ui.renderPlaneFlight?.(m,timestamp);
+  sound?.updateFlight?.(m);
 
   if(timestamp-lastFlightHudAt<visualPerformance.hudIntervalMs)return;
   lastFlightHudAt=timestamp;
@@ -858,7 +859,6 @@ function renderWaiting(){
 function renderCurrentRound(){
   renderProof();
   sound?.syncRound(round);
-  haptics?.syncRound(round);
 
   if(!round){
     renderWaiting();
@@ -1245,7 +1245,6 @@ $('#aviatorBetForm').addEventListener('submit',async e=>{
     myBet=r.bet_id;
     myStake=Number(r.stake);
     myAutoCashout=Number(r.auto_cashout_multiplier)||null;
-    sound?.playBet();
     lastRecoveredRoundId=round.id;
     renderTicket();
     renderBetConfirmation();
@@ -1299,7 +1298,6 @@ $('#cashoutBtn').addEventListener('click',async event=>{
       r.multiplier,
       r.payout
     );
-    sound?.playCashout();
     setBetResult({
       status:'CASHED_OUT',
       stake:myStake,
