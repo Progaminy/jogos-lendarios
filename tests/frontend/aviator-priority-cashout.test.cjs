@@ -34,8 +34,9 @@ test('voo com aposta ativa recebe prioridade visual forte',()=>{
   assert.match(css,/box-shadow:0 0 0 2px rgba\(216,59,66,\.25\),0 14px 34px rgba\(216,59,66,\.22\)!important/);
 });
 
-test('Sacar mantém cálculo estimado fora do texto principal do botão',()=>{
-  assert.match(ui,/active\?'Sacar':'Sacar'/);
+test('botão de cash-out mostra o retorno confirmado que cresce com o multiplicador',()=>{
+  assert.match(ui,/const liveReturn=active&&hasMultiplier&&hasStake\?money\(s\*m\):null/);
+  assert.match(ui,/const nextText=pending\?'Confirmando…':liveReturn\|\|'Sacar'/);
   assert.match(ui,/moneyCompact\(s\)\+' × '\+m\.toFixed\(2\)\+' = '\+money\(s\*m\)/);
   assert.doesNotMatch(ui,/JLApi\.rpc|jl_aviator_cashout|payout_transaction/);
 });
