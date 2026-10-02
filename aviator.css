@@ -588,3 +588,36 @@ body>.topbar .brand{font-size:1rem}
     font-size:.94rem
   }
 }
+
+
+/* Saldo do jogador fixo no topo direito. */
+.aviator-top-balance{
+  margin-left:auto;
+  display:flex;
+  align-items:baseline;
+  gap:6px;
+  min-width:0;
+  white-space:nowrap
+}
+.aviator-top-balance[hidden]{display:none!important}
+.aviator-top-balance span{
+  font-size:.62rem;
+  font-weight:800;
+  color:#7f8ba0;
+  letter-spacing:.04em
+}
+.aviator-top-balance strong{
+  font-size:.9rem;
+  font-weight:950;
+  color:#f1f4f8;
+  font-variant-numeric:tabular-nums
+}
+
+@media(max-width:650px){
+  .aviator-top-balance{
+    gap:4px;
+    margin-left:auto
+  }
+  .aviator-top-balance span{font-size:.56rem}
+  .aviator-top-balance strong{font-size:.82rem}
+}
