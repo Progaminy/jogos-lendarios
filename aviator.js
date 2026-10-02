@@ -1414,7 +1414,7 @@ function startRealtime(){
       if(!connectionOnline)return;
       if(connected){
         if(!stateBusy)void reconnectState();
-        scheduleState(120000);
+        scheduleState();
       }else{
         scheduleState(3000);
       }
