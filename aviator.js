@@ -1046,43 +1046,15 @@ async function recover(force=false){
 
   try{
     const x=await JLApi.rpc('jl_aviator_player_state',{p_token:playerToken()});
+    if(Number(round?.id)!==requestedRoundId)return;
 
-    if(Number(round?.id)!==requestedRoundId){
-      return;
-    }
-
-    const bets=Array.isArray(x?.bets)?x.bets:[];
-    const current=runtime.pickActiveBet(bets,requestedRoundId);
-    const latest=bets
-      .filter(b=>Number(b?.round_id)===requestedRoundId)
-      .sort((a,b)=>Number(b?.id)-Number(a?.id))[0]||null;
-
-    myBet=current?.id??null;
-    myStake=current?Number(current.stake)||0:0;
-    myAutoCashout=current?Number(current.auto_cashout_multiplier)||null:null;
-    if(current)setBetResult(null);
-    lastRecoveredRoundId=requestedRoundId;
-    renderTicket();
-    renderBetConfirmation();
+    applyReconnectPlayerState(x);
 
     if(myBet&&round.status==='FLYING'){
-      setBetResult(null);
-      $('#aviatorMessage').textContent='Aposta ativa recuperada.';
-    }else if(latest?.status==='CASHED_OUT'){
-      setBetResultFromBet(latest);
-      myAutoCashout=null;
-      resetCashout();
-      $('#aviatorMessage').textContent=cashoutMessage(
-        latest.cashout_source,
-        latest.cashout_multiplier,
-        latest.payout
-      );
-    }else if(latest?.status==='LOST'){
-      setBetResultFromBet(latest);
-      $('#aviatorMessage').textContent='Fim da rodada. A aposta foi perdida.';
-    }else if(latest?.status==='REFUNDED'){
-      setBetResultFromBet(latest);
-      $('#aviatorMessage').textContent='A aposta foi reembolsada pelo servidor.';
+      $('#aviatorMessage').textContent='Aposta 1 ativa recuperada.';
+    }
+    if(myBet2&&round.status==='FLYING'){
+      $('#aviatorMessage2').textContent='Aposta 2 ativa recuperada.';
     }
   }catch(_){
     lastRecoveredRoundId=null;
@@ -1420,54 +1392,74 @@ function scheduleState(delay=nextPollDelay()){
 function applyReconnectPlayerState(player){
   const bets=Array.isArray(player?.bets)?player.bets:[];
   const roundId=Number(round?.id);
-  const current=Number.isFinite(roundId)
-    ?runtime.pickActiveBet(bets,roundId)
-    :null;
-  const latest=Number.isFinite(roundId)
-    ?bets
-      .filter(b=>Number(b?.round_id)===roundId)
-      .sort((a,b)=>Number(b?.id)-Number(a?.id))[0]||null
-    :null;
+  const current1=Number.isFinite(roundId)?activeBetForSlot(bets,roundId,1):null;
+  const current2=Number.isFinite(roundId)?activeBetForSlot(bets,roundId,2):null;
+  const latest1=Number.isFinite(roundId)?latestBetForSlot(bets,roundId,1):null;
+  const latest2=Number.isFinite(roundId)?latestBetForSlot(bets,roundId,2):null;
 
-  myBet=current?.id??null;
-  myStake=current?Number(current.stake)||0:0;
-  myAutoCashout=current?Number(current.auto_cashout_multiplier)||null:null;
-  if(current)setBetResult(null);
+  myBet=current1?.id??null;
+  myStake=current1?Number(current1.stake)||0:0;
+  myAutoCashout=current1?Number(current1.auto_cashout_multiplier)||null:null;
+  myBet2=current2?.id??null;
+  myStake2=current2?Number(current2.stake)||0:0;
+  myAutoCashout2=current2?Number(current2.auto_cashout_multiplier)||null:null;
+
+  if(current1)setBetResult(null);
+  if(current2)setBetResult2(null);
   lastRecoveredRoundId=round?.id??null;
 
-  if(latest?.status==='CASHED_OUT'){
-    clearPendingCashout();
-    setBetResultFromBet(latest);
-    myBet=null;
-    myStake=0;
-    myAutoCashout=null;
-    $('#aviatorMessage').textContent=cashoutMessage(
-      latest.cashout_source,
-      latest.cashout_multiplier,
-      latest.payout
-    );
-    preserveMessageOnNextRoundSync=true;
-  }else if(latest?.status==='LOST'){
-    clearPendingCashout();
-    setBetResultFromBet(latest);
-    myBet=null;
-    myStake=0;
-    myAutoCashout=null;
-    $('#aviatorMessage').textContent='Fim da rodada. A aposta foi perdida.';
-    preserveMessageOnNextRoundSync=true;
-  }else if(latest?.status==='REFUNDED'){
-    clearPendingCashout();
-    setBetResultFromBet(latest);
-    myBet=null;
-    myStake=0;
-    myAutoCashout=null;
-    $('#aviatorMessage').textContent='A aposta foi reembolsada pelo servidor.';
-    preserveMessageOnNextRoundSync=true;
+  if(!current1&&latest1){
+    if(latest1.status==='CASHED_OUT'){
+      clearPendingCashout();
+      setBetResultFromBet(latest1);
+      $('#aviatorMessage').textContent=cashoutMessage(
+        latest1.cashout_source,
+        latest1.cashout_multiplier,
+        latest1.payout
+      );
+      preserveMessageOnNextRoundSync=true;
+    }else if(latest1.status==='LOST'){
+      clearPendingCashout();
+      setBetResultFromBet(latest1);
+      $('#aviatorMessage').textContent='Fim da rodada. A aposta foi perdida.';
+      preserveMessageOnNextRoundSync=true;
+    }else if(latest1.status==='REFUNDED'){
+      clearPendingCashout();
+      setBetResultFromBet(latest1);
+      $('#aviatorMessage').textContent='A aposta foi reembolsada pelo servidor.';
+      preserveMessageOnNextRoundSync=true;
+    }
+  }
+
+  if(!current2&&latest2){
+    if(latest2.status==='CASHED_OUT'){
+      clearPendingCashout2();
+      setBetResultFromBet2(latest2);
+      $('#aviatorMessage2').textContent=cashoutMessage(
+        latest2.cashout_source,
+        latest2.cashout_multiplier,
+        latest2.payout
+      );
+      preserveMessageOnNextRoundSync=true;
+    }else if(latest2.status==='LOST'){
+      clearPendingCashout2();
+      setBetResultFromBet2(latest2);
+      $('#aviatorMessage2').textContent='Fim da rodada. A aposta foi perdida.';
+      preserveMessageOnNextRoundSync=true;
+    }else if(latest2.status==='REFUNDED'){
+      clearPendingCashout2();
+      setBetResultFromBet2(latest2);
+      $('#aviatorMessage2').textContent='A aposta foi reembolsada pelo servidor.';
+      preserveMessageOnNextRoundSync=true;
+    }
   }
 
   renderTicket();
+  renderTicket2();
   renderBetConfirmation();
+  renderBetConfirmation2();
   renderAutoBetStatus();
+  renderAutoBetStatus2();
 }
 
 async function reconnectState(){
