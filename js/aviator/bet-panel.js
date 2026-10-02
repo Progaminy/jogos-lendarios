@@ -349,8 +349,8 @@
         renderBetAction({
           disabled:true,
           status:betId?'Aposta confirmada':'Apostas fechadas',
-          label:betId?'Foi apostado':'Apostar',
-          mode:betId?'confirmed':'bet'
+          label:betId?'Foi apostado':'Aguarde',
+          mode:betId?'confirmed':'locked'
         });
         resetCashout();
         renderTicket();
