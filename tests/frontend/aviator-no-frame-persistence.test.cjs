@@ -17,7 +17,8 @@ test('loop visual do multiplicador não persiste frames',()=>{
   assert.match(loop,/requestAnimationFrame\(flightPaintLoop\)/);
 });
 
-test('multiplicador visual deriva de started_at e relógio, sem histórico remoto',()=>{
-  assert.match(engine,/runtime\.liveMultiplier\(round\.started_at,serverNowMs\(\)\)/);
+test('multiplicador visual usa somente frame confirmado pelo servidor, sem histórico remoto',()=>{
+  assert.match(engine,/round\?\.current_multiplier/);
+  assert.doesNotMatch(engine,/runtime\.liveMultiplier\(/);
   assert.doesNotMatch(js,/multiplier_history|frame_history|visual_history|tick_history/);
 });
