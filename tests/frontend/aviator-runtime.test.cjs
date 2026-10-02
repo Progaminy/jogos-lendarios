@@ -401,8 +401,9 @@ test('multiplicadores baixos medios e altos usam tiers visuais sem animação ex
   const css=fs.readFileSync(path.join(__dirname,'../../aviator.css'),'utf8');
 
   assert.match(uiSource,/function multiplierTier\(value\)/);
-  assert.match(uiSource,/if\(!Number\.isFinite\(n\)\|\|n<2\)return 'low'/);
-  assert.match(uiSource,/if\(n<=10\)return 'medium'/);
+  assert.match(uiSource,/const shown=Math\.round\(n\*100\)\/100/);
+  assert.match(uiSource,/if\(shown<2\)return 'low'/);
+  assert.match(uiSource,/if\(shown<=10\)return 'medium'/);
   assert.match(uiSource,/return 'high'/);
   assert.match(historySource,/tier-'\+multiplierTier\(item\.crash_multiplier\)/);
   assert.match(js,/applyMultiplierTier\(\$\('#crashMultiplier'\),result\)/);
