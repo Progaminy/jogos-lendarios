@@ -12,6 +12,12 @@ TOKEN_EXACT='aviator-point61-exact'
 
 cleanup() {
   "${PSQL[@]}" <<SQL >/dev/null 2>&1 || true
+update public.jl_aviator_settings
+set enabled=false,
+    one_round_test=false,
+    updated_at=clock_timestamp()
+where id=true;
+
 update public.jl_aviator_rounds
 set status='CANCELLED',
     settled_at=coalesce(settled_at,clock_timestamp())
@@ -47,7 +53,7 @@ cleanup
 
 "${PSQL[@]}" <<SQL
 update public.jl_aviator_settings
-set enabled=true,
+set enabled=false,
     one_round_test=false,
     updated_at=clock_timestamp()
 where id=true;
@@ -72,6 +78,14 @@ values(
 )
 returning id;
 ")
+
+"${PSQL[@]}" -c "
+update public.jl_aviator_settings
+set enabled=true,
+    one_round_test=false,
+    updated_at=clock_timestamp()
+where id=true;
+" >/dev/null
 
 # Fase A: saldo 9 MZN; duas apostas simultâneas de 10 MZN.
 # Ambas precisam falhar e nenhuma pode produzir débito/aposta parcial.
@@ -138,6 +152,12 @@ select
 # 10 MZN. O próprio insert do jogador cria o lançamento inicial reconciliado
 # no ledger, sem ajuste artificial de balance.
 "${PSQL[@]}" <<SQL
+update public.jl_aviator_settings
+set enabled=false,
+    one_round_test=false,
+    updated_at=clock_timestamp()
+where id=true;
+
 update public.jl_aviator_rounds
 set status='CANCELLED',
     settled_at=clock_timestamp()
@@ -163,6 +183,14 @@ values(
 )
 returning id;
 ")
+
+"${PSQL[@]}" -c "
+update public.jl_aviator_settings
+set enabled=true,
+    one_round_test=false,
+    updated_at=clock_timestamp()
+where id=true;
+" >/dev/null
 
 # Fase B: saldo exatamente 10 MZN; duas apostas simultâneas de 10 MZN.
 # O lock da carteira deve permitir um único débito.
