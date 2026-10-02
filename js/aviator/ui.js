@@ -221,7 +221,7 @@
 
       if(wrap){
         wrap.classList.toggle('hidden',Boolean(hidden));
-        wrap.classList.toggle('is-cancel',mode==='cancel'||mode==='cancel-next');
+        wrap.classList.remove('is-cancel');
       }
 
       if(button){
