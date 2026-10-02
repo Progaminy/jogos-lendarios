@@ -44,7 +44,6 @@
         "./js/aviator/history.js",
         "./js/aviator/personal-history.js",
         "./js/aviator/sound.js",
-        "./js/aviator/haptics.js",
         "./js/realtime/aviator.js",
         "./aviator.js",
         "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.min.js"
