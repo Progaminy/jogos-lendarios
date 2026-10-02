@@ -8,9 +8,9 @@ body{background:#070a10}
 .aviator-head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin:0 2px 8px}
 .aviator-head-tools{display:flex;align-items:center;justify-content:flex-end;gap:8px;min-width:0}
 .aviator-sound-toggle{min-height:30px;border:1px solid rgba(255,255,255,.08);border-radius:999px;background:rgba(255,255,255,.04);color:#9aa8bd;font:inherit;font-size:.68rem;font-weight:900;padding:5px 9px;cursor:pointer;white-space:nowrap}
-.aviator-sound-toggle:hover,.aviator-vibration-toggle:hover{background:rgba(255,255,255,.07)}
-.aviator-sound-toggle.is-on,.aviator-vibration-toggle.is-on{color:#d9f7e6;border-color:rgba(78,213,138,.24);background:rgba(78,213,138,.08)}
-.aviator-sound-toggle:focus-visible,.aviator-vibration-toggle:focus-visible{outline:2px solid currentColor;outline-offset:2px}
+.aviator-sound-toggle:hover{background:rgba(255,255,255,.07)}
+.aviator-sound-toggle.is-on{color:#d9f7e6;border-color:rgba(78,213,138,.24);background:rgba(78,213,138,.08)}
+.aviator-sound-toggle:focus-visible{outline:2px solid currentColor;outline-offset:2px}
 .aviator-round,.aviator-clock{display:flex;align-items:baseline;gap:7px;min-width:0}
 .aviator-round span,.aviator-clock span{font-size:.58rem;font-weight:900;letter-spacing:.1em;color:#6f7b90}
 .aviator-round strong,.aviator-clock strong{font-size:.88rem;color:#cbd5e1}
@@ -399,8 +399,7 @@ body>.topbar .brand{font-size:1rem}
   gap:5px;
   pointer-events:auto
 }
-.aviator-sound-toggle,
-.aviator-vibration-toggle{
+.aviator-sound-toggle{
   display:grid;
   place-items:center;
   width:32px;
@@ -412,10 +411,8 @@ body>.topbar .brand{font-size:1rem}
   font-size:.9rem;
   color:#d7deea
 }
-.aviator-sound-toggle span,
-.aviator-vibration-toggle span{line-height:1}
-.aviator-sound-toggle.is-on,
-.aviator-vibration-toggle.is-on{
+.aviator-sound-toggle span{line-height:1}
+.aviator-sound-toggle.is-on{
   background:rgba(0,0,0,.34);
   border:0
 }
@@ -501,8 +498,7 @@ body>.topbar .brand{font-size:1rem}
   .aviator-stage{padding:0!important}
   .flight-area{height:230px;border-radius:12px}
   .aviator-head{top:6px;right:6px}
-  .aviator-sound-toggle,
-  .aviator-vibration-toggle{
+  .aviator-sound-toggle{
     width:28px;
     height:28px;
     min-height:28px;
