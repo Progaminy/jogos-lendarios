@@ -45,3 +45,16 @@ test('ponto 58: snapshot antigo depois do refresh não pode fazer a UI andar par
   assert.equal(runtime.shouldAcceptSnapshot(5800,5801),true);
   assert.equal(runtime.shouldAcceptSnapshot(5801,5800),false);
 });
+
+
+test('refresh não mostra estado provisório antes do snapshot autoritativo',()=>{
+  const html=fs.readFileSync(path.join(__dirname,'../../aviator.html'),'utf8');
+  const css=fs.readFileSync(path.join(__dirname,'../../aviator.css'),'utf8');
+  const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
+
+  assert.match(html,/<body class="aviator-booting">/);
+  assert.match(css,/\.aviator-booting \.aviator-controls/);
+  assert.match(css,/\.aviator-booting \.aviator-top-balance/);
+  assert.match(css,/content:"A carregar…"/);
+  assert.match(js,/document\.body\.classList\.remove\('aviator-booting'\);\s*renderCurrentRound\(\)/);
+});
