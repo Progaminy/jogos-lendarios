@@ -47,8 +47,8 @@ test('painel 2 mantém preparação independente da próxima aposta',()=>{
 
 
 test('botão da próxima rodada continua escrito Apostar',()=>{
-  assert.match(primary,/queued\?'Cancelar próxima':'Apostar'/);
-  assert.match(secondary,/label:queuedNextBet\?'Cancelar próxima':'Apostar'/);
+  assert.match(primary,/queued\?'Cancelar':'Apostar'/);
+  assert.match(secondary,/label:queuedNextBet\?'Cancelar':'Apostar'/);
   assert.doesNotMatch(primary,/'Preparar próxima'/);
   assert.doesNotMatch(secondary,/'Preparar próxima'/);
 });
@@ -63,4 +63,10 @@ test('painel 2 não mostra a mensagem explicativa de envio futuro',()=>{
     secondary,
     /saveQueuedNextBet\(\{amount,auto_cashout:auto\}\);[\s\S]*?message\.textContent=''/
   );
+});
+
+
+test("botão de aposta preparada mostra apenas Cancelar",()=>{
+  assert.doesNotMatch(primary,/'Cancelar próxima'/);
+  assert.doesNotMatch(secondary,/'Cancelar próxima'/);
 });
