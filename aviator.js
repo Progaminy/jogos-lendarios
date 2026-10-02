@@ -289,8 +289,8 @@ function updateRoundClock(){
           :closed
             ?'Apostas fechadas'
             :'Disponível',
-        'Apostar',
-        'bet'
+        myBet?'Foi apostado':'Apostar',
+        myBet?'confirmed':'bet'
       );
     }
     return;
@@ -715,12 +715,12 @@ function renderLocked(){
   show('#crashText',false);
 
   const queued=Boolean(nextBet?.hasQueued());
-  setBetInputsLocked(!connectionOnline||!enabled||queued);
+  setBetInputsLocked(Boolean(myBet)||!connectionOnline||!enabled||queued);
   renderBetAction(
-    !connectionOnline||!enabled,
-    queued?'Aposta registada':'Disponível',
-    queued?'Cancelar':'Apostar',
-    queued?'cancel-next':'queue-next'
+    Boolean(myBet)||!connectionOnline||!enabled,
+    myBet?'Aposta confirmada':queued?'Aposta registada':'Disponível',
+    myBet?'Foi apostado':queued?'Cancelar':'Apostar',
+    myBet?'confirmed':queued?'cancel-next':'queue-next'
   );
 
   resetCashout();
