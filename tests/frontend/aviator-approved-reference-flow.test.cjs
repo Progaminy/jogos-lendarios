@@ -17,39 +17,24 @@ test('histórico recente de multiplicadores fica no topo do Aviator',()=>{
   assert.match(css,/\.aviator-history-top/);
 });
 
-test('durante voo não existe fila silenciosa nem Cancelar fantasma',()=>{
+test('durante voo permite Apostar para a próxima rodada sem Cancelar',()=>{
   const flying=js.match(/function renderFlying\(\)[\s\S]*?function renderFinished/)?.[0]||'';
-  assert.match(flying,/renderBetAction\(\s*true/);
+  assert.match(flying,/Aposte para a próxima rodada/);
+  assert.match(flying,/myBet\|\|queued\?'Foi apostado':'Apostar'/);
   assert.match(flying,/renderCashoutAction\(\{[\s\S]*?active:Boolean\(myBet\)/);
-  assert.doesNotMatch(flying,/nextBet|queue-next|cancel-next|Cancelar/);
+  assert.doesNotMatch(flying,/Cancelar/);
 });
 
-test('auto-bet só dispara quando servidor informa OPEN',()=>{
+test('auto-bet só dispara quando servidor informa OPEN e não disputa fila do voo',()=>{
   const fn=js.match(/function scheduleAutoBetForOpenRound\(\)[\s\S]*?\n\}/)?.[0]||'';
   assert.match(fn,/round\?\.status!=='OPEN'/);
   assert.match(fn,/round\?\.betting_open===false/);
-  assert.match(fn,/playerToken\(\)/);
+  assert.match(fn,/nextBet\?\.hasQueued\?\.\(\)/);
   assert.match(fn,/requestSubmit/);
-  assert.match(fn,/autoBetAttemptedRoundId===roundId/);
 });
 
-test('auto-bet usa o mesmo fluxo financeiro normal e não debita antecipadamente',()=>{
-  assert.match(js,/autoBetSubmittingRoundId=roundId/);
-  assert.match(js,/\$\('#aviatorBetForm'\)\?\.requestSubmit/);
-  const fn=js.match(/function scheduleAutoBetForOpenRound\(\)[\s\S]*?\n\}/)?.[0]||'';
-  assert.doesNotMatch(fn,/jl_aviator_place_bet|JLApi\.rpc|financial\.placeBet/);
-});
-
-test('auto-bet aguarda OPEN sem criar fila manual oculta',()=>{
-  assert.match(html,/id="aviatorAutoBet"/);
-  assert.match(html,/id="aviatorAutoBetStatus"/);
-  assert.doesNotMatch(js,/Próxima aposta preparada|Prepare a próxima rodada/);
-  assert.match(js,/Aposta automática confirmada para esta rodada/);
-});
-
-test('contagem regressiva permanece separada do multiplicador',()=>{
-  assert.match(html,/id="roundCountdown"/);
+test('contagem visível de aposta permanece separada do multiplicador',()=>{
   assert.match(html,/id="preflightCountdown"/);
   assert.match(html,/id="multiplier"/);
-  assert.match(html,/id="nextRoundSeconds"/);
+  assert.match(html,/id="nextRoundCountdown" class="next-round-countdown hidden"/);
 });
