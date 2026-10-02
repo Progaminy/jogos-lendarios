@@ -338,15 +338,16 @@ test('confirmação visual usa o valor confirmado pelo servidor antes do voo',()
 });
 
 
-test('termos da aposta confirmada ficam imutáveis e não existe fila oculta',()=>{
+test('termos confirmados ficam imutáveis e a fila do voo é explícita',()=>{
   const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
   assert.match(js,/function setBetInputsLocked\(locked\)/);
-  assert.match(js,/Boolean\(myBet\)\|\|betting\|\|closed/);
+  assert.match(js,/Boolean\(myBet\)\|\|queued\|\|betting\|\|closed/);
   assert.match(uiSource,/if\(amount\)amount\.disabled=value/);
   assert.match(uiSource,/if\(auto\)auto\.disabled=value/);
   assert.match(js,/myStake=Number\(r\.stake\);/);
   assert.match(js,/myAutoCashout=Number\(r\.auto_cashout_multiplier\)\|\|null/);
-  assert.doesNotMatch(js,/nextBet|queue-next|cancel-next/);
+  assert.match(js,/nextBet\?\.queue\?\.\(\)/);
+  assert.doesNotMatch(js,/cancel-next|Cancelar/);
 });
 
 
