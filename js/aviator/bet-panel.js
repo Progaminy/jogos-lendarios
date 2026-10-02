@@ -312,8 +312,8 @@
           status:betId
             ?'Aposta confirmada'
             :closed?'Apostas fechadas':'Disponível',
-          label:betId?'Foi apostado':'Apostar',
-          mode:betId?'confirmed':'bet'
+          label:betId?'Foi apostado':'Aguarde',
+          mode:betId?'confirmed':'locked'
         });
 
         resetCashout();
@@ -343,10 +343,13 @@
         renderBetAction({
           disabled:true,
           status:betId?'Aposta em voo':'Voo em curso',
-          label:betId?'Foi apostado':'Apostar',
-          mode:betId?'confirmed':'bet',
+          label:betId?'Foi apostado':'Aguarde',
+          mode:betId?'confirmed':'locked',
           hidden:Boolean(betId)
         });
+        if(!betId&&message&&/^Aposta confirmada/i.test(message.textContent||'')){
+          message.textContent='';
+        }
         renderCashout({
           active:Boolean(betId),
           disabled:!online()||!betId||cashingOut,
@@ -363,8 +366,8 @@
       renderBetAction({
         disabled:true,
         status:'Aguarde a próxima rodada',
-        label:'Apostar',
-        mode:'bet'
+        label:'Aguarde',
+        mode:'locked'
       });
       resetCashout();
       renderTicket();
