@@ -58,7 +58,10 @@
         if(!playerToken?.())throw new Error('Entre na sua conta primeiro.');
         if(!isEnabled?.())throw new Error('Aviator brevemente.');
         const r=getRound?.();
-        if(!r||!['LOCKED','FLYING'].includes(r.status)){
+        if(r?.status==='OPEN'){
+          throw new Error('Apostas abertas.');
+        }
+        if(r&&!['LOCKED','FLYING','CRASHED','SETTLED','CANCELLED'].includes(r.status)){
           throw new Error('Aguarde a rodada em curso.');
         }
         save(parse());
@@ -88,9 +91,12 @@
         )return;
         const amount=$('#aviatorAmount'+suffix);
         const auto=$('#aviatorAutoCashout'+suffix);
+        const button=$('#betBtn'+suffix);
         if(amount)amount.value=String(queued.amount);
         if(auto)auto.value=queued.auto_cashout===null?'':String(queued.auto_cashout);
+        if(button)button.dataset.action='bet';
         submittingRoundId=roundId;
+        attemptedRoundId=roundId;
         form?.requestSubmit?.();
       });
     }
