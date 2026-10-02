@@ -52,7 +52,6 @@ const financial=window.JLAviatorFinancial.create({
   getRoundId:()=>round?.id
 });
 const balance=window.JLAviatorBalance?.create({element:$('#aviatorBalance'),rpc:(n,a)=>JLApi.rpc(n,a),playerToken})||null;
-const nextBet=null;
 const history=window.JLAviatorHistory.create({
   $,
   rpc:(name,args)=>JLApi.rpc(name,args),
@@ -951,7 +950,6 @@ async function reconnectState(){
       ['CRASHED','SETTLED'].includes(round?.status);
 
     if(changedRound){
-      nextBet?.resetRound();
       fairnessProofRoundId=null;
       fairnessProofData=null;
       fairnessProofBusy=false;
@@ -1044,7 +1042,6 @@ async function state(){
       ['CRASHED','SETTLED'].includes(round?.status);
 
     if(changedRound){
-      nextBet?.resetRound();
       fairnessProofRoundId=null;
       fairnessProofData=null;
       fairnessProofBusy=false;
