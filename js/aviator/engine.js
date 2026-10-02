@@ -41,9 +41,6 @@
 
     function multiplier(){
       const round=getRound?.();
-      if(round?.status==='FLYING'&&round?.started_at&&runtime?.liveMultiplier){
-        return runtime.liveMultiplier(round.started_at,serverNowMs());
-      }
       const value=Number(round?.current_multiplier);
       return Number.isFinite(value)&&value>=1?Math.min(500,value):1;
     }
