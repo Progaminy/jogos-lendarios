@@ -36,19 +36,22 @@ test('contagem 10 a 0 toca um único bip por segundo',()=>{
   assert.match(js,/sound\?\.syncCountdown\?\.\(round\?\.id,seconds\)/);
 });
 
-test('voo tem som contínuo suave cuja frequência sobe com o multiplicador',()=>{
+test('voo tem som contínuo agradável e presente cuja frequência sobe com o multiplicador',()=>{
   assert.match(sound,/function startFlight\(\)/);
   assert.match(sound,/function updateFlight\(multiplier\)/);
   assert.match(sound,/Math\.log\(m\)\/Math\.log\(500\)/);
-  assert.match(sound,/setTargetAtTime\(base,now,\.22\)/);
-  assert.doesNotMatch(sound,/osc\.type='sawtooth'/);
+  assert.match(sound,/osc\.type='triangle'/);
+  assert.match(sound,/air\.type='sine'/);
+  assert.match(sound,/createBiquadFilter\(\)/);
+  assert.match(sound,/createDynamicsCompressor\(\)/);
+  assert.match(sound,/setTargetAtTime\(base,now,\.20\)/);
   assert.match(js,/sound\?\.updateFlight\?\.\(m\)/);
 });
 
-test('crash para o som de voo e toca impacto suave',()=>{
+test('crash para o som de voo e toca impacto forte sem aspereza',()=>{
   assert.match(sound,/function playCrash\(\)/);
   assert.match(sound,/stopFlight\(\);/);
-  assert.match(sound,/tone\(280,\.18,\.016,0,'triangle',120\)/);
+  assert.match(sound,/tone\(330,\.18,\.070,0,'triangle',150\)/);
   assert.doesNotMatch(sound,/sawtooth|square/);
   assert.match(sound,/status==='CRASHED'\|\|status==='SETTLED'/);
 });
