@@ -47,11 +47,11 @@ test('reconciliação encontra uma aposta específica pelo bet_id',()=>{
   assert.equal(runtime.findBetById(bets,99),null);
 });
 
-test('Realtime reduz polling a fallback de baixa frequência',()=>{
-  assert.equal(runtime.pollDelay('FLYING',false,true),15000);
+test('voo usa snapshots autoritativos de 250 ms mesmo com Realtime',()=>{
+  assert.equal(runtime.pollDelay('FLYING',false,true),250);
   assert.equal(runtime.pollDelay('OPEN',false,true),750);
   assert.equal(runtime.pollDelay('FLYING',true,true),300000);
-  assert.equal(runtime.pollDelay('FLYING',false,false),3000);
+  assert.equal(runtime.pollDelay('FLYING',false,false),250);
   assert.equal(runtime.pollDelay('OPEN',false,false),750);
   assert.equal(runtime.pollDelay('SETTLED',false,false),750);
 });
@@ -135,10 +135,11 @@ test('modo offline bloqueia aposta e cash-out até reconectar',()=>{
   assert.match(js,/if\(!connectionOnline\)throw new Error\('Sem ligação/);
 });
 
-test('controlador usa timestamps do servidor para interpolação apenas visual',()=>{
+test('multiplicador visível vem somente do snapshot do servidor',()=>{
   const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
   assert.match(js,/syncServerClock\(x\)/);
-  assert.match(engineSource,/runtime\.liveMultiplier\(round\.started_at,serverNowMs\(\)\)/);
+  assert.match(engineSource,/round\?\.current_multiplier/);
+  assert.doesNotMatch(engineSource,/runtime\.liveMultiplier\(/);
   assert.match(engineSource,/runtime\.secondsUntil\(round\[field\],serverNowMs\(\)\)/);
   assert.doesNotMatch(js,/p_multiplier\s*:/);
 });
@@ -179,7 +180,7 @@ test('provably fair v2 verifica seed, lock e resultado sem confiar no controlado
   const seedCommit=await fairness.sha256Hex(seed);
   const visual=fairness.visualTarget(seedCommit);
   const payload=[
-    fairness.VERSION,
+    fairness.VERSION_V2,
     '42',
     seedCommit,
     '10.00',
@@ -191,7 +192,7 @@ test('provably fair v2 verifica seed, lock e resultado sem confiar no controlado
 
   const proof={
     available:true,
-    fairness_version:fairness.VERSION,
+    fairness_version:fairness.VERSION_V2,
     seed,
     seed_commit:seedCommit,
     lock_payload:payload,
@@ -214,6 +215,40 @@ test('provably fair v2 verifica seed, lock e resultado sem confiar no controlado
   });
   assert.equal(tampered.valid,false);
   assert.equal(tampered.resultValid,false);
+});
+
+test('provably fair v4 fixa a queda no alvo comprometido, independente do teto financeiro',async()=>{
+  const seed='abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789';
+  const seedCommit=await fairness.sha256Hex(seed);
+  const visual=fairness.visualTarget(seedCommit,fairness.VERSION_V4);
+  const payload=[
+    fairness.VERSION_V4,
+    '900',
+    seedCommit,
+    '0.50',
+    '999.000000',
+    visual.toFixed(6),
+    visual.toFixed(6)
+  ].join('|');
+  const lockCommit=await fairness.sha256Hex(payload);
+  const proof={
+    available:true,
+    fairness_version:fairness.VERSION_V4,
+    seed,
+    seed_commit:seedCommit,
+    lock_payload:payload,
+    lock_commit:lockCommit,
+    inputs:{
+      visual_target:visual,
+      locked_effective_target:visual,
+      visual_extension:false,
+      zero_exposure_at_multiplier:null
+    },
+    result:{actual_crash_multiplier:visual}
+  };
+  const ok=await fairness.verify(proof);
+  assert.equal(ok.valid,true);
+  assert.equal(ok.expectedCrash,visual);
 });
 
 test('controlador verifica a rodada sem expor detalhes técnicos ao jogador',()=>{
