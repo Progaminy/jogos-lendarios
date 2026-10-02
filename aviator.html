@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0a0d14">
   <title>Aviator Lendário — Jogos Lendários</title>
   <link rel="stylesheet" href="./styles.css?v=20260929">
-  <link rel="stylesheet" href="./aviator.css?v=20261002-6">
+  <link rel="stylesheet" href="./aviator.css?v=20261002-7">
 </head>
 <body>
   <header class="topbar">
@@ -92,9 +92,13 @@
         <form id="aviatorBetForm">
           <label class="field">
             <span class="sr-only">Valor da aposta</span>
-            <div class="money-input">
-              <span>MZN</span>
-              <input aria-label="Valor da aposta 1" id="aviatorAmount" type="number" min="0.5" max="500" step="0.01" value="10" inputmode="decimal" required>
+            <div class="stake-stepper">
+              <button id="aviatorAmountMinus" class="stake-step" type="button" aria-label="Diminuir valor da aposta">−</button>
+              <div class="money-input">
+                <span>MZN</span>
+                <input aria-label="Valor da aposta 1" id="aviatorAmount" type="number" min="0.5" max="500" step="0.01" value="0.5" inputmode="decimal" required>
+              </div>
+              <button id="aviatorAmountPlus" class="stake-step" type="button" aria-label="Aumentar valor da aposta">+</button>
             </div>
           </label>
           <label class="field">
@@ -161,9 +165,13 @@
         <form id="aviatorBetForm2">
           <label class="field">
             <span class="sr-only">Valor da aposta</span>
-            <div class="money-input">
-              <span>MZN</span>
-              <input aria-label="Valor da aposta 2" id="aviatorAmount2" type="number" min="0.5" max="500" step="0.01" value="10" inputmode="decimal" required>
+            <div class="stake-stepper">
+              <button id="aviatorAmountMinus2" class="stake-step" type="button" aria-label="Diminuir valor da aposta 2">−</button>
+              <div class="money-input">
+                <span>MZN</span>
+                <input aria-label="Valor da aposta 2" id="aviatorAmount2" type="number" min="0.5" max="500" step="0.01" value="0.5" inputmode="decimal" required>
+              </div>
+              <button id="aviatorAmountPlus2" class="stake-step" type="button" aria-label="Aumentar valor da aposta 2">+</button>
             </div>
           </label>
           <label class="field">
@@ -244,8 +252,9 @@
   <script src="./js/aviator/ui.js?v=20261002-1"></script>
   <script src="./js/aviator/financial.js?v=20261002-5"></script>
   <script src="./js/aviator/balance.js?v=20261002-2"></script>
-  <script src="./js/aviator/next-bet.js?v=20261002-2"></script>
-  <script src="./js/aviator/bet-panel.js?v=20261002-6"></script>
+  <script src="./js/aviator/amount-stepper.js?v=20261002-1"></script>
+  <script src="./js/aviator/next-bet.js?v=20261002-3"></script>
+  <script src="./js/aviator/bet-panel.js?v=20261002-7"></script>
   <script src="./js/aviator/history.js?v=20261001-1"></script>
   <script src="./js/aviator/personal-history.js?v=20261002-1"></script>
   <script src="./js/aviator/sound.js?v=20261002-1"></script>
