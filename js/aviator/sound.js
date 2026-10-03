@@ -138,15 +138,15 @@
       const ctx=audioCtx;
       try{
         const now=ctx?.currentTime||0;
-        voice.gain.gain.cancelScheduledValues(now);
-        voice.gain.gain.setTargetAtTime(.0001,now,.055);
-        voice.airGain.gain.cancelScheduledValues(now);
-        voice.airGain.gain.setTargetAtTime(.0001,now,.06);
-        voice.shimmerGain.gain.cancelScheduledValues(now);
-        voice.shimmerGain.gain.setTargetAtTime(.0001,now,.06);
-        voice.osc.stop(now+.20);
-        voice.air.stop(now+.20);
-        voice.shimmer.stop(now+.20);
+        voice.motorGain.gain.cancelScheduledValues(now);
+        voice.motorGain.gain.setTargetAtTime(.0001,now,.055);
+        voice.harmonicGain.gain.cancelScheduledValues(now);
+        voice.harmonicGain.gain.setTargetAtTime(.0001,now,.06);
+        voice.windGain.gain.cancelScheduledValues(now);
+        voice.windGain.gain.setTargetAtTime(.0001,now,.065);
+        voice.motor.stop(now+.20);
+        voice.harmonic.stop(now+.20);
+        voice.wind.stop(now+.20);
       }catch(_){}
     }
 
@@ -155,82 +155,64 @@
       const ctx=ensureAudio();
       if(!ctx||ctx.state!=='running')return;
 
-      const osc=ctx.createOscillator();
-      const air=ctx.createOscillator();
-      const shimmer=ctx.createOscillator();
-      const gain=ctx.createGain();
-      const airGain=ctx.createGain();
-      const shimmerGain=ctx.createGain();
-      const filter=ctx.createBiquadFilter();
-      const airFilter=ctx.createBiquadFilter();
-      const shimmerFilter=ctx.createBiquadFilter();
-      const panner=typeof ctx.createStereoPanner==='function'?ctx.createStereoPanner():null;
-      const shimmerPanner=typeof ctx.createStereoPanner==='function'?ctx.createStereoPanner():null;
+      const motor=ctx.createOscillator();
+      const harmonic=ctx.createOscillator();
+      const wind=ctx.createBufferSource();
+      const motorGain=ctx.createGain();
+      const harmonicGain=ctx.createGain();
+      const windGain=ctx.createGain();
+      const motorFilter=ctx.createBiquadFilter();
+      const harmonicFilter=ctx.createBiquadFilter();
+      const windFilter=ctx.createBiquadFilter();
 
-      osc.type='triangle';
-      air.type='sine';
-      shimmer.type='sine';
+      motor.type='sine';
+      harmonic.type='triangle';
+      motor.frequency.setValueAtTime(74,ctx.currentTime);
+      harmonic.frequency.setValueAtTime(148,ctx.currentTime);
 
-      osc.frequency.setValueAtTime(108,ctx.currentTime);
-      air.frequency.setValueAtTime(216,ctx.currentTime);
-      shimmer.frequency.setValueAtTime(432,ctx.currentTime);
+      const seconds=2;
+      const noiseBuffer=ctx.createBuffer(1,Math.max(1,Math.floor(ctx.sampleRate*seconds)),ctx.sampleRate);
+      const noise=noiseBuffer.getChannelData(0);
+      for(let i=0;i<noise.length;i++)noise[i]=(Math.random()*2-1);
+      wind.buffer=noiseBuffer;
+      wind.loop=true;
 
-      osc.detune.setValueAtTime(-2,ctx.currentTime);
-      air.detune.setValueAtTime(3,ctx.currentTime);
-      shimmer.detune.setValueAtTime(5,ctx.currentTime);
+      motorFilter.type='lowpass';
+      motorFilter.frequency.setValueAtTime(520,ctx.currentTime);
+      motorFilter.Q.setValueAtTime(.7,ctx.currentTime);
+      harmonicFilter.type='lowpass';
+      harmonicFilter.frequency.setValueAtTime(900,ctx.currentTime);
+      harmonicFilter.Q.setValueAtTime(.55,ctx.currentTime);
+      windFilter.type='bandpass';
+      windFilter.frequency.setValueAtTime(780,ctx.currentTime);
+      windFilter.Q.setValueAtTime(.55,ctx.currentTime);
 
-      filter.type='lowpass';
-      filter.frequency.setValueAtTime(1100,ctx.currentTime);
-      filter.Q.setValueAtTime(.62,ctx.currentTime);
-      airFilter.type='lowpass';
-      airFilter.frequency.setValueAtTime(1700,ctx.currentTime);
-      airFilter.Q.setValueAtTime(.46,ctx.currentTime);
-      shimmerFilter.type='lowpass';
-      shimmerFilter.frequency.setValueAtTime(2800,ctx.currentTime);
-      shimmerFilter.Q.setValueAtTime(.4,ctx.currentTime);
+      motorGain.gain.setValueAtTime(.0001,ctx.currentTime);
+      motorGain.gain.exponentialRampToValueAtTime(.040,ctx.currentTime+.28);
+      harmonicGain.gain.setValueAtTime(.0001,ctx.currentTime);
+      harmonicGain.gain.exponentialRampToValueAtTime(.018,ctx.currentTime+.34);
+      windGain.gain.setValueAtTime(.0001,ctx.currentTime);
+      windGain.gain.exponentialRampToValueAtTime(.028,ctx.currentTime+.36);
 
-      gain.gain.setValueAtTime(.0001,ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(.038,ctx.currentTime+.42);
-      airGain.gain.setValueAtTime(.0001,ctx.currentTime);
-      airGain.gain.exponentialRampToValueAtTime(.016,ctx.currentTime+.48);
-      shimmerGain.gain.setValueAtTime(.0001,ctx.currentTime);
-      shimmerGain.gain.exponentialRampToValueAtTime(.007,ctx.currentTime+.64);
+      motor.connect(motorFilter);
+      motorFilter.connect(motorGain);
+      harmonic.connect(harmonicFilter);
+      harmonicFilter.connect(harmonicGain);
+      wind.connect(windFilter);
+      windFilter.connect(windGain);
 
-      if(panner)panner.pan.setValueAtTime(-.04,ctx.currentTime);
+      motorGain.connect(masterGain||ctx.destination);
+      harmonicGain.connect(masterGain||ctx.destination);
+      windGain.connect(masterGain||ctx.destination);
 
-      osc.connect(filter);
-      filter.connect(gain);
-      air.connect(airFilter);
-      airFilter.connect(airGain);
-      shimmer.connect(shimmerFilter);
-      shimmerFilter.connect(shimmerGain);
-
-      if(panner){
-        gain.connect(panner);
-        airGain.connect(panner);
-        panner.connect(masterGain||ctx.destination);
-      }else{
-        gain.connect(masterGain||ctx.destination);
-        airGain.connect(masterGain||ctx.destination);
-      }
-
-      if(shimmerPanner){
-        shimmerPanner.pan.setValueAtTime(.35,ctx.currentTime);
-        shimmerGain.connect(shimmerPanner);
-        shimmerPanner.connect(masterGain||ctx.destination);
-      }else{
-        shimmerGain.connect(masterGain||ctx.destination);
-      }
-
-      osc.start();
-      air.start();
-      shimmer.start();
+      motor.start();
+      harmonic.start();
+      wind.start();
 
       flightVoice={
-        osc,air,shimmer,
-        gain,airGain,shimmerGain,
-        filter,airFilter,shimmerFilter,
-        panner,shimmerPanner
+        motor,harmonic,wind,
+        motorGain,harmonicGain,windGain,
+        motorFilter,harmonicFilter,windFilter
       };
       updateFlight(getMultiplier?.());
     }
@@ -243,29 +225,44 @@
       const m=Math.max(1,Math.min(500,Number(multiplier)||1));
       const progress=Math.log(m)/Math.log(500);
       const now=audioCtx.currentTime;
-      const base=108+(progress*112);
-      const overtone=216+(progress*224);
-      const shimmer=432+(progress*310);
-      const volume=.038+(progress*.018);
+      const motorHz=74+(progress*82);
+      const harmonicHz=148+(progress*164);
 
       try{
-        flightVoice.osc.frequency.setTargetAtTime(base,now,.24);
-        flightVoice.air.frequency.setTargetAtTime(overtone,now,.28);
-        flightVoice.shimmer.frequency.setTargetAtTime(shimmer,now,.32);
-        flightVoice.gain.gain.setTargetAtTime(volume,now,.26);
-        flightVoice.airGain.gain.setTargetAtTime(.016+(progress*.008),now,.30);
-        flightVoice.shimmerGain.gain.setTargetAtTime(.007+(progress*.006),now,.34);
-        flightVoice.filter.frequency.setTargetAtTime(1100+(progress*800),now,.30);
-        flightVoice.airFilter.frequency.setTargetAtTime(1700+(progress*950),now,.32);
-        flightVoice.shimmerFilter.frequency.setTargetAtTime(2800+(progress*1200),now,.36);
+        flightVoice.motor.frequency.setTargetAtTime(motorHz,now,.18);
+        flightVoice.harmonic.frequency.setTargetAtTime(harmonicHz,now,.20);
+        flightVoice.motorGain.gain.setTargetAtTime(.040+(progress*.020),now,.22);
+        flightVoice.harmonicGain.gain.setTargetAtTime(.018+(progress*.012),now,.24);
+        flightVoice.windGain.gain.setTargetAtTime(.028+(progress*.026),now,.20);
+        flightVoice.motorFilter.frequency.setTargetAtTime(520+(progress*420),now,.22);
+        flightVoice.harmonicFilter.frequency.setTargetAtTime(900+(progress*700),now,.24);
+        flightVoice.windFilter.frequency.setTargetAtTime(780+(progress*1550),now,.18);
       }catch(_){}
     }
 
     function playCrash(){
       stopFlight();
-      tone(300,.14,.064,0,'triangle',165);
-      tone(170,.22,.045,.018,'sine',95);
-      tone(520,.055,.022,.008,'sine',330);
+      const ctx=ensureAudio();
+      if(ctx&&ctx.state==='running'){
+        const source=ctx.createBufferSource();
+        const duration=.18;
+        const buffer=ctx.createBuffer(1,Math.max(1,Math.floor(ctx.sampleRate*duration)),ctx.sampleRate);
+        const data=buffer.getChannelData(0);
+        for(let i=0;i<data.length;i++)data[i]=(Math.random()*2-1)*(1-(i/data.length));
+        const filter=ctx.createBiquadFilter();
+        const gain=ctx.createGain();
+        filter.type='lowpass';
+        filter.frequency.setValueAtTime(1150,ctx.currentTime);
+        gain.gain.setValueAtTime(.085,ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(.0001,ctx.currentTime+duration);
+        source.buffer=buffer;
+        source.connect(filter);
+        filter.connect(gain);
+        gain.connect(masterGain||ctx.destination);
+        source.start();
+      }
+      tone(190,.20,.050,0,'sine',78);
+      tone(460,.07,.026,.012,'triangle',240);
     }
 
     function setEnabled(next){
