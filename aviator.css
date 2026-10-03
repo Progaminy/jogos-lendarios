@@ -52,10 +52,10 @@ body{background:#070a10}
 .multiplier.tier-medium,.crash-text span.tier-medium{color:#e4b94f;text-shadow:0 8px 30px rgba(228,185,79,.10)}
 .multiplier.tier-high,.crash-text span.tier-high{color:#66d99a;text-shadow:0 8px 30px rgba(102,217,154,.12)}
 .multiplier-wrap small{font-size:.58rem;font-weight:850;letter-spacing:.12em;color:#68758a}
-.plane{position:absolute;z-index:2;font-size:76px;left:6%;bottom:10%;transform:translate3d(0,0,0) rotate(-10deg);opacity:.62;filter:drop-shadow(0 10px 18px rgba(0,0,0,.42))}
+.plane{position:absolute;z-index:2;font-size:92px;left:5%;bottom:8%;transform:translate3d(0,0,0) rotate(-8deg) scale(1);opacity:.7;filter:drop-shadow(0 12px 22px rgba(0,0,0,.46))}
 .plane,.flight-grid,.flight-area::after{pointer-events:none}
 .aviator-stage.is-open .plane{animation:aviatorIdle 1.6s ease-in-out infinite}
-.aviator-stage.is-flying .plane{opacity:1;animation:none;transition:transform .12s linear;transform-origin:58% 54%}
+.aviator-stage.is-flying .plane{opacity:1;animation:none;transition:transform .09s linear;transform-origin:58% 54%;will-change:transform}
 .aviator-stage.is-flying .flight-area::after{animation:trailPulse 1.2s ease-in-out infinite}
 .aviator-stage.is-crashed .plane{opacity:0;animation:none}
 .aviator-stage.is-crashed .flight-area::after{opacity:0;animation:none}
@@ -189,7 +189,7 @@ body{background:#070a10}
   .next-round-countdown strong{font-size:1.35rem}
   .flight-grid{display:none}
   .flight-area::after{animation:none!important;opacity:.28}
-  .plane{font-size:64px;filter:none}
+  .plane{font-size:78px;filter:none}
   .aviator-stage.is-flying .plane{will-change:transform}
   .aviator-stage:not(.is-flying) .plane{will-change:auto}
   .multiplier,.crash-text span,.aviator-history-value{transition:none}
@@ -331,7 +331,7 @@ body{background:#070a10}
   .preflight{padding:8px}
   .preflight .countdown-value{font-size:clamp(2.2rem,12vw,3.5rem)}
   .multiplier{font-size:clamp(58px,17vw,92px)}
-  .plane{font-size:64px}
+  .plane{font-size:78px}
   .aviator-history-top .aviator-history-strip{padding:6px 1px}
   .aviator-history-value{font-size:.73rem}
   .aviator-controls{grid-template-columns:1fr;gap:5px}
