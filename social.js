@@ -12,6 +12,7 @@
     searchBusy: false,
     searchQuery: '',
     following: [],
+    onlineOpen: false,
     counts: { following: 0, followers: 0, online: 0 }
   };
 
@@ -56,6 +57,8 @@
       '.jl-social-tag.online{color:#83efb3;background:rgba(66,221,141,.09)}',
       '.jl-social-tag.game{color:#ffd776;background:rgba(244,189,66,.09)}',
       '.jl-social-actions{display:flex;gap:5px;flex:0 0 auto;align-items:center}.jl-social-actions .button{min-height:30px;padding:5px 8px;border-radius:8px;font-size:.62rem;white-space:nowrap}',
+      '.jl-social-pill-button{appearance:none;cursor:pointer;color:inherit;font:inherit}.jl-social-pill-button[aria-expanded="true"]{border-color:rgba(66,221,141,.42);background:rgba(66,221,141,.10)}',
+      '.jl-social-online-panel{margin-top:12px}.jl-social-online-panel.hidden{display:none!important}',
       '.jl-social-empty{padding:14px 8px;text-align:center;color:#91a4bd;border:1px dashed rgba(255,255,255,.10);border-radius:10px;font-size:.72rem}.jl-social-refresh{min-width:34px!important;width:34px;height:32px;padding:0!important;font-size:1rem!important}',
       '.online-metric.jl-social-link{cursor:pointer}.online-metric.jl-social-link:focus{outline:2px solid rgba(244,189,66,.55);outline-offset:3px}',
       '@media(max-width:760px){.jl-social-grid{grid-template-columns:1fr;gap:8px}.jl-social-card{padding:10px}.jl-social-head{align-items:center;flex-direction:row}.jl-social-counts{justify-content:flex-start}.jl-social-list{max-height:none;overflow:visible}.jl-social-player{align-items:center}.jl-social-actions{align-self:center}.jl-social-search{margin-top:8px}.jl-social-zone:not(.is-collapsed) .jl-collapse-body{padding-bottom:4px}}',
@@ -78,7 +81,7 @@
       '<div class="jl-social-head">' +
         '<div class="jl-social-head-actions">' +
           '<div class="jl-social-counts">' +
-            '<span id="socialOnlineCount" class="jl-social-pill">0 online</span>' +
+            '<button id="socialOnlineCount" class="jl-social-pill jl-social-pill-button" type="button" aria-expanded="false" aria-controls="socialOnlinePanel">0 online</button>' +
             '<span id="socialFollowingCount" class="jl-social-pill">0 seguindo</span>' +
             '<span id="socialFollowersCount" class="jl-social-pill">0 seguidores</span>' +
           '</div>' +
@@ -100,6 +103,10 @@
           '<div id="socialFollowingList" class="jl-social-list"><div class="jl-social-empty">Você ainda não segue nenhum jogador.</div></div>' +
         '</section>' +
       '</div>' +
+      '<section id="socialOnlinePanel" class="panel jl-social-card jl-social-online-panel hidden" aria-label="Jogadores online">' +
+        '<div class="section-head"><div><p class="eyebrow">ONLINE</p><h3>Jogadores online</h3></div></div>' +
+        '<div id="socialOnlineList" class="jl-social-list"><div class="jl-social-empty">Nenhum jogador que você segue está online.</div></div>' +
+      '</section>' +
       '</div>';
 
     anchor.insertAdjacentElement('afterend', section);
@@ -112,6 +119,8 @@
     ui.search = section.querySelector('#socialSearch');
     ui.searchResults = section.querySelector('#socialSearchResults');
     ui.followingList = section.querySelector('#socialFollowingList');
+    ui.onlinePanel = section.querySelector('#socialOnlinePanel');
+    ui.onlineList = section.querySelector('#socialOnlineList');
     ui.refresh = section.querySelector('#refreshSocial');
 
     ui.searchForm.addEventListener('submit', (event) => {
@@ -120,6 +129,11 @@
       searchPlayers();
     });
     ui.refresh.addEventListener('click', () => loadSocial(false));
+    ui.online.addEventListener('click', () => {
+      state.onlineOpen = !state.onlineOpen;
+      renderFollowing();
+      if (state.onlineOpen) ui.onlinePanel?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
 
     section.addEventListener('click', (event) => {
       const inviteButton = event.target.closest('[data-social-invite]');
@@ -131,6 +145,7 @@
       if (!button) return;
       const target = button.dataset.socialTarget;
       const follow = button.dataset.socialFollow === '1';
+      if (!follow && !window.confirm('Tem certeza que deseja deixar de seguir este jogador?')) return;
       changeFollow(target, follow, button);
     });
 
@@ -159,7 +174,7 @@
 
   function playerHtml(player, context) {
     const online = Boolean(player.online);
-    const following = context === 'following' ? true : Boolean(player.following);
+    const following = (context === 'following' || context === 'online') ? true : Boolean(player.following);
     const mutual = Boolean(player.mutual || player.follows_you);
     const tags = [
       '<span class="jl-social-tag ' + (online ? 'online' : '') + '">' + (online ? 'Online' : 'Offline') + '</span>',
@@ -173,7 +188,7 @@
         '<div class="jl-social-copy"><strong>' + escapeHtml(player.name) + '</strong><small>' + escapeHtml(player.code) + '</small><div class="jl-social-tags">' + tags + '</div></div>' +
       '</div>' +
       '<div class="jl-social-actions">' +
-        ((window.JLLudoSocial && window.JLLudoSocial.canInvite && window.JLLudoSocial.canInvite()) ? '<button class="button primary small" type="button" data-social-invite="' + escapeHtml(player.player_id) + '">Convidar</button>' : '') +
+        ((document.getElementById('room') || window.JLLudoSocial) ? '<button class="button primary tiny" type="button" data-social-invite="' + escapeHtml(player.player_id) + '">Convidar</button>' : '') +
         '<button class="button ' + (following ? 'ghost' : 'secondary') + ' small" type="button" data-social-target="' + escapeHtml(player.player_id) + '" data-social-follow="' + (following ? '0' : '1') + '">' + (following ? 'Deixar' : 'Seguir') + '</button>' +
       '</div>' +
     '</div>';
@@ -184,6 +199,15 @@
     ui.online.textContent = String(state.counts.online) + ' online';
     ui.followingCount.textContent = String(state.counts.following) + ' seguindo';
     ui.followersCount.textContent = String(state.counts.followers) + ' seguidores';
+    ui.online.setAttribute('aria-expanded', state.onlineOpen ? 'true' : 'false');
+    ui.onlinePanel?.classList.toggle('hidden', !state.onlineOpen);
+
+    const onlinePlayers = state.following.filter((player) => Boolean(player.online));
+    if (ui.onlineList) {
+      ui.onlineList.innerHTML = onlinePlayers.length
+        ? onlinePlayers.map((player) => playerHtml(player, 'online')).join('')
+        : '<div class="jl-social-empty">Nenhum jogador que você segue está online.</div>';
+    }
 
     ui.followingList.innerHTML = state.following.length
       ? state.following.map((player) => playerHtml(player, 'following')).join('')
@@ -237,7 +261,11 @@
   }
 
   async function invitePlayer(target, button) {
-    if (!target || !button || !window.JLLudoSocial || !window.JLLudoSocial.invite) return;
+    if (!target || !button) return;
+    if (!window.JLLudoSocial || !window.JLLudoSocial.invite) {
+      window.alert('O convite do Ludo ainda não está disponível.');
+      return;
+    }
     button.disabled = true;
     const oldText = button.textContent;
     button.textContent = 'Enviando…';
@@ -254,7 +282,7 @@
       button.disabled = false;
       button.textContent = oldText;
       const message = error && error.message ? error.message : 'Não foi possível enviar o convite.';
-      ui.searchResults.insertAdjacentHTML('afterbegin', '<div class="jl-social-empty">' + escapeHtml(message) + '</div>');
+      window.alert(message);
     }
   }
 
