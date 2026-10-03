@@ -36,19 +36,20 @@ test('contagem 10 a 0 toca um único bip por segundo',()=>{
   assert.match(js,/sound\?\.syncCountdown\?\.\(round\?\.id,seconds\)/);
 });
 
-test('voo usa motor e fluxo de ar audivelmente diferentes do tom antigo',()=>{
+test('voo usa whoosh eletrônico crescente e não som de motor convencional',()=>{
   assert.match(sound,/function startFlight\(\)/);
   assert.match(sound,/function updateFlight\(multiplier\)/);
   assert.match(sound,/Math\.log\(m\)\/Math\.log\(500\)/);
-  assert.match(sound,/const wind=ctx\.createBufferSource\(\)/);
+  assert.match(sound,/const whoosh=ctx\.createBufferSource\(\)/);
   assert.match(sound,/noiseBuffer=ctx\.createBuffer/);
-  assert.match(sound,/windFilter\.type='bandpass'/);
-  assert.match(sound,/motor\.type='sine'/);
-  assert.match(sound,/harmonic\.type='triangle'/);
-  assert.match(sound,/motor\.frequency\.setValueAtTime\(74/);
-  assert.match(sound,/harmonic\.frequency\.setValueAtTime\(148/);
-  assert.match(sound,/windGain\.gain\.setTargetAtTime/);
-  assert.match(sound,/windFilter\.frequency\.setTargetAtTime/);
+  assert.match(sound,/whooshFilter\.type='bandpass'/);
+  assert.match(sound,/rise\.type='sine'/);
+  assert.match(sound,/edge\.type='triangle'/);
+  assert.match(sound,/rise\.frequency\.setValueAtTime\(185/);
+  assert.match(sound,/edge\.frequency\.setValueAtTime\(370/);
+  assert.match(sound,/const tension=Math\.pow\(progress,\.62\)/);
+  assert.match(sound,/whooshGain\.gain\.setTargetAtTime/);
+  assert.match(sound,/whooshFilter\.frequency\.setTargetAtTime/);
   assert.match(sound,/createDynamicsCompressor\(\)/);
   assert.doesNotMatch(sound,/binaural|subliminal|hypnot/i);
   assert.match(js,/sound\?\.updateFlight\?\.\(m\)/);
@@ -57,8 +58,9 @@ test('voo usa motor e fluxo de ar audivelmente diferentes do tom antigo',()=>{
 test('crash para o som de voo e toca impacto forte sem aspereza',()=>{
   assert.match(sound,/function playCrash\(\)/);
   assert.match(sound,/stopFlight\(\);/);
-  assert.match(sound,/const duration=\.18/);
-  assert.match(sound,/tone\(190,\.20,\.050,0,'sine',78\)/);
+  assert.match(sound,/linearRampToValueAtTime\(\.0001,now\+\.015\)/);
+  assert.match(sound,/const duration=\.14/);
+  assert.match(sound,/tone\(145,\.16,\.060,0,'sine',58\)/);
   assert.doesNotMatch(sound,/sawtooth|square/);
   assert.match(sound,/status==='CRASHED'\|\|status==='SETTLED'/);
 });
