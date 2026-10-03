@@ -29,6 +29,8 @@ jobs:
           node --check aviator.js
           for file in js/aviator/*.js; do node --check "$file"; done
           node --check app.js
+          node --check social.js
+          node --check js/platform/ludo-feature-loader.js
           node --check js/ludo/movement-guard.js
           node --check js/ludo/room-state.js
           node --check js/ludo/animation.js
