@@ -25,8 +25,12 @@ test('desktop usa dois cartões e mobile empilha os painéis',()=>{
 
 test('mobile mantém multiplicador limpo e confirmação em linha própria',()=>{
   assert.match(css,/grid-template-columns:minmax\(0,1\.08fr\) minmax\(78px,\.78fr\) minmax\(126px,1\.2fr\)/);
-  assert.match(css,/form>\.auto-cashout-enable\{[\s\S]*?grid-column:2;[\s\S]*?grid-row:2/);
-  assert.match(css,/form>\.aviator-auto-bet-toggle\{[\s\S]*?grid-column:1;[\s\S]*?grid-row:2/);
+  assert.match(html,/class="field bet-amount-field"/);
+  assert.match(css,/form>\.bet-amount-field\{[\s\S]*?grid-column:1!important;[\s\S]*?grid-row:1!important/);
+  assert.match(css,/form>\.auto-cashout-field\{[\s\S]*?grid-column:2!important;[\s\S]*?grid-row:1!important/);
+  assert.match(css,/form>\.aviator-primary-action-slot\{[\s\S]*?grid-column:3!important;[\s\S]*?grid-row:1\/3!important/);
+  assert.match(css,/form>\.auto-cashout-enable\{[\s\S]*?grid-column:2!important;[\s\S]*?grid-row:2!important/);
+  assert.match(css,/form>\.aviator-auto-bet-toggle\{[\s\S]*?grid-column:1!important;[\s\S]*?grid-row:2!important/);
   assert.match(css,/\.stake-stepper \.money-input input\{[\s\S]*?text-align:center/);
   assert.match(css,/\.auto-cashout-field \.money-input input\{[\s\S]*?text-align:center/);
   assert.doesNotMatch(html,/class="auto-cashout-config"/);
