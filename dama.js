@@ -322,14 +322,21 @@
     renderBoard();
     renderHistory();
 
-    const q = Number(r.quiet_king_moves || 0);
-    const regLimit = Number(r.regulation_limit || 0);
-    const regMoves = Number(r.regulation_moves || 0);
-    if (q > 0) {
-      els.damaDrawCounter.textContent = `Empate: faltam ${Math.max(0, 20 - q)} lances de damas sem captura nem movimento de pedra.`;
+    const draw = state.room.draw || {};
+    const p1 = players().find((p) => p.seat === 1);
+    const p2 = players().find((p) => p.seat === 2);
+    const q1 = Number(draw.quiet_light || 0);
+    const q2 = Number(draw.quiet_dark || 0);
+    const regLimit = Number(draw.regulation_limit || 0);
+    const rg1 = Number(draw.regulation_light || 0);
+    const rg2 = Number(draw.regulation_dark || 0);
+    if (q1 > 0 || q2 > 0) {
+      els.damaDrawCounter.textContent =
+        `20 lances: ${firstName(p1)} ${Math.max(0, 20 - q1)} · ${firstName(p2)} ${Math.max(0, 20 - q2)} restantes`;
       els.damaDrawCounter.classList.remove('hidden');
     } else if (regLimit > 0) {
-      els.damaDrawCounter.textContent = `Final regulamentar: faltam ${Math.max(0, regLimit - regMoves)} lances.`;
+      els.damaDrawCounter.textContent =
+        `Final regulamentar: ${firstName(p1)} ${Math.max(0, regLimit - rg1)} · ${firstName(p2)} ${Math.max(0, regLimit - rg2)} restantes`;
       els.damaDrawCounter.classList.remove('hidden');
     } else {
       els.damaDrawCounter.classList.add('hidden');
