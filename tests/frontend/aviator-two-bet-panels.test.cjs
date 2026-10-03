@@ -23,10 +23,13 @@ test('desktop usa dois cartões e mobile empilha os painéis',()=>{
   assert.match(css,/@media\(max-width:650px\)[\s\S]*?\.aviator-controls\{grid-template-columns:1fr/);
 });
 
-test('mobile distribui espaço sem esmagar cash-out automático nem desperdiçar no valor',()=>{
-  assert.match(css,/grid-template-columns:minmax\(0,1fr\) minmax\(0,\.8fr\) minmax\(126px,1\.2fr\)/);
+test('mobile mantém multiplicador limpo e confirmação em linha própria',()=>{
+  assert.match(css,/grid-template-columns:minmax\(0,1\.08fr\) minmax\(78px,\.78fr\) minmax\(126px,1\.2fr\)/);
+  assert.match(css,/form>\.auto-cashout-enable\{[\s\S]*?grid-column:2;[\s\S]*?grid-row:2/);
+  assert.match(css,/form>\.aviator-auto-bet-toggle\{[\s\S]*?grid-column:1;[\s\S]*?grid-row:2/);
   assert.match(css,/\.stake-stepper \.money-input input\{[\s\S]*?text-align:center/);
   assert.match(css,/\.auto-cashout-field \.money-input input\{[\s\S]*?text-align:center/);
+  assert.doesNotMatch(html,/class="auto-cashout-config"/);
 });
 
 test('multiplicador só ativa saída automática quando a caixa está marcada',()=>{
