@@ -19,6 +19,11 @@
             b.textContent = '🎙️ Microfone indisponível';
           }
         }
+        if (els.muteOpponent) {
+          els.muteOpponent.disabled = true;
+          els.muteOpponent.setAttribute('aria-pressed', 'false');
+          els.muteOpponent.textContent = '🔊 Ouvir adversário';
+        }
         return;
       }
 
@@ -36,6 +41,11 @@
           b.setAttribute('aria-label', on ? 'Desligar microfone' : 'Ligar microfone');
           b.textContent = label;
         }
+      }
+      if (els.muteOpponent) {
+        els.muteOpponent.disabled = false;
+        els.muteOpponent.setAttribute('aria-pressed', state.opponentMuted ? 'true' : 'false');
+        els.muteOpponent.textContent = state.opponentMuted ? '🔇 Áudio dos outros silenciado' : '🔊 Ouvir adversário';
       }
       startSignalPolling();
     }
@@ -90,6 +100,15 @@
         showToast(`Microfone: ${error.message}`, 'error');
         renderVoice();
       }
+    }
+
+    function toggleOpponentMute() {
+      state.opponentMuted = !state.opponentMuted;
+      for (const audio of els.remoteAudio?.querySelectorAll?.('audio') || []) {
+        audio.muted = Boolean(state.opponentMuted);
+      }
+      renderVoice();
+      showToast(state.opponentMuted ? 'Áudio dos outros jogadores silenciado.' : 'Áudio dos outros jogadores ligado.');
     }
 
     function startSignalPolling() {
@@ -166,6 +185,7 @@
           els.remoteAudio.appendChild(audio);
         }
         audio.srcObject = event.streams[0];
+        audio.muted = Boolean(state.opponentMuted);
         audio.play().then(() => {
           audio.controls = false;
         }).catch(() => {
@@ -292,6 +312,7 @@
       if (state.localStream) state.localStream.getTracks().forEach((t) => t.stop());
       state.localStream = null;
       state.micMuted = true;
+      state.opponentMuted = false;
       state.lastSignalId = 0;
       if (els.remoteAudio) els.remoteAudio.innerHTML = '';
     }
@@ -307,6 +328,7 @@
       stopVoiceIfRoomEnded,
       renderVoice,
       toggleMic,
+      toggleOpponentMute,
       pullSignals,
       closeVoice,
       unlockMediaAudio
