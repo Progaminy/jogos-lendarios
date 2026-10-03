@@ -98,7 +98,7 @@
         const auto=$('#aviatorAutoCashout'+suffix);
         const autoEnabled=$('#aviatorAutoCashoutEnabled'+suffix);
         if(amount)amount.value=String(queued.amount);
-        if(auto)auto.value=queued.auto_cashout===null?'':String(queued.auto_cashout);
+        if(auto&&queued.auto_cashout!==null)auto.value=String(queued.auto_cashout);
         if(autoEnabled)autoEnabled.checked=queued.auto_cashout!==null;
 
         submittingRoundId=roundId;
