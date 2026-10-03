@@ -11,7 +11,7 @@
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="stylesheet" href="./styles.css?v=20260928-20">
   <link rel="stylesheet" href="./site-nav.css?v=20261003-2">
-  <link rel="stylesheet" href="./dama.css?v=20261003-1">
+  <link rel="stylesheet" href="./dama.css?v=20261004-1">
 </head>
 <body>
   <div id="damaToast" class="toast" role="status" aria-live="polite"></div>
@@ -129,8 +129,16 @@
       <section id="damaGame" class="dama-game-grid hidden">
         <div class="card dama-board-panel">
           <div class="dama-game-head">
-            <div><p class="eyebrow">TABULEIRO 8×8</p><h2 id="damaTurnTitle">—</h2></div>
-            <div id="damaTimer" class="dama-timer">—</div>
+            <div class="dama-turn-block">
+              <p class="eyebrow">TABULEIRO 8×8</p>
+              <div class="dama-turn-line">
+                <span id="damaTurnDot" class="dama-turn-dot" aria-hidden="true"></span>
+                <h2 id="damaTurnTitle">—</h2>
+                <span id="damaCaptureBadge" class="dama-capture-badge hidden">CAPTURA</span>
+              </div>
+              <p id="damaBoardStatus" class="dama-board-status">Toque numa peça marcada para jogar.</p>
+            </div>
+            <div class="dama-timer-wrap"><span>tempo</span><div id="damaTimer" class="dama-timer">—</div></div>
           </div>
 
           <div id="damaDrawCounter" class="dama-draw-counter hidden"></div>
@@ -182,7 +190,7 @@
   <div id="damaRouteModal" class="dama-modal hidden" role="dialog" aria-modal="true" aria-labelledby="damaRouteTitle">
     <div class="dama-modal-card">
       <h2 id="damaRouteTitle">Escolha a rota</h2>
-      <p class="muted">Há mais de uma captura legal para o mesmo destino.</p>
+      <p class="muted">Existem caminhos diferentes para o mesmo destino. Escolha a rota completa.</p>
       <div id="damaRouteChoices" class="dama-route-choices"></div>
       <button id="damaRouteClose" class="button ghost wide" type="button">Fechar</button>
     </div>
@@ -202,6 +210,6 @@
   <script src="./config.js"></script>
   <script src="./js/api/rpc.js?v=20261001-1"></script>
   <script src="./js/auth/session.js?v=20260928-2"></script>
-  <script src="./dama.js?v=20261003-2" defer></script>
+  <script src="./dama.js?v=20261004-1" defer></script>
 </body>
 </html>
