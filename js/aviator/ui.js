@@ -110,19 +110,25 @@
 
       const mobile=globalThis.matchMedia?.('(max-width: 650px)').matches===true;
       const reduced=globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches===true;
-      const maxX=mobile?64:58;
-      const maxY=mobile?142:178;
-      const climb=Math.pow(progress,1.12);
-      const wobble=reduced?0:
-        Math.sin(Number(timestamp)/210)*2+
-        Math.sin(Number(timestamp)/470)*1.1;
-      const tiltWobble=reduced?0:Math.sin(Number(timestamp)/280)*0.9;
-      const x=maxX*progress;
-      const y=-(maxY*climb)+wobble;
-      const rotation=-13-(11*climb)+tiltWobble;
+      const area=$('#flightArea');
+      const stageWidth=Math.max(280,Number(area?.clientWidth)||(mobile?360:900));
+      const stageHeight=Math.max(200,Number(area?.clientHeight)||(mobile?230:320));
+
+      // Curva contínua: avança sempre para a direita, sobe suavemente e só flutua no eixo vertical.
+      const sweep=1-Math.pow(1-progress,1.28);
+      const climb=Math.pow(progress,.86);
+      const maxX=stageWidth*(mobile?.68:.76);
+      const maxY=stageHeight*(mobile?.50:.56);
+      const floatY=reduced?0:
+        Math.sin(Number(timestamp)/260)*1.4+
+        Math.sin(Number(timestamp)/610)*.7;
+      const tiltFloat=reduced?0:Math.sin(Number(timestamp)/360)*.75;
+      const x=maxX*sweep;
+      const y=-(maxY*climb)+floatY;
+      const rotation=-10-(10*climb)+tiltFloat;
 
       plane.style.transform=
-        'translate3d('+x.toFixed(2)+'vw,'+y.toFixed(2)+'px,0) rotate('+rotation.toFixed(2)+'deg)';
+        'translate3d('+x.toFixed(2)+'px,'+y.toFixed(2)+'px,0) rotate('+rotation.toFixed(2)+'deg)';
     }
 
     function resetPlaneFlight(){

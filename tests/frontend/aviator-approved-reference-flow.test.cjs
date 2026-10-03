@@ -7,6 +7,7 @@ const fs=require('node:fs');
 const html=fs.readFileSync('aviator.html','utf8');
 const css=fs.readFileSync('aviator.css','utf8');
 const js=fs.readFileSync('aviator.js','utf8');
+const ui=fs.readFileSync('js/aviator/ui.js','utf8');
 
 test('histórico recente de multiplicadores fica no topo do Aviator',()=>{
   const historyAt=html.indexOf('id="aviatorHistoryCard"');
@@ -35,4 +36,16 @@ test('auto-bet só dispara quando servidor informa OPEN e não disputa fila do v
 test('a única contagem numérica visível continua sendo 10 a 0',()=>{
   assert.match(html,/id="preflightCountdown"/);
   assert.match(html,/id="nextRoundCountdown" class="next-round-countdown hidden"/);
+});
+
+
+test('avião segue curva contínua, não recua e usa escala maior da referência',()=>{
+  assert.match(ui,/progress=Math\.max\(lastPlaneProgress,progress\)/);
+  assert.match(ui,/const sweep=1-Math\.pow\(1-progress,1\.28\)/);
+  assert.match(ui,/const climb=Math\.pow\(progress,\.86\)/);
+  assert.match(ui,/stageWidth\*\(mobile\?\.68:\.76\)/);
+  assert.match(ui,/stageHeight\*\(mobile\?\.50:\.56\)/);
+  assert.match(ui,/translate3d\('\+x\.toFixed\(2\)\+'px,/);
+  assert.match(css,/\.plane\{[^}]*font-size:76px[^}]*left:6%[^}]*bottom:10%/);
+  assert.match(css,/@media\(max-width:650px\)[\s\S]*?\.plane\{font-size:64px/);
 });

@@ -36,27 +36,28 @@ test('contagem 10 a 0 toca um único bip por segundo',()=>{
   assert.match(js,/sound\?\.syncCountdown\?\.\(round\?\.id,seconds\)/);
 });
 
-test('voo tem textura ambiente envolvente sem técnicas subliminares',()=>{
+test('voo tem subida contínua suave sem pulsação artificial',()=>{
   assert.match(sound,/function startFlight\(\)/);
   assert.match(sound,/function updateFlight\(multiplier\)/);
   assert.match(sound,/Math\.log\(m\)\/Math\.log\(500\)/);
   assert.match(sound,/osc\.type='triangle'/);
   assert.match(sound,/air\.type='sine'/);
   assert.match(sound,/shimmer\.type='sine'/);
-  assert.match(sound,/pulse\.frequency\.setValueAtTime\(\.18/);
-  assert.match(sound,/drift\.frequency\.setValueAtTime\(\.11/);
+  assert.match(sound,/osc\.frequency\.setValueAtTime\(108/);
+  assert.match(sound,/air\.frequency\.setValueAtTime\(216/);
+  assert.match(sound,/shimmer\.frequency\.setValueAtTime\(432/);
   assert.match(sound,/createStereoPanner/);
   assert.match(sound,/createBiquadFilter\(\)/);
   assert.match(sound,/createDynamicsCompressor\(\)/);
-  assert.match(sound,/setTargetAtTime\(base,now,\.20\)/);
-  assert.doesNotMatch(sound,/binaural|subliminal|hypnot/i);
+  assert.match(sound,/setTargetAtTime\(base,now,\.24\)/);
+  assert.doesNotMatch(sound,/pulse|drift|binaural|subliminal|hypnot/i);
   assert.match(js,/sound\?\.updateFlight\?\.\(m\)/);
 });
 
 test('crash para o som de voo e toca impacto forte sem aspereza',()=>{
   assert.match(sound,/function playCrash\(\)/);
   assert.match(sound,/stopFlight\(\);/);
-  assert.match(sound,/tone\(330,\.18,\.070,0,'triangle',150\)/);
+  assert.match(sound,/tone\(300,\.14,\.064,0,'triangle',165\)/);
   assert.doesNotMatch(sound,/sawtooth|square/);
   assert.match(sound,/status==='CRASHED'\|\|status==='SETTLED'/);
 });
