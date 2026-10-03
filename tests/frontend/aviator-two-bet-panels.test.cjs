@@ -9,11 +9,12 @@ const css=fs.readFileSync('aviator.css','utf8');
 const player=fs.readFileSync('aviator.js','utf8');
 const panel=fs.readFileSync('js/aviator/bet-panel.js','utf8');
 const financial=fs.readFileSync('js/aviator/financial.js','utf8');
+const nextBet=fs.readFileSync('js/aviator/next-bet.js','utf8');
 
 test('Aviator expõe dois painéis independentes de aposta',()=>{
   for(const id of [
-    'aviatorBetForm','aviatorAmount','aviatorAutoCashout','aviatorAutoBet','betBtn','cashoutBtn',
-    'aviatorBetForm2','aviatorAmount2','aviatorAutoCashout2','aviatorAutoBet2','betBtn2','cashoutBtn2'
+    'aviatorBetForm','aviatorAmount','aviatorAutoCashout','aviatorAutoCashoutEnabled','aviatorAutoBet','betBtn','cashoutBtn',
+    'aviatorBetForm2','aviatorAmount2','aviatorAutoCashout2','aviatorAutoCashoutEnabled2','aviatorAutoBet2','betBtn2','cashoutBtn2'
   ]) assert.match(html,new RegExp('id="'+id+'"'));
 });
 
@@ -25,7 +26,17 @@ test('desktop usa dois cartões e mobile empilha os painéis',()=>{
 test('mobile distribui espaço sem esmagar cash-out automático nem desperdiçar no valor',()=>{
   assert.match(css,/grid-template-columns:minmax\(0,1fr\) minmax\(0,\.8fr\) minmax\(126px,1\.2fr\)/);
   assert.match(css,/\.stake-stepper \.money-input input\{[\s\S]*?text-align:center/);
-  assert.match(css,/field:nth-of-type\(2\) \.money-input input\{[\s\S]*?text-align:center/);
+  assert.match(css,/\.auto-cashout-field \.money-input input\{[\s\S]*?text-align:center/);
+});
+
+test('multiplicador só ativa saída automática quando a caixa está marcada',()=>{
+  assert.match(player,/const autoEnabled=Boolean\(\$\('#aviatorAutoCashoutEnabled'\)\?\.checked\)/);
+  assert.match(player,/const auto=autoEnabled\?Number\(autoRaw\):null/);
+  assert.match(panel,/const autoEnabled=Boolean\(\$\('#aviatorAutoCashoutEnabled'\+suffix\)\?\.checked\)/);
+  assert.match(panel,/const auto=autoEnabled\?Number\(autoRaw\):null/);
+  assert.match(nextBet,/const enabled=Boolean\(\$\('#aviatorAutoCashoutEnabled'\+suffix\)\?\.checked\)/);
+  assert.match(nextBet,/const auto=enabled\?Number\(raw\):null/);
+  assert.match(nextBet,/autoEnabled\.checked=queued\.auto_cashout!==null/);
 });
 
 test('cada painel usa slot financeiro próprio',()=>{
