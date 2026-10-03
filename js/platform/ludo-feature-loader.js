@@ -5,7 +5,8 @@ support:{css:['./support-ui.css?v=20260922-12fix'],js:['./support-ui.js?v=202609
 recovery:{css:['./recovery-ui.css?v=20260922-13'],js:['./recovery-ui.js?v=20260928-2']},
 notifications:{js:['./js/notifications/client.js?v=20260928-22']},
 sessions:{js:['./js/auth/player-sessions.js?v=20260928-1']},
-social:{js:['./social.js?v=20261003-5']}
+social:{js:['./social.js?v=20261003-5']},
+policy:{js:['./js/ludo/policy.js?v=20261003-3']}
 });
 const state=new Map(),queue=[];
 let facade=null,replaying=false;
@@ -118,6 +119,7 @@ idle('social',1200,hasToken);
 }
 function init(){
 notifications();support();recovery();account();
+idle('policy',350);
 if(hasToken())authenticated();
 window.addEventListener('jl-player-session-changed',event=>{
 if(event.detail?.authenticated)authenticated();
