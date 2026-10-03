@@ -34,13 +34,15 @@
       if(!Number.isFinite(amount)||amount<0.5||amount>500){
         throw new Error('Informe um valor entre 0,50 e 500.');
       }
+      const enabled=Boolean($('#aviatorAutoCashoutEnabled'+suffix)?.checked);
       const raw=String($('#aviatorAutoCashout'+suffix)?.value||'').trim();
-      const auto=raw===''?null:Number(raw);
-      if(auto!==null&&(
+      const auto=enabled?Number(raw):null;
+      if(enabled&&(
+        raw===''||
         !Number.isFinite(auto)||auto<1.01||
         Math.abs(auto*100-Math.round(auto*100))>1e-8
       )){
-        throw new Error('Cash-out automático deve ser 1,01x ou maior, com até 2 casas decimais.');
+        throw new Error('Marque a saída automática e informe um multiplicador de 1,01x ou maior, com até 2 casas decimais.');
       }
       return {amount,auto_cashout:auto};
     }
@@ -94,8 +96,10 @@
 
         const amount=$('#aviatorAmount'+suffix);
         const auto=$('#aviatorAutoCashout'+suffix);
+        const autoEnabled=$('#aviatorAutoCashoutEnabled'+suffix);
         if(amount)amount.value=String(queued.amount);
         if(auto)auto.value=queued.auto_cashout===null?'':String(queued.auto_cashout);
+        if(autoEnabled)autoEnabled.checked=queued.auto_cashout!==null;
 
         submittingRoundId=roundId;
         if(typeof form?.requestSubmit==='function'){
