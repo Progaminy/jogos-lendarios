@@ -61,7 +61,8 @@
       '.jl-social-tag.game{color:#ffd776;background:rgba(244,189,66,.09)}',
       '.jl-social-actions{display:flex;gap:5px;flex:0 0 auto;align-items:center}.jl-social-actions .button{min-height:30px;padding:5px 8px;border-radius:8px;font-size:.62rem;white-space:nowrap}',
       '.jl-social-pill-button{appearance:none;cursor:pointer;color:inherit;font:inherit}.jl-social-pill-button[aria-expanded="true"]{border-color:rgba(66,221,141,.42);background:rgba(66,221,141,.10)}',
-      '.jl-social-online-panel{margin-top:12px}.jl-social-online-panel.hidden{display:none!important}',
+      '.jl-social-online-panel{margin:0 0 12px;position:relative;z-index:25}.jl-social-online-panel.hidden{display:none!important}',
+      '.jl-social-online-panel .jl-social-list{max-height:min(52vh,420px);overflow:auto}',
       '.jl-social-empty{padding:14px 8px;text-align:center;color:#91a4bd;border:1px dashed rgba(255,255,255,.10);border-radius:10px;font-size:.72rem}.jl-social-refresh{min-width:34px!important;width:34px;height:32px;padding:0!important;font-size:1rem!important}',
       '.online-metric.jl-social-link{cursor:pointer}.online-metric.jl-social-link:focus{outline:2px solid rgba(244,189,66,.55);outline-offset:3px}',
       '@media(max-width:760px){.jl-social-grid{grid-template-columns:1fr;gap:8px}.jl-social-card{padding:10px}.jl-social-head{align-items:center;flex-direction:row}.jl-social-counts{justify-content:flex-start}.jl-social-list{max-height:none;overflow:visible}.jl-social-player{align-items:center}.jl-social-actions{align-self:center}.jl-social-search{margin-top:8px}.jl-social-zone:not(.is-collapsed) .jl-collapse-body{padding-bottom:4px}}',
@@ -126,6 +127,11 @@
     ui.onlineList = section.querySelector('#socialOnlineList');
     ui.refresh = section.querySelector('#refreshSocial');
 
+    const statusStrip = document.getElementById('ludoStatusStrip');
+    if (statusStrip && ui.onlinePanel) {
+      statusStrip.insertAdjacentElement('afterend', ui.onlinePanel);
+    }
+
     ui.searchForm.addEventListener('submit', (event) => {
       event.preventDefault();
       state.searchQuery = ui.search.value.trim();
@@ -138,13 +144,10 @@
     ui.online.addEventListener('click', () => {
       state.onlineOpen = !state.onlineOpen;
       renderFollowing();
-      if (state.onlineOpen) {
-        loadOnlinePlayers(false);
-        ui.onlinePanel?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      }
+      if (state.onlineOpen) loadOnlinePlayers(false);
     });
 
-    section.addEventListener('click', (event) => {
+    const handleSocialAction = (event) => {
       const inviteButton = event.target.closest('[data-social-invite]');
       if (inviteButton) {
         invitePlayer(inviteButton.dataset.socialInvite, inviteButton);
@@ -156,38 +159,21 @@
       const follow = button.dataset.socialFollow === '1';
       if (!follow && !window.confirm('Tem certeza que deseja deixar de seguir este jogador?')) return;
       changeFollow(target, follow, button);
-    });
+    };
+    section.addEventListener('click', handleSocialAction);
+    ui.onlinePanel?.addEventListener('click', handleSocialAction);
 
     const metric = document.querySelector('.online-metric');
     if (metric) {
       metric.classList.add('jl-social-link');
-      metric.setAttribute('role', 'button');
-      metric.setAttribute('tabindex', '0');
       metric.setAttribute('aria-label', 'Ver jogadores online');
-      const open = () => {
-        section.classList.remove('hidden');
-        state.onlineOpen = true;
-        const body = section.querySelector('.jl-collapse-body');
-        const toggle = section.querySelector('.jl-collapse-toggle');
-        if (body) body.hidden = false;
-        section.classList.remove('is-collapsed');
-        if (toggle) {
-          toggle.setAttribute('aria-expanded', 'true');
-          toggle.setAttribute('aria-label', 'Recolher');
-          toggle.textContent = toggle.classList.contains('jl-symbol-toggle') ? '⌃' : 'Recolher';
-        }
+      metric.setAttribute('aria-expanded', 'false');
+      const toggleOnlineDirectory = () => {
+        state.onlineOpen = !state.onlineOpen;
         renderFollowing();
-        loadSocial(true);
-        loadOnlinePlayers(false);
-        setTimeout(() => (ui.onlinePanel || section).scrollIntoView({ behavior: 'smooth', block: 'start' }), 0);
+        if (state.onlineOpen) loadOnlinePlayers(false);
       };
-      metric.addEventListener('click', open);
-      metric.addEventListener('keydown', (event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault();
-          open();
-        }
-      });
+      metric.addEventListener('click', toggleOnlineDirectory);
     }
 
     return true;
@@ -223,12 +209,13 @@
     ui.followingCount.textContent = String(state.counts.following) + ' seguindo';
     ui.followersCount.textContent = String(state.counts.followers) + ' seguidores';
     ui.online.setAttribute('aria-expanded', state.onlineOpen ? 'true' : 'false');
+    document.querySelector('.online-metric')?.setAttribute('aria-expanded', state.onlineOpen ? 'true' : 'false');
     ui.onlinePanel?.classList.toggle('hidden', !state.onlineOpen);
 
     if (ui.onlineList) {
       ui.onlineList.innerHTML = state.onlinePlayers.length
         ? state.onlinePlayers.map((player) => playerHtml(player, 'online')).join('')
-        : '<div class="jl-social-empty">' + (state.onlineBusy ? 'Carregando jogadores online…' : 'Nenhum outro jogador está online agora.') + '</div>';
+        : '<div class="jl-social-empty">' + (state.onlineBusy ? 'Carregando jogadores online…' : 'Nenhum jogador está online agora.') + '</div>';
     }
 
     ui.followingList.innerHTML = state.following.length
@@ -240,6 +227,10 @@
     if (!createUi()) return;
     const t = token();
     ui.root.classList.toggle('hidden', !t);
+    if (!t) {
+      state.onlineOpen = false;
+      ui.onlinePanel?.classList.add('hidden');
+    }
     if (!t || state.busy || document.visibilityState !== 'visible') return;
 
     state.busy = true;
@@ -248,11 +239,11 @@
       state.following = Array.isArray(data && data.following) ? data.following : [];
       state.counts.following = Math.max(0, Number(data && data.following_count) || 0);
       state.counts.followers = Math.max(0, Number(data && data.followers_count) || 0);
-      if (!state.onlineLoaded) {
-        const topCount = Number(document.getElementById('onlinePlayerCount')?.textContent);
-        state.counts.online = Number.isFinite(topCount)
-          ? Math.max(0, topCount)
-          : Math.max(0, Number(data && data.online_count) || 0);
+      const topCount = Number(document.getElementById('onlinePlayerCount')?.textContent);
+      if (Number.isFinite(topCount)) {
+        state.counts.online = Math.max(0, topCount);
+      } else if (!state.onlineLoaded) {
+        state.counts.online = Math.max(0, Number(data && data.online_count) || 0);
       }
       renderFollowing();
     } catch (error) {
@@ -370,6 +361,10 @@
     const refreshVisibility = () => {
       const logged = Boolean(token());
       ui.root.classList.toggle('hidden', !logged);
+      if (!logged) {
+        state.onlineOpen = false;
+        ui.onlinePanel?.classList.add('hidden');
+      }
       if (logged && document.visibilityState === 'visible') loadSocial(true);
     };
 
