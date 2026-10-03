@@ -19,7 +19,7 @@
     .board-hub-head h1{margin:.2rem 0 0}
     .board-game-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
     .board-game-card{display:grid;grid-template-rows:auto auto 1fr auto;gap:12px;min-height:250px;padding:22px;contain:layout paint}
-    .board-game-preview{width:100%;display:grid;place-items:center;padding:10px;border-radius:18px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.07);overflow:hidden}
+    .board-game-preview{width:100%;display:grid;place-items:center;padding:10px;border-radius:18px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.07);overflow:hidden;text-decoration:none;cursor:pointer}
     .board-game-preview svg{display:block;width:min(100%,170px);height:auto;filter:drop-shadow(0 8px 14px rgba(0,0,0,.18))}
     .board-game-card h2{margin:0}
     .board-game-card p{margin:0;color:#97a7ba;line-height:1.5}
@@ -56,8 +56,8 @@
 
     <section class="board-game-grid" aria-label="Jogos de tabuleiro">
       <article class="card board-game-card">
-        <div class="board-game-preview" aria-hidden="true">
-          <svg viewBox="0 0 220 220" role="img" aria-label="Mini tabuleiro de Ludo">
+        <a class="board-game-preview" href="./ludo.html" aria-label="Entrar no Ludo Lendário">
+          <svg viewBox="0 0 220 220" aria-hidden="true">
             <rect x="2" y="2" width="216" height="216" rx="12" fill="#f7f7f2"/>
             <rect x="8" y="8" width="76" height="76" rx="8" fill="#e53935"/>
             <rect x="136" y="8" width="76" height="76" rx="8" fill="#43a047"/>
@@ -95,15 +95,15 @@
               <circle cx="163" cy="185" r="8" fill="#1e88e5"/><circle cx="185" cy="185" r="8" fill="#1e88e5"/>
             </g>
           </svg>
-        </div>
+        </a>
         <h2>Ludo Lendário</h2>
         
         <a class="button primary" href="./ludo.html">Entrar</a>
       </article>
 
       <article class="card board-game-card">
-        <div class="board-game-preview" aria-hidden="true">
-          <svg viewBox="0 0 240 220" role="img" aria-label="Mini tabuleiro de Dama">
+        <a class="board-game-preview" href="#dama-brevemente" aria-label="Dama Lendária — brevemente">
+          <svg viewBox="0 0 240 220" aria-hidden="true">
             <defs>
               <pattern id="damas" width="50" height="50" patternUnits="userSpaceOnUse">
                 <rect width="50" height="50" fill="#efe8d8"/>
@@ -141,7 +141,7 @@
               <circle cx="145" cy="85" r="5" fill="none" stroke="#c8a85e" stroke-width="2"/>
             </g>
           </svg>
-        </div>
+        </a>
         <h2>Dama Lendária</h2>
         <p>Brevemente.</p>
         <a class="button secondary" href="#dama-brevemente">Entrar</a>
