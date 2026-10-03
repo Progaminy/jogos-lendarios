@@ -848,3 +848,19 @@
 .quick-turn-time .player-count-picker{grid-template-columns:repeat(5,minmax(0,1fr))}
 .quick-turn-time .player-count-picker button{grid-template-columns:1fr auto;padding-inline:8px}
 .quick-turn-time .player-count-picker button span{font-size:.68rem;color:#91a2b7}
+
+
+.rematch-controls-full{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+  margin-top:12px;
+  text-align:left;
+}
+.rematch-controls-full .button{align-self:end;min-height:44px}
+@media(max-width:700px){
+  .rematch-controls-full{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:460px){
+  .rematch-controls-full{grid-template-columns:1fr}
+}
