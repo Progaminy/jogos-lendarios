@@ -32,7 +32,11 @@ test('avião avança continuamente e nunca reinicia em loop CSS',()=>{
   assert.match(ui,/progress=Math\.max\(lastPlaneProgress,progress\)/);
   assert.match(ui,/lastPlaneProgress=progress/);
   assert.match(ui,/Math\.log\(safe\)\/Math\.log\(500\)/);
-  assert.match(ui,/Math\.sin\(Number\(timestamp\)\/210\)\*2/);
+  assert.match(ui,/const sweep=1-Math\.pow\(1-progress,1\.28\)/);
+  assert.match(ui,/const climb=Math\.pow\(progress,\.86\)/);
+  assert.match(ui,/Math\.sin\(Number\(timestamp\)\/260\)\*1\.4/);
+  assert.match(ui,/stageWidth\*\(mobile\?\.68:\.76\)/);
+  assert.match(ui,/translate3d\('\+x\.toFixed\(2\)\+'px,/);
   assert.match(js,/ui\.renderPlaneFlight\?\.\(m,timestamp\)/);
   assert.doesNotMatch(css,/animation:aviatorFlight[^;]*infinite/);
   assert.doesNotMatch(css,/@keyframes aviatorFlight/);

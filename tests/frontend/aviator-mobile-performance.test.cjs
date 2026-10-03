@@ -36,7 +36,7 @@ test('HUD não é reescrito a cada frame',()=>{
 test('mobile remove efeitos de pintura caros',()=>{
   assert.match(css,/@media\(max-width:650px\)/);
   assert.match(css,/\.flight-grid\{display:none\}/);
-  assert.match(css,/\.plane\{font-size:50px;filter:none\}/);
+  assert.match(css,/\.plane\{font-size:64px;filter:none\}/);
   assert.match(css,/\.flight-area::after\{animation:none!important;opacity:\.28\}/);
   assert.match(css,/contain:layout paint style/);
   assert.match(css,/#cashoutBtn:not\(:disabled\)\{box-shadow:0 0 0 1px/);
