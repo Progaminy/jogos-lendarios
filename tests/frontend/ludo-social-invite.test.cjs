@@ -11,7 +11,9 @@ const loader=fs.readFileSync(path.join(__dirname,'../../js/platform/ludo-feature
 test('contador online abre lista de jogadores online',()=>{
   assert.match(social,/id="socialOnlineCount"[^>]*aria-controls="socialOnlinePanel"/);
   assert.match(social,/id="socialOnlineList"/);
-  assert.match(social,/state\.following\.filter\(\(player\) => Boolean\(player\.online\)\)/);
+  assert.match(social,/jl_social_online_players/);
+  assert.match(social,/state\.onlinePlayers/);
+  assert.match(social,/state\.onlineOpen = true/);
   assert.match(social,/playerHtml\(player, 'online'\)/);
 });
 
@@ -28,5 +30,5 @@ test('deixar de seguir exige confirmação',()=>{
 });
 
 test('loader usa versão nova do módulo social',()=>{
-  assert.match(loader,/social\.js\?v=20261003-1/);
+  assert.match(loader,/social\.js\?v=20261003-2/);
 });
