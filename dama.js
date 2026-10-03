@@ -330,13 +330,13 @@
     const regLimit = Number(draw.regulation_limit || 0);
     const rg1 = Number(draw.regulation_light || 0);
     const rg2 = Number(draw.regulation_dark || 0);
-    if (q1 > 0 || q2 > 0) {
-      els.damaDrawCounter.textContent =
-        `20 lances: ${firstName(p1)} ${Math.max(0, 20 - q1)} · ${firstName(p2)} ${Math.max(0, 20 - q2)} restantes`;
-      els.damaDrawCounter.classList.remove('hidden');
-    } else if (regLimit > 0) {
+    if (regLimit > 0) {
       els.damaDrawCounter.textContent =
         `Final regulamentar: ${firstName(p1)} ${Math.max(0, regLimit - rg1)} · ${firstName(p2)} ${Math.max(0, regLimit - rg2)} restantes`;
+      els.damaDrawCounter.classList.remove('hidden');
+    } else if (q1 > 0 || q2 > 0) {
+      els.damaDrawCounter.textContent =
+        `20 lances: ${firstName(p1)} ${Math.max(0, 20 - q1)} · ${firstName(p2)} ${Math.max(0, 20 - q2)} restantes`;
       els.damaDrawCounter.classList.remove('hidden');
     } else {
       els.damaDrawCounter.classList.add('hidden');
