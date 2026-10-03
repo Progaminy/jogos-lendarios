@@ -260,8 +260,10 @@
       const value=Boolean(locked);
       const amount=$('#aviatorAmount');
       const auto=$('#aviatorAutoCashout');
+      const autoEnabled=$('#aviatorAutoCashoutEnabled');
       if(amount)amount.disabled=value;
       if(auto)auto.disabled=value;
+      if(autoEnabled)autoEnabled.disabled=value;
     }
 
     function renderBetAction({
