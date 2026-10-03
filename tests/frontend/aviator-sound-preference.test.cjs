@@ -36,32 +36,28 @@ test('contagem 10 a 0 toca um único bip por segundo',()=>{
   assert.match(js,/sound\?\.syncCountdown\?\.\(round\?\.id,seconds\)/);
 });
 
-test('voo usa whoosh eletrônico crescente e não som de motor convencional',()=>{
+test('voo usa arpejo musical tipo piano, sem motor nem ruído de ar',()=>{
+  assert.match(sound,/function playPianoNote\(freq,volume=\.040,duration=\.72\)/);
   assert.match(sound,/function startFlight\(\)/);
   assert.match(sound,/function updateFlight\(multiplier\)/);
   assert.match(sound,/Math\.log\(m\)\/Math\.log\(500\)/);
-  assert.match(sound,/const whoosh=ctx\.createBufferSource\(\)/);
-  assert.match(sound,/noiseBuffer=ctx\.createBuffer/);
-  assert.match(sound,/whooshFilter\.type='bandpass'/);
-  assert.match(sound,/rise\.type='sine'/);
-  assert.match(sound,/edge\.type='triangle'/);
-  assert.match(sound,/rise\.frequency\.setValueAtTime\(185/);
-  assert.match(sound,/edge\.frequency\.setValueAtTime\(370/);
-  assert.match(sound,/const tension=Math\.pow\(progress,\.62\)/);
-  assert.match(sound,/whooshGain\.gain\.setTargetAtTime/);
-  assert.match(sound,/whooshFilter\.frequency\.setTargetAtTime/);
-  assert.match(sound,/createDynamicsCompressor\(\)/);
-  assert.doesNotMatch(sound,/binaural|subliminal|hypnot/i);
+  assert.match(sound,/const scale=\[261\.63,293\.66,329\.63,392\.00,440\.00,523\.25,587\.33,659\.25\]/);
+  assert.match(sound,/const pattern=\[0,2,4,2,5,4,6,4\]/);
+  assert.match(sound,/osc\.type='triangle'/);
+  assert.match(sound,/harmonic\.type='sine'/);
+  assert.match(sound,/filter\.frequency\.exponentialRampToValueAtTime\(1500/);
+  assert.match(sound,/gain\.gain\.exponentialRampToValueAtTime\(volume,start\+\.008\)/);
+  assert.doesNotMatch(sound,/whoosh|windFilter|motor|noiseBuffer|binaural|subliminal|hypnot/i);
   assert.match(js,/sound\?\.updateFlight\?\.\(m\)/);
 });
 
-test('crash para o som de voo e toca impacto forte sem aspereza',()=>{
+test('crash corta o arpejo e faz queda musical curta',()=>{
   assert.match(sound,/function playCrash\(\)/);
   assert.match(sound,/stopFlight\(\);/);
-  assert.match(sound,/linearRampToValueAtTime\(\.0001,now\+\.015\)/);
-  assert.match(sound,/const duration=\.14/);
-  assert.match(sound,/tone\(145,\.16,\.060,0,'sine',58\)/);
-  assert.doesNotMatch(sound,/sawtooth|square/);
+  assert.match(sound,/tone\(392\.00,\.18,\.044,0,'triangle',261\.63\)/);
+  assert.match(sound,/tone\(261\.63,\.34,\.040,\.035,'sine',130\.81\)/);
+  assert.match(sound,/tone\(196\.00,\.26,\.028,\.055,'triangle',98\.00\)/);
+  assert.doesNotMatch(sound,/createBufferSource\(\).*playCrash|explosion|impact/i);
   assert.match(sound,/status==='CRASHED'\|\|status==='SETTLED'/);
 });
 
