@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0a0d14">
   <title>Aviator Lendário — Jogos Lendários</title>
   <link rel="stylesheet" href="./styles.css?v=20260929">
-  <link rel="stylesheet" href="./aviator.css?v=20261003-15">
+  <link rel="stylesheet" href="./aviator.css?v=20261003-16">
 </head>
 <body class="aviator-booting">
   <header class="topbar">
@@ -99,13 +99,19 @@
               <button id="aviatorAmountPlus" class="stake-step" type="button" aria-label="Aumentar valor da aposta">+</button>
             </div>
           </label>
-          <label class="field">
+          <div class="field auto-cashout-field">
             <span class="sr-only">Cash-out automático</span>
-            <div class="money-input">
-              <span>×</span>
-              <input aria-label="Cash-out automático da aposta 1" id="aviatorAutoCashout" type="number" min="1.01" step="0.01" placeholder="1.50" inputmode="decimal">
+            <div class="auto-cashout-config">
+              <label class="auto-cashout-enable" for="aviatorAutoCashoutEnabled" title="Ativar saída automática">
+                <input id="aviatorAutoCashoutEnabled" type="checkbox" aria-label="Ativar saída automática da aposta 1">
+                <span class="sr-only">Ativar saída automática da aposta 1</span>
+              </label>
+              <label class="money-input" for="aviatorAutoCashout">
+                <span>×</span>
+                <input aria-label="Multiplicador da saída automática da aposta 1" id="aviatorAutoCashout" type="number" min="1.01" step="0.01" placeholder="1.50" inputmode="decimal">
+              </label>
             </div>
-          </label>
+          </div>
           <label class="aviator-auto-bet-toggle">
             <input id="aviatorAutoBet" type="checkbox">
             <span>Auto apostar</span>
@@ -156,13 +162,19 @@
               <button id="aviatorAmountPlus2" class="stake-step" type="button" aria-label="Aumentar valor da aposta 2">+</button>
             </div>
           </label>
-          <label class="field">
+          <div class="field auto-cashout-field">
             <span class="sr-only">Cash-out automático</span>
-            <div class="money-input">
-              <span>×</span>
-              <input aria-label="Cash-out automático da aposta 2" id="aviatorAutoCashout2" type="number" min="1.01" step="0.01" placeholder="1.50" inputmode="decimal">
+            <div class="auto-cashout-config">
+              <label class="auto-cashout-enable" for="aviatorAutoCashoutEnabled2" title="Ativar saída automática">
+                <input id="aviatorAutoCashoutEnabled2" type="checkbox" aria-label="Ativar saída automática da aposta 2">
+                <span class="sr-only">Ativar saída automática da aposta 2</span>
+              </label>
+              <label class="money-input" for="aviatorAutoCashout2">
+                <span>×</span>
+                <input aria-label="Multiplicador da saída automática da aposta 2" id="aviatorAutoCashout2" type="number" min="1.01" step="0.01" placeholder="1.50" inputmode="decimal">
+              </label>
             </div>
-          </label>
+          </div>
           <label class="aviator-auto-bet-toggle">
             <input id="aviatorAutoBet2" type="checkbox">
             <span>Auto apostar</span>
@@ -221,11 +233,11 @@
   <script src="./js/aviator/balance.js?v=20261002-3"></script>
   <script src="./js/aviator/amount-stepper.js?v=20261002-2"></script>
   <script src="./js/aviator/next-bet.js?v=20261002-3"></script>
-  <script src="./js/aviator/bet-panel.js?v=20261003-3"></script>
+  <script src="./js/aviator/bet-panel.js?v=20261003-4"></script>
   <script src="./js/aviator/history.js?v=20261001-1"></script>
   <script src="./js/aviator/personal-history.js?v=20261002-1"></script>
   <script src="./js/aviator/sound.js?v=20261003-11"></script>
   <script src="./js/realtime/aviator.js?v=20260930-1"></script>
-  <script src="./aviator.js?v=20261003-5" defer></script>
+  <script src="./aviator.js?v=20261003-6" defer></script>
 </body>
 </html>
