@@ -30,6 +30,7 @@
     let betting=false;
     let cashingOut=false;
     let autoRecoveryRoundId=null;
+    let autoRecoveryLastCheckAt=0;
     let autoBetEnabled=sessionStorage.getItem('jl_aviator_auto_bet_v1_slot_'+slot)==='1';
     let autoBetAttemptedRoundId=null;
     let autoBetSubmittingRoundId=null;
@@ -553,6 +554,7 @@
       stake=0;
       autoCashout=null;
       autoRecoveryRoundId=null;
+      autoRecoveryLastCheckAt=0;
       autoBetAttemptedRoundId=null;
       nextBet?.resetRound?.();
       resetCashout();
@@ -589,11 +591,15 @@
       if(
         betId&&
         autoCashout&&
-        Number(round()?.id)!==Number(autoRecoveryRoundId)&&
         Number(value)>=autoCashout
       ){
-        autoRecoveryRoundId=Number(round().id);
-        void refreshStatus();
+        const now=Date.now();
+        const sameRound=Number(round()?.id)===Number(autoRecoveryRoundId);
+        if(!sameRound||now-autoRecoveryLastCheckAt>=500){
+          autoRecoveryRoundId=Number(round().id);
+          autoRecoveryLastCheckAt=now;
+          void refreshStatus();
+        }
       }
     }
 
