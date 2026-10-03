@@ -36,28 +36,29 @@ test('contagem 10 a 0 toca um único bip por segundo',()=>{
   assert.match(js,/sound\?\.syncCountdown\?\.\(round\?\.id,seconds\)/);
 });
 
-test('voo tem subida contínua suave sem pulsação artificial',()=>{
+test('voo usa motor e fluxo de ar audivelmente diferentes do tom antigo',()=>{
   assert.match(sound,/function startFlight\(\)/);
   assert.match(sound,/function updateFlight\(multiplier\)/);
   assert.match(sound,/Math\.log\(m\)\/Math\.log\(500\)/);
-  assert.match(sound,/osc\.type='triangle'/);
-  assert.match(sound,/air\.type='sine'/);
-  assert.match(sound,/shimmer\.type='sine'/);
-  assert.match(sound,/osc\.frequency\.setValueAtTime\(108/);
-  assert.match(sound,/air\.frequency\.setValueAtTime\(216/);
-  assert.match(sound,/shimmer\.frequency\.setValueAtTime\(432/);
-  assert.match(sound,/createStereoPanner/);
-  assert.match(sound,/createBiquadFilter\(\)/);
+  assert.match(sound,/const wind=ctx\.createBufferSource\(\)/);
+  assert.match(sound,/noiseBuffer=ctx\.createBuffer/);
+  assert.match(sound,/windFilter\.type='bandpass'/);
+  assert.match(sound,/motor\.type='sine'/);
+  assert.match(sound,/harmonic\.type='triangle'/);
+  assert.match(sound,/motor\.frequency\.setValueAtTime\(74/);
+  assert.match(sound,/harmonic\.frequency\.setValueAtTime\(148/);
+  assert.match(sound,/windGain\.gain\.setTargetAtTime/);
+  assert.match(sound,/windFilter\.frequency\.setTargetAtTime/);
   assert.match(sound,/createDynamicsCompressor\(\)/);
-  assert.match(sound,/setTargetAtTime\(base,now,\.24\)/);
-  assert.doesNotMatch(sound,/pulse|drift|binaural|subliminal|hypnot/i);
+  assert.doesNotMatch(sound,/binaural|subliminal|hypnot/i);
   assert.match(js,/sound\?\.updateFlight\?\.\(m\)/);
 });
 
 test('crash para o som de voo e toca impacto forte sem aspereza',()=>{
   assert.match(sound,/function playCrash\(\)/);
   assert.match(sound,/stopFlight\(\);/);
-  assert.match(sound,/tone\(300,\.14,\.064,0,'triangle',165\)/);
+  assert.match(sound,/const duration=\.18/);
+  assert.match(sound,/tone\(190,\.20,\.050,0,'sine',78\)/);
   assert.doesNotMatch(sound,/sawtooth|square/);
   assert.match(sound,/status==='CRASHED'\|\|status==='SETTLED'/);
 });
