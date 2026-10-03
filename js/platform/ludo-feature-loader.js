@@ -5,7 +5,7 @@ support:{css:['./support-ui.css?v=20260922-12fix'],js:['./support-ui.js?v=202609
 recovery:{css:['./recovery-ui.css?v=20260922-13'],js:['./recovery-ui.js?v=20260928-2']},
 notifications:{js:['./js/notifications/client.js?v=20260928-22']},
 sessions:{js:['./js/auth/player-sessions.js?v=20260928-1']},
-social:{js:['./social.js?v=20260929-2']}
+social:{js:['./social.js?v=20261003-1']}
 });
 const state=new Map(),queue=[];
 let facade=null,replaying=false;
