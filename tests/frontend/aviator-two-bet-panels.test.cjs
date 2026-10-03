@@ -36,6 +36,14 @@ test('mobile mantém multiplicador limpo e confirmação em linha própria',()=>
   assert.doesNotMatch(html,/class="auto-cashout-config"/);
 });
 
+test('campos de saída automática começam em 1.5x mas continuam ajustáveis',()=>{
+  assert.match(html,/id="aviatorAutoCashout"[^>]*value="1\.5"/);
+  assert.match(html,/id="aviatorAutoCashout2"[^>]*value="1\.5"/);
+  assert.match(html,/id="aviatorAutoCashout"[^>]*step="0\.01"/);
+  assert.match(html,/id="aviatorAutoCashout2"[^>]*step="0\.01"/);
+  assert.match(nextBet,/if\(auto&&queued\.auto_cashout!==null\)auto\.value=String\(queued\.auto_cashout\)/);
+});
+
 test('multiplicador só ativa saída automática quando a caixa está marcada',()=>{
   assert.match(player,/const autoEnabled=Boolean\(\$\('#aviatorAutoCashoutEnabled'\)\?\.checked\)/);
   assert.match(player,/const auto=autoEnabled\?Number\(autoRaw\):null/);
