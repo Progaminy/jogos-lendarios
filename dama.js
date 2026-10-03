@@ -4,6 +4,7 @@
   const $ = (id) => document.getElementById(id);
   const rpc = (name, args = {}) => window.JLApi.rpc(name, args);
   const ROOM_KEY = 'jl_dama_room_id';
+  const BOARD_INVITE_ID = new URL(location.href).searchParams.get('board_invite') || '';
 
   const els = Object.fromEntries([
     'damaToast','damaBalance','damaLoggedOut','damaLoginForm','damaLoginPhone','damaLoginPin',
@@ -764,17 +765,28 @@
     event.preventDefault();
     withBusy(async () => {
       try {
-        const room = await rpc('jl_dama_create_room', {
+        const args = {
           p_token: state.token,
           p_bet_amount: Number(els.damaBet.value),
           p_turn_seconds: Number(els.damaTime.value),
           p_host_color: els.damaColor.value,
-          p_first_player: els.damaFirst.value,
-          p_is_public: els.damaPublic.checked
-        });
+          p_first_player: els.damaFirst.value
+        };
+        const room = BOARD_INVITE_ID
+          ? await rpc('jl_dama_create_from_board_invite', {
+              ...args,
+              p_board_invite: BOARD_INVITE_ID
+            })
+          : await rpc('jl_dama_create_room', {
+              ...args,
+              p_is_public: els.damaPublic.checked
+            });
         setRoom(room);
         startRoomPolling();
-        showToast('Partida criada.', 'success');
+        if (BOARD_INVITE_ID && room?.room?.id) {
+          history.replaceState({}, '', './dama.html?room=' + encodeURIComponent(room.room.id));
+        }
+        showToast(BOARD_INVITE_ID ? 'Desafio de Dama criado.' : 'Partida criada.', 'success');
       } catch (error) { showToast(error.message, 'error'); }
     });
   });
