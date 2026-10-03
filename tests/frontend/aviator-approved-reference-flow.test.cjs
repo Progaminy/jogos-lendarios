@@ -39,13 +39,12 @@ test('a única contagem numérica visível continua sendo 10 a 0',()=>{
 });
 
 
-test('avião segue curva contínua, não recua e usa escala maior da referência',()=>{
+test('avião segue curva contínua, começa a mover logo após decolar e usa escala maior',()=>{
   assert.match(ui,/progress=Math\.max\(lastPlaneProgress,progress\)/);
-  assert.match(ui,/const sweep=1-Math\.pow\(1-progress,1\.28\)/);
-  assert.match(ui,/const climb=Math\.pow\(progress,\.86\)/);
-  assert.match(ui,/stageWidth\*\(mobile\?\.68:\.76\)/);
-  assert.match(ui,/stageHeight\*\(mobile\?\.50:\.56\)/);
-  assert.match(ui,/translate3d\('\+x\.toFixed\(2\)\+'px,/);
-  assert.match(css,/\.plane\{[^}]*font-size:76px[^}]*left:6%[^}]*bottom:10%/);
-  assert.match(css,/@media\(max-width:650px\)[\s\S]*?\.plane\{font-size:64px/);
+  assert.match(ui,/flightVisualStartedAt/);
+  assert.match(ui,/1-Math\.exp\(-elapsed\/5200\)/);
+  assert.match(ui,/const sweep=1-Math\.pow\(1-progress,1\.42\)/);
+  assert.match(ui,/const scale=1\+\(progress\*\.16\)/);
+  assert.match(css,/\.plane\{[^}]*font-size:92px[^}]*left:5%[^}]*bottom:8%/);
+  assert.match(css,/@media\(max-width:650px\)[\s\S]*?\.plane\{font-size:78px/);
 });
