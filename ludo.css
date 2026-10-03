@@ -30,6 +30,10 @@
   isolation:isolate;
   box-shadow:0 14px 34px rgba(0,0,0,.28);
 }
+.ludo-board.view-red{transform:rotate(180deg)}
+.ludo-board.view-green{transform:rotate(90deg)}
+.ludo-board.view-yellow{transform:rotate(0deg)}
+.ludo-board.view-blue{transform:rotate(-90deg)}
 .cell{min-width:0;min-height:0;aspect-ratio:1/1;border:1px solid rgba(20,31,43,.28);overflow:visible;background:#fff}
 .cell.base.red{background:#ef2737}.cell.base.green{background:#079a54}.cell.base.yellow{background:#ffd428}.cell.base.blue{background:#28a9e8}
 .cell.yard{background:#fff!important}
