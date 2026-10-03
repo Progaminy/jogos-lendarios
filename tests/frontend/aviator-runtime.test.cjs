@@ -306,14 +306,16 @@ test('Aviator mostra LOCKED separado do voo e não aceita nova aposta',()=>{
 });
 
 
-test('auto cash-out e opcional na UI mas executado pelo servidor',()=>{
+test('auto cash-out exige caixa marcada e continua executado pelo servidor',()=>{
   const html=fs.readFileSync(path.join(__dirname,'../../aviator.html'),'utf8');
   const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
   assert.match(html,/id="aviatorAutoCashout"[^>]*min="1\.01"[^>]*step="0\.01"/);
+  assert.match(html,/id="aviatorAutoCashoutEnabled"[^>]*type="checkbox"/);
   assert.doesNotMatch(html,/id="activeBetAuto"/);
   assert.match(financialSource,/p_auto_cashout_multiplier:autoCashoutMultiplier/);
   assert.match(js,/myAutoCashout=Number\(r\.auto_cashout_multiplier\)\|\|null/);
-  assert.match(js,/Cash-out automático/);
+  assert.match(js,/const autoEnabled=Boolean\(\$\('#aviatorAutoCashoutEnabled'\)\?\.checked\)/);
+  assert.match(js,/const auto=autoEnabled\?Number\(autoRaw\):null/);
   assert.match(js,/auto<1\.01/);
   assert.equal((financialSource.match(/jl_aviator_cashout'/g)||[]).length,1,
     'auto cash-out nao deve disparar jl_aviator_cashout pelo navegador');
