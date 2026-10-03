@@ -30,9 +30,12 @@
       .board-game-card{content-visibility:auto;contain-intrinsic-size:250px}
     }
     @media(max-width:640px){
-      .board-game-grid{grid-template-columns:1fr}
-      .board-game-card{min-height:220px}
-      .board-game-preview svg{width:min(100%,145px)}
+      .board-game-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+      .board-game-card{min-height:0;padding:12px}
+      .board-game-preview{padding:6px}
+      .board-game-preview svg{width:min(100%,115px)}
+      .board-game-card h2{font-size:.8rem}
+      .board-game-card p{font-size:.75rem}
     }
   </style>
 </head>
