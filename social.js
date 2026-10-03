@@ -195,12 +195,14 @@
 
   function playerHtml(player, context) {
     const online = Boolean(player.online);
+    const self = Boolean(player.is_self);
     const following = context === 'following' ? true : Boolean(player.following);
     const mutual = Boolean(player.mutual || player.follows_you);
     const tags = [
       '<span class="jl-social-tag ' + (online ? 'online' : '') + '">' + (online ? 'Online' : 'Offline') + '</span>',
+      self ? '<span class="jl-social-tag">Você</span>' : '',
       player.in_game ? '<span class="jl-social-tag game">Em jogo</span>' : '',
-      mutual ? '<span class="jl-social-tag">Segue você</span>' : ''
+      (!self && mutual) ? '<span class="jl-social-tag">Segue você</span>' : ''
     ].join('');
 
     return '<div class="jl-social-player">' +
@@ -209,8 +211,8 @@
         '<div class="jl-social-copy"><strong>' + escapeHtml(player.name) + '</strong><small>' + escapeHtml(player.code) + '</small><div class="jl-social-tags">' + tags + '</div></div>' +
       '</div>' +
       '<div class="jl-social-actions">' +
-        ((document.getElementById('room') || window.JLLudoSocial) ? '<button class="button primary tiny" type="button" data-social-invite="' + escapeHtml(player.player_id) + '">Convidar</button>' : '') +
-        '<button class="button ' + (following ? 'ghost' : 'secondary') + ' small" type="button" data-social-target="' + escapeHtml(player.player_id) + '" data-social-follow="' + (following ? '0' : '1') + '">' + (following ? 'Deixar' : 'Seguir') + '</button>' +
+        (self ? '' : (((document.getElementById('room') || window.JLLudoSocial) ? '<button class="button primary tiny" type="button" data-social-invite="' + escapeHtml(player.player_id) + '">Convidar</button>' : '') +
+        '<button class="button ' + (following ? 'ghost' : 'secondary') + ' small" type="button" data-social-target="' + escapeHtml(player.player_id) + '" data-social-follow="' + (following ? '0' : '1') + '">' + (following ? 'Deixar' : 'Seguir') + '</button>')) +
       '</div>' +
     '</div>';
   }
