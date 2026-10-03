@@ -244,7 +244,7 @@
     renderDice();
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
+  function initPolicy() {
     injectVariantStyles();
     injectVariantControls();
     enforceMinimums();
@@ -258,5 +258,8 @@
 
     const meta = document.getElementById('roomMeta');
     if (meta) new MutationObserver(renderRoomMeta).observe(meta, { childList: true, characterData: true, subtree: true });
-  });
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initPolicy, { once:true });
+  else initPolicy();
 })();
