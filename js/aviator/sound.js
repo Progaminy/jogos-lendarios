@@ -136,21 +136,64 @@
       flightVoice=null;
       if(!voice)return;
       const ctx=audioCtx;
-      try{
-        const now=ctx?.currentTime||0;
-        voice.riseGain.gain.cancelScheduledValues(now);
-        voice.riseGain.gain.setValueAtTime(Math.max(.0001,voice.riseGain.gain.value),now);
-        voice.riseGain.gain.linearRampToValueAtTime(.0001,now+.015);
-        voice.edgeGain.gain.cancelScheduledValues(now);
-        voice.edgeGain.gain.setValueAtTime(Math.max(.0001,voice.edgeGain.gain.value),now);
-        voice.edgeGain.gain.linearRampToValueAtTime(.0001,now+.015);
-        voice.whooshGain.gain.cancelScheduledValues(now);
-        voice.whooshGain.gain.setValueAtTime(Math.max(.0001,voice.whooshGain.gain.value),now);
-        voice.whooshGain.gain.linearRampToValueAtTime(.0001,now+.015);
-        voice.rise.stop(now+.025);
-        voice.edge.stop(now+.025);
-        voice.whoosh.stop(now+.025);
-      }catch(_){}
+      const now=ctx?.currentTime||0;
+      for(const note of voice.activeNotes){
+        try{
+          note.gain.gain.cancelScheduledValues(now);
+          note.gain.gain.setValueAtTime(Math.max(.0001,note.gain.gain.value),now);
+          note.gain.gain.linearRampToValueAtTime(.0001,now+.018);
+          note.osc.stop(now+.025);
+          note.harmonic.stop(now+.025);
+        }catch(_){}
+      }
+      voice.activeNotes.clear();
+    }
+
+    function playPianoNote(freq,volume=.040,duration=.72){
+      const ctx=ensureAudio();
+      const voice=flightVoice;
+      if(!ctx||ctx.state!=='running'||!voice)return;
+
+      const start=ctx.currentTime;
+      const osc=ctx.createOscillator();
+      const harmonic=ctx.createOscillator();
+      const gain=ctx.createGain();
+      const harmonicGain=ctx.createGain();
+      const filter=ctx.createBiquadFilter();
+
+      osc.type='triangle';
+      harmonic.type='sine';
+      osc.frequency.setValueAtTime(freq,start);
+      harmonic.frequency.setValueAtTime(freq*2,start);
+
+      filter.type='lowpass';
+      filter.frequency.setValueAtTime(3600,start);
+      filter.frequency.exponentialRampToValueAtTime(1500,start+duration);
+      filter.Q.setValueAtTime(.35,start);
+
+      gain.gain.setValueAtTime(.0001,start);
+      gain.gain.exponentialRampToValueAtTime(volume,start+.008);
+      gain.gain.exponentialRampToValueAtTime(Math.max(.00012,volume*.22),start+.16);
+      gain.gain.exponentialRampToValueAtTime(.0001,start+duration);
+
+      harmonicGain.gain.setValueAtTime(.0001,start);
+      harmonicGain.gain.exponentialRampToValueAtTime(volume*.20,start+.006);
+      harmonicGain.gain.exponentialRampToValueAtTime(.0001,start+Math.min(.34,duration));
+
+      osc.connect(filter);
+      filter.connect(gain);
+      harmonic.connect(harmonicGain);
+      gain.connect(masterGain||ctx.destination);
+      harmonicGain.connect(masterGain||ctx.destination);
+
+      const note={osc,harmonic,gain};
+      voice.activeNotes.add(note);
+      osc.onended=()=>voice.activeNotes.delete(note);
+
+      osc.start(start);
+      harmonic.start(start);
+      osc.stop(start+duration+.03);
+      harmonic.stop(start+Math.min(.38,duration)+.03);
     }
 
     function startFlight(){
@@ -158,65 +201,10 @@
       const ctx=ensureAudio();
       if(!ctx||ctx.state!=='running')return;
 
-      const rise=ctx.createOscillator();
-      const edge=ctx.createOscillator();
-      const whoosh=ctx.createBufferSource();
-      const riseGain=ctx.createGain();
-      const edgeGain=ctx.createGain();
-      const whooshGain=ctx.createGain();
-      const riseFilter=ctx.createBiquadFilter();
-      const edgeFilter=ctx.createBiquadFilter();
-      const whooshFilter=ctx.createBiquadFilter();
-
-      rise.type='sine';
-      edge.type='triangle';
-      rise.frequency.setValueAtTime(185,ctx.currentTime);
-      edge.frequency.setValueAtTime(370,ctx.currentTime);
-      edge.detune.setValueAtTime(6,ctx.currentTime);
-
-      const seconds=2;
-      const noiseBuffer=ctx.createBuffer(1,Math.max(1,Math.floor(ctx.sampleRate*seconds)),ctx.sampleRate);
-      const noise=noiseBuffer.getChannelData(0);
-      for(let i=0;i<noise.length;i++)noise[i]=(Math.random()*2-1);
-      whoosh.buffer=noiseBuffer;
-      whoosh.loop=true;
-
-      riseFilter.type='bandpass';
-      riseFilter.frequency.setValueAtTime(420,ctx.currentTime);
-      riseFilter.Q.setValueAtTime(.75,ctx.currentTime);
-      edgeFilter.type='lowpass';
-      edgeFilter.frequency.setValueAtTime(1450,ctx.currentTime);
-      edgeFilter.Q.setValueAtTime(.45,ctx.currentTime);
-      whooshFilter.type='bandpass';
-      whooshFilter.frequency.setValueAtTime(900,ctx.currentTime);
-      whooshFilter.Q.setValueAtTime(.62,ctx.currentTime);
-
-      riseGain.gain.setValueAtTime(.0001,ctx.currentTime);
-      riseGain.gain.exponentialRampToValueAtTime(.024,ctx.currentTime+.22);
-      edgeGain.gain.setValueAtTime(.0001,ctx.currentTime);
-      edgeGain.gain.exponentialRampToValueAtTime(.011,ctx.currentTime+.28);
-      whooshGain.gain.setValueAtTime(.0001,ctx.currentTime);
-      whooshGain.gain.exponentialRampToValueAtTime(.040,ctx.currentTime+.24);
-
-      rise.connect(riseFilter);
-      riseFilter.connect(riseGain);
-      edge.connect(edgeFilter);
-      edgeFilter.connect(edgeGain);
-      whoosh.connect(whooshFilter);
-      whooshFilter.connect(whooshGain);
-
-      riseGain.connect(masterGain||ctx.destination);
-      edgeGain.connect(masterGain||ctx.destination);
-      whooshGain.connect(masterGain||ctx.destination);
-
-      rise.start();
-      edge.start();
-      whoosh.start();
-
       flightVoice={
-        rise,edge,whoosh,
-        riseGain,edgeGain,whooshGain,
-        riseFilter,edgeFilter,whooshFilter
+        activeNotes:new Set(),
+        lastNoteAt:-Infinity,
+        noteIndex:0
       };
       updateFlight(getMultiplier?.());
     }
@@ -229,49 +217,30 @@
       const m=Math.max(1,Math.min(500,Number(multiplier)||1));
       const progress=Math.log(m)/Math.log(500);
       const now=audioCtx.currentTime;
-      const tension=Math.pow(progress,.62);
-      const riseHz=185+(tension*520);
-      const edgeHz=370+(tension*1040);
+      const interval=.52-(Math.min(1,progress)*.20);
+      if(now-flightVoice.lastNoteAt<interval)return;
 
-      try{
-        flightVoice.rise.frequency.setTargetAtTime(riseHz,now,.12);
-        flightVoice.edge.frequency.setTargetAtTime(edgeHz,now,.14);
-        flightVoice.riseGain.gain.setTargetAtTime(.024+(tension*.020),now,.16);
-        flightVoice.edgeGain.gain.setTargetAtTime(.011+(tension*.011),now,.18);
-        flightVoice.whooshGain.gain.setTargetAtTime(.040+(tension*.035),now,.14);
-        flightVoice.riseFilter.frequency.setTargetAtTime(420+(tension*950),now,.14);
-        flightVoice.edgeFilter.frequency.setTargetAtTime(1450+(tension*1750),now,.16);
-        flightVoice.whooshFilter.frequency.setTargetAtTime(900+(tension*2700),now,.12);
-      }catch(_){}
+      const scale=[261.63,293.66,329.63,392.00,440.00,523.25,587.33,659.25];
+      const lift=Math.min(1,progress);
+      const baseShift=Math.min(3,Math.floor(lift*4));
+      const pattern=[0,2,4,2,5,4,6,4];
+      const rawIndex=pattern[flightVoice.noteIndex%pattern.length]+baseShift;
+      const octave=Math.floor(rawIndex/scale.length);
+      const noteIndex=rawIndex%scale.length;
+      const freq=scale[noteIndex]*Math.pow(2,octave);
+      const volume=.032+(lift*.018);
+      const duration=.78-(lift*.18);
+
+      playPianoNote(freq,volume,duration);
+      flightVoice.noteIndex+=1;
+      flightVoice.lastNoteAt=now;
     }
 
     function playCrash(){
       stopFlight();
-      const ctx=ensureAudio();
-      if(ctx&&ctx.state==='running'){
-        const source=ctx.createBufferSource();
-        const duration=.14;
-        const buffer=ctx.createBuffer(1,Math.max(1,Math.floor(ctx.sampleRate*duration)),ctx.sampleRate);
-        const data=buffer.getChannelData(0);
-        for(let i=0;i<data.length;i++){
-          const decay=Math.pow(1-(i/data.length),2.4);
-          data[i]=(Math.random()*2-1)*decay;
-        }
-        const filter=ctx.createBiquadFilter();
-        const gain=ctx.createGain();
-        filter.type='lowpass';
-        filter.frequency.setValueAtTime(820,ctx.currentTime);
-        filter.Q.setValueAtTime(.5,ctx.currentTime);
-        gain.gain.setValueAtTime(.11,ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(.0001,ctx.currentTime+duration);
-        source.buffer=buffer;
-        source.connect(filter);
-        filter.connect(gain);
-        gain.connect(masterGain||ctx.destination);
-        source.start();
-      }
-      tone(145,.16,.060,0,'sine',58);
-      tone(520,.035,.018,.006,'triangle',220);
+      tone(392.00,.18,.044,0,'triangle',261.63);
+      tone(261.63,.34,.040,.035,'sine',130.81);
+      tone(196.00,.26,.028,.055,'triangle',98.00);
     }
 
     function setEnabled(next){
