@@ -62,7 +62,7 @@
     'joinCodeForm','joinCode','queueForm','queuePlayers','queueMode','queueBet','queueButton','queueStatus','notificationCenter','inviteList','directInviteCount','publicChallengeList','publicChallengeCount','refreshLobby',
     'room','roomCode','roomMeta','roomPot','roomPrize','copyRoomCode','leaveRoom','forfeitRoom','deadlineBar','deadlineLabel','deadlineClock','playersPanel',
     'rulesVersion','rulesSummary','rulesForm','rulesDecision','acceptRules','declineRules','rulesAcceptModal','rulesAcceptTitle','rulesAcceptSummary','rulesModalAccept','rulesModalDecline','rulesModalEdit','stakeAcceptModal','stakeAcceptTitle','stakeAcceptText','stakeBalanceText','stakeModalAccept','stakeProposalAmount','stakeProposalSend','searchPlayerForm','searchPlayer','playerSearchResults','refreshWaiting','waitingPlayers',
-    'fundingPanel','fundingText','fundButton','gamePanel','turnTitle','turnTimer','pinLudo','dice','ludoBoard','rollDice','soundToggle','micQuickButton','moveHint','reenterButton','voiceState','micButton','remoteAudio',
+    'fundingPanel','fundingText','fundButton','gamePanel','turnTitle','turnTimer','pinLudo','dice','ludoBoard','rollDice','soundToggle','micQuickButton','moveHint','reenterButton','voiceState','micButton','muteOpponent','remoteAudio',
     'chatMessages','chatForm','chatInput','resultPanel','resultTitle','resultPayouts','rematchBet','rematchButton','rematchHelp','authModal','closeAuth','loginTab','registerTab','loginForm','registerForm','loginPhone','loginPin',
     'registerName','registerPhone','registerPin','registerPinConfirm','registerInviteCode','registerInviteStatus','authMessage','winModal','winModalTitle','winModalMessage','winModalOk','ludoDiceLive','ludoTurnLive','ludoErrorLive','ludoVictoryLive'
   ].map(k => [k, $(k)]));
@@ -1073,6 +1073,7 @@
     stopVoiceIfRoomEnded,
     renderVoice,
     toggleMic,
+    toggleOpponentMute,
     pullSignals,
     closeVoice,
     unlockMediaAudio
