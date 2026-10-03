@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="pt-MZ">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0a0d14">
+  <meta name="description" content="Tabuleiro dos Jogos Lendários — escolha Ludo Lendário ou Dama Lendária.">
+  <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
+  <link rel="canonical" href="https://jogoslendarios.adadpsf.shop/tabuleiro.html">
+  <title>Tabuleiro · Jogos Lendários</title>
+  <link rel="icon" href="./favicon.ico" sizes="any">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
+  <link rel="stylesheet" href="./styles.css?v=20260928-20">
+  <link rel="stylesheet" href="./site-nav.css?v=20261003-2">
+  <style>
+    .board-hub{max-width:980px;margin:0 auto}
+    .board-hub-head{margin-bottom:16px}
+    .board-hub-head h1{margin:.2rem 0 0}
+    .board-game-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+    .board-game-card{display:grid;grid-template-rows:auto auto 1fr auto;gap:12px;min-height:250px;padding:22px;contain:layout paint}
+    .board-game-mark{width:54px;height:54px;display:grid;place-items:center;border-radius:16px;background:rgba(244,181,31,.12);font-weight:900;font-size:1.05rem}
+    .board-game-card h2{margin:0}
+    .board-game-card p{margin:0;color:#97a7ba;line-height:1.5}
+    .board-game-card .button{justify-self:start;min-width:110px;text-align:center}
+    .board-soon{display:none;margin-top:16px;padding:16px;text-align:center;font-weight:900}
+    .board-soon:target{display:block}
+    @supports (content-visibility:auto){
+      .board-game-card{content-visibility:auto;contain-intrinsic-size:250px}
+    }
+    @media(max-width:640px){
+      .board-game-grid{grid-template-columns:1fr}
+      .board-game-card{min-height:220px}
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./index.html" aria-label="Jogos Lendários">Jogos <strong>Lendários</strong></a>
+    <nav class="game-nav" aria-label="Categorias de jogos">
+      <a href="./index.html#catalogo">Todos</a>
+      <a href="./index.html#sorteios">Sorteios</a>
+      <a class="nav-aviator-symbol" href="./aviator.html" aria-label="Aviator" title="Aviator"><span aria-hidden="true">✈</span></a>
+      <a class="active" href="./tabuleiro.html">Tabuleiro</a>
+      <a href="./index.html#playerArea">Conta</a>
+    </nav>
+  </header>
+
+  <main class="shell board-hub">
+    <section class="board-hub-head">
+      <p class="eyebrow">TABULEIRO</p>
+      <h1>Escolha o jogo</h1>
+    </section>
+
+    <section class="board-game-grid" aria-label="Jogos de tabuleiro">
+      <article class="card board-game-card">
+        <div class="board-game-mark" aria-hidden="true">LUDO</div>
+        <h2>Ludo Lendário</h2>
+        <p>Entre no Ludo atual.</p>
+        <a class="button primary" href="./ludo.html">Entrar</a>
+      </article>
+
+      <article class="card board-game-card">
+        <div class="board-game-mark" aria-hidden="true">DAMA</div>
+        <h2>Dama Lendária</h2>
+        <p>Dama fará parte dos jogos de tabuleiro.</p>
+        <a class="button secondary" href="#dama-brevemente">Entrar</a>
+      </article>
+    </section>
+
+    <section id="dama-brevemente" class="card board-soon" role="status" aria-live="polite">
+      Brevemente.
+    </section>
+  </main>
+</body>
+</html>
