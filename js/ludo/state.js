@@ -16,6 +16,7 @@
       lastSignalId: 0,
       localStream: null,
       micMuted: true,
+      opponentMuted: false,
       peers: new Map(),
       busy: false,
       animating: false,
