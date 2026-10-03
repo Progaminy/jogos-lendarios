@@ -30,5 +30,5 @@ test('deixar de seguir exige confirmação',()=>{
 });
 
 test('loader usa versão nova do módulo social',()=>{
-  assert.match(loader,/social\.js\?v=20261003-2/);
+  assert.match(loader,/social\.js\?v=20261003-3/);
 });
