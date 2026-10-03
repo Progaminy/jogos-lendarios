@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="pt-MZ">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0a0d14">
+  <meta name="description" content="Dama Lendária — Damas Brasileiras 8x8, 1 contra 1, com aposta e saldo integrado aos Jogos Lendários.">
+  <link rel="canonical" href="https://jogoslendarios.adadpsf.shop/dama.html">
+  <title>Dama Lendária · Jogos Lendários</title>
+  <link rel="icon" href="./favicon.ico" sizes="any">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="stylesheet" href="./styles.css?v=20260928-20">
+  <link rel="stylesheet" href="./site-nav.css?v=20261003-2">
+  <link rel="stylesheet" href="./dama.css?v=20261003-1">
+</head>
+<body>
+  <div id="damaToast" class="toast" role="status" aria-live="polite"></div>
+
+  <header class="topbar">
+    <a class="brand" href="./index.html">Jogos <strong>Lendários</strong></a>
+    <nav class="game-nav" aria-label="Categorias de jogos">
+      <a href="./index.html#catalogo">Todos</a>
+      <a href="./index.html#sorteios">Sorteios</a>
+      <a href="./aviator.html" aria-label="Aviator">✈</a>
+      <a class="active" href="./tabuleiro.html">Tabuleiro</a>
+      <a href="./index.html#playerArea">Conta</a>
+    </nav>
+    <div class="dama-top-balance"><span>Saldo</span><strong id="damaBalance">—</strong></div>
+  </header>
+
+  <main class="shell dama-shell">
+    <section id="damaLoggedOut" class="card dama-login hidden">
+      <p class="eyebrow">DAMA LENDÁRIA</p>
+      <h1>Entre para jogar</h1>
+      <form id="damaLoginForm" class="stack-form">
+        <label><span>Celular</span><input id="damaLoginPhone" inputmode="tel" required></label>
+        <label><span>PIN</span><input id="damaLoginPin" type="password" inputmode="numeric" minlength="4" maxlength="8" required></label>
+        <button class="button primary" type="submit">Entrar</button>
+      </form>
+      <a class="button ghost" href="./index.html#playerArea">Criar conta</a>
+    </section>
+
+    <section id="damaLobby" class="hidden">
+      <div class="card dama-lobby-head">
+        <div><p class="eyebrow">DAMA LENDÁRIA</p><h1>1 × 1</h1></div>
+        <button id="refreshDamaLobby" class="button ghost small" type="button" aria-label="Atualizar">⟳</button>
+      </div>
+
+      <div class="dama-lobby-grid">
+        <section class="card">
+          <p class="eyebrow">NOVA PARTIDA</p>
+          <form id="damaCreateForm" class="dama-create-form">
+            <label>
+              <span>Valor por jogador</span>
+              <div class="money"><span>MZN</span><input id="damaBet" type="number" min="10" step="1" value="10" inputmode="numeric"></div>
+            </label>
+
+            <fieldset>
+              <legend>Tempo por jogada</legend>
+              <div class="dama-choice-row" data-choice="time">
+                <button class="active" type="button" data-value="120">2 min</button>
+                <button type="button" data-value="180">3 min</button>
+              </div>
+              <input id="damaTime" type="hidden" value="120">
+            </fieldset>
+
+            <fieldset>
+              <legend>Sua cor</legend>
+              <div class="dama-choice-row" data-choice="color">
+                <button class="active" type="button" data-value="white"><span class="dama-choice-piece white"></span> Clara</button>
+                <button type="button" data-value="red"><span class="dama-choice-piece red"></span> Vermelha</button>
+              </div>
+              <input id="damaColor" type="hidden" value="white">
+            </fieldset>
+
+            <fieldset>
+              <legend>Quem começa</legend>
+              <div class="dama-choice-row" data-choice="first">
+                <button class="active" type="button" data-value="host">Eu</button>
+                <button type="button" data-value="guest">Adversário</button>
+              </div>
+              <input id="damaFirst" type="hidden" value="host">
+            </fieldset>
+
+            <label class="dama-public-toggle"><input id="damaPublic" type="checkbox" checked> <span>Partida pública</span></label>
+            <button class="button primary wide" type="submit">Criar partida</button>
+          </form>
+        </section>
+
+        <section class="card">
+          <div class="section-head"><div><p class="eyebrow">PÚBLICAS</p><h2>Partidas abertas</h2></div></div>
+          <div id="damaPublicRooms" class="dama-room-list"></div>
+          <form id="damaJoinCodeForm" class="inline-form dama-code-form">
+            <input id="damaJoinCode" placeholder="DAMA-ABC123" maxlength="11" autocomplete="off">
+            <button class="button secondary" type="submit">Abrir</button>
+          </form>
+        </section>
+      </div>
+    </section>
+
+    <section id="damaRoom" class="hidden">
+      <div class="card dama-room-head">
+        <div>
+          <p class="eyebrow">DAMA LENDÁRIA</p>
+          <h1 id="damaRoomCode">—</h1>
+          <p id="damaRoomMeta" class="muted">—</p>
+        </div>
+        <div class="dama-room-actions">
+          <button id="damaCancel" class="button danger small" type="button">Cancelar</button>
+          <button id="damaOfferDraw" class="button ghost small hidden" type="button">Propor empate</button>
+          <button id="damaForfeit" class="button danger small hidden" type="button">Desistir</button>
+        </div>
+      </div>
+
+      <div id="damaPlayers" class="dama-players"></div>
+
+      <section id="damaSettingsPanel" class="card">
+        <div class="section-head"><div><p class="eyebrow">DEFINIÇÕES</p><h2>Partida</h2></div></div>
+        <div id="damaSettingsSummary" class="dama-settings-summary"></div>
+        <div id="damaGuestDecision" class="dama-decision hidden">
+          <button id="damaDeclineSettings" class="button danger" type="button">Recusar</button>
+          <button id="damaAcceptSettings" class="button success" type="button">Aceitar</button>
+        </div>
+        <div id="damaFunding" class="dama-decision hidden">
+          <button id="damaFund" class="button primary" type="button">Confirmar aposta</button>
+        </div>
+      </section>
+
+      <section id="damaGame" class="dama-game-grid hidden">
+        <div class="card dama-board-panel">
+          <div class="dama-game-head">
+            <div><p class="eyebrow">TABULEIRO 8×8</p><h2 id="damaTurnTitle">—</h2></div>
+            <div id="damaTimer" class="dama-timer">—</div>
+          </div>
+
+          <div id="damaDrawCounter" class="dama-draw-counter hidden"></div>
+          <div id="damaBoard" class="dama-board" aria-label="Tabuleiro de Dama"></div>
+          <p id="damaHint" class="muted dama-hint">—</p>
+        </div>
+
+        <aside class="dama-side">
+          <section class="card">
+            <div class="section-head"><div><p class="eyebrow">VOZ</p><h2>Microfone</h2></div><span id="damaVoiceState" class="badge">Desligado</span></div>
+            <button id="damaMic" class="button secondary wide" type="button" aria-pressed="false">🎙️ Ligar microfone</button>
+            <button id="damaMuteOpponent" class="button ghost wide" type="button" aria-pressed="false">🔊 Ouvir adversário</button>
+            <div id="damaRemoteAudio"></div>
+          </section>
+
+          <details class="card dama-history">
+            <summary>Histórico de jogadas</summary>
+            <div id="damaHistory"></div>
+          </details>
+        </aside>
+      </section>
+
+      <section id="damaDrawOffer" class="card dama-draw-offer hidden">
+        <p><strong>O adversário propôs empate.</strong></p>
+        <div>
+          <button id="damaDrawDecline" class="button danger" type="button">Recusar</button>
+          <button id="damaDrawAccept" class="button success" type="button">Aceitar</button>
+        </div>
+      </section>
+
+      <section id="damaResult" class="card hidden">
+        <p class="eyebrow">RESULTADO</p>
+        <h2 id="damaResultTitle">Partida terminada</h2>
+        <div id="damaResultMoney"></div>
+        <details class="dama-rematch" open>
+          <summary>Revanche</summary>
+          <form id="damaRematchForm" class="dama-create-form">
+            <label><span>Valor por jogador</span><div class="money"><span>MZN</span><input id="damaRematchBet" type="number" min="10" step="1" value="10"></div></label>
+            <label><span>Tempo</span><select id="damaRematchTime"><option value="120">2 min</option><option value="180">3 min</option></select></label>
+            <label><span>Sua cor</span><select id="damaRematchColor"><option value="white">Clara</option><option value="red">Vermelha</option></select></label>
+            <label><span>Quem começa</span><select id="damaRematchFirst"><option value="host">Eu</option><option value="guest">Adversário</option></select></label>
+            <button class="button primary" type="submit">Propor revanche</button>
+          </form>
+        </details>
+      </section>
+    </section>
+  </main>
+
+  <div id="damaRouteModal" class="dama-modal hidden" role="dialog" aria-modal="true" aria-labelledby="damaRouteTitle">
+    <div class="dama-modal-card">
+      <h2 id="damaRouteTitle">Escolha a rota</h2>
+      <p class="muted">Há mais de uma captura legal para o mesmo destino.</p>
+      <div id="damaRouteChoices" class="dama-route-choices"></div>
+      <button id="damaRouteClose" class="button ghost wide" type="button">Fechar</button>
+    </div>
+  </div>
+
+  <div id="damaConfirmModal" class="dama-modal hidden" role="dialog" aria-modal="true" aria-labelledby="damaConfirmTitle">
+    <div class="dama-modal-card">
+      <h2 id="damaConfirmTitle">Confirmar</h2>
+      <p id="damaConfirmText">Tem certeza?</p>
+      <div class="dama-confirm-actions">
+        <button id="damaConfirmNo" class="button ghost" type="button">Não</button>
+        <button id="damaConfirmYes" class="button danger" type="button">Sim</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="./config.js"></script>
+  <script src="./js/api/rpc.js?v=20261001-1"></script>
+  <script src="./js/auth/session.js?v=20260928-2"></script>
+  <script src="./dama.js?v=20261003-1" defer></script>
+</body>
+</html>
