@@ -30,7 +30,7 @@ test('deixar de seguir exige confirmação',()=>{
 });
 
 test('loader usa versão nova do módulo social',()=>{
-  assert.match(loader,/social\.js\?v=20261003-4/);
+  assert.match(loader,/social\.js\?v=20261003-5/);
 });
 
 test('botão superior online abre diretório global e lista inclui o próprio jogador',()=>{
@@ -42,4 +42,14 @@ test('botão superior online abre diretório global e lista inclui o próprio jo
   assert.match(social,/self \? '' :/);
   assert.match(migration,/'is_self', x\.id = me/);
   assert.doesNotMatch(migration,/p\.id <> me/);
+});
+
+
+test('botão online abre a lista abaixo do contador sem deslocar a página',()=>{
+  assert.match(social,/statusStrip\.insertAdjacentElement\('afterend', ui\.onlinePanel\)/);
+  assert.match(social,/metric\.addEventListener\('click', toggleOnlineDirectory\)/);
+  assert.match(social,/ui\.onlinePanel\?\.addEventListener\('click', handleSocialAction\)/);
+  const metricBlock=social.slice(social.indexOf("const metric = document.querySelector('.online-metric')"),social.indexOf('return true;',social.indexOf("const metric = document.querySelector('.online-metric')")));
+  assert.doesNotMatch(metricBlock,/scrollIntoView/);
+  assert.doesNotMatch(metricBlock,/\.jl-collapse-body/);
 });
