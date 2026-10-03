@@ -12,6 +12,9 @@
     searchBusy: false,
     searchQuery: '',
     following: [],
+    onlinePlayers: [],
+    onlineBusy: false,
+    onlineLoaded: false,
     onlineOpen: false,
     counts: { following: 0, followers: 0, online: 0 }
   };
@@ -132,7 +135,10 @@
     ui.online.addEventListener('click', () => {
       state.onlineOpen = !state.onlineOpen;
       renderFollowing();
-      if (state.onlineOpen) ui.onlinePanel?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      if (state.onlineOpen) {
+        loadOnlinePlayers(false);
+        ui.onlinePanel?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
     });
 
     section.addEventListener('click', (event) => {
@@ -157,8 +163,20 @@
       metric.setAttribute('aria-label', 'Ver jogadores que sigo e estado online');
       const open = () => {
         section.classList.remove('hidden');
-        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        state.onlineOpen = true;
+        const body = section.querySelector('.jl-collapse-body');
+        const toggle = section.querySelector('.jl-collapse-toggle');
+        if (body) body.hidden = false;
+        section.classList.remove('is-collapsed');
+        if (toggle) {
+          toggle.setAttribute('aria-expanded', 'true');
+          toggle.setAttribute('aria-label', 'Recolher');
+          toggle.textContent = toggle.classList.contains('jl-symbol-toggle') ? '⌃' : 'Recolher';
+        }
+        renderFollowing();
         loadSocial(true);
+        loadOnlinePlayers(false);
+        setTimeout(() => (ui.onlinePanel || section).scrollIntoView({ behavior: 'smooth', block: 'start' }), 0);
       };
       metric.addEventListener('click', open);
       metric.addEventListener('keydown', (event) => {
@@ -174,7 +192,7 @@
 
   function playerHtml(player, context) {
     const online = Boolean(player.online);
-    const following = (context === 'following' || context === 'online') ? true : Boolean(player.following);
+    const following = context === 'following' ? true : Boolean(player.following);
     const mutual = Boolean(player.mutual || player.follows_you);
     const tags = [
       '<span class="jl-social-tag ' + (online ? 'online' : '') + '">' + (online ? 'Online' : 'Offline') + '</span>',
@@ -202,11 +220,10 @@
     ui.online.setAttribute('aria-expanded', state.onlineOpen ? 'true' : 'false');
     ui.onlinePanel?.classList.toggle('hidden', !state.onlineOpen);
 
-    const onlinePlayers = state.following.filter((player) => Boolean(player.online));
     if (ui.onlineList) {
-      ui.onlineList.innerHTML = onlinePlayers.length
-        ? onlinePlayers.map((player) => playerHtml(player, 'online')).join('')
-        : '<div class="jl-social-empty">Nenhum jogador que você segue está online.</div>';
+      ui.onlineList.innerHTML = state.onlinePlayers.length
+        ? state.onlinePlayers.map((player) => playerHtml(player, 'online')).join('')
+        : '<div class="jl-social-empty">' + (state.onlineBusy ? 'Carregando jogadores online…' : 'Nenhum outro jogador está online agora.') + '</div>';
     }
 
     ui.followingList.innerHTML = state.following.length
@@ -226,7 +243,12 @@
       state.following = Array.isArray(data && data.following) ? data.following : [];
       state.counts.following = Math.max(0, Number(data && data.following_count) || 0);
       state.counts.followers = Math.max(0, Number(data && data.followers_count) || 0);
-      state.counts.online = Math.max(0, Number(data && data.online_count) || 0);
+      if (!state.onlineLoaded) {
+        const topCount = Number(document.getElementById('onlinePlayerCount')?.textContent);
+        state.counts.online = Number.isFinite(topCount)
+          ? Math.max(0, topCount)
+          : Math.max(0, Number(data && data.online_count) || 0);
+      }
       renderFollowing();
     } catch (error) {
       if (!silent) {
@@ -234,6 +256,34 @@
       }
     } finally {
       state.busy = false;
+    }
+  }
+
+  async function loadOnlinePlayers(silent = true) {
+    if (!createUi()) return;
+    const t = token();
+    if (!t || state.onlineBusy || document.visibilityState !== 'visible') return;
+
+    state.onlineBusy = true;
+    if (state.onlineOpen) renderFollowing();
+    try {
+      const data = await rpc('jl_social_online_players', {
+        p_token: t,
+        p_limit: 100
+      });
+      state.onlinePlayers = Array.isArray(data && data.players) ? data.players : [];
+      state.counts.online = Math.max(0, Number(data && data.online_count) || 0);
+      state.onlineLoaded = true;
+      renderFollowing();
+    } catch (error) {
+      if (!silent && ui.onlineList) {
+        ui.onlineList.innerHTML = '<div class="jl-social-empty">' +
+          escapeHtml(error && error.message ? error.message : 'Não foi possível carregar os jogadores online.') +
+          '</div>';
+      }
+    } finally {
+      state.onlineBusy = false;
+      if (state.onlineOpen && state.onlineLoaded) renderFollowing();
     }
   }
 
