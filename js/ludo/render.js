@@ -81,6 +81,13 @@
       return { cells, at };
     }
 
+    function applyPlayerOrientation(target) {
+      if (!target) return;
+      target.classList.remove('view-red','view-green','view-yellow','view-blue');
+      const minePlayer = roomPlayers().find((p) => p.player_id === me() && p.status !== 'left');
+      if (minePlayer?.color) target.classList.add(`view-${minePlayer.color}`);
+    }
+
     function renderStaticBoard(target,pieces=['red','green','yellow','blue'],pawnCount=4) {
       if (!target) return;
       const { cells, at } = makeCells();
@@ -98,6 +105,7 @@
         });
       }
       target.replaceChildren(...cells, classicCenter());
+      applyPlayerOrientation(target);
     }
 
     function renderLobbyBoard() {
@@ -229,6 +237,7 @@
       }
 
       els.ludoBoard.replaceChildren(...cells, center);
+      applyPlayerOrientation(els.ludoBoard);
     }
 
     return Object.freeze({
