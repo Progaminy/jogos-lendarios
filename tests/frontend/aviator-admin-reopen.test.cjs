@@ -14,30 +14,38 @@ test('admin usa Reabrir Aviator separado e com confirmação',()=>{
   );
   assert.match(html,/id="aviatorMaintenanceClose"[^>]*>Fechar Aviator<\/button>/);
 
-  assert.match(js,/jl_aviator_admin_reopen/);
-  assert.match(js,/Reabrir Aviator agora\?/);
-  assert.match(js,/Novas rodadas e novas apostas voltarão a ser permitidas/);
-  assert.match(js,/window\.confirm/);
-  assert.match(js,/Aguarde a rodada atual terminar antes de reabrir o Aviator/);
-
-  const reopenBlock=js.match(
-    /\$\('aviatorMaintenanceReopen'\)\?\.addEventListener\('click',[\s\S]*?\n\s*\}\);/
-  )?.[0]||'';
+  const reopenBlock=js.slice(
+    js.indexOf("$('aviatorMaintenanceReopen')?.addEventListener('click'"),
+    js.indexOf("$('aviatorOneRoundTest')?.addEventListener('click'")
+  );
 
   assert.match(reopenBlock,/jl_aviator_admin_reopen/);
+  assert.match(reopenBlock,/Reabrir Aviator agora\?/);
+  assert.match(reopenBlock,/Novas rodadas e novas apostas voltarão a ser permitidas/);
   assert.match(reopenBlock,/window\.confirm/);
   assert.doesNotMatch(reopenBlock,/jl_aviator_admin_close/);
-  assert.doesNotMatch(reopenBlock,/p_enabled:false/);
+  assert.doesNotMatch(reopenBlock,/jl_aviator_admin_release_gate/);
+  assert.doesNotMatch(reopenBlock,/Aguarde a rodada atual terminar/);
 });
 
-test('reabrir fica desativado enquanto aberto ou em drenagem',()=>{
+test('reabrir só fica desativado quando o Aviator já está aberto',()=>{
   const js=fs.readFileSync('js/aviator/admin.js','utf8');
 
-  assert.match(
-    js,
-    /const draining=\s*!d\.enabled&&\['OPEN','LOCKED','FLYING','CRASHED'\]/
+  assert.match(js,/reopenBtn\.disabled=Boolean\(d\.enabled\);/);
+  assert.match(js,/reopenBtn\.textContent=d\.enabled\?'Aviator aberto':'Reabrir Aviator'/);
+  assert.match(js,/reopenBtn\.classList\.toggle\('success',!d\.enabled\)/);
+  assert.match(js,/FECHADO · NÃO CERTIFICADO/);
+});
+
+test('reabertura não depende dos testes automáticos para autorizar abertura',()=>{
+  const js=fs.readFileSync('js/aviator/admin.js','utf8');
+  const reopenBlock=js.slice(
+    js.indexOf("$('aviatorMaintenanceReopen')?.addEventListener('click'"),
+    js.indexOf("$('aviatorOneRoundTest')?.addEventListener('click'")
   );
-  assert.match(js,/reopenBtn\.disabled=Boolean\(d\.enabled\)\|\|draining/);
-  assert.match(js,/d\.enabled\s*\?'Aviator aberto'/);
-  assert.match(js,/draining\s*\?'Aguarde a rodada atual'/);
+
+  assert.match(reopenBlock,/button\.textContent='Reabrindo…'/);
+  assert.match(reopenBlock,/Aviator reaberto\. Novas rodadas e apostas estão permitidas/);
+  assert.doesNotMatch(reopenBlock,/engineTest/);
+  assert.doesNotMatch(reopenBlock,/passed\/.*total/);
 });

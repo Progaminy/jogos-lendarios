@@ -359,7 +359,7 @@
                 ?referenceCeiling<1.5
                   ?'CERTIFICADO · BANCA BAIXA'
                   :'CERTIFICADO'
-                :'NÃO ABRIR · CERTIFICAÇÃO NECESSÁRIA';
+                :'FECHADO · NÃO CERTIFICADO';
         }
         const draining=
           !d.enabled&&['OPEN','LOCKED','FLYING','CRASHED'].includes(String(r.status||''));
@@ -373,13 +373,12 @@
     
         const reopenBtn=$('aviatorMaintenanceReopen');
         if(reopenBtn){
-          reopenBtn.disabled=Boolean(d.enabled)||draining;
-          reopenBtn.textContent=d.enabled
-            ?'Aviator aberto'
-            :draining
-              ?'Aguarde a rodada atual'
-              :'Reabrir Aviator';
-          reopenBtn.classList.toggle('success',!d.enabled&&!draining);
+          // Reabrir é uma decisão administrativa explícita: não é bloqueada
+          // por drenagem nem pelo estado da certificação. Se houver uma rodada
+          // em curso, ela continua e o ciclo normal prossegue depois.
+          reopenBtn.disabled=Boolean(d.enabled);
+          reopenBtn.textContent=d.enabled?'Aviator aberto':'Reabrir Aviator';
+          reopenBtn.classList.toggle('success',!d.enabled);
         }
     
         const preflightBtn=$('aviatorEnginePreflight');
@@ -586,19 +585,9 @@
       const button=$('aviatorMaintenanceReopen');
       try{
         const d=await rpc('jl_aviator_admin_state',{p_token:state.token});
-        const r=d.round||{};
-        const draining=
-          !d.enabled&&['OPEN','LOCKED','FLYING','CRASHED'].includes(String(r.status||''));
     
         if(d.enabled){
           $('aviatorAdminMessage').textContent='Aviator já está aberto.';
-          await refreshAviatorAdmin();
-          return;
-        }
-    
-        if(draining){
-          $('aviatorAdminMessage').textContent=
-            'Aguarde a rodada atual terminar antes de reabrir o Aviator.';
           await refreshAviatorAdmin();
           return;
         }
@@ -619,18 +608,18 @@
     
         if(button){
           button.disabled=true;
-          button.textContent='Testando e reabrindo…';
+          button.textContent='Reabrindo…';
         }
 
         const reopened=await rpc('jl_aviator_admin_reopen',{p_token:state.token});
-        const engineTest=reopened?.engine_test||{};
-        const passed=Number(engineTest?.passed)||0;
-        const total=Number(engineTest?.total)||0;
-        $('aviatorAdminMessage').textContent=
-          'Aviator reaberto após '+passed+'/'+total+' testes automáticos do motor.';
+        $('aviatorAdminMessage').textContent=reopened?.already_open
+          ?'Aviator já está aberto.'
+          :'Aviator reaberto. Novas rodadas e apostas estão permitidas.';
+        toast('Aviator reaberto.','success');
         await refreshAviatorAdmin();
       }catch(e){
-        $('aviatorAdminMessage').textContent=e.message;
+        $('aviatorAdminMessage').textContent=
+          'Falha ao reabrir Aviator: '+String(e?.message||e||'Erro desconhecido.');
         await refreshAviatorAdmin();
       }
     });

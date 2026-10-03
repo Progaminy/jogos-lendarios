@@ -19,7 +19,6 @@ declare
   v_round bigint;
   v_result jsonb;
   v_unauthorized boolean:=false;
-  v_blocked boolean:=false;
   v_enabled boolean;
 begin
   insert into public.admin_accounts(
@@ -58,39 +57,16 @@ begin
   )
   returning id into v_round;
 
-  begin
-    perform public.jl_aviator_admin_reopen(v_token);
-  exception
-    when others then
-      if position('Aguarde a rodada atual terminar' in sqlerrm)>0 then
-        v_blocked:=true;
-      else
-        raise;
-      end if;
-  end;
-
-  if not v_blocked then
-    raise exception 'reabertura ocorreu com rodada transitória ainda viva';
-  end if;
-
-  select enabled into v_enabled
-  from public.jl_aviator_settings
-  where id=true;
-
-  if v_enabled is distinct from false then
-    raise exception 'reabertura bloqueada não pode alterar enabled';
-  end if;
-
-  update public.jl_aviator_rounds
-     set status='CANCELLED',
-         settled_at=clock_timestamp()
-   where id=v_round;
-
+  -- Reabrir não pode ser negado só porque existe uma rodada em drenagem.
   v_result:=public.jl_aviator_admin_reopen(v_token);
 
   if coalesce((v_result->>'enabled')::boolean,false) is distinct from true
      or coalesce((v_result->>'already_open')::boolean,true) then
-    raise exception 'reabertura válida falhou: %',v_result;
+    raise exception 'reabertura com rodada em curso foi negada: %',v_result;
+  end if;
+
+  if v_result->>'round_in_progress'<>'OPEN' then
+    raise exception 'reabertura deveria informar rodada em curso: %',v_result;
   end if;
 
   select enabled into v_enabled
