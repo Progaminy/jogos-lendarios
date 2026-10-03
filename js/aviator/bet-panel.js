@@ -57,8 +57,10 @@
     function setInputsLocked(locked){
       const amount=$('#aviatorAmount'+suffix);
       const auto=$('#aviatorAutoCashout'+suffix);
+      const autoEnabled=$('#aviatorAutoCashoutEnabled'+suffix);
       if(amount)amount.disabled=Boolean(locked);
       if(auto)auto.disabled=Boolean(locked);
+      if(autoEnabled)autoEnabled.disabled=Boolean(locked);
     }
 
     function renderBetAction({
@@ -683,16 +685,18 @@
           throw new Error('Informe um valor entre 0,50 e 500.');
         }
 
+        const autoEnabled=Boolean($('#aviatorAutoCashoutEnabled'+suffix)?.checked);
         const autoRaw=String($('#aviatorAutoCashout'+suffix)?.value||'').trim();
-        const auto=autoRaw===''?null:Number(autoRaw);
+        const auto=autoEnabled?Number(autoRaw):null;
         if(
-          auto!==null&&(
+          autoEnabled&&(
+            autoRaw===''||
             !Number.isFinite(auto)||
             auto<1.01||
             Math.abs(auto*100-Math.round(auto*100))>1e-8
           )
         ){
-          throw new Error('Cash-out automático deve ser 1,01x ou maior, com até 2 casas decimais.');
+          throw new Error('Marque a saída automática e informe um multiplicador de 1,01x ou maior, com até 2 casas decimais.');
         }
 
         const result=await financial.placeBetSlot({
