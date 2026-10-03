@@ -26,6 +26,7 @@ let realtimeConnected=false;
 let flightFrame=0;
 let lastFlightPaintAt=0;
 let autoRecoveryRoundId=null;
+let autoRecoveryLastCheckAt=0;
 let lastFlightHudAt=0;
 let autoBetEnabled=sessionStorage.getItem('jl_aviator_auto_bet_v1')==='1';
 let autoBetAttemptedRoundId=null;
@@ -398,11 +399,15 @@ function flightPaintLoop(timestamp){
     if(
       myBet&&
       myAutoCashout&&
-      Number(round?.id)!==Number(autoRecoveryRoundId)&&
       mul()>=myAutoCashout
     ){
-      autoRecoveryRoundId=Number(round.id);
-      void refreshCurrentBetLight();
+      const now=Date.now();
+      const sameRound=Number(round?.id)===Number(autoRecoveryRoundId);
+      if(!sameRound||now-autoRecoveryLastCheckAt>=500){
+        autoRecoveryRoundId=Number(round.id);
+        autoRecoveryLastCheckAt=now;
+        void refreshCurrentBetLight();
+      }
     }
   }
 
@@ -1377,6 +1382,7 @@ async function applyRealtimeSnapshot(x){
     myStake=0;
     myAutoCashout=null;
     autoRecoveryRoundId=null;
+    autoRecoveryLastCheckAt=0;
     lastRecoveredRoundId=null;
     stopFlight();
     resetCashout();
