@@ -309,7 +309,7 @@ test('Aviator mostra LOCKED separado do voo e não aceita nova aposta',()=>{
 test('auto cash-out exige caixa marcada e continua executado pelo servidor',()=>{
   const html=fs.readFileSync(path.join(__dirname,'../../aviator.html'),'utf8');
   const js=fs.readFileSync(path.join(__dirname,'../../aviator.js'),'utf8');
-  assert.match(html,/id="aviatorAutoCashout"[^>]*min="1\.01"[^>]*step="0\.01"/);
+  assert.match(html,/id="aviatorAutoCashout"[^>]*min="1\.01"[^>]*step="0\.01"[^>]*value="1\.5"/);
   assert.match(html,/id="aviatorAutoCashoutEnabled"[^>]*type="checkbox"/);
   assert.doesNotMatch(html,/id="activeBetAuto"/);
   assert.match(financialSource,/p_auto_cashout_multiplier:autoCashoutMultiplier/);
