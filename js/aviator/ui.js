@@ -4,6 +4,7 @@
   function create({$,getRound,getBetState,multiplier}) {
     let betResultTimer=0;
     let lastPlaneProgress=0;
+    let flightVisualStartedAt=0;
     function money(value){
       const n=Number(value);
       return (Number.isFinite(n)?n:0).toLocaleString('pt-MZ',{
@@ -99,14 +100,21 @@
 
       const n=Number(multiplierValue);
       const safe=Number.isFinite(n)&&n>=1?Math.min(500,n):1;
-      let progress=Math.log(safe)/Math.log(500);
-      progress=Math.max(0,Math.min(1,progress));
+      let multiplierProgress=Math.log(safe)/Math.log(500);
+      multiplierProgress=Math.max(0,Math.min(1,multiplierProgress));
+
+      const flying=getRound?.()?.status==='FLYING';
+      if(flying&&!flightVisualStartedAt)flightVisualStartedAt=Number(timestamp)||performance.now();
+      const elapsed=flying?Math.max(0,(Number(timestamp)||performance.now())-flightVisualStartedAt):0;
+      const timeProgress=flying?1-Math.exp(-elapsed/5200):0;
+      let progress=Math.max(multiplierProgress,timeProgress*.88);
 
       // O avião nunca recua dentro do mesmo voo.
-      if(getRound?.()?.status==='FLYING'){
+      if(flying){
         progress=Math.max(lastPlaneProgress,progress);
         lastPlaneProgress=progress;
       }
+      progress=Math.max(0,Math.min(.94,progress));
 
       const mobile=globalThis.matchMedia?.('(max-width: 650px)').matches===true;
       const reduced=globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches===true;
@@ -114,25 +122,27 @@
       const stageWidth=Math.max(280,Number(area?.clientWidth)||(mobile?360:900));
       const stageHeight=Math.max(200,Number(area?.clientHeight)||(mobile?230:320));
 
-      // Curva contínua: avança sempre para a direita, sobe suavemente e só flutua no eixo vertical.
-      const sweep=1-Math.pow(1-progress,1.28);
-      const climb=Math.pow(progress,.86);
-      const maxX=stageWidth*(mobile?.68:.76);
-      const maxY=stageHeight*(mobile?.50:.56);
+      // Trajetória visual evidente desde a decolagem: curva para cima e para a direita, sem vai-e-volta.
+      const sweep=1-Math.pow(1-progress,1.42);
+      const climb=.14*progress+.86*Math.pow(progress,.72);
+      const maxX=stageWidth*(mobile?.66:.74);
+      const maxY=stageHeight*(mobile?.56:.62);
       const floatY=reduced?0:
-        Math.sin(Number(timestamp)/260)*1.4+
-        Math.sin(Number(timestamp)/610)*.7;
-      const tiltFloat=reduced?0:Math.sin(Number(timestamp)/360)*.75;
+        Math.sin(Number(timestamp)/250)*2.4+
+        Math.sin(Number(timestamp)/590)*1.15;
+      const bank=reduced?0:Math.sin(Number(timestamp)/330)*1.1;
       const x=maxX*sweep;
       const y=-(maxY*climb)+floatY;
-      const rotation=-10-(10*climb)+tiltFloat;
+      const rotation=-8-(16*climb)+bank;
+      const scale=1+(progress*.16);
 
       plane.style.transform=
-        'translate3d('+x.toFixed(2)+'px,'+y.toFixed(2)+'px,0) rotate('+rotation.toFixed(2)+'deg)';
+        'translate3d('+x.toFixed(2)+'px,'+y.toFixed(2)+'px,0) rotate('+rotation.toFixed(2)+'deg) scale('+scale.toFixed(3)+')';
     }
 
     function resetPlaneFlight(){
       lastPlaneProgress=0;
+      flightVisualStartedAt=0;
       const plane=$('#plane');
       if(plane)plane.style.removeProperty('transform');
     }
