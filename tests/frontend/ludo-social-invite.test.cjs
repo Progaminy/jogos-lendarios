@@ -13,7 +13,7 @@ test('contador online abre lista de jogadores online',()=>{
   assert.match(social,/id="socialOnlineList"/);
   assert.match(social,/jl_social_online_players/);
   assert.match(social,/state\.onlinePlayers/);
-  assert.match(social,/state\.onlineOpen = true/);
+  assert.match(social,/state\.onlineOpen = !state\.onlineOpen/);
   assert.match(social,/playerHtml\(player, 'online'\)/);
 });
 
