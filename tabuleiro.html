@@ -24,6 +24,21 @@
     .board-game-card h2{margin:-1px 0 0;font-weight:300;font-size:.88rem;line-height:1.1}
     .board-game-card p{margin:0;color:#97a7ba;line-height:1.5}
     .board-game-card .button{justify-self:start;min-width:110px;text-align:center}
+    .board-social{margin-top:14px;padding:14px}
+    .board-social-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+    .board-social-head h2{margin:0;font-size:1rem}
+    .board-social-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+    .board-social-tabs button{min-height:38px;border:1px solid rgba(255,255,255,.09);border-radius:10px;background:#0b1727;color:#eef3f9;font-size:.76rem;font-weight:800}
+    .board-social-tabs button.active{border-color:#f4bd42;background:rgba(244,189,66,.1)}
+    .board-social-pane{display:grid;gap:7px;margin-top:10px;max-height:320px;overflow:auto}
+    .board-social-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 9px;border:1px solid rgba(255,255,255,.07);border-radius:10px;background:rgba(255,255,255,.025)}
+    .board-social-person{min-width:0;display:grid;gap:1px}
+    .board-social-person strong{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.82rem}
+    .board-social-person small{color:#91a2b7;font-size:.68rem}
+    .board-social-actions{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}
+    .board-social-actions .button{padding:6px 9px;min-height:30px;font-size:.7rem}
+    .board-game-choice{display:flex;gap:5px}
+    .board-social-empty{padding:12px;text-align:center;color:#91a2b7;font-size:.76rem}
     .board-soon{display:none;margin-top:16px;padding:16px;text-align:center;font-weight:900}
     .board-soon:target{display:block}
     @supports (content-visibility:auto){
@@ -146,6 +161,25 @@
         <h2>Dama Lendária</h2>
       </article>
     </section>
+    <section id="boardSocial" class="card board-social hidden" aria-label="Jogadores e convites">
+      <div class="board-social-head">
+        <div><p class="eyebrow">JOGADORES</p><h2>Online e convites</h2></div>
+        <span id="boardOnlineCount" class="badge">0</span>
+      </div>
+      <div class="board-social-tabs" role="tablist">
+        <button class="active" type="button" data-board-tab="online">Online</button>
+        <button type="button" data-board-tab="following">Segue</button>
+        <button type="button" data-board-tab="invites">Convites <span id="boardInviteCount">0</span></button>
+      </div>
+      <div id="boardOnlinePane" class="board-social-pane"></div>
+      <div id="boardFollowingPane" class="board-social-pane hidden"></div>
+      <div id="boardInvitesPane" class="board-social-pane hidden"></div>
+    </section>
   </main>
+
+  <script src="./config.js"></script>
+  <script src="./js/api/rpc.js?v=20261001-1"></script>
+  <script src="./js/auth/session.js?v=20260928-2"></script>
+  <script src="./tabuleiro.js?v=20261003-1" defer></script>
 </body>
 </html>
