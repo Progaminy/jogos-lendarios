@@ -30,5 +30,16 @@ test('deixar de seguir exige confirmação',()=>{
 });
 
 test('loader usa versão nova do módulo social',()=>{
-  assert.match(loader,/social\.js\?v=20261003-3/);
+  assert.match(loader,/social\.js\?v=20261003-4/);
+});
+
+test('botão superior online abre diretório global e lista inclui o próprio jogador',()=>{
+  const html=fs.readFileSync(path.join(__dirname,'../../ludo.html'),'utf8');
+  const migration=fs.readFileSync(path.join(__dirname,'../../supabase/migrations/20261003075316_ludo_online_list_matches_counter.sql'),'utf8');
+  assert.match(html,/<button class="status-metric online-metric"[^>]*aria-label="Ver jogadores online"/);
+  assert.match(social,/const self = Boolean\(player\.is_self\)/);
+  assert.match(social,/self \? '<span class="jl-social-tag">Você<\/span>'/);
+  assert.match(social,/self \? '' :/);
+  assert.match(migration,/'is_self', x\.id = me/);
+  assert.doesNotMatch(migration,/p\.id <> me/);
 });
