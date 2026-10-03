@@ -12,7 +12,7 @@
     'damaPublicRooms','damaJoinCodeForm','damaJoinCode','damaRoom','damaRoomCode','damaRoomMeta',
     'damaCancel','damaOfferDraw','damaForfeit','damaPlayers','damaSettingsPanel','damaSettingsSummary',
     'damaGuestDecision','damaDeclineSettings','damaAcceptSettings','damaFunding','damaFund',
-    'damaGame','damaTurnTitle','damaTimer','damaDrawCounter','damaBoard','damaHint',
+    'damaGame','damaTurnTitle','damaTurnDot','damaCaptureBadge','damaBoardStatus','damaTimer','damaDrawCounter','damaBoard','damaHint',
     'damaVoiceState','damaMic','damaMuteOpponent','damaRemoteAudio','damaHistory',
     'damaDrawOffer','damaDrawDecline','damaDrawAccept','damaResult','damaResultTitle','damaResultMoney',
     'damaRematchForm','damaRematchBet','damaRematchTime','damaRematchColor','damaRematchFirst',
@@ -301,21 +301,42 @@
     if (!show) return;
 
     const current = players().find((p) => p.player_id === r.current_player_id);
+    const legal = state.room?.legal_moves || [];
+    const myTurn = r.status !== 'finished' && r.current_player_id === me();
+    const captureRequired = myTurn && legal.some((move) => move.is_capture || Number(move.capture_count || 0) > 0);
+    const selected = Boolean(state.selectedPiece);
+
     els.damaTurnTitle.textContent = r.status === 'finished'
       ? 'Partida terminada'
       : current
-        ? `Vez de ${firstName(current)}`
+        ? (myTurn ? 'Sua vez' : `Vez de ${firstName(current)}`)
         : 'Aguardando';
 
+    els.damaTurnDot.className = `dama-turn-dot ${myTurn ? 'mine' : 'waiting'}`;
+    els.damaCaptureBadge.classList.toggle('hidden', !captureRequired);
+
     if (r.status === 'ready') {
-      els.damaHint.textContent = r.current_player_id === me()
-        ? 'Sua vez. Antes da primeira jogada não há contagem de tempo.'
-        : 'Aguardando a primeira jogada. Ainda não há contagem de tempo.';
+      els.damaBoardStatus.textContent = myTurn ? 'Pode começar quando quiser.' : `Aguardando ${firstName(current)}.`;
+      els.damaHint.textContent = myTurn
+        ? 'Antes da primeira jogada não há contagem de tempo. Toque numa peça marcada quando quiser começar.'
+        : 'A primeira jogada ainda não foi feita. O relógio continua parado.';
     } else if (r.status === 'playing') {
-      els.damaHint.textContent = r.current_player_id === me()
-        ? 'Escolha uma peça destacada e toque no destino final.'
-        : `Aguardando ${firstName(current)}.`;
+      if (myTurn && captureRequired) {
+        els.damaBoardStatus.textContent = selected ? 'Escolha o destino final.' : 'Captura obrigatória.';
+        els.damaHint.textContent = selected
+          ? 'Peça escolhida. Toque no destino final marcado.'
+          : 'Captura obrigatória: toque numa peça marcada e depois no destino final.';
+      } else if (myTurn) {
+        els.damaBoardStatus.textContent = selected ? 'Escolha o destino final.' : 'Escolha uma peça marcada.';
+        els.damaHint.textContent = selected
+          ? 'Peça escolhida. Toque no destino final marcado.'
+          : 'Toque numa peça destacada e depois no destino final.';
+      } else {
+        els.damaBoardStatus.textContent = `Aguardando ${firstName(current)}.`;
+        els.damaHint.textContent = `Aguardando ${firstName(current)}.`;
+      }
     } else {
+      els.damaBoardStatus.textContent = 'Partida encerrada.';
       els.damaHint.textContent = 'Partida encerrada.';
     }
 
@@ -352,10 +373,21 @@
     );
     const legal = state.room.legal_moves || [];
     const legalPieceIds = new Set(legal.map((m) => m.piece_id));
+    const myTurn = r.current_player_id === me() && r.status !== 'finished';
+    const captureRequired = myTurn && legal.some((move) => move.is_capture || Number(move.capture_count || 0) > 0);
     if (state.selectedPiece && !legalPieceIds.has(state.selectedPiece)) state.selectedPiece = null;
+
+    // Se só existe uma peça legal, já a apresenta selecionada. O jogador continua
+    // a confirmar a jogada tocando apenas no destino final.
+    if (myTurn && !state.selectedPiece && legalPieceIds.size === 1) {
+      state.selectedPiece = [...legalPieceIds][0];
+    }
 
     const selectedRoutes = state.selectedPiece ? legal.filter((m) => m.piece_id === state.selectedPiece) : [];
     const targetKeys = new Set(selectedRoutes.map((m) => `${m.to_row}:${m.to_col}`));
+    els.damaBoard.classList.toggle('is-my-turn', myTurn);
+    els.damaBoard.classList.toggle('capture-turn', captureRequired);
+    els.damaBoard.classList.toggle('has-selection', Boolean(state.selectedPiece));
 
     const lastPath = Array.isArray(r.last_move?.path) ? r.last_move.path : [];
     const lastKeys = new Set(lastPath.map((p) => `${p.row}:${p.col}`));
@@ -380,7 +412,10 @@
         if (key === lastOrigin) cell.classList.add('last-origin');
         if (key === lastEnd) cell.classList.add('last-destination');
         if (previewKeys.has(key)) cell.classList.add('route-preview');
-        if (targetKeys.has(key)) cell.classList.add('legal-target');
+        if (targetKeys.has(key)) {
+          cell.classList.add('legal-target');
+          cell.setAttribute('aria-label', 'Destino possível');
+        }
 
         const piece = piecesBySquare.get(key);
         if (piece) {
@@ -388,7 +423,10 @@
           const token = document.createElement('span');
           token.className = `dama-piece ${owner?.color || 'white'}`;
           token.dataset.pieceId = piece.id;
-          if (legalPieceIds.has(piece.id) && r.current_player_id === me() && r.status !== 'finished') token.classList.add('legal');
+          if (legalPieceIds.has(piece.id) && myTurn) {
+            token.classList.add('legal');
+            token.setAttribute('title', 'Peça disponível');
+          }
           if (state.selectedPiece === piece.id) token.classList.add('selected');
           if (piece.is_king) {
             const crown = document.createElement('span');
@@ -429,12 +467,23 @@
 
   function openRouteChooser(routes) {
     state.previewRoute = routes[0] || null;
-    els.damaRouteChoices.innerHTML = routes.map((route, index) => `
-      <button class="dama-route-option" type="button" data-route-id="${escapeHtml(route.route_id)}">
-        <strong>Rota ${index + 1} · ${route.capture_count} captura${route.capture_count === 1 ? '' : 's'}</strong>
-        <small>${escapeHtml(routeLabel(route))}</small>
-      </button>
-    `).join('');
+    els.damaRouteChoices.innerHTML = routes.map((route, index) => {
+      const path = route.path || [];
+      const flow = path.map((point, pointIndex) => {
+        const square = `<span class="dama-route-square">${escapeHtml(squareName(point))}</span>`;
+        if (pointIndex === path.length - 1) return square;
+        return square + `<span class="dama-route-arrow">${route.is_capture ? '×' : '→'}</span>`;
+      }).join('');
+      const captures = Number(route.capture_count || 0);
+      return `
+        <button class="dama-route-option" type="button"
+          data-route-id="${escapeHtml(route.route_id)}" data-route-number="${index + 1}">
+          <strong>Rota ${index + 1} · ${captures} captura${captures === 1 ? '' : 's'}</strong>
+          <small>Destino final: ${escapeHtml(squareName(path[path.length - 1] || { row: route.to_row, col: route.to_col }))}</small>
+          <span class="dama-route-flow">${flow}</span>
+        </button>
+      `;
+    }).join('');
     els.damaRouteModal.classList.remove('hidden');
     renderBoard();
   }
@@ -878,12 +927,14 @@
     if (!button) return;
     playRoute(button.dataset.routeId);
   });
-  els.damaRouteChoices.addEventListener('pointerover', (event) => {
+  const previewChosenRoute = (event) => {
     const button = event.target.closest('[data-route-id]');
     if (!button) return;
     state.previewRoute = (state.room?.legal_moves || []).find((r) => r.route_id === button.dataset.routeId) || null;
     renderBoard();
-  });
+  };
+  els.damaRouteChoices.addEventListener('pointerover', previewChosenRoute);
+  els.damaRouteChoices.addEventListener('pointerdown', previewChosenRoute);
   els.damaRouteClose.addEventListener('click', closeRouteChooser);
 
   els.damaCancel.addEventListener('click', async () => {
