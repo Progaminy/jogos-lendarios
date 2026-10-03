@@ -131,7 +131,10 @@
       state.searchQuery = ui.search.value.trim();
       searchPlayers();
     });
-    ui.refresh.addEventListener('click', () => loadSocial(false));
+    ui.refresh.addEventListener('click', () => {
+      loadSocial(false);
+      if (state.onlineOpen) loadOnlinePlayers(false);
+    });
     ui.online.addEventListener('click', () => {
       state.onlineOpen = !state.onlineOpen;
       renderFollowing();
@@ -160,7 +163,7 @@
       metric.classList.add('jl-social-link');
       metric.setAttribute('role', 'button');
       metric.setAttribute('tabindex', '0');
-      metric.setAttribute('aria-label', 'Ver jogadores que sigo e estado online');
+      metric.setAttribute('aria-label', 'Ver jogadores online');
       const open = () => {
         section.classList.remove('hidden');
         state.onlineOpen = true;
@@ -350,6 +353,7 @@
         p_follow: follow
       });
       await loadSocial(true);
+      if (state.onlineOpen) await loadOnlinePlayers(true);
       if (state.searchQuery || ui.searchResults.querySelector('[data-social-target]')) await searchPlayers();
       window.JLNotifications && window.JLNotifications.sync && window.JLNotifications.sync();
     } catch (error) {
@@ -370,7 +374,10 @@
     refreshVisibility();
 
     if (window.JLLudoSync?.register) {
-      window.JLLudoSync.register('social', () => loadSocial(true), {
+      window.JLLudoSync.register('social', () => {
+        loadSocial(true);
+        if (state.onlineOpen) loadOnlinePlayers(true);
+      }, {
         interval: LUDO_SYNC_MS,
         when: () => Boolean(token()),
         visibleOnly: true,
