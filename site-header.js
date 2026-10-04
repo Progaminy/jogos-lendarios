@@ -49,14 +49,8 @@
       refresh.type = 'button';
       refresh.setAttribute('aria-label', 'Atualizar');
       refresh.textContent = '⟳';
-      refresh.addEventListener('click', async () => {
-        refresh.disabled = true;
-        try {
-          await refreshGlobal();
-          window.JLNotifications?.refresh?.();
-        } finally {
-          setTimeout(() => { refresh.disabled = false; }, 350);
-        }
+      refresh.addEventListener('click', () => {
+        location.reload();
       });
       actions.prepend(refresh);
     }
@@ -99,9 +93,7 @@
     strip.append(
       makeMetric('Ver jogadores online', '●', 'jlGlobalOnlineCount', './ludo.html#socialZone'),
       makeMetric('Convites individuais', '🔔', 'jlGlobalDirectCount', './ludo.html#notificationCenter'),
-      makeMetric('Convites populares', '📣', 'jlGlobalPublicCount', './ludo.html#notificationCenter'),
-      makeMetric('Part.', '', 'jlGlobalPartCount', './ludo.html#notificationCenter'),
-      makeMetric('Pop.', '', 'jlGlobalPopCount', './ludo.html#notificationCenter')
+      makeMetric('Convites populares', '📣', 'jlGlobalPublicCount', './ludo.html#notificationCenter')
     );
     main.prepend(strip);
   }
@@ -134,9 +126,7 @@
       };
       set('jlGlobalOnlineCount', online);
       set('jlGlobalDirectCount', invites.length);
-      set('jlGlobalPartCount', invites.length);
       set('jlGlobalPublicCount', publicCount);
-      set('jlGlobalPopCount', publicCount);
 
       strip?.classList.remove('hidden');
 
