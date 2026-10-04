@@ -10,7 +10,7 @@
     if (path.endsWith('/ludo.html')) return 'tabuleiro';
     if (path.endsWith('/dama.html')) return 'tabuleiro';
     if (path.endsWith('/tabuleiro.html')) return 'tabuleiro';
-    if (path.endsWith('/aviator.html')) return 'todos';
+    if (path.endsWith('/aviator.html')) return 'aviator';
     const hash = location.hash.toLowerCase();
     if (hash.includes('sorteios') || hash.includes('numero-lendario') || hash.includes('dupla-lendaria')) return 'sorteios';
     if (hash.includes('playerarea')) return 'conta';
@@ -23,6 +23,7 @@
     nav.innerHTML = [
       '<a data-jl-nav="todos" href="./index.html#catalogo">Todos</a>',
       '<a data-jl-nav="sorteios" href="./index.html#sorteios">Sorteios</a>',
+      '<a data-jl-nav="aviator" class="nav-aviator-symbol" href="./aviator.html" aria-label="Aviator" title="Aviator"><span aria-hidden="true">✈</span></a>',
       '<a data-jl-nav="tabuleiro" href="./tabuleiro.html">Tabuleiro</a>',
       '<a data-jl-nav="conta" href="./index.html#playerArea">Conta</a>'
     ].join('');
