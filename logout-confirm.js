@@ -20,6 +20,7 @@
   function bootSharedUi(){
     loadSharedAsset('./site-auth.js?v=20261004-1','jl-shared-auth');
     loadSharedAsset('./site-ui.js?v=20261004-1','jl-site-ui');
+    loadSharedAsset('./site-auth-priority.js?v=20261004-1','jl-auth-priority');
   }
 
   function ensureWindow(){
