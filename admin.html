@@ -7,30 +7,33 @@
   <title>Administração — Jogos Lendários</title>
   <link rel="icon" href="./favicon.ico" sizes="any">
   <link rel="stylesheet" href="./styles.css?v=20260930-3">
-  <link rel="stylesheet" href="./site-nav.css?v=20261004-4">
+  <link rel="stylesheet" href="./site-nav.css?v=20261004-5">
   <link rel="stylesheet" href="./admin-bonus.css?v=20260922-14">
   <link rel="stylesheet" href="./admin-recovery.css?v=20260922-13">
   <link rel="stylesheet" href="./admin-ludo-spectator.css?v=20261001-1">
 </head>
-<body data-jl-header-mode="admin">
+<body>
   <div id="toast" class="toast" aria-live="polite"></div>
 
   <header class="topbar">
-    <a class="brand" href="./index.html">Jogos <strong>Lendários</strong></a>
+    <a class="brand" href="./index.html" aria-label="Jogos Lendários">Jogos <strong>Lendários</strong></a>
     <nav class="game-nav" aria-label="Categorias de jogos">
       <a href="./index.html#catalogo">Todos</a>
       <a href="./index.html#sorteios">Sorteios</a>
       <a href="./tabuleiro.html">Tabuleiro</a>
       <a href="./index.html#playerArea">Conta</a>
     </nav>
-    <div class="top-actions">
-      <button id="refreshAdmin" class="top-refresh-button hidden" type="button" aria-label="Atualizar">⟳</button>
-      <span class="badge muted">ADMINISTRAÇÃO</span>
-      <button id="adminLogout" class="button ghost small hidden" type="button">Sair</button>
-    </div>
+    <div class="top-actions"></div>
   </header>
 
   <main class="admin-shell">
+    <section class="card admin-global-tools">
+      <span class="badge muted">ADMINISTRAÇÃO</span>
+      <div class="admin-actions">
+        <button id="refreshAdmin" class="button ghost small hidden" type="button">Atualizar</button>
+        <button id="adminLogout" class="button ghost small hidden" type="button">Sair</button>
+      </div>
+    </section>
     <section id="adminLogin" class="card admin-login">
       <p class="eyebrow">ACESSO RESTRITO</p>
       <h1 style="font-size:clamp(2.3rem,7vw,4rem)">Painel administrativo</h1>
@@ -439,7 +442,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.min.js"></script>
   <script src="./config.js"></script>
   <script src="./js/auth/session.js?v=20260928-2"></script>
-  <script src="./site-header.js?v=20261004-2" defer></script>
+  <script src="./site-header.js?v=20261004-3" defer></script>
+  <script src="./js/notifications/client.js?v=20260928-22" defer></script>
   <script src="./js/a11y/dialogs.js?v=20260928-2"></script>
   <script src="./js/aviator/admin.js?v=20261002-4" defer></script>
   <script src="./admin.js?v=20261001-1" defer></script>
