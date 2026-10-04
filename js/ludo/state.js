@@ -1,12 +1,16 @@
 (() => {
   'use strict';
 
+  let sharedState = window.__JL_LUDO_RUNTIME_STATE__ || null;
+
   function create() {
+    if (sharedState) return sharedState;
+
     const token = window.JLSession?.getPlayerToken?.()
       || localStorage.getItem('jl_player_token')
       || '';
 
-    return {
+    sharedState = {
       token,
       status: null,
       room: null,
@@ -34,10 +38,10 @@
       lastDiceValue: null,
       lastDiceRoomId: null
     };
+
+    window.__JL_LUDO_RUNTIME_STATE__ = sharedState;
+    return sharedState;
   }
 
-  // O recovery da sala é carregado explicitamente pelo HTML.
-  // Não o injetar aqui: uma cópia antiga pode vencer a corrida de boot e
-  // bloquear a versão atual através do guard window.__JL_LUDO_ACTIVE_ROOM_RECOVERY__.
   window.JLLudoState = Object.freeze({ create });
 })();
