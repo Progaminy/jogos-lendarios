@@ -4,6 +4,9 @@
   const MONEY = (value) => Number(value || 0).toLocaleString('pt-MZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const token = () => window.JLSession?.getPlayerToken?.() || localStorage.getItem('jl_player_token') || '';
   const rpc = (name, args = {}) => window.JLApi.rpc(name, args);
+  const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (ch) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[ch]));
 
   function message(el, text = '', type = '') {
     if (!el) return;
@@ -71,8 +74,8 @@
       <section class="jl-account-card jl-account-head">
         <div>
           <p class="jl-account-kicker">MINHA CONTA</p>
-          <h2>${String(player.name || 'Jogador')}</h2>
-          <p class="jl-account-phone">${phone}</p>
+          <h2>${escapeHtml(player.name || 'Jogador')}</h2>
+          <p class="jl-account-phone">${escapeHtml(phone)}</p>
         </div>
         <div class="jl-account-stat"><span>Saldo disponível</span><strong>${balance}</strong><small>saldo comum</small></div>
         <div class="jl-account-stat"><span>Bónus para jogar</span><strong class="jl-account-bonus">${MONEY(bonus.total || 0)} MZN</strong><small>Número ${MONEY(bonus.number || 0)} · Dupla ${MONEY(bonus.pair || 0)}</small></div>
@@ -200,8 +203,13 @@
       }
       renderAccount(root, data);
     } catch (error) {
-      if (/sess[aã]o|session/i.test(String(error?.message || ''))) renderLoggedOut(root);
-      else root.innerHTML = `<section class="jl-account-card jl-account-login"><p class="jl-account-kicker">MINHA CONTA</p><h2>Não foi possível carregar a conta</h2><p class="jl-account-muted">${String(error?.message || 'Tente atualizar a página.')}</p></section>`;
+      if (/sess[aã]o|session/i.test(String(error?.message || ''))) {
+        renderLoggedOut(root);
+      } else {
+        root.innerHTML = '<section class="jl-account-card jl-account-login"><p class="jl-account-kicker">MINHA CONTA</p><h2>Não foi possível carregar a conta</h2><p id="jlAccountLoadError" class="jl-account-muted"></p></section>';
+        const out = document.getElementById('jlAccountLoadError');
+        if (out) out.textContent = String(error?.message || 'Tente atualizar a página.');
+      }
     }
   }
 
@@ -215,6 +223,8 @@
       if (document.visibilityState === 'visible') refresh();
     });
   }
+
+  window.JLAccountFooter = Object.freeze({ refresh });
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true });
   else boot();
