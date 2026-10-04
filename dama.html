@@ -11,7 +11,7 @@
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="stylesheet" href="./styles.css?v=20260928-20">
   <link rel="stylesheet" href="./site-nav.css?v=20261004-7">
-  <link rel="stylesheet" href="./dama.css?v=20261004-2">
+  <link rel="stylesheet" href="./dama.css?v=20261004-3">
 </head>
 <body>
   <div id="damaToast" class="toast" role="status" aria-live="polite"></div>
@@ -107,7 +107,7 @@
 
     <section id="damaRoom" class="hidden">
       <div class="card dama-room-head">
-        <div>
+        <div class="dama-room-summary">
           <p class="eyebrow">DAMA LENDÁRIA</p>
           <h1 id="damaRoomCode">—</h1>
           <p id="damaRoomMeta" class="muted">—</p>
@@ -116,6 +116,9 @@
           <button id="damaCancel" class="button danger small" type="button">Cancelar</button>
           <button id="damaOfferDraw" class="button ghost small hidden" type="button">Propor empate</button>
           <button id="damaForfeit" class="button danger small hidden" type="button">Desistir</button>
+        </div>
+        <div id="damaRoomPreview" class="dama-room-preview" aria-label="Tabuleiro da sala de Dama">
+          <div id="damaRoomPreviewBoard" class="dama-board dama-room-preview-board" aria-label="Tabuleiro de Dama antes do início da partida"></div>
         </div>
       </div>
 
@@ -219,6 +222,6 @@
   <script src="./js/auth/session.js?v=20260928-2"></script>
   <script src="./site-header.js?v=20261004-5" defer></script>
   <script src="./js/notifications/client.js?v=20260928-22" defer></script>
-  <script src="./dama.js?v=20261004-2" defer></script>
+  <script src="./dama.js?v=20261004-3" defer></script>
 </body>
 </html>
