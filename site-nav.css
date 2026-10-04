@@ -325,3 +325,15 @@ body {
   .status-metric .shortcut-label{font-size:.53rem}
   .status-metric strong{font-size:.74rem}
 }
+
+/* Sem exceções: o cabeçalho deve ser visualmente idêntico em todo Jogos Lendários. */
+.product-tag{display:none!important}
+.top-actions>#identityBadge{display:none!important}
+.admin-global-tools{
+  width:min(100%,1220px);margin:10px auto 14px;padding:10px 12px;
+  display:flex;align-items:center;justify-content:space-between;gap:10px
+}
+.admin-global-tools .admin-actions{display:flex;align-items:center;gap:8px;margin:0}
+@media(max-width:600px){
+  .admin-global-tools{margin-top:8px}
+}
