@@ -64,6 +64,14 @@
     return room?.status === 'playing' && Boolean(room?.started_at);
   }
 
+  // Once ludo.js has rendered the real player cards, it owns playersPanel.
+  // The authority module is a recovery/visibility guard and must not keep
+  // replacing the primary markup every 500 ms, otherwise mobile layout shifts.
+  function primaryPlayersRendererReady() {
+    const target = document.getElementById('playersPanel');
+    return Boolean(target?.querySelector('.player-card .color-dot'));
+  }
+
   function renderPlayers(snapshot) {
     const target = document.getElementById('playersPanel');
     const room = snapshot?.room;
@@ -157,7 +165,7 @@
     document.getElementById('forfeitRoom')?.classList.toggle('hidden', !started(roomData));
     document.querySelector('.invite-panel')?.classList.toggle('hidden', !roomCanInvite(snapshot));
 
-    renderPlayers(snapshot);
+    if (!primaryPlayersRendererReady()) renderPlayers(snapshot);
     renderDeadline(snapshot);
 
     if (authority.scrolledRoomId !== authority.activeRoomId) {
