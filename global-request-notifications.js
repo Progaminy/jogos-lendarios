@@ -7,6 +7,8 @@
   const POLL_MS = 6000;
   let busy = false;
   let timer = null;
+  let countObserver = null;
+  const lastCounts = { direct: 0, public: 0, ready: false };
 
   const token = () => window.JLSession?.getPlayerToken?.() || localStorage.getItem('jl_player_token') || '';
   const rpc = (name, args = {}) => window.JLApi?.rpc?.(name, args);
@@ -35,7 +37,35 @@
 
   function setCount(id, value) {
     const el = document.getElementById(id);
-    if (el) el.textContent = String(Math.max(0, Number(value) || 0));
+    if (!el) return;
+    const next = String(Math.max(0, Number(value) || 0));
+    if (el.textContent !== next) el.textContent = next;
+  }
+
+  function applyCounts(direct, publicCount) {
+    lastCounts.direct = Math.max(0, Number(direct) || 0);
+    lastCounts.public = Math.max(0, Number(publicCount) || 0);
+    lastCounts.ready = true;
+    setCount('jlGlobalDirectCount', lastCounts.direct);
+    setCount('jlGlobalPublicCount', lastCounts.public);
+  }
+
+  function installCountGuard() {
+    countObserver?.disconnect?.();
+    const direct = document.getElementById('jlGlobalDirectCount');
+    const publicEl = document.getElementById('jlGlobalPublicCount');
+    if (!direct && !publicEl) {
+      setTimeout(installCountGuard, 250);
+      return;
+    }
+
+    countObserver = new MutationObserver(() => {
+      if (!lastCounts.ready) return;
+      setCount('jlGlobalDirectCount', lastCounts.direct);
+      setCount('jlGlobalPublicCount', lastCounts.public);
+    });
+    if (direct) countObserver.observe(direct, { childList: true, characterData: true, subtree: true });
+    if (publicEl) countObserver.observe(publicEl, { childList: true, characterData: true, subtree: true });
   }
 
   function pushNotification(item) {
@@ -90,8 +120,8 @@
 
   async function safeRpc(name, args) {
     try {
-      const fn = rpc(name, args);
-      return fn && typeof fn.then === 'function' ? await fn : null;
+      const result = rpc(name, args);
+      return result && typeof result.then === 'function' ? await result : null;
     } catch {
       return null;
     }
@@ -100,10 +130,7 @@
   async function refresh() {
     const current = token();
     if (!current || busy || !window.JLApi?.rpc) {
-      if (!current) {
-        setCount('jlGlobalDirectCount', 0);
-        setCount('jlGlobalPublicCount', 0);
-      }
+      if (!current) applyCounts(0, 0);
       return;
     }
 
@@ -134,12 +161,9 @@
       const fallbackPublic = Number(status?.public_challenges_count ?? status?.public_count);
       const publicCount = publicChallenges.length || (Number.isFinite(fallbackPublic) ? Math.max(0, fallbackPublic) : 0);
 
-      setCount('jlGlobalDirectCount', incomingBoard.length + ludoDirectCount);
-      setCount('jlGlobalPublicCount', publicCount);
-
+      applyCounts(incomingBoard.length + ludoDirectCount, publicCount);
       bridgeDirectNotifications(incomingBoard, legacyInvites);
       bridgePublicNotifications(publicChallenges);
-
       window.JLNotifications?.refresh?.();
     } finally {
       busy = false;
@@ -155,6 +179,7 @@
   }
 
   const boot = () => {
+    installCountGuard();
     start();
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') void refresh();
