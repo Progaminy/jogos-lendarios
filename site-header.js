@@ -38,10 +38,10 @@
         <a data-jl-nav="sorteios" href="./index.html#sorteios">Sorteios</a>
         <a data-jl-nav="aviator" class="nav-aviator-symbol" href="./aviator.html" aria-label="Aviator" title="Aviator"><span aria-hidden="true">✈</span></a>
         <a data-jl-nav="tabuleiro" href="./tabuleiro.html">Tabuleiro</a>
-        <a data-jl-nav="conta" href="./index.html#playerArea">Conta</a>
+        <a data-jl-nav="conta" href="#account">Conta</a>
       </nav>
       <div class="top-actions">
-        <button id="${refreshId}" class="top-refresh-button" type="button" aria-label="Atualizar">⟳</button>
+        <button id="${refreshId}" class="top-refresh-button" type="button" aria-label="Atualizar página">⟳</button>
         <span id="numberRoundBadge" class="badge muted jl-header-legacy-hidden">Número</span>
         <span id="pairRoundBadge" class="badge muted jl-header-legacy-hidden">Dupla</span>
         <span id="identityBadge" class="badge jl-header-legacy-hidden">Não autenticado</span>
@@ -94,7 +94,10 @@
 
   function ensureStyle(href, marker) {
     if (document.querySelector(`link[data-${marker}]`)) return;
-    const exists = [...document.styleSheets].some((sheet) => String(sheet.href || '').includes(href.split('?')[0]));
+    const path = href.split('?')[0].replace(/^\.\//, '/');
+    const exists = [...document.styleSheets].some((sheet) => {
+      try { return new URL(sheet.href || '', location.href).pathname.endsWith(path); } catch { return false; }
+    });
     if (exists) return;
     const link = document.createElement('link');
     link.rel = 'stylesheet';
@@ -104,6 +107,7 @@
   }
 
   function ensureSharedStyles() {
+    ensureStyle('./site-header-enforce.css?v=20261004-1', 'jl-header-enforce');
     ensureStyle('./site-account.css?v=20261004-1', 'jl-site-account');
     ensureStyle('./support-ui.css?v=20260922-12fix', 'jl-support-style');
   }
@@ -134,10 +138,8 @@
   }
 
   function closeAccountMenu() {
-    const menu = $('#accountMenu');
-    const button = $('#accountButton');
-    menu?.classList.add('hidden');
-    button?.setAttribute('aria-expanded', 'false');
+    $('#accountMenu')?.classList.add('hidden');
+    $('#accountButton')?.setAttribute('aria-expanded', 'false');
   }
 
   function openAccountMenu() {
@@ -156,11 +158,6 @@
   }
 
   function setAccountFields(data) {
-    const button = $('#accountButton');
-    const playerEl = $('#accountMenuPlayer');
-    const codeEl = $('#accountMenuCode');
-    const balanceEl = $('#accountMenuBalance');
-    const bonusEl = $('#accountMenuBonus');
     const player = data?.player || data?.identity || {};
     const bonus = data?.bonus || {};
     const name = String(player.name || player.code || 'Conta').trim() || 'Conta';
@@ -168,16 +165,16 @@
     const balance = Number(player.balance);
     const bonusTotal = Number(bonus.total ?? player.bonus_balance ?? 0) || 0;
 
+    const button = $('#accountButton');
     if (button) {
       button.textContent = name;
       button.title = Number.isFinite(balance) ? `Saldo: ${money(balance)} MZN` : 'Conta';
     }
-    if (playerEl) playerEl.textContent = name;
-    if (codeEl) codeEl.textContent = code;
-    if (balanceEl) balanceEl.textContent = Number.isFinite(balance) ? `${money(balance)} MZN` : '—';
-    if (bonusEl && (data?.bonus || player.bonus_balance != null)) bonusEl.textContent = `Bónus ${money(bonusTotal)} MZN`;
-    const identity = $('#identityBadge');
-    if (identity) identity.textContent = code;
+    if ($('#accountMenuPlayer')) $('#accountMenuPlayer').textContent = name;
+    if ($('#accountMenuCode')) $('#accountMenuCode').textContent = code;
+    if ($('#accountMenuBalance')) $('#accountMenuBalance').textContent = Number.isFinite(balance) ? `${money(balance)} MZN` : '—';
+    if ($('#accountMenuBonus') && (data?.bonus || player.bonus_balance != null)) $('#accountMenuBonus').textContent = `Bónus ${money(bonusTotal)} MZN`;
+    if ($('#identityBadge')) $('#identityBadge').textContent = code;
   }
 
   function setLoggedOutHeader() {
@@ -186,14 +183,10 @@
       button.textContent = 'Entrar';
       button.title = 'Entrar na conta';
     }
-    const playerEl = $('#accountMenuPlayer');
-    const codeEl = $('#accountMenuCode');
-    const balanceEl = $('#accountMenuBalance');
-    const bonusEl = $('#accountMenuBonus');
-    if (playerEl) playerEl.textContent = '—';
-    if (codeEl) codeEl.textContent = '—';
-    if (balanceEl) balanceEl.textContent = '0,00 MZN';
-    if (bonusEl) bonusEl.textContent = 'Bónus 0,00 MZN';
+    if ($('#accountMenuPlayer')) $('#accountMenuPlayer').textContent = '—';
+    if ($('#accountMenuCode')) $('#accountMenuCode').textContent = '—';
+    if ($('#accountMenuBalance')) $('#accountMenuBalance').textContent = '0,00 MZN';
+    if ($('#accountMenuBonus')) $('#accountMenuBonus').textContent = 'Bónus 0,00 MZN';
     closeAccountMenu();
   }
 
@@ -225,7 +218,7 @@
         return;
       }
     }
-    if (attempt >= 15) return;
+    if (attempt >= 20) return;
     setTimeout(() => retryFind(selectors, callback, attempt + 1), 100);
   }
 
@@ -244,13 +237,66 @@
     });
   }
 
+  function loadScriptOnce(src, marker) {
+    const bare = src.split('?')[0].replace(/^\.\//, '/');
+    const existing = [...document.scripts].find((script) => {
+      try { return new URL(script.src, location.href).pathname.endsWith(bare); } catch { return false; }
+    });
+    if (existing) {
+      if (existing.dataset.jlLoaded === '1' || !existing.async) return Promise.resolve(existing);
+      return new Promise((resolve) => {
+        existing.addEventListener('load', () => resolve(existing), { once: true });
+        setTimeout(() => resolve(existing), 1200);
+      });
+    }
+    return new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = src;
+      script.async = true;
+      if (marker) script.dataset[marker] = '1';
+      script.addEventListener('load', () => {
+        script.dataset.jlLoaded = '1';
+        resolve(script);
+      }, { once: true });
+      script.addEventListener('error', reject, { once: true });
+      document.head.appendChild(script);
+    });
+  }
+
+  async function ensureLogoutConfirm() {
+    if (typeof window.JLConfirmLogout === 'function') return true;
+    try { await loadScriptOnce('./logout-confirm.js?v=20260924-2', 'jlLogoutConfirmLoader'); } catch {}
+    return typeof window.JLConfirmLogout === 'function';
+  }
+
+  function openLogin() {
+    closeAccountMenu();
+    const modal = $('#authModal');
+    if (modal) {
+      modal.classList.remove('hidden');
+      document.body.classList.add('modal-open');
+      setTimeout(() => {
+        $('#loginTab')?.click();
+        $('#loginPhone')?.focus?.();
+      }, 0);
+      return;
+    }
+    location.href = './index.html#login';
+  }
+
   async function genericLogout() {
     const current = token();
     if (!current) return;
-    if (window.JLConfirmLogout && !(await window.JLConfirmLogout())) return;
+    await ensureLogoutConfirm();
+    if (typeof window.JLConfirmLogout === 'function' && !(await window.JLConfirmLogout())) return;
+    if (typeof window.JLConfirmLogout !== 'function' && !window.confirm('Sair da conta?')) return;
+
     try { await rpc?.('jl_logout_player', { p_token: current }); } catch {}
     if (window.JLSession?.setPlayerToken) window.JLSession.setPlayerToken('');
-    else localStorage.removeItem('jl_player_token');
+    else {
+      localStorage.removeItem('jl_player_token');
+      window.dispatchEvent(new CustomEvent('jl-player-session-changed', { detail: { authenticated: false } }));
+    }
     setLoggedOutHeader();
     window.JLAccountFooter?.refresh?.();
     showToast('Sessão encerrada.', 'success');
@@ -264,17 +310,13 @@
       location.reload();
     }, true);
 
-    const accountButton = $('#accountButton');
-    accountButton?.addEventListener('click', async (event) => {
-      if (!token()) {
-        if (isIndexPage() || isLudoPage()) return;
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        location.href = './index.html#playerArea';
-        return;
-      }
+    $('#accountButton')?.addEventListener('click', async (event) => {
       event.preventDefault();
       event.stopImmediatePropagation();
+      if (!token()) {
+        openLogin();
+        return;
+      }
       toggleAccountMenu();
       if (!$('#accountMenu')?.classList.contains('hidden')) await refreshAccount();
     }, true);
@@ -291,11 +333,12 @@
       scrollFinancial('withdraw');
     }, true);
 
-    $('#accountMenuLogout')?.addEventListener('click', async (event) => {
-      if (isIndexPage() || isLudoPage()) return;
+    document.addEventListener('click', (event) => {
+      const logout = event.target.closest?.('#accountMenuLogout,#logoutButton,#jlAccountLogout');
+      if (!logout) return;
       event.preventDefault();
       event.stopImmediatePropagation();
-      await genericLogout();
+      genericLogout();
     }, true);
 
     document.addEventListener('click', (event) => {
@@ -306,31 +349,19 @@
     });
 
     document.addEventListener('click', (event) => {
-      const link = event.target.closest('.game-nav [data-jl-nav="conta"]');
-      if (!link || !token()) return;
+      const link = event.target.closest?.('.game-nav [data-jl-nav="conta"]');
+      if (!link) return;
       event.preventDefault();
       event.stopImmediatePropagation();
-      scrollFinancial('account');
+      if (!token()) openLogin();
+      else scrollFinancial('account');
     }, true);
   }
 
-  function loadScriptOnce(src, marker) {
-    const bare = src.split('?')[0].replace(/^\.\//, '/');
-    const existing = [...document.scripts].find((script) => {
-      try { return new URL(script.src, location.href).pathname.endsWith(bare); } catch { return false; }
-    });
-    if (existing) return existing;
-    const script = document.createElement('script');
-    script.src = src;
-    script.async = true;
-    if (marker) script.dataset[marker] = '1';
-    document.head.appendChild(script);
-    return script;
-  }
-
   function loadAccountPlugins() {
-    loadScriptOnce('./js/auth/player-sessions.js?v=20260928-1', 'jlPlayerSessions');
-    loadScriptOnce('./support-ui.js?v=20260928-1', 'jlSupportUi');
+    ensureLogoutConfirm();
+    loadScriptOnce('./js/auth/player-sessions.js?v=20260928-1', 'jlPlayerSessions').catch(() => {});
+    loadScriptOnce('./support-ui.js?v=20260928-1', 'jlSupportUi').catch(() => {});
   }
 
   function makeMetric(label, icon, id, target) {
@@ -418,10 +449,8 @@
     updateEstimatedOnline(0);
     if (!current || !rpc) {
       strip?.classList.remove('hidden');
-      const direct = $('#jlGlobalDirectCount');
-      const popular = $('#jlGlobalPublicCount');
-      if (direct) direct.textContent = '0';
-      if (popular) popular.textContent = '0';
+      if ($('#jlGlobalDirectCount')) $('#jlGlobalDirectCount').textContent = '0';
+      if ($('#jlGlobalPublicCount')) $('#jlGlobalPublicCount').textContent = '0';
       return;
     }
 
@@ -445,13 +474,13 @@
 
   function loadPageEnhancements() {
     if (!pathName().endsWith('/dama.html')) return;
-    loadScriptOnce('./dama-room-preview.js?v=20261004-2', 'jlDamaRoomPreview');
+    loadScriptOnce('./dama-room-preview.js?v=20261004-2', 'jlDamaRoomPreview').catch(() => {});
   }
 
   function loadAccountFooter() {
     ensureStyle('./account-footer.css?v=20261004-1', 'jl-account-footer');
 
-    const loadFooterScript = () => loadScriptOnce('./account-footer.js?v=20261004-2', 'jlAccountFooter');
+    const loadFooterScript = () => loadScriptOnce('./account-footer.js?v=20261004-2', 'jlAccountFooter').catch(() => {});
     if (window.JLFinancial) {
       loadFooterScript();
       return;
@@ -482,6 +511,8 @@
     refreshAccount();
     refreshGlobal();
 
+    if (isIndexPage() && location.hash.toLowerCase() === '#login') setTimeout(openLogin, 120);
+
     window.addEventListener('hashchange', normalizeNav);
     window.addEventListener('jl-player-session-changed', () => {
       refreshAccount();
@@ -506,7 +537,8 @@
     openAccountMenu,
     closeAccountMenu,
     scrollAccount: () => scrollFinancial('account'),
-    logout: genericLogout
+    logout: genericLogout,
+    login: openLogin
   });
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true });
