@@ -9,6 +9,7 @@
   }[ch]));
 
   let root = null;
+  let nativeRoot = null;
   let actionModal = null;
   const actionState = { kind: 'deposit' };
 
@@ -38,10 +39,48 @@
   function nativeAccountAtBottom() {
     const existing = document.getElementById('playerArea');
     const main = document.querySelector('main');
-    if (!existing || !main) return false;
+    if (!existing || !main) return null;
     existing.classList.add('jl-account-footer-native');
     main.appendChild(existing);
-    return true;
+    return existing;
+  }
+
+  function compactNativeAccount(existing) {
+    const legacyActions = existing.querySelector(':scope > .account-grid');
+    if (legacyActions) legacyActions.hidden = true;
+
+    let card = document.getElementById('jlNativeAccountActions');
+    if (!card) {
+      card = document.createElement('section');
+      card.id = 'jlNativeAccountActions';
+      card.className = 'card jl-native-account-actions-card';
+      card.innerHTML = `
+        <div class="jl-account-actions" aria-label="Ações da conta">
+          <button id="jlNativeAccountDeposit" class="jl-account-btn primary" type="button">Depósito</button>
+          <button id="jlNativeAccountWithdraw" class="jl-account-btn ghost" type="button">Saque</button>
+          <button id="jlNativeAccountSupport" class="jl-account-btn ghost" type="button">Mensagem</button>
+          <button id="jlNativeAccountSessions" class="jl-account-btn ghost" type="button">Sessões</button>
+        </div>`;
+      const wallet = existing.querySelector(':scope > .wallet-card');
+      if (wallet?.nextSibling) existing.insertBefore(card, wallet.nextSibling);
+      else existing.prepend(card);
+    }
+
+    document.getElementById('jlNativeAccountDeposit')?.addEventListener('click', () => openTransaction('deposit'));
+    document.getElementById('jlNativeAccountWithdraw')?.addEventListener('click', () => openTransaction('withdraw'));
+    document.getElementById('jlNativeAccountSupport')?.addEventListener('click', () => triggerHeaderAction('accountMenuSupport'));
+    document.getElementById('jlNativeAccountSessions')?.addEventListener('click', () => triggerHeaderAction('accountMenuSessions'));
+
+    const depositMessage = document.getElementById('depositMessage');
+    if (depositMessage && depositMessage.dataset.jlAccountBridge !== '1') {
+      depositMessage.dataset.jlAccountBridge = '1';
+      new MutationObserver(() => {
+        const text = String(depositMessage.textContent || '').trim();
+        if (!text || !/saldo insuficiente|faltam|dep[oó]sito/i.test(text)) return;
+        const amount = Number(document.getElementById('depositAmount')?.value || 0);
+        openTransaction('deposit', amount);
+      }).observe(depositMessage, { childList: true, characterData: true, subtree: true });
+    }
   }
 
   function createFooter() {
@@ -303,7 +342,7 @@
     document.documentElement.dataset.jlAccountFooterFinancialBound = '1';
     document.addEventListener('click', (event) => {
       const trigger = event.target.closest?.('#accountMenuDeposit,#accountMenuWithdraw');
-      if (!trigger || !root || !token()) return;
+      if (!trigger || (!root && !nativeRoot) || !token()) return;
       event.preventDefault();
       event.stopImmediatePropagation();
       closeHeaderMenu();
@@ -312,8 +351,19 @@
   }
 
   async function refresh() {
-    if (!root) return;
     const current = token();
+    if (nativeRoot) {
+      if (!current) {
+        window.JLAccountFooter.lastData = null;
+        return;
+      }
+      try {
+        window.JLAccountFooter.lastData = await rpc('jl_player_state', { p_token: current });
+      } catch {}
+      return;
+    }
+
+    if (!root) return;
     if (!current) {
       renderLoggedOut(root);
       return;
@@ -338,10 +388,20 @@
   }
 
   function boot() {
-    if (nativeAccountAtBottom()) {
+    const native = nativeAccountAtBottom();
+    if (native) {
+      nativeRoot = native;
+      compactNativeAccount(native);
       wireLocalAccountLinks();
+      bindHeaderFinancialActions();
+      refresh();
+      window.addEventListener('jl-player-session-changed', refresh);
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') refresh();
+      });
       return;
     }
+
     root = createFooter();
     if (!root) return;
     wireLocalAccountLinks();
