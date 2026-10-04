@@ -116,6 +116,48 @@
       || document.getElementById('gamePanel');
   }
 
+  function directPinnedBoardIntoView() {
+    if (!document.body.classList.contains('ludo-pinned')) return false;
+    const gamePanel = document.getElementById('gamePanel');
+    const board = document.getElementById('ludoBoard');
+    const target = boardFocusTarget();
+    if (!target || !gamePanel || gamePanel.classList.contains('hidden') || !board) return false;
+
+    try {
+      const url = new URL(window.location.href);
+      if (stickyRoomId) url.searchParams.set('room', stickyRoomId);
+      url.hash = 'ludoBoard';
+      window.history.replaceState(window.history.state, '', url.toString());
+    } catch {
+      window.location.hash = 'ludoBoard';
+    }
+
+    const moveToBoard = () => {
+      if (!document.body.classList.contains('ludo-pinned')) return;
+      const topbarHeight = document.querySelector('.topbar')?.getBoundingClientRect().height || 0;
+      const rect = target.getBoundingClientRect();
+      const destination = Math.max(0, window.scrollY + rect.top - topbarHeight - 6);
+      window.scrollTo({ top: destination, behavior: 'smooth' });
+    };
+
+    requestAnimationFrame(() => requestAnimationFrame(moveToBoard));
+    window.setTimeout(moveToBoard, 180);
+    return true;
+  }
+
+  function installPinButtonRedirect() {
+    if (!isLudoPath()) return;
+    document.addEventListener('click', event => {
+      const button = event.target?.closest?.('#pinLudo');
+      if (!button) return;
+      window.setTimeout(() => {
+        if (document.body.classList.contains('ludo-pinned')) {
+          directPinnedBoardIntoView();
+        }
+      }, 0);
+    });
+  }
+
   function focusCreatedRoomBoard() {
     if (!createBoardFocusPending) return false;
 
@@ -322,6 +364,7 @@
 
   installPinnedBoardFix();
   repairLudoHeader();
+  installPinButtonRedirect();
   installCreateRoomBoardRedirect();
   installActiveRoomVisibilityGuard();
   document.addEventListener('DOMContentLoaded', () => {
