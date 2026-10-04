@@ -4,7 +4,6 @@
   if (window.__JL_LUDO_ACTIVE_ROOM_RECOVERY__) return;
   window.__JL_LUDO_ACTIVE_ROOM_RECOVERY__ = true;
 
-  const cfg = window.JL_CONFIG || {};
   const TOKEN_KEY = 'jl_player_token';
   let recovering = false;
   let redirectedRoomId = '';
@@ -13,25 +12,6 @@
     return window.JLSession?.getPlayerToken?.()
       || localStorage.getItem(TOKEN_KEY)
       || '';
-  }
-
-  async function rpc(name, args = {}) {
-    if (!cfg.supabaseUrl || !cfg.supabaseKey) throw new Error('Configuração do servidor indisponível.');
-    const response = await fetch(`${cfg.supabaseUrl}/rest/v1/rpc/${name}`, {
-      method: 'POST',
-      headers: {
-        apikey: cfg.supabaseKey,
-        Authorization: `Bearer ${cfg.supabaseKey}`,
-        'Content-Type': 'application/json',
-        Accept: 'application/json'
-      },
-      body: JSON.stringify(args)
-    });
-    const raw = await response.text();
-    let data = null;
-    try { data = raw ? JSON.parse(raw) : null; } catch { data = raw; }
-    if (!response.ok) throw new Error(data?.message || data?.hint || data?.error || `Erro ${response.status}`);
-    return data;
   }
 
   function normalizedText(value) {
@@ -45,7 +25,7 @@
     const text = normalizedText(message);
     return text.includes('sala')
       && text.includes('ativa')
-      && (text.includes('ja participa') || text.includes('participa'));
+      && text.includes('participa');
   }
 
   function roomUrl(roomId) {
@@ -56,31 +36,35 @@
     return url;
   }
 
-  function focusExistingRoom(roomId) {
+  function focusWhenRendered(roomId) {
     const current = new URL(window.location.href);
     if (current.searchParams.get('room') !== roomId) return false;
 
+    const room = document.getElementById('room');
+    if (!room) return true;
+
     const focus = () => {
-      const room = document.getElementById('room');
-      if (!room) return false;
-      room.classList.remove('hidden');
+      if (room.classList.contains('hidden')) return false;
       room.scrollIntoView({ behavior: 'smooth', block: 'start' });
       return true;
     };
 
     if (focus()) return true;
-    let attempts = 0;
-    const timer = setInterval(() => {
-      attempts += 1;
-      if (focus() || attempts >= 20) clearInterval(timer);
-    }, 150);
+
+    const observer = new MutationObserver(() => {
+      if (!focus()) return;
+      observer.disconnect();
+    });
+    observer.observe(room, { attributes: true, attributeFilter: ['class'] });
+    setTimeout(() => observer.disconnect(), 10000);
     return true;
   }
 
   async function recoverActiveRoom() {
     if (recovering) return;
     const playerToken = token();
-    if (!playerToken) return;
+    const rpc = window.JLApi?.rpc;
+    if (!playerToken || typeof rpc !== 'function') return;
 
     recovering = true;
     try {
@@ -88,12 +72,13 @@
       const roomId = String(status?.active_room_id || '').trim();
       if (!roomId) return;
 
-      if (focusExistingRoom(roomId)) return;
+      if (focusWhenRendered(roomId)) return;
       if (redirectedRoomId === roomId) return;
+
       redirectedRoomId = roomId;
       window.location.replace(roomUrl(roomId).toString());
     } catch {
-      // Mantém a mensagem original. A recuperação é auxiliar e não deve mascarar o erro real.
+      // O fluxo principal do Ludo continua responsável por mostrar erros.
     } finally {
       recovering = false;
     }
@@ -101,22 +86,27 @@
 
   function install() {
     const toast = document.getElementById('toast');
-    if (!toast) return;
+    if (toast) {
+      const inspectToast = () => {
+        if (isActiveRoomMessage(toast.textContent)) void recoverActiveRoom();
+      };
+      new MutationObserver(inspectToast).observe(toast, {
+        childList: true,
+        characterData: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['class']
+      });
+      inspectToast();
+    }
 
-    const inspectToast = () => {
-      if (isActiveRoomMessage(toast.textContent)) void recoverActiveRoom();
-    };
-
-    new MutationObserver(inspectToast).observe(toast, {
-      childList: true,
-      characterData: true,
-      subtree: true,
-      attributes: true,
-      attributeFilter: ['class']
-    });
-    inspectToast();
+    // Se já existe uma sala, abre essa sala em vez de deixar o jogador preso no lobby.
+    void recoverActiveRoom();
   }
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install, { once: true });
-  else install();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', install, { once: true });
+  } else {
+    install();
+  }
 })();
