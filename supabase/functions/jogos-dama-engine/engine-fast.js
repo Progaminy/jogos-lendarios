@@ -65,7 +65,6 @@ function legal(board, turn, forward){
     }
   }
   if(max) return caps;
-
   const out=[];
   for(const q of DARK){
     const p=board[q]; if(!p || side(p)!==turn) continue;
@@ -134,7 +133,16 @@ function regulationState(board,seatOfSide){
   const aLong=seat1.long,bLong=seat2.long;
   let limit=0;
   if(ak===1&&am===0&&bk===1&&bm===0) limit=2;
-  else if((ak===2&&am===0&&bk===1&&bm===0)||(bk===2&&bm===0&&ak===1&&am===0)||(ak===1&&am===1&&bk===1&&bm===0)||(bk===1&&bm===1&&ak===1&&am===0)||(ak===1&&am===1&&bk===1&&bm===1)||(ak===2&&am===0&&bk===2&&bm===0)||(bLong&&((ak===3&&am===0)||(ak===2&&am===1)||(ak===1&&am===2)))||(aLong&&((bk===3&&bm===0)||(bk===2&&bm===1)||(bk===1&&bm===2)))) limit=5;
+  else if(
+    (ak===2&&am===0&&bk===1&&bm===0) ||
+    (bk===2&&bm===0&&ak===1&&am===0) ||
+    (ak===1&&am===1&&bk===1&&bm===0) ||
+    (bk===1&&bm===1&&ak===1&&am===0) ||
+    (ak===1&&am===1&&bk===1&&bm===1) ||
+    (ak===2&&am===0&&bk===2&&bm===0) ||
+    (bLong&&((ak===3&&am===0)||(ak===2&&am===1)||(ak===1&&am===2))) ||
+    (aLong&&((bk===3&&bm===0)||(bk===2&&bm===1)||(bk===1&&bm===2)))
+  ) limit=5;
   const key=limit?`${ak}:${am}:${bk}:${bm}:${aLong?'t':'f'}:${bLong?'t':'f'}:${limit}`:null;
   return {key,limit};
 }
@@ -143,7 +151,12 @@ function initialDraw(snapshot,mine,other){
   const d=snapshot?.draw||{}, room=snapshot?.room||{};
   const quietBySeat={1:+(d.quiet_light||0),2:+(d.quiet_dark||0)};
   const regBySeat={1:+(d.regulation_light||0),2:+(d.regulation_dark||0)};
-  return {quiet:[quietBySeat[+mine.seat]||0,quietBySeat[+other.seat]||0],reg:[regBySeat[+mine.seat]||0,regBySeat[+other.seat]||0],regKey:room.regulation_key??null,regLimit:+(room.regulation_limit||d.regulation_limit||0)};
+  return {
+    quiet:[quietBySeat[+mine.seat]||0,quietBySeat[+other.seat]||0],
+    reg:[regBySeat[+mine.seat]||0,regBySeat[+other.seat]||0],
+    regKey:room.regulation_key??null,
+    regLimit:+(room.regulation_limit||d.regulation_limit||0)
+  };
 }
 
 function applyDraw(boardBefore,boardAfter,m,draw,seatOfSide){
@@ -152,9 +165,12 @@ function applyDraw(boardBefore,boardAfter,m,draw,seatOfSide){
   if(wasKing&&(m.captureCount||0)===0) next.quiet[mover]++;
   else next.quiet=[0,0];
   const rs=regulationState(boardAfter,seatOfSide);
-  if(rs.limit>0){if(next.regKey!==rs.key) next.reg=[0,0]; else next.reg[mover]++;}
-  else next.reg=[0,0];
-  next.regKey=rs.key; next.regLimit=rs.limit;
+  if(rs.limit>0){
+    if(next.regKey!==rs.key) next.reg=[0,0];
+    else next.reg[mover]++;
+  }else next.reg=[0,0];
+  next.regKey=rs.key;
+  next.regLimit=rs.limit;
   return next;
 }
 
@@ -248,7 +264,8 @@ function diagonalScore(board,s){
 function promotionRace(board,s,forward){
   let best=99,count=0;
   for(const q of DARK){const p=board[q];if(!p||side(p)!==s||king(p))continue;count++;best=Math.min(best,Math.abs(promo(forward[s])-row(q)));}
-  if(!count)return 0;return best===1?24:best===2?10:best===3?3:0;
+  if(!count)return 0;
+  return best===1?24:best===2?10:best===3?3:0;
 }
 
 function staticEval(board,forward,turn,moves,draw){
@@ -263,10 +280,15 @@ function staticEval(board,forward,turn,moves,draw){
     const s=side(p),sign=s===0?1:-1,r=row(q),c=col(q);
     const central=Math.max(0,7-(Math.abs(3.5-r)+Math.abs(3.5-c)));
     if(king(p)){
-      let v=kingValue+central*(end?8:4);if(c===0||c===7)v-=end?10:4;score+=sign*v;
+      let v=kingValue+central*(end?8:4);
+      if(c===0||c===7)v-=end?10:4;
+      score+=sign*v;
     }else{
       const adv=forward[s]>0?r:7-r,dist=Math.abs(promo(forward[s])-r);
-      let v=100+adv*(end?9:6)+central*2;if(dist===1)v+=end?42:30;else if(dist===2)v+=end?18:11;if(c===0||c===7)v+=3;score+=sign*v;
+      let v=100+adv*(end?9:6)+central*2;
+      if(dist===1)v+=end?42:30; else if(dist===2)v+=end?18:11;
+      if(c===0||c===7)v+=3;
+      score+=sign*v;
     }
   }
   score+=structureScore(board,0,forward,phase)-structureScore(board,1,forward,phase);
@@ -287,13 +309,26 @@ function staticEval(board,forward,turn,moves,draw){
   return score;
 }
 
-function moveOrderScore(m,ttBest,killer){
+function moveOrderScore(m,ttBest,killer,history,turn){
   let s=(m.captureCount||0)*13000+(m.promotes?3500:0)+(king(m.piece)?90:0);
-  const r=row(m.to),c=col(m.to);s+=Math.round((7-(Math.abs(3.5-r)+Math.abs(3.5-c)))*7);
-  const k=mkey(m);if(ttBest&&k===ttBest)s+=1_000_000;if(killer&&k===killer)s+=18_000;return s;
+  const r=row(m.to),c=col(m.to);
+  s+=Math.round((7-(Math.abs(3.5-r)+Math.abs(3.5-c)))*7);
+  const k=mkey(m);
+  if(ttBest&&k===ttBest)s+=1_000_000;
+  if(killer&&k===killer)s+=18_000;
+  s+=Math.min(12000,history.get(`${turn}:${k}`)||0);
+  return s;
 }
-function ordered(ms,ttBest,killer){return [...ms].sort((a,b)=>moveOrderScore(b,ttBest,killer)-moveOrderScore(a,ttBest,killer));}
+function ordered(ms,ttBest,killer,history,turn){
+  return [...ms].sort((a,b)=>moveOrderScore(b,ttBest,killer,history,turn)-moveOrderScore(a,ttBest,killer,history,turn));
+}
 function tick(ctx){ctx.nodes++;if((ctx.nodes&31)===0&&performance.now()>=ctx.deadline)throw TIMEOUT;}
+function rewardHistory(ctx,turn,m,depth){
+  if(m.captureCount||m.promotes)return;
+  const k=`${turn}:${mkey(m)}`;
+  const old=ctx.history.get(k)||0;
+  ctx.history.set(k,Math.min(50000,old+Math.max(1,depth*depth*12)));
+}
 function pushRep(ctx,key){const n=(ctx.rep.get(key)||0)+1;ctx.rep.set(key,n);if(n===2)ctx.repeated++;return n;}
 function popRep(ctx,key){const n=ctx.rep.get(key)||0;if(n===2)ctx.repeated--;if(n<=1)ctx.rep.delete(key);else ctx.rep.set(key,n-1);}
 
@@ -309,29 +344,59 @@ function search(board,turn,depth,alpha,beta,qdepth,ply,draw,extLeft,ctx){
   const alpha0=alpha,beta0=beta;
   const useTT=ctx.repeated===0;
   const hit=useTT?ctx.tt.get(ttKey):null;
-  if(depth>0&&hit&&hit.depth>=depth){if(hit.flag===0)return hit.score;if(hit.flag===1)alpha=Math.max(alpha,hit.score);else beta=Math.min(beta,hit.score);if(alpha>=beta)return hit.score;}
+  if(depth>0&&hit&&hit.depth>=depth){
+    if(hit.flag===0)return hit.score;
+    if(hit.flag===1)alpha=Math.max(alpha,hit.score);else beta=Math.min(beta,hit.score);
+    if(alpha>=beta)return hit.score;
+  }
   const capture=(ms[0].captureCount||0)>0;
   if(depth<=0&&(!capture||qdepth>=QMAX))return staticEval(board,ctx.forward,turn,ms,draw);
   const canExtend=depth>0&&extLeft>0&&depth<=3&&(capture||ms.length===1);
   const nd=depth>0?Math.max(0,depth-1+(canExtend?1:0)):0;
   const nq=depth>0?0:qdepth+1;
   const nextExt=canExtend?extLeft-1:extLeft;
-  const moves=ordered(ms,hit?.best,ctx.killers[ply]||'');
+  const moves=ordered(ms,hit?.best,ctx.killers[ply]||'',ctx.history,turn);
   let best=turn===0?-Infinity:Infinity,bestMove='';
   if(turn===0){
-    for(const m of moves){
-      const b2=play(board,m,ctx.forward),d2=applyDraw(board,b2,m,draw,ctx.seatOfSide),rk=boardKey(b2,1),reps=pushRep(ctx,rk);let v;
-      try{v=reps>=3?0:search(b2,1,nd,alpha,beta,nq,ply+1,d2,nextExt,ctx);}finally{popRep(ctx,rk);}
-      if(v>best){best=v;bestMove=mkey(m);}if(v>alpha)alpha=v;if(alpha>=beta){if(!(m.captureCount||0))ctx.killers[ply]=mkey(m);break;}
+    for(let i=0;i<moves.length;i++){
+      const m=moves[i],b2=play(board,m,ctx.forward),d2=applyDraw(board,b2,m,draw,ctx.seatOfSide),rk=boardKey(b2,1),reps=pushRep(ctx,rk);
+      const reduce=depth>=5&&i>=3&&!capture&&!m.promotes&&moves.length>=6?1:0;
+      let v;
+      try{
+        if(reps>=3)v=0;
+        else if(i===0)v=search(b2,1,nd,alpha,beta,nq,ply+1,d2,nextExt,ctx);
+        else{
+          const rd=Math.max(0,nd-reduce);
+          v=search(b2,1,rd,alpha,Math.min(beta,alpha+1),nq,ply+1,d2,nextExt,ctx);
+          if(reduce&&v>alpha)v=search(b2,1,nd,alpha,Math.min(beta,alpha+1),nq,ply+1,d2,nextExt,ctx);
+          if(v>alpha&&v<beta)v=search(b2,1,nd,alpha,beta,nq,ply+1,d2,nextExt,ctx);
+        }
+      }finally{popRep(ctx,rk);}
+      if(v>best){best=v;bestMove=mkey(m);}
+      if(v>alpha)alpha=v;
+      if(alpha>=beta){if(!(m.captureCount||0)){ctx.killers[ply]=mkey(m);rewardHistory(ctx,turn,m,depth);}break;}
     }
   }else{
-    for(const m of moves){
-      const b2=play(board,m,ctx.forward),d2=applyDraw(board,b2,m,draw,ctx.seatOfSide),rk=boardKey(b2,0),reps=pushRep(ctx,rk);let v;
-      try{v=reps>=3?0:search(b2,0,nd,alpha,beta,nq,ply+1,d2,nextExt,ctx);}finally{popRep(ctx,rk);}
-      if(v<best){best=v;bestMove=mkey(m);}if(v<beta)beta=v;if(alpha>=beta){if(!(m.captureCount||0))ctx.killers[ply]=mkey(m);break;}
+    for(let i=0;i<moves.length;i++){
+      const m=moves[i],b2=play(board,m,ctx.forward),d2=applyDraw(board,b2,m,draw,ctx.seatOfSide),rk=boardKey(b2,0),reps=pushRep(ctx,rk);
+      const reduce=depth>=5&&i>=3&&!capture&&!m.promotes&&moves.length>=6?1:0;
+      let v;
+      try{
+        if(reps>=3)v=0;
+        else if(i===0)v=search(b2,0,nd,alpha,beta,nq,ply+1,d2,nextExt,ctx);
+        else{
+          const rd=Math.max(0,nd-reduce);
+          v=search(b2,0,rd,Math.max(alpha,beta-1),beta,nq,ply+1,d2,nextExt,ctx);
+          if(reduce&&v<beta)v=search(b2,0,nd,Math.max(alpha,beta-1),beta,nq,ply+1,d2,nextExt,ctx);
+          if(v>alpha&&v<beta)v=search(b2,0,nd,alpha,beta,nq,ply+1,d2,nextExt,ctx);
+        }
+      }finally{popRep(ctx,rk);}
+      if(v<best){best=v;bestMove=mkey(m);}
+      if(v<beta)beta=v;
+      if(alpha>=beta){if(!(m.captureCount||0)){ctx.killers[ply]=mkey(m);rewardHistory(ctx,turn,m,depth);}break;}
     }
   }
-  if(depth>0&&useTT){const flag=best<=alpha0?2:best>=beta0?1:0;if(ctx.tt.size<45000)ctx.tt.set(ttKey,{depth,score:best,flag,best:bestMove});}
+  if(depth>0&&useTT){const flag=best<=alpha0?2:best>=beta0?1:0;if(ctx.tt.size<50000)ctx.tt.set(ttKey,{depth,score:best,flag,best:bestMove});}
   return best;
 }
 
@@ -355,12 +420,11 @@ function adaptiveDepth(board){
   if(p.total<=8)return 15;
   if(p.total<=12)return 12;
   if(p.total<=18)return 10;
-  return 9;
+  return 11;
 }
 
 export function analyze(snapshot){
-  const me=String(snapshot?.identity?.player_id||'');
-  const players=Array.isArray(snapshot?.players)?snapshot.players:[];
+  const me=String(snapshot?.identity?.player_id||''),players=Array.isArray(snapshot?.players)?snapshot.players:[];
   const mine=players.find(p=>String(p?.player_id||'')===me),other=players.find(p=>String(p?.player_id||'')!==me);
   if(!me||!mine||!other)throw new Error('INVALID_PLAYERS');
   const forward=[mine?.color==='red'?1:-1,other?.color==='red'?1:-1];
@@ -377,15 +441,15 @@ export function analyze(snapshot){
     const lm=rootMove(board,r,idSq);lm.promotes=!king(lm.piece)&&row(lm.to)===promo(forward[0]);
     const b=play(board,lm,forward),d=applyDraw(board,b,lm,initial,seatOfSide);
     rootData.set(String(r.route_id),{board:b,draw:d,move:lm});
-    const s=tacticalFloor(b,lm,d,{...shared});if(s>bestScore){bestScore=s;best=r;}
+    const sc=tacticalFloor(b,lm,d,{...shared});if(sc>bestScore){bestScore=sc;best=r;}
   }
   roots.sort((a,b)=>String(a.route_id)===String(best.route_id)?-1:String(b.route_id)===String(best.route_id)?1:0);
-  const maxDepth=adaptiveDepth(board),tt=new Map(),killers=[];
+  const maxDepth=adaptiveDepth(board),tt=new Map(),killers=[],history=new Map();
   let depthDone=2,totalNodes=0,pv=String(best.route_id),proven=false;
   const rootKey=boardKey(board,0);
   for(let depth=3;depth<=maxDepth;depth++){
     const rep=new Map([[rootKey,1]]);
-    const ctx={deadline,nodes:0,forward,seatOfSide,tt,killers,rep,repeated:0};
+    const ctx={deadline,nodes:0,forward,seatOfSide,tt,killers,history,rep,repeated:0};
     let roundBest=best,roundScore=-Infinity,complete=true,alpha=-MATE;
     roots.sort((a,b)=>String(a.route_id)===pv?-1:String(b.route_id)===pv?1:0);
     try{
@@ -402,5 +466,11 @@ export function analyze(snapshot){
   }
   const path=Array.isArray(best?.path)&&best.path.length>=2?best.path:[{row:+best.from_row,col:+best.from_col},{row:+best.to_row,col:+best.to_col}];
   const phase=phaseInfo(board);
-  return {route_id:best.route_id,piece_id:best.piece_id,path,from:{row:+best.from_row,col:+best.from_col},to:{row:+best.to_row,col:+best.to_col},capture_count:+(best.capture_count||0),depth:depthDone,nodes:totalNodes,elapsed_ms:Math.round(performance.now()-started),score:bestScore,board_version:snapshot?.room?.board_version??null,move_seq:snapshot?.room?.move_seq??null,mode:'strategic_v7',max_depth:maxDepth,tt_entries:tt.size,endgame:phase.total<=8,proven};
+  return {
+    route_id:best.route_id,piece_id:best.piece_id,path,
+    from:{row:+best.from_row,col:+best.from_col},to:{row:+best.to_row,col:+best.to_col},capture_count:+(best.capture_count||0),
+    depth:depthDone,nodes:totalNodes,elapsed_ms:Math.round(performance.now()-started),score:bestScore,
+    board_version:snapshot?.room?.board_version??null,move_seq:snapshot?.room?.move_seq??null,
+    mode:'strategic_v8',max_depth:maxDepth,tt_entries:tt.size,endgame:phase.total<=8,proven,history_entries:history.size
+  };
 }
