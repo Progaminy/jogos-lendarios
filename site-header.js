@@ -105,7 +105,7 @@
 
   function ensureSharedStyles() {
     ensureStyle('./site-account.css?v=20261004-1', 'jl-site-account');
-    ensureStyle('./support-ui.css?v=20260928-1', 'jl-support-style');
+    ensureStyle('./support-ui.css?v=20260922-12fix', 'jl-support-style');
   }
 
   function ensureToast() {
@@ -175,7 +175,7 @@
     if (playerEl) playerEl.textContent = name;
     if (codeEl) codeEl.textContent = code;
     if (balanceEl) balanceEl.textContent = Number.isFinite(balance) ? `${money(balance)} MZN` : '—';
-    if (bonusEl) bonusEl.textContent = `Bónus ${money(bonusTotal)} MZN`;
+    if (bonusEl && (data?.bonus || player.bonus_balance != null)) bonusEl.textContent = `Bónus ${money(bonusTotal)} MZN`;
     const identity = $('#identityBadge');
     if (identity) identity.textContent = code;
   }
@@ -329,7 +329,7 @@
   }
 
   function loadAccountPlugins() {
-    loadScriptOnce('./js/auth/player-sessions.js?v=20261004-1', 'jlPlayerSessions');
+    loadScriptOnce('./js/auth/player-sessions.js?v=20260928-1', 'jlPlayerSessions');
     loadScriptOnce('./support-ui.js?v=20260928-1', 'jlSupportUi');
   }
 
