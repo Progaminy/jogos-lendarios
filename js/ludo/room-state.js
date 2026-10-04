@@ -4,15 +4,19 @@
   function create(getToken) {
     if (typeof getToken !== 'function') throw new Error('Token do Ludo indisponível.');
 
+    function cleanItems(items) {
+      return (Array.isArray(items) ? items : []).filter(item => item && typeof item === 'object');
+    }
+
     function maxItemId(items) {
       let max = 0;
-      for (const item of items || []) max = Math.max(max, Number(item?.id) || 0);
+      for (const item of cleanItems(items)) max = Math.max(max, Number(item?.id) || 0);
       return max;
     }
 
     function mergeItems(previous, incoming, limit = 50) {
       const map = new Map();
-      for (const item of [...(previous || []), ...(incoming || [])]) {
+      for (const item of [...cleanItems(previous), ...cleanItems(incoming)]) {
         map.set(String(item?.id ?? ''), item);
       }
       return [...map.values()]
@@ -41,10 +45,12 @@
         console.warn('ludo delta', error?.message || error);
       }
 
-      const incomingEvents = delta?.events || [];
-      const incomingChat = delta?.chat || [];
-      const events = same ? mergeItems(previous.events, incomingEvents) : incomingEvents.slice(-50);
-      const chat = same ? mergeItems(previous.chat, incomingChat) : incomingChat.slice(-50);
+      const incomingEvents = cleanItems(delta?.events);
+      const incomingChat = cleanItems(delta?.chat);
+      const previousEvents = cleanItems(previous?.events);
+      const previousChat = cleanItems(previous?.chat);
+      const events = same ? mergeItems(previousEvents, incomingEvents) : incomingEvents.slice(-50);
+      const chat = same ? mergeItems(previousChat, incomingChat) : incomingChat.slice(-50);
       const payouts = includePayouts
         ? (delta?.payouts || previous?.payouts || [])
         : (same ? (previous?.payouts || []) : []);
