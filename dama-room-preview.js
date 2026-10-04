@@ -108,11 +108,10 @@
         color:#ffd15a;
       }
 
-      /* Mesmo princípio do modo Fixar Ludo: só a área de jogo fica em foco. */
+      /* Fixar funciona tanto antes como durante a partida. */
       body.dama-pinned{overflow:auto!important}
       body.dama-pinned #jlGlobalStatusStrip,
       body.dama-pinned #ludoStatusStrip,
-      body.dama-pinned #damaRoom>.dama-room-head,
       body.dama-pinned #damaPlayers,
       body.dama-pinned #damaSettingsPanel,
       body.dama-pinned #damaDrawOffer,
@@ -122,17 +121,23 @@
       body.dama-pinned #playerArea{
         display:none!important;
       }
+      body.dama-pinned.dama-game-active #damaRoom>.dama-room-head{
+        display:none!important;
+      }
       body.dama-pinned #damaRoom{
         display:block!important;
         margin-top:6px!important;
       }
-      body.dama-pinned #damaGame{
+      body.dama-pinned:not(.dama-game-active) #damaGame{
+        display:none!important;
+      }
+      body.dama-pinned.dama-game-active #damaGame{
         display:block!important;
         width:100%!important;
         max-width:none!important;
         margin:0!important;
       }
-      body.dama-pinned #damaGame>.dama-board-panel{
+      body.dama-pinned.dama-game-active #damaGame>.dama-board-panel{
         position:static!important;
         inset:auto!important;
         width:100%!important;
@@ -141,7 +146,7 @@
         transform:none!important;
         overflow:visible!important;
       }
-      body.dama-pinned #damaBoard{
+      body.dama-pinned.dama-game-active #damaBoard{
         width:min(100%,720px)!important;
         max-height:none!important;
         margin:8px auto 0!important;
@@ -156,7 +161,7 @@
         .dama-flow-actions{grid-template-columns:1fr}
         .dama-flow-actions .button{width:100%}
         body.dama-pinned .dama-shell{width:calc(100% - 10px)!important;margin-top:6px!important}
-        body.dama-pinned #damaGame>.dama-board-panel{padding:10px!important;border-radius:14px!important}
+        body.dama-pinned.dama-game-active #damaGame>.dama-board-panel{padding:10px!important;border-radius:14px!important}
       }
     `;
     document.head.appendChild(style);
@@ -260,11 +265,21 @@
     return modal;
   }
 
-  function ensurePinButton() {
+  function ensurePinPlacement(actualGameVisible) {
+    const button = document.getElementById('pinDama');
+    if (!button) return null;
+
+    button.classList.add('small', 'dama-pin-button');
+    button.classList.remove('hidden');
+
+    if (!actualGameVisible) {
+      const actions = head.querySelector('.dama-room-actions');
+      if (actions && button.parentElement !== actions) actions.prepend(button);
+      return button;
+    }
+
     const boardPanel = game.querySelector('.dama-board-panel');
-    if (!boardPanel) return null;
-    let button = document.getElementById('pinDama');
-    if (button) return button;
+    if (!boardPanel) return button;
     let row = boardPanel.querySelector('.dama-pin-row');
     if (!row) {
       row = document.createElement('div');
@@ -273,20 +288,7 @@
       if (board) board.insertAdjacentElement('afterend', row);
       else boardPanel.appendChild(row);
     }
-    button = document.createElement('button');
-    button.id = 'pinDama';
-    button.className = 'button ghost pin-dama-button';
-    button.type = 'button';
-    button.setAttribute('aria-pressed', 'false');
-    button.textContent = 'Fixar Dama';
-    button.addEventListener('click', () => {
-      const pinned = !document.body.classList.contains('dama-pinned');
-      document.body.classList.toggle('dama-pinned', pinned);
-      button.setAttribute('aria-pressed', String(pinned));
-      button.textContent = pinned ? 'Desfixar Dama' : 'Fixar Dama';
-      if (pinned) window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
-    row.appendChild(button);
+    if (button.parentElement !== row) row.appendChild(button);
     return button;
   }
 
@@ -317,19 +319,12 @@
   function sync() {
     const preview = ensurePreview();
     const actualGameVisible = !game.classList.contains('hidden');
+    document.body.classList.toggle('dama-game-active', actualGameVisible);
+
     preview.classList.toggle('hidden', actualGameVisible);
     if (!actualGameVisible) renderPreviewBoard();
 
-    const pin = ensurePinButton();
-    if (pin) pin.classList.toggle('hidden', !actualGameVisible);
-    if (!actualGameVisible && document.body.classList.contains('dama-pinned')) {
-      document.body.classList.remove('dama-pinned');
-      if (pin) {
-        pin.setAttribute('aria-pressed', 'false');
-        pin.textContent = 'Fixar Dama';
-      }
-    }
-
+    ensurePinPlacement(actualGameVisible);
     syncDialogs();
   }
 
@@ -337,7 +332,6 @@
   ensurePreview();
   ensureAcceptModal();
   ensureStakeModal();
-  ensurePinButton();
   sync();
 
   const observer = new MutationObserver(sync);
