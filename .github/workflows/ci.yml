@@ -38,8 +38,14 @@ jobs:
           node --check js/ludo/room-state.js
           node --check js/ludo/animation.js
           node --check js/platform/feature-loader.js
-      - name: Delayed sync, animation and platform-scaling tests
-        run: node --test tests/frontend/*.test.cjs
+      - name: Dama frontend regression tests
+        run: node --test tests/frontend/dama-*.test.cjs
+      - name: Ludo frontend regression tests
+        run: node --test tests/frontend/ludo-*.test.cjs tests/frontend/admin-ludo-*.test.cjs
+      - name: Aviator frontend regression tests
+        run: node --test tests/frontend/aviator-*.test.cjs tests/frontend/home-aviator-*.test.cjs
+      - name: Platform frontend regression tests
+        run: node --test tests/frontend/lazy-game-loading.test.cjs tests/frontend/player-session-invalidation.test.cjs tests/frontend/point27-page-weight.test.cjs
 
   database:
     name: Database rules and finance
