@@ -30,7 +30,8 @@ jobs:
           path = Path('ludo.html')
           text = path.read_text(encoding='utf-8')
           replacements = {
-              './js/ludo/state.js?v=20261004-2': './js/ludo/state.js?v=20261004-3',
+              './js/ludo/state.js?v=20261004-2': './js/ludo/state.js?v=20261004-4',
+              './js/ludo/state.js?v=20261004-3': './js/ludo/state.js?v=20261004-4',
               './js/ludo/room-state.js?v=20260928-1': './js/ludo/room-state.js?v=20261004-4',
               './js/ludo/room-state.js?v=20261004-3': './js/ludo/room-state.js?v=20261004-4',
               './js/platform/ludo-feature-loader.js?v=20261003-2': './js/platform/ludo-feature-loader.js?v=20261004-10',
@@ -45,11 +46,10 @@ jobs:
           for old, new in replacements.items():
               text = text.replace(old, new)
 
-          # Remover recovery antigo e qualquer ponte anterior antes de reconstruir a ordem.
           text = re.sub(r'^\s*<script src="\./js/ludo/active-room-recovery\.js\?v=[^"]+" defer></script>\s*\n?', '', text, flags=re.M)
           text = re.sub(r'^\s*<script src="\./js/ludo/room-authority-v1\.js\?v=[^"]+" defer></script>\s*\n?', '', text, flags=re.M)
 
-          authority = '  <script src="./js/ludo/room-authority-v1.js?v=20261004-1" defer></script>\n'
+          authority = '  <script src="./js/ludo/room-authority-v1.js?v=20261004-2" defer></script>\n'
           ludo_pattern = r'(^\s*<script src="\./ludo\.js\?v=20261004-8" defer></script>\s*$)'
           if not re.search(ludo_pattern, text, flags=re.M):
               raise SystemExit('ludo.js anchor not found')
@@ -60,11 +60,11 @@ jobs:
       - name: Commit cache bust if needed
         run: |
           if git diff --quiet -- ludo.html; then
-            echo "ludo.html already points at authoritative room bridge"
+            echo "ludo.html already points at singleton room authority"
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add ludo.html
-          git commit -m "Insert authoritative Ludo room bridge"
+          git commit -m "Force fresh singleton Ludo room authority"
           git push
