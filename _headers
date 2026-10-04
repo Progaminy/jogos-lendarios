@@ -44,3 +44,6 @@
 
 /dama-room-preview.js
   Cache-Control: no-cache, must-revalidate
+
+/js/ludo/render.js
+  Cache-Control: no-cache, must-revalidate
