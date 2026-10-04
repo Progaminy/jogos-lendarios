@@ -1,0 +1,18 @@
+/* Shared authentication UI for all Jogos Lendários pages. */
+.jl-auth-overlay{position:fixed;inset:0;z-index:1800;display:grid;place-items:center;padding:14px;background:rgba(1,6,14,.78);backdrop-filter:blur(8px)}
+.jl-auth-overlay.hidden{display:none!important}
+.jl-auth-window{width:min(430px,100%);max-height:min(90dvh,760px);overflow:auto;border:1px solid rgba(244,189,66,.3);border-radius:22px;background:linear-gradient(160deg,#17263b,#0b1625);box-shadow:0 30px 100px rgba(0,0,0,.62)}
+.jl-auth-bar{min-height:48px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 12px 0 16px;border-bottom:1px solid rgba(255,255,255,.08);background:linear-gradient(180deg,#1a2b42,#132035)}
+.jl-auth-brand{display:flex;align-items:center;gap:8px;font-weight:900}.jl-auth-brand strong{color:#f4bd42}.jl-auth-dot{width:9px;height:9px;border-radius:50%;background:#f4bd42;box-shadow:0 0 0 4px rgba(244,189,66,.11)}
+.jl-auth-close{width:36px;height:36px;display:grid;place-items:center;border:0;border-radius:9px;background:transparent;color:#dce5f2;font-size:1.35rem;cursor:pointer}.jl-auth-close:hover{background:rgba(255,255,255,.07)}
+.jl-auth-body{padding:20px}.jl-auth-kicker{margin:0;color:#f4bd42;font-size:.68rem;font-weight:950;letter-spacing:.14em}.jl-auth-body h2{margin:4px 0 5px;font-size:1.55rem}.jl-auth-lead{margin:0 0 16px;color:#93a5bc;font-size:.84rem;line-height:1.45}
+.jl-auth-tabs{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:16px;padding:4px;border:1px solid rgba(255,255,255,.07);border-radius:13px;background:rgba(0,0,0,.15)}
+.jl-auth-tab{min-height:40px;border:0;border-radius:9px;background:transparent;color:#aebdce;font-weight:900;cursor:pointer}.jl-auth-tab.active{background:#f4bd42;color:#201600;box-shadow:0 6px 18px rgba(244,189,66,.12)}
+.jl-auth-form{display:grid;gap:12px}.jl-auth-form.hidden{display:none!important}
+.jl-auth-field{display:grid;gap:6px}.jl-auth-field>span{font-size:.72rem;font-weight:900;color:#c9d5e3}.jl-auth-input{min-height:49px;display:grid;grid-template-columns:38px minmax(0,1fr);align-items:center;border:1px solid #2c405d;border-radius:12px;background:linear-gradient(180deg,#0b1828,#091522);box-shadow:inset 0 1px 0 rgba(255,255,255,.03)}.jl-auth-input:focus-within{border-color:#f4bd42;box-shadow:0 0 0 3px rgba(244,189,66,.12)}
+.jl-auth-input>.jl-auth-icon{display:grid;place-items:center;color:#f4bd42;font-size:1rem}.jl-auth-input input{width:100%;min-width:0;height:47px;padding:0 12px 0 0;border:0!important;outline:0!important;background:transparent!important;color:#f5f7fb!important;font:inherit;box-shadow:none!important}.jl-auth-input input::placeholder{color:#687b92}.jl-auth-hint{margin:-2px 0 0;color:#74869c;font-size:.67rem;line-height:1.35}
+.jl-auth-submit{min-height:48px;border:1px solid #f0bd47;border-radius:12px;background:linear-gradient(135deg,#e3a92e,#f7cc61);color:#241800;font-weight:950;cursor:pointer}.jl-auth-submit:disabled{opacity:.55;cursor:wait}.jl-auth-submit .jl-auth-submit-icon{margin-right:7px}
+.jl-auth-message{min-height:1.3em;margin:2px 0 0;color:#9fb0c4;font-size:.75rem;font-weight:750}.jl-auth-message.error{color:#ff929a}.jl-auth-message.success{color:#82e8b3}
+.jl-auth-invite-status{display:block;min-height:1em;margin-top:2px;font-size:.66rem;color:#8fa1b7}
+body.jl-auth-open{overflow:hidden}
+@media(max-width:520px){.jl-auth-overlay{padding:8px}.jl-auth-window{border-radius:17px}.jl-auth-body{padding:17px 14px}.jl-auth-bar{padding-left:13px}.jl-auth-body h2{font-size:1.35rem}.jl-auth-input{min-height:47px}.jl-auth-input input{height:45px}}
