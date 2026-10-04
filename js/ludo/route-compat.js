@@ -12,9 +12,17 @@
       .toLowerCase();
   }
 
+  function hasLudoDom() {
+    return Boolean(
+      document.getElementById('ludoLobbyBoard') &&
+      document.getElementById('room') &&
+      document.getElementById('createRoomForm')
+    );
+  }
+
   function isLudoPath() {
     const path = normalizedPath();
-    return path.endsWith('/ludo') || path.endsWith('/ludo.html');
+    return path.endsWith('/ludo') || path.endsWith('/ludo.html') || hasLudoDom();
   }
 
   function token() {
