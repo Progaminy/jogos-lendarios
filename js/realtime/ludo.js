@@ -13,7 +13,7 @@
     const next=Boolean(value);
     if(connected===next)return;
     connected=next;
-    try{handlers.onStatus?.(next);}catch{}
+    try{handlers.onStatus?.(next);}catch(_){}
   }
 
   function ensureClient(){
@@ -21,8 +21,13 @@
     const cfg=root.JL_CONFIG||{};
     const lib=root.supabase;
     if(!lib?.createClient||!cfg.supabaseUrl||!cfg.supabaseKey)return null;
+
     client=lib.createClient(cfg.supabaseUrl,cfg.supabaseKey,{
-      auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}
+      auth:{
+        persistSession:false,
+        autoRefreshToken:false,
+        detectSessionInUrl:false
+      }
     });
     return client;
   }
@@ -31,14 +36,11 @@
     signalTimer=0;
     const payload=pendingPayload;
     pendingPayload=null;
-    try{handlers.onSignal?.(payload);}catch{}
+    try{handlers.onSignal?.(payload);}catch(_){}
   }
 
   function queueSignal(payload){
-    if(payload?.kind==='dice_rolled'){
-      try{handlers.onSignal?.(payload);}catch{}
-      return;
-    }
+    if(payload?.kind==='dice_rolled'){try{handlers.onSignal?.(payload);}catch(_){}return;}
     pendingPayload=payload||pendingPayload;
     if(signalTimer)return;
     signalTimer=setTimeout(flushSignal,60);
@@ -48,26 +50,40 @@
     const id=String(nextRoomId||'').trim();
     if(!id)return false;
     handlers=options||{};
+
     const sb=ensureClient();
     if(!sb)return false;
+
     if(channel&&roomId===id)return true;
 
     const previous=channel;
     channel=null;
-    if(previous){try{void sb.removeChannel(previous);}catch{}}
+    if(previous){
+      try{void sb.removeChannel(previous);}catch(_){}
+    }
 
     roomId=id;
     setStatus(false);
+
     const current=sb
-      .channel(`ludo:room:${id}`,{config:{broadcast:{self:false}}})
-      .on('broadcast',{event:'sync'},message=>{
+      .channel(`ludo:room:${id}`,{
+        config:{
+          broadcast:{self:false}
+        }
+      })
+      .on('broadcast',{event:'sync'},(message)=>{
         if(channel!==current)return;
         queueSignal(message?.payload||null);
       })
-      .subscribe(status=>{
+      .subscribe((status)=>{
         if(channel!==current)return;
-        if(status==='SUBSCRIBED'){setStatus(true);return;}
-        if(['CHANNEL_ERROR','TIMED_OUT','CLOSED'].includes(status))setStatus(false);
+        if(status==='SUBSCRIBED'){
+          setStatus(true);
+          return;
+        }
+        if(['CHANNEL_ERROR','TIMED_OUT','CLOSED'].includes(status)){
+          setStatus(false);
+        }
       });
 
     channel=current;
@@ -80,20 +96,17 @@
     pendingPayload=null;
     roomId='';
     setStatus(false);
+
     const current=channel;
     channel=null;
     if(!current||!client)return;
-    try{await client.removeChannel(current);}catch{}
+    try{await client.removeChannel(current);}catch(_){}
   }
 
-  // Voice needs only a passive audio sink; it carries no game state.
-  if(!document.getElementById('remoteAudio')){
-    const sink=document.createElement('div');
-    sink.id='remoteAudio';
-    sink.className='remote-audio hidden';
-    sink.setAttribute('aria-hidden','true');
-    document.body.appendChild(sink);
-  }
-
-  root.JLLudoRealtime=Object.freeze({connect,disconnect,isConnected:()=>connected,roomId:()=>roomId});
+  root.JLLudoRealtime=Object.freeze({
+    connect,
+    disconnect,
+    isConnected:()=>connected,
+    roomId:()=>roomId
+  });
 })(typeof globalThis!=='undefined'?globalThis:this);
