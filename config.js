@@ -29,5 +29,6 @@ window.JL_CONFIG = Object.freeze({
     // ludo-stable-ui é somente apresentação e não consulta o servidor.
     add('./ludo-public-challenges-v3.js?v=7');
     add('./ludo-stable-ui.js?v=1');
+    add('./ludo-resilience-fix.js?v=20261004-1');
   }
 })();
