@@ -45,18 +45,15 @@ jobs:
           for old, new in replacements.items():
               text = text.replace(old, new)
 
-          # O antigo recovery concorria com o state.room privado do ludo.js.
-          # Remover todas as cópias e usar uma única ponte que escreve no próprio runtime state.
+          # Remover recovery antigo e qualquer ponte anterior antes de reconstruir a ordem.
           text = re.sub(r'^\s*<script src="\./js/ludo/active-room-recovery\.js\?v=[^"]+" defer></script>\s*\n?', '', text, flags=re.M)
           text = re.sub(r'^\s*<script src="\./js/ludo/room-authority-v1\.js\?v=[^"]+" defer></script>\s*\n?', '', text, flags=re.M)
 
-          route_compat = '  <script src="./js/ludo/route-compat.js?v=20261004-3" defer></script>\n'
           authority = '  <script src="./js/ludo/room-authority-v1.js?v=20261004-1" defer></script>\n'
-          ludo_anchor = '  <script src="./ludo.js?v=20261004-8" defer></script>\n'
-
-          if 'js/ludo/route-compat.js' not in text:
-              text = text.replace(ludo_anchor, route_compat + ludo_anchor)
-          text = text.replace(ludo_anchor, authority + ludo_anchor)
+          ludo_pattern = r'(^\s*<script src="\./ludo\.js\?v=20261004-8" defer></script>\s*$)'
+          if not re.search(ludo_pattern, text, flags=re.M):
+              raise SystemExit('ludo.js anchor not found')
+          text = re.sub(ludo_pattern, authority.rstrip('\n') + '\n' + r'\1', text, count=1, flags=re.M)
 
           path.write_text(text, encoding='utf-8')
           PY
@@ -69,5 +66,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add ludo.html
-          git commit -m "Use authoritative Ludo room runtime bridge"
+          git commit -m "Insert authoritative Ludo room bridge"
           git push
