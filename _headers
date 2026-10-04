@@ -21,6 +21,21 @@
 /site-nav.css
   Cache-Control: no-cache, must-revalidate
 
+/site-auth.js
+  Cache-Control: no-cache, must-revalidate
+
+/site-auth.css
+  Cache-Control: no-cache, must-revalidate
+
+/site-ui.js
+  Cache-Control: no-cache, must-revalidate
+
+/site-ui.css
+  Cache-Control: no-cache, must-revalidate
+
+/logout-confirm.js
+  Cache-Control: no-cache, must-revalidate
+
 /account-footer.js
   Cache-Control: no-cache, must-revalidate
 
