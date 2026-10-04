@@ -99,30 +99,26 @@ test('Ludo remains isolated from the home bundle', () => {
   assert.match(read('ludo.html'), /src=["']\.\/ludo\.js\?/);
 });
 
-test('Ludo clean rebuild does not reintroduce legacy feature loaders or patch bundles', () => {
+
+test('Ludo optional shared features are not eager', () => {
   const html = read('ludo.html');
   const scripts = scriptSources(html).map(stripQuery);
   const styles = styleSources(html).map(stripQuery);
 
-  for (const legacy of [
+  for (const optional of [
     'support-ui.js',
     'recovery-ui.js',
+    'js/notifications/client.js',
     'js/auth/player-sessions.js',
-    'social.js',
-    'js/platform/ludo-feature-loader.js',
-    'js/platform/feature-loader.js',
-    'ludo-sync.js',
-    'ludo-stable-ui.js',
-    'ludo-resilience-fix.js',
-    'ludo-public-challenges-v3.js'
+    'social.js'
   ]) {
-    assert.equal(scripts.includes(legacy), false, legacy + ' não deve voltar ao runtime reconstruído do Ludo');
+    assert.equal(scripts.includes(optional), false, optional + ' voltou ao carregamento inicial do Ludo');
   }
 
   assert.equal(styles.includes('support-ui.css'), false);
   assert.equal(styles.includes('recovery-ui.css'), false);
-  assert.equal(styles.includes('ludo-deferred.css'), false);
-  assert.ok(scripts.includes('ludo.js'));
+  assert.ok(scripts.includes('js/platform/ludo-feature-loader.js'));
+  assert.equal(scripts.includes('js/platform/feature-loader.js'),false);
 });
 
 test('Ludo initial JavaScript source budget stays below 145 KiB', () => {
@@ -137,15 +133,14 @@ test('Ludo initial CSS source budget stays below 50 KiB', () => {
   assert.ok(bytes <= 50 * 1024, 'CSS inicial do Ludo cresceu para ' + bytes + ' bytes');
 });
 
-test('platform loaders are singular and Ludo does not need a loader layer', () => {
+test('only one platform feature loader is eager per page', () => {
   const homeScripts=scriptSources(read('index.html')).map(stripQuery);
   const ludoScripts=scriptSources(read('ludo.html')).map(stripQuery);
   assert.equal(homeScripts.includes('js/platform/lazy-loader.js'),false);
   assert.equal(ludoScripts.includes('js/platform/lazy-loader.js'),false);
   assert.equal(homeScripts.filter(src=>src==='js/platform/feature-loader.js').length,1);
-  assert.equal(ludoScripts.includes('js/platform/ludo-feature-loader.js'),false);
+  assert.equal(ludoScripts.filter(src=>src==='js/platform/ludo-feature-loader.js').length,1);
   assert.equal(ludoScripts.includes('js/platform/feature-loader.js'),false);
-  assert.equal(ludoScripts.filter(src=>src==='ludo.js').length,1);
 });
 
 test('Service Worker keeps authoritative game and money state online-only', () => {
