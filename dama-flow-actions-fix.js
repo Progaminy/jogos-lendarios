@@ -44,6 +44,8 @@
         const button = document.getElementById(id);
         if (button) button.disabled = busy;
       });
+    const amount = document.getElementById('damaStakeModalInput');
+    if (amount) amount.disabled = busy;
   }
 
   async function rpc(name, args) {
@@ -74,6 +76,26 @@
     const p_token = token();
     const p_room = roomId();
     if (!p_token || !p_room) throw new Error('Sala de Dama indisponível.');
+
+    const input = document.getElementById('damaStakeModalInput');
+    if (input && !input.readOnly) {
+      const requested = Number(input.value);
+      const original = Number(input.dataset.originalValue || input.value);
+
+      if (!Number.isInteger(requested) || requested < 10) {
+        throw new Error('A aposta deve ser um valor inteiro de pelo menos 10 MZN.');
+      }
+
+      if (requested !== original) {
+        await rpc('jl_dama_update_bet_before_stake', {
+          p_token,
+          p_room,
+          p_bet_amount: requested
+        });
+        location.reload();
+        return;
+      }
+    }
 
     await rpc('jl_dama_commit_stake', { p_token, p_room });
     location.reload();
