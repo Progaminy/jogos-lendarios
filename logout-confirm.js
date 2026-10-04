@@ -4,6 +4,24 @@
   let resolver=null;
   let lastFocus=null;
 
+  function loadSharedAsset(src,marker){
+    if(document.querySelector(`script[data-${marker}]`))return;
+    const existing=[...document.scripts].some(script=>{
+      try{return new URL(script.src,location.href).pathname.endsWith('/'+src.split('?')[0].replace(/^\.\//,''));}catch{return false;}
+    });
+    if(existing)return;
+    const script=document.createElement('script');
+    script.src=src;
+    script.async=true;
+    script.dataset[marker.replace(/-([a-z])/g,(_,c)=>c.toUpperCase())]='1';
+    document.head.appendChild(script);
+  }
+
+  function bootSharedUi(){
+    loadSharedAsset('./site-auth.js?v=20261004-1','jl-shared-auth');
+    loadSharedAsset('./site-ui.js?v=20261004-1','jl-site-ui');
+  }
+
   function ensureWindow(){
     let modal=document.getElementById('jlLogoutConfirm');
     if(modal)return modal;
@@ -73,4 +91,6 @@
       requestAnimationFrame(()=>modal.querySelector('#jlLogoutCancel')?.focus());
     });
   };
+
+  bootSharedUi();
 })();
