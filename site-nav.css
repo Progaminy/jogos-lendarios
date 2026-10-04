@@ -393,3 +393,40 @@ body {
     font-size:1.32rem;
   }
 }
+
+
+/* Linha de estado fixa abaixo do cabeçalho, sem contadores duplicados. */
+.ludo-status-strip,
+.jl-global-status-strip{
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  position:sticky;
+  top:var(--nav-desktop-height);
+  z-index:105;
+  background:linear-gradient(180deg,var(--nav-bg-deep),rgba(8,13,21,.97));
+  padding:8px 0;
+  margin-top:0!important;
+  margin-bottom:10px!important;
+  box-shadow:0 8px 18px rgba(0,0,0,.22);
+}
+.jl-global-status-strip{
+  max-width:none;
+  width:100%;
+}
+@media(max-width:900px){
+  .ludo-status-strip,
+  .jl-global-status-strip{
+    top:var(--nav-mobile-height);
+  }
+}
+@media(max-width:600px){
+  .ludo-status-strip,
+  .jl-global-status-strip{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    gap:5px;
+    padding:7px 6px;
+  }
+  .status-metric{
+    min-height:44px;
+    height:44px;
+  }
+}
