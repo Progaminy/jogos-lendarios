@@ -6,7 +6,8 @@ recovery:{css:['./recovery-ui.css?v=20260922-13'],js:['./recovery-ui.js?v=202609
 notifications:{js:['./js/notifications/client.js?v=20260928-22']},
 sessions:{js:['./js/auth/player-sessions.js?v=20260928-1']},
 social:{js:['./social.js?v=20261003-5']},
-policy:{js:['./js/ludo/policy.js?v=20261003-3']}
+policy:{js:['./js/ludo/policy.js?v=20261003-3']},
+roomRecovery:{js:['./js/ludo/active-room-recovery.js?v=20261004-4']}
 });
 const state=new Map(),queue=[];
 let facade=null,replaying=false;
@@ -117,6 +118,10 @@ function authenticated(){
 idle('notifications',700,hasToken);
 idle('social',1200,hasToken);
 }
+function activeRoomRecoveryState(){
+const recovery=window.__JL_LUDO_ACTIVE_ROOM_RECOVERY__;
+return recovery&&typeof recovery==='object'?recovery:null;
+}
 function restoreLobbyIfStranded(){
 if(!hasToken())return;
 const lobby=document.getElementById('lobby');
@@ -125,8 +130,10 @@ if(!lobby||!room)return;
 const roomVisible=!room.classList.contains('hidden');
 const lobbyVisible=!lobby.classList.contains('hidden');
 if(roomVisible||lobbyVisible)return;
-// Estado quebrado observado em produção: sessão ativa, mas nem sala nem lobby aparecem.
-// Nessa situação o jogador fica sem poder criar sala, enviar convite ou entrar na fila.
+const recovery=activeRoomRecoveryState();
+// Nunca reabrir o lobby enquanto a sala ativa ainda está a ser resolvida.
+// O lobby só pode ser restaurado depois de uma resposta explícita de "sem sala ativa".
+if(!recovery||recovery.pending||recovery.resolved!==true||recovery.activeRoomId)return;
 lobby.classList.remove('hidden');
 document.getElementById('loggedOut')?.classList.add('hidden');
 document.getElementById('notificationCenter')?.classList.remove('hidden');
@@ -138,6 +145,7 @@ const run=()=>restoreLobbyIfStranded();
 setTimeout(run,1800);
 setTimeout(run,4200);
 window.addEventListener('pageshow',run);
+window.addEventListener('jl-ludo-active-room-recovery',run);
 window.addEventListener('jl-player-session-changed',event=>{
 if(event.detail?.authenticated)setTimeout(run,180);
 });
@@ -145,8 +153,14 @@ document.addEventListener('visibilitychange',()=>{
 if(document.visibilityState==='visible')setTimeout(run,180);
 });
 }
+function installActiveRoomRecovery(){
+if(!window.__JL_LUDO_ACTIVE_ROOM_RECOVERY__){
+window.__JL_LUDO_ACTIVE_ROOM_RECOVERY__={installed:false,pending:true,resolved:false,activeRoomId:'',lastError:''};
+}
+load('roomRecovery').catch(()=>{});
+}
 function init(){
-notifications();support();recovery();account();installLobbyRecovery();
+notifications();support();recovery();account();installActiveRoomRecovery();installLobbyRecovery();
 idle('policy',350);
 if(hasToken())authenticated();
 window.addEventListener('jl-player-session-changed',event=>{
