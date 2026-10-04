@@ -40,7 +40,7 @@
     if (document.getElementById('jlLudoActiveRoomRecovery')) return;
     const script = document.createElement('script');
     script.id = 'jlLudoActiveRoomRecovery';
-    script.src = './js/ludo/active-room-recovery.js?v=20261004-1';
+    script.src = './js/ludo/active-room-recovery.js?v=20261004-2';
     script.async = true;
     document.head.appendChild(script);
   }
