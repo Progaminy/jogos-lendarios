@@ -337,3 +337,59 @@ body {
 @media(max-width:600px){
   .admin-global-tools{margin-top:8px}
 }
+
+
+/* Gestão real de espaço do cabeçalho móvel: 5 destinos, 5 colunas, sem desperdício. */
+@media(max-width:900px){
+  .game-nav{
+    width:100%;
+    display:grid;
+    grid-template-columns:repeat(5,minmax(0,1fr));
+    gap:0;
+    overflow:visible;
+  }
+  .game-nav a{
+    width:100%;
+    min-width:0;
+    max-width:none;
+    padding-inline:4px;
+    overflow:hidden;
+    text-overflow:clip;
+  }
+}
+@media(max-width:600px){
+  .topbar{
+    padding-inline:6px;
+    gap:0 6px;
+  }
+  .game-nav{
+    grid-template-columns:repeat(5,minmax(0,1fr));
+  }
+  .game-nav a{
+    min-width:0!important;
+    width:100%;
+    height:44px;
+    padding:2px 1px;
+    gap:1px;
+    font-size:.56rem;
+    letter-spacing:-.015em;
+  }
+  .game-nav a::before{
+    font-size:.95rem;
+  }
+  .game-nav a.nav-aviator-symbol{
+    padding-inline:0;
+  }
+  .game-nav a.nav-aviator-symbol>span{
+    font-size:1.45rem;
+    transform:rotate(-8deg);
+  }
+}
+@media(max-width:380px){
+  .game-nav a{
+    font-size:.52rem;
+  }
+  .game-nav a.nav-aviator-symbol>span{
+    font-size:1.32rem;
+  }
+}
