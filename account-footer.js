@@ -8,6 +8,8 @@
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
   }[ch]));
 
+  let root = null;
+
   function message(el, text = '', type = '') {
     if (!el) return;
     el.textContent = text;
@@ -42,8 +44,10 @@
 
   function createFooter() {
     const main = document.querySelector('main');
-    if (!main || document.getElementById('jlGlobalAccountFooter')) return null;
-    const section = document.createElement('section');
+    if (!main) return null;
+    let section = document.getElementById('jlGlobalAccountFooter');
+    if (section) return section;
+    section = document.createElement('section');
     section.id = 'jlGlobalAccountFooter';
     section.className = 'jl-account-footer';
     section.setAttribute('aria-label', 'Conta, depósito e saque');
@@ -51,8 +55,51 @@
     return section;
   }
 
-  function renderLoggedOut(root) {
-    root.innerHTML = `
+  function wireLocalAccountLinks() {
+    const localTarget = document.getElementById('jlGlobalAccountFooter') ? '#jlGlobalAccountFooter' : '#playerArea';
+    const navAccount = document.querySelector('.game-nav [data-jl-nav="conta"]');
+    if (navAccount) navAccount.setAttribute('href', localTarget);
+    const headerAccount = document.getElementById('jlHeaderAccount');
+    if (headerAccount) headerAccount.setAttribute('href', localTarget);
+  }
+
+  async function confirmLogout() {
+    if (typeof window.JLConfirmLogout === 'function') return Boolean(await window.JLConfirmLogout());
+    return window.confirm('Sair da conta?');
+  }
+
+  async function logoutHere(button) {
+    const pageLogout = document.getElementById('accountMenuLogout');
+    if (pageLogout && pageLogout !== button) {
+      pageLogout.click();
+      return;
+    }
+
+    if (!(await confirmLogout())) return;
+    const current = token();
+    if (button) button.disabled = true;
+    try {
+      try { if (current) await rpc('jl_logout_player', { p_token: current }); } catch {}
+      if (window.JLSession?.setPlayerToken) window.JLSession.setPlayerToken('');
+      else {
+        localStorage.removeItem('jl_player_token');
+        window.dispatchEvent(new CustomEvent('jl-player-session-changed', { detail: { authenticated: false } }));
+      }
+
+      if (root) renderLoggedOut(root);
+      const headerAccount = document.getElementById('jlHeaderAccount');
+      if (headerAccount) headerAccount.textContent = 'Entrar';
+
+      // Mantém o utilizador na página em que estava. Recarregar a mesma URL
+      // garante que páginas com estado próprio (Dama/Aviator/Tabuleiro) limpem a sessão visual.
+      setTimeout(() => location.reload(), 80);
+    } finally {
+      if (button) button.disabled = false;
+    }
+  }
+
+  function renderLoggedOut(target) {
+    target.innerHTML = `
       <section class="jl-account-card jl-account-login">
         <p class="jl-account-kicker">MINHA CONTA</p>
         <h2>Conta dos Jogos Lendários</h2>
@@ -61,7 +108,7 @@
       </section>`;
   }
 
-  function renderAccount(root, data) {
+  function renderAccount(target, data) {
     const player = data?.player || {};
     const bonus = data?.bonus || {};
     const confirmed = player.balance_confirmed === true && Number.isFinite(Number(player.balance));
@@ -70,12 +117,13 @@
     const locked = confirmed && Number.isFinite(Number(player.deposit_locked)) ? `${MONEY(player.deposit_locked)} MZN` : '—';
     const phone = player.phone ? `+${String(player.phone).replace(/^\+/, '')}` : '—';
 
-    root.innerHTML = `
+    target.innerHTML = `
       <section class="jl-account-card jl-account-head">
         <div>
           <p class="jl-account-kicker">MINHA CONTA</p>
           <h2>${escapeHtml(player.name || 'Jogador')}</h2>
           <p class="jl-account-phone">${escapeHtml(phone)}</p>
+          <button id="jlAccountLogout" class="jl-account-btn ghost" type="button">Sair</button>
         </div>
         <div class="jl-account-stat"><span>Saldo disponível</span><strong>${balance}</strong><small>saldo comum</small></div>
         <div class="jl-account-stat"><span>Bónus para jogar</span><strong class="jl-account-bonus">${MONEY(bonus.total || 0)} MZN</strong><small>Número ${MONEY(bonus.number || 0)} · Dupla ${MONEY(bonus.pair || 0)}</small></div>
@@ -111,6 +159,8 @@
           <p id="jlAccountWithdrawMessage" class="jl-account-message"></p>
         </section>
       </div>`;
+
+    document.getElementById('jlAccountLogout')?.addEventListener('click', (event) => logoutHere(event.currentTarget));
 
     document.getElementById('jlAccountCopyPhone')?.addEventListener('click', async () => {
       const ok = await copy('869954518');
@@ -159,9 +209,7 @@
       message(out, 'A verificar o saque…');
       try {
         let check = null;
-        try {
-          check = await rpc('jl_check_funds', { p_token: token(), p_game_type: 'withdrawal', p_amount: amount });
-        } catch {}
+        try { check = await rpc('jl_check_funds', { p_token: token(), p_game_type: 'withdrawal', p_amount: amount }); } catch {}
         if (check?.reason === 'deposit_not_played') {
           message(out, `Este valor ainda não pode ser sacado: ${MONEY(check.deposit_locked || 0)} MZN de depósito ainda precisa ser jogado.`, 'error');
           return;
@@ -187,16 +235,15 @@
     });
   }
 
-  let root = null;
   async function refresh() {
     if (!root) return;
-    const t = token();
-    if (!t) {
+    const current = token();
+    if (!current) {
       renderLoggedOut(root);
       return;
     }
     try {
-      const data = await rpc('jl_player_state', { p_token: t });
+      const data = await rpc('jl_player_state', { p_token: current });
       if (!data?.player) {
         renderLoggedOut(root);
         return;
@@ -214,9 +261,13 @@
   }
 
   function boot() {
-    if (nativeAccountAtBottom()) return;
+    if (nativeAccountAtBottom()) {
+      wireLocalAccountLinks();
+      return;
+    }
     root = createFooter();
     if (!root) return;
+    wireLocalAccountLinks();
     refresh();
     window.addEventListener('jl-player-session-changed', refresh);
     document.addEventListener('visibilitychange', () => {
