@@ -8,3 +8,18 @@
 
 /admin.html
   X-Robots-Tag: noindex, nofollow, noarchive
+
+/site-header.js
+  Cache-Control: no-cache, must-revalidate
+
+/site-account.css
+  Cache-Control: no-cache, must-revalidate
+
+/site-nav.css
+  Cache-Control: no-cache, must-revalidate
+
+/account-footer.js
+  Cache-Control: no-cache, must-revalidate
+
+/dama-room-preview.js
+  Cache-Control: no-cache, must-revalidate
