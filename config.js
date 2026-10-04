@@ -19,6 +19,9 @@ window.JL_CONFIG = Object.freeze({
   const isAdminPage = location.pathname.includes('admin');
   if (isAdminPage) add('./admin-dama-analysis.js?v=20261004-1');
 
+  const isDamaPage = location.pathname.includes('dama');
+  if (isDamaPage) add('./dama-history-copy.js?v=20261004-1');
+
   const isLudoPage = location.pathname.includes('ludo');
   if (!document.querySelector('a[href*="ludo"]') && !isLudoPage) return;
   if (!isLudoPage) add('./ludo-challenge-badge.js?v=5');
