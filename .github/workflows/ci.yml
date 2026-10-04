@@ -39,12 +39,36 @@ jobs:
           node --check js/ludo/animation.js
           node --check js/platform/feature-loader.js
       - name: Dama frontend regression tests
+        if: always()
         run: node --test tests/frontend/dama-*.test.cjs
       - name: Ludo frontend regression tests
+        if: always()
         run: node --test tests/frontend/ludo-*.test.cjs tests/frontend/admin-ludo-*.test.cjs
-      - name: Aviator admin frontend tests
-        run: node --test tests/frontend/aviator-admin-*.test.cjs
+      - name: Aviator admin control tests
+        if: always()
+        run: >-
+          node --test
+          tests/frontend/aviator-admin-cancel.test.cjs
+          tests/frontend/aviator-admin-close.test.cjs
+          tests/frontend/aviator-admin-reopen.test.cjs
+          tests/frontend/aviator-admin-one-round-test.test.cjs
+      - name: Aviator admin finance tests
+        if: always()
+        run: >-
+          node --test
+          tests/frontend/aviator-admin-bank-ledger.test.cjs
+          tests/frontend/aviator-admin-bank-warning.test.cjs
+          tests/frontend/aviator-admin-exposure.test.cjs
+          tests/frontend/aviator-admin-house-indicator.test.cjs
+      - name: Aviator admin audit and readiness tests
+        if: always()
+        run: >-
+          node --test
+          tests/frontend/aviator-admin-audit.test.cjs
+          tests/frontend/aviator-admin-preflight.test.cjs
+          tests/frontend/aviator-admin-readiness.test.cjs
       - name: Aviator betting and cash-out frontend tests
+        if: always()
         run: >-
           node --test
           tests/frontend/aviator-amount-stepper.test.cjs
@@ -63,6 +87,7 @@ jobs:
           tests/frontend/aviator-stable-bet-button.test.cjs
           tests/frontend/aviator-two-bet-panels.test.cjs
       - name: Aviator flight runtime and performance frontend tests
+        if: always()
         run: >-
           node --test
           tests/frontend/aviator-approved-reference-flow.test.cjs
@@ -83,6 +108,7 @@ jobs:
           tests/frontend/aviator-sound-preference.test.cjs
           tests/frontend/home-aviator-nav-icon.test.cjs
       - name: Platform frontend regression tests
+        if: always()
         run: node --test tests/frontend/lazy-game-loading.test.cjs tests/frontend/player-session-invalidation.test.cjs tests/frontend/point27-page-weight.test.cjs
 
   database:
