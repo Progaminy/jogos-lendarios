@@ -8,6 +8,8 @@
   let createBoardFocusPending = false;
   let createBoardFocusTimer = 0;
   let createBoardFocusDeadline = 0;
+  let leaveRoomPending = false;
+  let leaveRoomConfirmTimer = 0;
 
   function normalizedPath() {
     return String(window.location.pathname || '/')
@@ -57,6 +59,115 @@
     delete document.documentElement.dataset.jlConfirmedActiveLudoRoom;
   }
 
+  function clearLegacyActiveRoomState() {
+    const recovery = recoveryState();
+    if (recovery) {
+      recovery.activeRoomId = '';
+      recovery.pending = false;
+      recovery.resolved = true;
+      recovery.rescueActive = false;
+    }
+
+    const authority = window.__JL_LUDO_ROOM_AUTHORITY_V1__;
+    if (authority && typeof authority === 'object') {
+      authority.snapshot = null;
+      authority.activeRoomId = '';
+      authority.scrolledRoomId = '';
+      if (authority.runtimeState && typeof authority.runtimeState === 'object') {
+        authority.runtimeState.room = null;
+        if (authority.runtimeState.status && typeof authority.runtimeState.status === 'object') {
+          authority.runtimeState.status.active_room_id = null;
+        }
+      }
+    }
+  }
+
+  function showLobbyAfterLeave() {
+    clearRememberedRoom();
+    clearLegacyActiveRoomState();
+    document.body.classList.remove('ludo-pinned');
+    document.body.classList.add('jl-ludo-leaving');
+
+    const room = document.getElementById('room');
+    if (room) {
+      room.classList.add('hidden');
+      room.hidden = true;
+      room.setAttribute('aria-hidden', 'true');
+    }
+
+    document.getElementById('lobby')?.classList.remove('hidden');
+    document.getElementById('boardLobby')?.classList.remove('hidden');
+    document.getElementById('loggedOut')?.classList.add('hidden');
+    document.getElementById('notificationCenter')?.classList.remove('hidden');
+    document.getElementById('ludoStatusStrip')?.classList.remove('hidden');
+
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('room');
+      if (url.hash === '#room' || url.hash === '#ludoBoard') url.hash = '';
+      window.history.replaceState(window.history.state, '', url.toString());
+    } catch {}
+  }
+
+  function finishLeaveTransition({ restoreRoomId = '' } = {}) {
+    leaveRoomPending = false;
+    clearTimeout(leaveRoomConfirmTimer);
+    leaveRoomConfirmTimer = 0;
+    document.body.classList.remove('jl-ludo-leaving');
+
+    const id = String(restoreRoomId || '').trim();
+    if (id) {
+      rememberRoom(id);
+      forceRoomVisible(id);
+      return;
+    }
+
+    clearRememberedRoom();
+    clearLegacyActiveRoomState();
+    const room = document.getElementById('room');
+    if (room) {
+      room.classList.add('hidden');
+      room.hidden = true;
+      room.setAttribute('aria-hidden', 'true');
+    }
+    document.getElementById('lobby')?.classList.remove('hidden');
+    document.getElementById('boardLobby')?.classList.remove('hidden');
+  }
+
+  async function confirmLeaveResult() {
+    if (!leaveRoomPending) return;
+    const playerToken = token();
+    const rpc = window.JLApi?.rpc;
+    if (!playerToken || typeof rpc !== 'function') {
+      leaveRoomConfirmTimer = window.setTimeout(() => void confirmLeaveResult(), 250);
+      return;
+    }
+
+    try {
+      const status = await rpc('jl_ludo_my_status', { p_token: playerToken });
+      const roomId = String(status?.active_room_id || '').trim();
+      if (roomId) {
+        finishLeaveTransition({ restoreRoomId: roomId });
+      } else {
+        finishLeaveTransition();
+      }
+    } catch {
+      leaveRoomConfirmTimer = window.setTimeout(() => void confirmLeaveResult(), 350);
+    }
+  }
+
+  function armLeaveRoomTransition() {
+    if (leaveRoomPending) return;
+    leaveRoomPending = true;
+    createBoardFocusPending = false;
+    clearTimeout(createBoardFocusTimer);
+    createBoardFocusTimer = 0;
+    createBoardFocusDeadline = 0;
+    showLobbyAfterLeave();
+    clearTimeout(leaveRoomConfirmTimer);
+    leaveRoomConfirmTimer = window.setTimeout(() => void confirmLeaveResult(), 220);
+  }
+
   function installPinnedBoardFix() {
     if (document.getElementById('jl-ludo-pin-fix')) return;
     const style = document.createElement('style');
@@ -98,6 +209,18 @@
         position: sticky;
         bottom: 8px;
         z-index: 4;
+      }
+
+      html body.jl-ludo-leaving #room {
+        display: none !important;
+      }
+
+      html body.jl-ludo-leaving #lobby {
+        display: grid !important;
+      }
+
+      html body.jl-ludo-leaving #boardLobby {
+        display: block !important;
       }
 
       @media (max-width: 600px) {
@@ -179,8 +302,16 @@
     });
   }
 
+  function installLeaveRoomGuard() {
+    if (!isLudoPath()) return;
+    document.addEventListener('click', event => {
+      if (!event.target?.closest?.('#leaveRoom')) return;
+      armLeaveRoomTransition();
+    }, true);
+  }
+
   function focusCreatedRoomBoard() {
-    if (!createBoardFocusPending) return false;
+    if (!createBoardFocusPending || leaveRoomPending) return false;
 
     const room = document.getElementById('room');
     const gamePanel = document.getElementById('gamePanel');
@@ -222,6 +353,7 @@
   }
 
   function armCreateBoardFocus() {
+    if (leaveRoomPending) return;
     createBoardFocusPending = true;
     createBoardFocusDeadline = Date.now() + 12000;
     clearTimeout(createBoardFocusTimer);
@@ -242,7 +374,7 @@
   }
 
   function forceRoomVisible(roomId = '') {
-    if (!isLudoPath()) return false;
+    if (!isLudoPath() || leaveRoomPending) return false;
     const id = String(roomId || stickyRoomId || recoveryState()?.activeRoomId || '').trim();
     if (!id) return false;
     rememberRoom(id);
@@ -277,7 +409,7 @@
   }
 
   function syncConfirmedRoom() {
-    if (!isLudoPath()) return;
+    if (!isLudoPath() || leaveRoomPending) return;
     const stateRoomId = String(recoveryState()?.activeRoomId || '').trim();
     if (stateRoomId) rememberRoom(stateRoomId);
     if (stickyRoomId) forceRoomVisible(stickyRoomId);
@@ -288,7 +420,8 @@
     if (!isLudoPath()) return;
     const playerToken = token();
     if (!playerToken) {
-      clearRememberedRoom();
+      if (leaveRoomPending) finishLeaveTransition();
+      else clearRememberedRoom();
       return;
     }
     const rpc = window.JLApi?.rpc;
@@ -297,15 +430,20 @@
     try {
       const status = await rpc('jl_ludo_my_status', { p_token: playerToken });
       const roomId = String(status?.active_room_id || '').trim();
+      if (leaveRoomPending) {
+        finishLeaveTransition({ restoreRoomId: roomId });
+        return;
+      }
       if (roomId) {
         rememberRoom(roomId);
         forceRoomVisible(roomId);
         focusCreatedRoomBoard();
       } else {
         clearRememberedRoom();
+        clearLegacyActiveRoomState();
       }
     } catch {
-      syncConfirmedRoom();
+      if (!leaveRoomPending) syncConfirmedRoom();
     }
   }
 
@@ -337,6 +475,7 @@
     }, true);
 
     window.addEventListener('jl-ludo-authoritative-room', event => {
+      if (leaveRoomPending) return;
       const roomId = String(event.detail?.roomId || event.detail?.snapshot?.room?.id || '').trim();
       if (roomId) {
         rememberRoom(roomId);
@@ -350,6 +489,7 @@
     if (!isLudoPath()) return;
 
     window.addEventListener('jl-ludo-active-room-recovery', event => {
+      if (leaveRoomPending) return;
       const roomId = String(event.detail?.activeRoomId || '').trim();
       if (roomId) {
         rememberRoom(roomId);
@@ -363,8 +503,10 @@
 
     window.addEventListener('jl-player-session-changed', event => {
       if (event.detail?.authenticated) scheduleAuthoritativeConfirm(120);
-      else if (!token()) clearRememberedRoom();
-      else scheduleAuthoritativeConfirm();
+      else if (!token()) {
+        if (leaveRoomPending) finishLeaveTransition();
+        else clearRememberedRoom();
+      } else scheduleAuthoritativeConfirm();
     });
 
     window.addEventListener('pageshow', () => {
@@ -386,6 +528,7 @@
   installPinnedBoardFix();
   repairLudoHeader();
   installPinButtonRedirect();
+  installLeaveRoomGuard();
   installCreateRoomBoardRedirect();
   installActiveRoomVisibilityGuard();
   document.addEventListener('DOMContentLoaded', () => {
