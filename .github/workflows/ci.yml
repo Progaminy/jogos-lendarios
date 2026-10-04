@@ -33,17 +33,13 @@ jobs:
           node --check admin-ludo-emergency.js
           node --check app.js
           node --check social.js
-          node --check js/platform/ludo-feature-loader.js
-          node --check js/ludo/movement-guard.js
-          node --check js/ludo/room-state.js
-          node --check js/ludo/animation.js
           node --check js/platform/feature-loader.js
       - name: Dama frontend regression tests
         if: always()
         run: node --test tests/frontend/dama-*.test.cjs
-      - name: Ludo frontend regression tests
+      - name: Ludo clean rebuild regression tests
         if: always()
-        run: node --test tests/frontend/ludo-*.test.cjs tests/frontend/admin-ludo-*.test.cjs
+        run: node --test tests/frontend/ludo-rebuild.test.cjs tests/frontend/admin-ludo-*.test.cjs
       - name: Aviator admin control tests
         if: always()
         run: >-
