@@ -60,6 +60,31 @@
     return true;
   }
 
+  function restoreRoomCountdown() {
+    const room = document.getElementById('room');
+    const bar = document.getElementById('deadlineBar');
+    const label = document.getElementById('deadlineLabel');
+    if (!room || !bar || !label) return;
+
+    const sync = () => {
+      if (room.classList.contains('hidden')) return;
+      // renderDeadline atualiza o rótulo/relógio, mas a barra vinha presa em .hidden.
+      bar.classList.remove('hidden');
+      bar.removeAttribute('aria-hidden');
+    };
+
+    new MutationObserver(sync).observe(room, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+    new MutationObserver(sync).observe(label, {
+      childList: true,
+      characterData: true,
+      subtree: true
+    });
+    sync();
+  }
+
   async function recoverActiveRoom() {
     if (recovering) return;
     const playerToken = token();
@@ -85,6 +110,8 @@
   }
 
   function install() {
+    restoreRoomCountdown();
+
     const toast = document.getElementById('toast');
     if (toast) {
       const inspectToast = () => {
