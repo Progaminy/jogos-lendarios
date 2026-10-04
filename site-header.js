@@ -5,13 +5,8 @@
   const token = () => window.JLSession?.getPlayerToken?.() || localStorage.getItem('jl_player_token') || '';
   const rpc = (name, args = {}) => window.JLApi?.rpc?.(name, args);
 
-  function isAdminMode() {
-    return document.body?.dataset?.jlHeaderMode === 'admin';
-  }
-
   function pageKind() {
     const path = location.pathname.toLowerCase();
-    if (isAdminMode()) return 'admin';
     if (path.endsWith('/ludo.html')) return 'tabuleiro';
     if (path.endsWith('/dama.html')) return 'tabuleiro';
     if (path.endsWith('/tabuleiro.html')) return 'tabuleiro';
@@ -46,7 +41,7 @@
       bar.appendChild(actions);
     }
 
-    if (!$('#refreshLobby') && !$('#refreshAdmin') && !$('#jlHeaderRefresh')) {
+    if (!$('#refreshLobby') && !$('#jlHeaderRefresh')) {
       const refresh = document.createElement('button');
       refresh.id = 'jlHeaderRefresh';
       refresh.className = 'top-refresh-button';
@@ -65,7 +60,7 @@
       actions.prepend(refresh);
     }
 
-    if (!isAdminMode() && !$('#accountButton') && !$('#jlHeaderAccount')) {
+    if (!$('#accountButton') && !$('#jlHeaderAccount')) {
       const account = document.createElement('a');
       account.id = 'jlHeaderAccount';
       account.className = 'button ghost small';
@@ -92,13 +87,13 @@
   }
 
   function ensureStatusStrip() {
-    if (isAdminMode() || $('#ludoStatusStrip') || $('#jlGlobalStatusStrip')) return;
+    if ($('#ludoStatusStrip') || $('#jlGlobalStatusStrip')) return;
     const main = document.querySelector('main');
     if (!main) return;
 
     const strip = document.createElement('section');
     strip.id = 'jlGlobalStatusStrip';
-    strip.className = 'ludo-status-strip jl-global-status-strip hidden';
+    strip.className = 'ludo-status-strip jl-global-status-strip';
     strip.setAttribute('aria-label', 'Estado dos Jogos Lendários');
     strip.append(
       makeMetric('Ver jogadores online', '●', 'jlGlobalOnlineCount', './ludo.html#socialZone'),
@@ -111,13 +106,12 @@
   }
 
   async function refreshGlobal() {
-    if (isAdminMode()) return;
     const t = token();
     const strip = $('#jlGlobalStatusStrip');
     const genericAccount = $('#jlHeaderAccount');
 
     if (!t || !rpc) {
-      strip?.classList.add('hidden');
+      strip?.classList.remove('hidden');
       if (genericAccount) genericAccount.textContent = 'Entrar';
       return;
     }
@@ -151,7 +145,7 @@
         if (i?.balance != null) genericAccount.title = 'Saldo: ' + Number(i.balance || 0).toLocaleString('pt-MZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' MZN';
       }
     } catch {
-      strip?.classList.add('hidden');
+      strip?.classList.remove('hidden');
     }
   }
 
