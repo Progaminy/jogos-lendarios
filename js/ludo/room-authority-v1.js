@@ -33,18 +33,11 @@
 
   function captureRuntimeState() {
     const api = window.JLLudoState;
-    if (!api || typeof api.create !== 'function' || api.__jlAuthorityWrapped) return;
-    const originalCreate = api.create.bind(api);
-    const wrapped = Object.freeze({
-      __jlAuthorityWrapped: true,
-      create() {
-        const state = originalCreate();
-        authority.runtimeState = state;
-        window.__JL_LUDO_RUNTIME_STATE__ = state;
-        return state;
-      }
-    });
-    window.JLLudoState = wrapped;
+    if (!api || typeof api.create !== 'function') return null;
+    const state = api.create();
+    authority.runtimeState = state;
+    window.__JL_LUDO_RUNTIME_STATE__ = state;
+    return state;
   }
 
   captureRuntimeState();
@@ -136,6 +129,14 @@
     authority.snapshot = snapshot;
     authority.activeRoomId = String(roomData.id || '');
 
+    const state = authority.runtimeState || captureRuntimeState();
+    if (state) {
+      state.token = token();
+      state.room = snapshot;
+      if (!state.status) state.status = {};
+      state.status.active_room_id = roomData.id;
+    }
+
     document.getElementById('lobby')?.classList.add('hidden');
     document.getElementById('boardLobby')?.classList.add('hidden');
     document.getElementById('loggedOut')?.classList.add('hidden');
@@ -159,13 +160,6 @@
     renderPlayers(snapshot);
     renderDeadline(snapshot);
 
-    const state = authority.runtimeState || window.__JL_LUDO_RUNTIME_STATE__;
-    if (state) {
-      state.token = token();
-      state.room = snapshot;
-      if (state.status) state.status.active_room_id = roomData.id;
-    }
-
     if (authority.scrolledRoomId !== authority.activeRoomId) {
       authority.scrolledRoomId = authority.activeRoomId;
       requestAnimationFrame(() => room.scrollIntoView({ behavior: 'smooth', block: 'start' }));
@@ -177,7 +171,7 @@
     authority.snapshot = null;
     authority.activeRoomId = '';
     authority.scrolledRoomId = '';
-    const state = authority.runtimeState || window.__JL_LUDO_RUNTIME_STATE__;
+    const state = authority.runtimeState || captureRuntimeState();
     if (state) {
       state.token = token();
       state.room = null;
@@ -203,7 +197,7 @@
     authority.running = true;
     try {
       const status = await rpc('jl_ludo_my_status', { p_token: playerToken });
-      const state = authority.runtimeState || window.__JL_LUDO_RUNTIME_STATE__;
+      const state = authority.runtimeState || captureRuntimeState();
       if (state) {
         state.token = playerToken;
         state.status = status;
