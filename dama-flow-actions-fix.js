@@ -1,10 +1,9 @@
 (() => {
   'use strict';
 
-  if (!String(location.pathname || '').toLowerCase().endsWith('/dama.html')) return;
-
   const ROOM_KEY = 'jl_dama_room_id';
   let busy = false;
+  let leaving = false;
 
   function token() {
     return window.JLSession?.getPlayerToken?.() || '';
@@ -29,6 +28,16 @@
     url.searchParams.delete('board_invite');
     const query = url.searchParams.toString();
     return `${url.pathname}${query ? `?${query}` : ''}${url.hash || ''}`;
+  }
+
+  function freezeLeavingUi() {
+    if (!leaving) return;
+    const modal = document.getElementById('damaStakeModal');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.setAttribute('aria-hidden', 'true');
+    }
+    document.body.classList.remove('dama-flow-open');
   }
 
   function leaveRoomUi() {
@@ -102,6 +111,10 @@
   }
 
   async function leaveBeforeStart() {
+    if (leaving) return;
+    leaving = true;
+    freezeLeavingUi();
+
     const p_token = token();
     const p_room = roomId();
     if (!p_token || !p_room) {
@@ -109,24 +122,34 @@
       return;
     }
 
-    await rpc('jl_dama_cancel', { p_token, p_room });
-    leaveRoomUi();
+    try {
+      await rpc('jl_dama_cancel', { p_token, p_room });
+      leaveRoomUi();
+    } catch (error) {
+      leaving = false;
+      const modal = document.getElementById('damaStakeModal');
+      if (modal) modal.removeAttribute('aria-hidden');
+      throw error;
+    }
   }
 
-  function normalizeStakeExitLabel() {
+  function normalizeStakeExit() {
     const button = document.getElementById('damaStakeCancel');
-    if (button && button.textContent.trim() !== 'Sair') button.textContent = 'Sair';
+    if (button) {
+      if (button.textContent.trim() !== 'Sair') button.textContent = 'Sair';
+      button.setAttribute('aria-label', 'Sair desta partida');
+    }
+    freezeLeavingUi();
   }
 
   document.addEventListener('click', async (event) => {
-    const button = event.target.closest?.('#damaModalDecline,#damaModalAccept,#damaStakeCancel,#damaStakeConfirm');
+    const target = event.target instanceof Element ? event.target : null;
+    const button = target?.closest?.('#damaModalDecline,#damaModalAccept,#damaStakeCancel,#damaStakeConfirm');
     if (!button) return;
 
-    // Estes botões pertencem ao modal visual. Impede o encadeamento antigo que
-    // tentava clicar em controlos escondidos e falhava em alguns telemóveis.
     event.preventDefault();
     event.stopImmediatePropagation();
-    if (busy) return;
+    if (busy || leaving) return;
 
     setBusy(true);
     try {
@@ -142,10 +165,11 @@
     } catch (error) {
       toast(error?.message || 'Não foi possível concluir a ação.', 'error');
       setBusy(false);
+      normalizeStakeExit();
     }
   }, true);
 
-  const observer = new MutationObserver(normalizeStakeExitLabel);
-  observer.observe(document.documentElement, { subtree: true, childList: true });
-  normalizeStakeExitLabel();
+  const observer = new MutationObserver(normalizeStakeExit);
+  observer.observe(document.documentElement, { subtree: true, childList: true, attributes: true, attributeFilter: ['class'] });
+  normalizeStakeExit();
 })();
