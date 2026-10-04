@@ -47,3 +47,6 @@
 
 /js/ludo/render.js
   Cache-Control: no-cache, must-revalidate
+
+/js/platform/ludo-feature-loader.js
+  Cache-Control: no-cache, must-revalidate
