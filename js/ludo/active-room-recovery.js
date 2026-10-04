@@ -1,12 +1,30 @@
 (() => {
   'use strict';
 
-  if (window.__JL_LUDO_ACTIVE_ROOM_RECOVERY__) return;
-  window.__JL_LUDO_ACTIVE_ROOM_RECOVERY__ = true;
+  const existing = window.__JL_LUDO_ACTIVE_ROOM_RECOVERY__;
+  if (existing && typeof existing === 'object' && existing.installed) return;
+
+  const recoveryState = existing && typeof existing === 'object' ? existing : {};
+  Object.assign(recoveryState, {
+    installed: true,
+    pending: true,
+    resolved: false,
+    activeRoomId: '',
+    lastError: ''
+  });
+  window.__JL_LUDO_ACTIVE_ROOM_RECOVERY__ = recoveryState;
 
   const TOKEN_KEY = 'jl_player_token';
+  const MAX_API_READY_RETRIES = 25;
+  const API_READY_RETRY_MS = 200;
+  const MAX_STATUS_RETRIES = 4;
+  const STATUS_RETRY_MS = 700;
+
   let recovering = false;
   let redirectedRoomId = '';
+  let apiReadyRetries = 0;
+  let statusRetries = 0;
+  let retryTimer = 0;
 
   function token() {
     return window.JLSession?.getPlayerToken?.()
@@ -26,6 +44,39 @@
     return text.includes('sala')
       && text.includes('ativa')
       && text.includes('participa');
+  }
+
+  function emitState() {
+    window.dispatchEvent(new CustomEvent('jl-ludo-active-room-recovery', {
+      detail: {
+        pending: Boolean(recoveryState.pending),
+        resolved: Boolean(recoveryState.resolved),
+        activeRoomId: String(recoveryState.activeRoomId || '')
+      }
+    }));
+  }
+
+  function markPending(error = '') {
+    recoveryState.pending = true;
+    recoveryState.resolved = false;
+    if (error) recoveryState.lastError = String(error);
+    emitState();
+  }
+
+  function markResolved(roomId = '') {
+    recoveryState.pending = false;
+    recoveryState.resolved = true;
+    recoveryState.activeRoomId = String(roomId || '').trim();
+    recoveryState.lastError = '';
+    emitState();
+  }
+
+  function scheduleRecovery(delay, reason) {
+    if (retryTimer) clearTimeout(retryTimer);
+    retryTimer = window.setTimeout(() => {
+      retryTimer = 0;
+      void recoverActiveRoom(reason);
+    }, delay);
   }
 
   function roomUrl(roomId) {
@@ -68,7 +119,6 @@
 
     const sync = () => {
       if (room.classList.contains('hidden')) return;
-      // renderDeadline atualiza o rótulo/relógio, mas a barra vinha presa em .hidden.
       bar.classList.remove('hidden');
       bar.removeAttribute('aria-hidden');
     };
@@ -85,25 +135,49 @@
     sync();
   }
 
-  async function recoverActiveRoom() {
+  async function recoverActiveRoom(reason = 'startup') {
     if (recovering) return;
-    const playerToken = token();
-    const rpc = window.JLApi?.rpc;
-    if (!playerToken || typeof rpc !== 'function') return;
 
+    const playerToken = token();
+    if (!playerToken) {
+      apiReadyRetries = 0;
+      statusRetries = 0;
+      markResolved('');
+      return;
+    }
+
+    const rpc = window.JLApi?.rpc;
+    if (typeof rpc !== 'function') {
+      markPending('api-not-ready');
+      if (apiReadyRetries < MAX_API_READY_RETRIES) {
+        apiReadyRetries += 1;
+        scheduleRecovery(API_READY_RETRY_MS, 'api-ready-retry');
+      }
+      return;
+    }
+
+    apiReadyRetries = 0;
     recovering = true;
+    markPending();
+
     try {
       const status = await rpc('jl_ludo_my_status', { p_token: playerToken });
       const roomId = String(status?.active_room_id || '').trim();
-      if (!roomId) return;
+      statusRetries = 0;
+      markResolved(roomId);
 
+      if (!roomId) return;
       if (focusWhenRendered(roomId)) return;
       if (redirectedRoomId === roomId) return;
 
       redirectedRoomId = roomId;
       window.location.replace(roomUrl(roomId).toString());
-    } catch {
-      // O fluxo principal do Ludo continua responsável por mostrar erros.
+    } catch (error) {
+      markPending(error?.message || reason || 'status-failed');
+      if (statusRetries < MAX_STATUS_RETRIES) {
+        statusRetries += 1;
+        scheduleRecovery(STATUS_RETRY_MS * statusRetries, 'status-retry');
+      }
     } finally {
       recovering = false;
     }
@@ -115,7 +189,10 @@
     const toast = document.getElementById('toast');
     if (toast) {
       const inspectToast = () => {
-        if (isActiveRoomMessage(toast.textContent)) void recoverActiveRoom();
+        if (isActiveRoomMessage(toast.textContent)) {
+          statusRetries = 0;
+          void recoverActiveRoom('active-room-toast');
+        }
       };
       new MutationObserver(inspectToast).observe(toast, {
         childList: true,
@@ -127,8 +204,26 @@
       inspectToast();
     }
 
-    // Se já existe uma sala, abre essa sala em vez de deixar o jogador preso no lobby.
-    void recoverActiveRoom();
+    window.addEventListener('jl-player-session-changed', event => {
+      if (event.detail?.authenticated) {
+        apiReadyRetries = 0;
+        statusRetries = 0;
+        markPending();
+        void recoverActiveRoom('session-authenticated');
+      } else {
+        markResolved('');
+      }
+    });
+
+    window.addEventListener('pageshow', () => {
+      if (!token()) return;
+      apiReadyRetries = 0;
+      statusRetries = 0;
+      markPending();
+      void recoverActiveRoom('pageshow');
+    });
+
+    void recoverActiveRoom('startup');
   }
 
   if (document.readyState === 'loading') {
