@@ -209,11 +209,23 @@
     }
   }
 
+  function loadPageEnhancements() {
+    const path = location.pathname.toLowerCase();
+    if (!path.endsWith('/dama.html')) return;
+    if (document.querySelector('script[data-jl-dama-room-preview]')) return;
+    const script = document.createElement('script');
+    script.src = './dama-room-preview.js?v=20261004-1';
+    script.async = true;
+    script.dataset.jlDamaRoomPreview = '1';
+    document.head.appendChild(script);
+  }
+
   function boot() {
     normalizeNav();
     ensureTopActions();
     ensureStatusStrip();
     installLudoOnlineEstimateGuard();
+    loadPageEnhancements();
     refreshGlobal();
     window.addEventListener('hashchange', normalizeNav);
     window.addEventListener('jl-player-session-changed', refreshGlobal);
