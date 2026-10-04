@@ -91,6 +91,7 @@
       html body.ludo-pinned #ludoBoard {
         position: relative !important;
         z-index: 1 !important;
+        scroll-margin-top: 4px !important;
       }
 
       html body.ludo-pinned .pin-ludo-button {
@@ -116,12 +117,24 @@
       || document.getElementById('gamePanel');
   }
 
-  function directPinnedBoardIntoView() {
+  function elementDocumentTop(element) {
+    let top = 0;
+    let current = element;
+    while (current) {
+      top += Number(current.offsetTop) || 0;
+      current = current.offsetParent;
+    }
+    return top;
+  }
+
+  function directPinnedBoardIntoView(button = null) {
     if (!document.body.classList.contains('ludo-pinned')) return false;
     const gamePanel = document.getElementById('gamePanel');
+    const panel = document.querySelector('#gamePanel > .board-panel');
     const board = document.getElementById('ludoBoard');
-    const target = boardFocusTarget();
-    if (!target || !gamePanel || gamePanel.classList.contains('hidden') || !board) return false;
+    if (!panel || !gamePanel || gamePanel.classList.contains('hidden') || !board) return false;
+
+    button?.blur?.();
 
     try {
       const url = new URL(window.location.href);
@@ -132,16 +145,24 @@
       window.location.hash = 'ludoBoard';
     }
 
-    const moveToBoard = () => {
+    const moveToBoard = (behavior = 'auto') => {
       if (!document.body.classList.contains('ludo-pinned')) return;
       const topbarHeight = document.querySelector('.topbar')?.getBoundingClientRect().height || 0;
-      const rect = target.getBoundingClientRect();
-      const destination = Math.max(0, window.scrollY + rect.top - topbarHeight - 6);
-      window.scrollTo({ top: destination, behavior: 'smooth' });
+      const destination = Math.max(0, elementDocumentTop(panel) - topbarHeight - 6);
+
+      panel.scrollTop = 0;
+      window.scrollTo({ top: destination, behavior });
+
+      requestAnimationFrame(() => {
+        if (!document.body.classList.contains('ludo-pinned')) return;
+        const boardInsidePanel = Math.max(0, Number(board.offsetTop) - 4);
+        panel.scrollTo({ top: boardInsidePanel, behavior: 'auto' });
+      });
     };
 
-    requestAnimationFrame(() => requestAnimationFrame(moveToBoard));
-    window.setTimeout(moveToBoard, 180);
+    requestAnimationFrame(() => requestAnimationFrame(() => moveToBoard('auto')));
+    window.setTimeout(() => moveToBoard('smooth'), 120);
+    window.setTimeout(() => moveToBoard('auto'), 320);
     return true;
   }
 
@@ -152,7 +173,7 @@
       if (!button) return;
       window.setTimeout(() => {
         if (document.body.classList.contains('ludo-pinned')) {
-          directPinnedBoardIntoView();
+          directPinnedBoardIntoView(button);
         }
       }, 0);
     });
