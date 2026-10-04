@@ -220,12 +220,51 @@
     document.head.appendChild(script);
   }
 
+  function loadAccountFooter() {
+    if (!document.querySelector('link[data-jl-account-footer]')) {
+      const style = document.createElement('link');
+      style.rel = 'stylesheet';
+      style.href = './account-footer.css?v=20261004-1';
+      style.dataset.jlAccountFooter = '1';
+      document.head.appendChild(style);
+    }
+
+    const loadFooterScript = () => {
+      if (window.JLAccountFooter || document.querySelector('script[data-jl-account-footer]')) return;
+      const script = document.createElement('script');
+      script.src = './account-footer.js?v=20261004-1';
+      script.async = true;
+      script.dataset.jlAccountFooter = '1';
+      document.head.appendChild(script);
+    };
+
+    if (window.JLFinancial) {
+      loadFooterScript();
+      return;
+    }
+
+    const existingFinancial = [...document.scripts].find((s) => /\/js\/bets\/financial\.js(?:\?|$)/.test(s.src));
+    if (existingFinancial) {
+      if (window.JLFinancial) loadFooterScript();
+      else existingFinancial.addEventListener('load', loadFooterScript, { once: true });
+      return;
+    }
+
+    const financial = document.createElement('script');
+    financial.src = './js/bets/financial.js?v=20260928-1';
+    financial.async = true;
+    financial.dataset.jlAccountFinancial = '1';
+    financial.addEventListener('load', loadFooterScript, { once: true });
+    document.head.appendChild(financial);
+  }
+
   function boot() {
     normalizeNav();
     ensureTopActions();
     ensureStatusStrip();
     installLudoOnlineEstimateGuard();
     loadPageEnhancements();
+    loadAccountFooter();
     refreshGlobal();
     window.addEventListener('hashchange', normalizeNav);
     window.addEventListener('jl-player-session-changed', refreshGlobal);
