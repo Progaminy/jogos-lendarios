@@ -6,8 +6,7 @@ recovery:{css:['./recovery-ui.css?v=20260922-13'],js:['./recovery-ui.js?v=202609
 notifications:{js:['./js/notifications/client.js?v=20260928-22']},
 sessions:{js:['./js/auth/player-sessions.js?v=20260928-1']},
 social:{js:['./social.js?v=20261003-5']},
-policy:{js:['./js/ludo/policy.js?v=20261003-3']},
-roomRecovery:{js:['./js/ludo/active-room-recovery.js?v=20261004-5']}
+policy:{js:['./js/ludo/policy.js?v=20261003-3']}
 });
 const state=new Map(),queue=[];
 let facade=null,replaying=false;
@@ -140,10 +139,7 @@ const roomVisible=!room.classList.contains('hidden');
 const lobbyVisible=!lobby.classList.contains('hidden');
 if(roomVisible||lobbyVisible)return;
 const recovery=activeRoomRecoveryState();
-// Uma sala ativa confirmada continua a ter prioridade sobre o lobby.
 if(recovery?.activeRoomId)return;
-// Enquanto a consulta ainda está em curso damos uma pequena janela para recuperar a sala.
-// Se a consulta travar/falhar, o lobby volta obrigatoriamente para não apagar Convidar/Nova partida.
 if(!force&&recovery?.pending&&recovery?.resolved!==true)return;
 showLobby();
 }
@@ -161,14 +157,8 @@ document.addEventListener('visibilitychange',()=>{
 if(document.visibilityState==='visible')setTimeout(()=>restoreLobbyIfStranded(true),300);
 });
 }
-function installActiveRoomRecovery(){
-if(!window.__JL_LUDO_ACTIVE_ROOM_RECOVERY__){
-window.__JL_LUDO_ACTIVE_ROOM_RECOVERY__={installed:false,pending:true,resolved:false,activeRoomId:'',lastError:''};
-}
-load('roomRecovery').catch(()=>{});
-}
 function init(){
-notifications();support();recovery();account();installActiveRoomRecovery();installLobbyRecovery();
+notifications();support();recovery();account();installLobbyRecovery();
 idle('policy',350);
 if(hasToken())authenticated();
 window.addEventListener('jl-player-session-changed',event=>{
