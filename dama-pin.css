@@ -1,0 +1,33 @@
+.dama-pin-button{
+  white-space:nowrap;
+  border-color:rgba(244,189,66,.32)!important;
+  color:#ffda73!important;
+}
+.dama-pin-button[aria-pressed="true"]{
+  border-color:rgba(73,213,138,.45)!important;
+  color:#8df1bb!important;
+  background:rgba(73,213,138,.08)!important;
+}
+
+body.dama-pinned{overflow:auto}
+body.dama-pinned .topbar,
+body.dama-pinned #jlGlobalStatusStrip,
+body.dama-pinned #jlGlobalAccountFooter,
+body.dama-pinned .site-footer,
+body.dama-pinned .foot-min{
+  display:none!important;
+}
+body.dama-pinned .dama-shell{
+  max-width:820px!important;
+  padding-top:8px!important;
+}
+body.dama-pinned #damaRoom{margin-top:0!important}
+body.dama-pinned .dama-room-head{margin-top:0}
+
+@media(max-width:520px){
+  .dama-pin-button{min-height:38px}
+  body.dama-pinned .dama-shell{
+    padding-left:6px!important;
+    padding-right:6px!important;
+  }
+}
