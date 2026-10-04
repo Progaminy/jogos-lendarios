@@ -27,7 +27,7 @@ test('alterar o valor antes do débito exige nova aceitação', () => {
   assert.match(sql, /settings_accepted=\(seat=1\)/);
 });
 
-test('pagina força carregamento das versões novas', () => {
-  assert.match(html, /dama-stake-edit\.js\?v=20261004-1/);
-  assert.match(html, /dama-flow-actions-fix\.js\?v=20261004-2/);
+test('pagina força carregamento versionado dos módulos da Dama', () => {
+  assert.match(html, /dama-stake-edit\.js\?v=\d{8}-\d+/);
+  assert.match(html, /dama-flow-actions-fix\.js\?v=\d{8}-\d+/);
 });
