@@ -241,3 +241,87 @@ body {
     transition: none;
   }
 }
+
+
+/* Cabeçalho global dos Jogos Lendários — referência visual do Ludo. */
+.top-refresh-button{
+  width:44px;height:44px;padding:0;display:grid;place-items:center;
+  border:1px solid rgba(255,255,255,.13);border-radius:12px;
+  background:#14243a;color:var(--nav-accent);font:900 1.55rem/1 system-ui;
+  cursor:pointer;box-shadow:inset 0 0 0 1px rgba(244,181,31,.05)
+}
+.top-refresh-button:hover{filter:brightness(1.12)}
+.top-refresh-button:disabled{opacity:.55;cursor:wait}
+.top-actions .top-refresh-button{order:1}
+.top-actions .jl-notify-wrap{order:2}
+.top-actions .account-popover-wrap,
+.top-actions>#jlHeaderAccount,
+.top-actions>#accountButton{order:3}
+.top-actions>#identityBadge{order:4}
+#numberRoundBadge,#pairRoundBadge{display:none!important}
+.jl-header-legacy-hidden{display:none!important}
+
+.ludo-status-strip,
+.jl-global-status-strip{
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:8px;
+  width:100%;
+  margin:10px 0 12px;
+}
+.jl-global-status-strip{
+  width:min(100%,1220px);
+  margin-left:auto;
+  margin-right:auto;
+}
+.ludo-status-strip.hidden,
+.jl-global-status-strip.hidden{display:none!important}
+.status-metric{
+  min-width:0;min-height:54px;padding:7px 8px;
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  border:1px solid rgba(255,255,255,.10);border-radius:12px;
+  background:linear-gradient(180deg,#14243a,#0e1b2d);
+  color:#f3f6fb;font:800 .76rem/1 system-ui;
+  box-shadow:0 7px 18px rgba(0,0,0,.14);
+  cursor:pointer;
+}
+.status-metric:hover{border-color:rgba(244,181,31,.35);filter:brightness(1.06)}
+.status-metric .status-icon{font-size:.92rem;line-height:1}
+.status-metric.online-metric .status-icon,
+.status-metric:first-child .status-icon{color:#48d58b}
+.status-metric .shortcut-label{font-size:.68rem;color:#e6edf6}
+.status-metric strong{font-size:.88rem;font-variant-numeric:tabular-nums}
+.status-metric.has-items{border-color:rgba(244,181,31,.42)}
+.status-metric.has-items strong{color:#ffd765}
+
+@media(max-width:900px){
+  .top-actions>#identityBadge{display:none}
+  .top-actions .account-popover-wrap,
+  .top-actions>#jlHeaderAccount{min-width:0}
+  .top-actions .account-popover-wrap>#accountButton,
+  .top-actions>#jlHeaderAccount{
+    max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap
+  }
+}
+@media(max-width:600px){
+  .top-refresh-button{width:44px;height:44px;border-radius:10px}
+  .top-actions{flex-wrap:nowrap!important}
+  .top-actions .account-popover-wrap>#accountButton,
+  .top-actions>#jlHeaderAccount{
+    min-width:0;max-width:210px;height:44px;
+    padding:0 12px;border-radius:8px;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap
+  }
+  .ludo-status-strip,
+  .jl-global-status-strip{
+    grid-template-columns:repeat(5,minmax(0,1fr));
+    gap:4px;margin:8px 0 8px;
+  }
+  .status-metric{
+    min-height:42px;height:42px;padding:3px 4px;gap:4px;
+    border-radius:9px;font-size:.62rem;overflow:hidden;white-space:nowrap
+  }
+  .status-metric .status-icon{font-size:.72rem}
+  .status-metric .shortcut-label{font-size:.53rem}
+  .status-metric strong{font-size:.74rem}
+}
