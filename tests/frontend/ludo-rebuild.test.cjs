@@ -67,7 +67,7 @@ test('lobby e sala possuem controles essenciais', () => {
     assert.match(html, new RegExp(`id="${id}"`));
   }
   assert.match(html, /id="(?:dice|rollDice)"/);
-  assert.match(html, />Convidar</);
+  assert.match(html, /Convidar/i);
   assert.match(html, />Sair</);
   assert.match(html, />Desistir</);
   assert.match(html, /id="deadlineClock"/);
