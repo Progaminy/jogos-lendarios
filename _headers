@@ -57,6 +57,9 @@
 /js/ludo/active-room-recovery.js
   Cache-Control: no-store, max-age=0
 
+/js/ludo/room-state.js
+  Cache-Control: no-store, max-age=0
+
 /js/ludo/route-compat.js
   Cache-Control: no-store, max-age=0
 
