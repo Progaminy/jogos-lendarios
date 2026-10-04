@@ -81,6 +81,72 @@
     return button;
   }
 
+  function hourKey(now = new Date()) {
+    return [
+      now.getFullYear(),
+      String(now.getMonth() + 1).padStart(2, '0'),
+      String(now.getDate()).padStart(2, '0'),
+      String(now.getHours()).padStart(2, '0')
+    ].join('-');
+  }
+
+  function hourlyEstimatedBase(now = new Date()) {
+    const input = 'jogos-lendarios-online-estimado:' + hourKey(now);
+    let hash = 2166136261;
+    for (let i = 0; i < input.length; i += 1) {
+      hash ^= input.charCodeAt(i);
+      hash = Math.imul(hash, 16777619);
+    }
+    return 50 + ((hash >>> 0) % 51);
+  }
+
+  function estimatedOnline(realOnline = 0, now = new Date()) {
+    const real = Math.max(0, Number(realOnline) || 0);
+    return hourlyEstimatedBase(now) + real;
+  }
+
+  function applyEstimatedOnline(el, realOnline = 0) {
+    if (!el) return;
+    const real = Math.max(0, Number(realOnline) || 0);
+    const value = estimatedOnline(real);
+    const text = '≈' + value;
+    el.dataset.jlRealOnline = String(real);
+    el.dataset.jlEstimateApplied = text;
+    if (el.textContent !== text) el.textContent = text;
+    const metric = el.closest('.status-metric');
+    if (metric) {
+      metric.setAttribute('aria-label', 'Jogadores online estimados: ' + value);
+      metric.title = 'Online estimado';
+    }
+  }
+
+  function updateEstimatedOnline(realOnline = 0) {
+    applyEstimatedOnline(document.getElementById('jlGlobalOnlineCount'), realOnline);
+    applyEstimatedOnline(document.getElementById('onlinePlayerCount'), realOnline);
+  }
+
+  function installLudoOnlineEstimateGuard() {
+    const el = document.getElementById('onlinePlayerCount');
+    if (!el || el.dataset.jlEstimateGuard === '1') return;
+    el.dataset.jlEstimateGuard = '1';
+
+    const observer = new MutationObserver(() => {
+      const current = String(el.textContent || '');
+      if (current === el.dataset.jlEstimateApplied) return;
+      const real = Math.max(0, Number(current.replace(/[^0-9.-]/g, '')) || 0);
+      applyEstimatedOnline(el, real);
+    });
+    observer.observe(el, { childList: true, characterData: true, subtree: true });
+
+    const initialReal = Math.max(0, Number(String(el.textContent || '').replace(/[^0-9.-]/g, '')) || 0);
+    applyEstimatedOnline(el, initialReal);
+  }
+
+  window.JLHeaderOnlineEstimate = Object.freeze({
+    base: hourlyEstimatedBase,
+    display: estimatedOnline
+  });
+
   function ensureStatusStrip() {
     if ($('#ludoStatusStrip') || $('#jlGlobalStatusStrip')) return;
     const main = document.querySelector('main');
@@ -91,7 +157,7 @@
     strip.className = 'ludo-status-strip jl-global-status-strip';
     strip.setAttribute('aria-label', 'Estado dos Jogos Lendários');
     strip.append(
-      makeMetric('Ver jogadores online', '●', 'jlGlobalOnlineCount', './ludo.html#socialZone'),
+      makeMetric('Jogadores online estimados', '●', 'jlGlobalOnlineCount', './ludo.html#socialZone'),
       makeMetric('Convites individuais', '🔔', 'jlGlobalDirectCount', './ludo.html#notificationCenter'),
       makeMetric('Convites populares', '📣', 'jlGlobalPublicCount', './ludo.html#notificationCenter')
     );
@@ -102,6 +168,8 @@
     const t = token();
     const strip = $('#jlGlobalStatusStrip');
     const genericAccount = $('#jlHeaderAccount');
+
+    updateEstimatedOnline(0);
 
     if (!t || !rpc) {
       strip?.classList.remove('hidden');
@@ -124,7 +192,7 @@
         const el = document.getElementById(id);
         if (el) el.textContent = String(value);
       };
-      set('jlGlobalOnlineCount', online);
+      updateEstimatedOnline(online);
       set('jlGlobalDirectCount', invites.length);
       set('jlGlobalPublicCount', publicCount);
 
@@ -136,6 +204,7 @@
         if (i?.balance != null) genericAccount.title = 'Saldo: ' + Number(i.balance || 0).toLocaleString('pt-MZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' MZN';
       }
     } catch {
+      updateEstimatedOnline(0);
       strip?.classList.remove('hidden');
     }
   }
@@ -144,6 +213,7 @@
     normalizeNav();
     ensureTopActions();
     ensureStatusStrip();
+    installLudoOnlineEstimateGuard();
     refreshGlobal();
     window.addEventListener('hashchange', normalizeNav);
     window.addEventListener('jl-player-session-changed', refreshGlobal);
