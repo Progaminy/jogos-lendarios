@@ -7,7 +7,7 @@ notifications:{js:['./js/notifications/client.js?v=20260928-22']},
 sessions:{js:['./js/auth/player-sessions.js?v=20260928-1']},
 social:{js:['./social.js?v=20261003-5']},
 policy:{js:['./js/ludo/policy.js?v=20261003-3']},
-roomRecovery:{js:['./js/ludo/active-room-recovery.js?v=20261004-4']}
+roomRecovery:{js:['./js/ludo/active-room-recovery.js?v=20261004-5']}
 });
 const state=new Map(),queue=[];
 let facade=null,replaying=false;
