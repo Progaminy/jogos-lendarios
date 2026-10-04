@@ -57,6 +57,59 @@
     delete document.documentElement.dataset.jlConfirmedActiveLudoRoom;
   }
 
+  function installPinnedBoardFix() {
+    if (document.getElementById('jl-ludo-pin-fix')) return;
+    const style = document.createElement('style');
+    style.id = 'jl-ludo-pin-fix';
+    style.textContent = `
+      html body.ludo-pinned #room {
+        content-visibility: visible !important;
+        contain: none !important;
+        overflow: visible !important;
+      }
+
+      html body.ludo-pinned #gamePanel {
+        overflow: visible !important;
+      }
+
+      html body.ludo-pinned #gamePanel > .board-panel {
+        position: sticky !important;
+        top: calc(var(--ludo-sticky-top, 64px) + 6px) !important;
+        right: auto !important;
+        bottom: auto !important;
+        left: auto !important;
+        inset: auto !important;
+        z-index: 35 !important;
+        transform: none !important;
+        width: 100% !important;
+        max-width: none !important;
+        max-height: calc(100dvh - var(--ludo-sticky-top, 64px) - 12px) !important;
+        overflow: auto !important;
+        overscroll-behavior: contain;
+      }
+
+      html body.ludo-pinned #ludoBoard {
+        position: relative !important;
+        z-index: 1 !important;
+      }
+
+      html body.ludo-pinned .pin-ludo-button {
+        position: sticky;
+        bottom: 8px;
+        z-index: 4;
+      }
+
+      @media (max-width: 600px) {
+        html body.ludo-pinned #gamePanel > .board-panel {
+          top: calc(var(--ludo-sticky-top, 56px) + 4px) !important;
+          max-height: calc(100dvh - var(--ludo-sticky-top, 56px) - 8px) !important;
+          padding: 10px !important;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
   function boardFocusTarget() {
     return document.querySelector('#gamePanel .board-panel')
       || document.getElementById('ludoBoard')
@@ -189,7 +242,6 @@
         clearRememberedRoom();
       }
     } catch {
-      // Em falha transitória, não apagar uma sala já confirmada.
       syncConfirmedRoom();
     }
   }
@@ -240,8 +292,6 @@
         rememberRoom(roomId);
         forceRoomVisible(roomId);
       } else if (token()) {
-        // Um evento vazio pode ser apenas uma corrida de sessão/UI.
-        // Só libertamos a sala depois de confirmação autoritativa do servidor.
         scheduleAuthoritativeConfirm();
       } else {
         clearRememberedRoom();
@@ -270,10 +320,12 @@
     scheduleAuthoritativeConfirm(250);
   }
 
+  installPinnedBoardFix();
   repairLudoHeader();
   installCreateRoomBoardRedirect();
   installActiveRoomVisibilityGuard();
   document.addEventListener('DOMContentLoaded', () => {
+    installPinnedBoardFix();
     repairLudoHeader();
     syncConfirmedRoom();
     scheduleAuthoritativeConfirm(120);
