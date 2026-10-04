@@ -1,0 +1,53 @@
+name: Ludo cache bust
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'js/ludo/active-room-recovery.js'
+      - 'js/platform/ludo-feature-loader.js'
+      - '.github/workflows/ludo-cache-bust.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch-live-assets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Force fresh Ludo recovery assets
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('ludo.html')
+          text = path.read_text(encoding='utf-8')
+          replacements = {
+              './js/ludo/room-state.js?v=20260928-1': './js/ludo/room-state.js?v=20261004-3',
+              './js/platform/ludo-feature-loader.js?v=20261003-2': './js/platform/ludo-feature-loader.js?v=20261004-7',
+              './ludo.js?v=20261004-2': './ludo.js?v=20261004-7',
+          }
+          for old, new in replacements.items():
+              text = text.replace(old, new)
+
+          recovery = '  <script src="./js/ludo/active-room-recovery.js?v=20261004-4" defer></script>\n'
+          anchor = '  <script src="./ludo.js?v=20261004-7" defer></script>\n'
+          if 'js/ludo/active-room-recovery.js' not in text:
+              text = text.replace(anchor, anchor + recovery)
+
+          path.write_text(text, encoding='utf-8')
+          PY
+      - name: Commit cache bust if needed
+        run: |
+          if git diff --quiet -- ludo.html; then
+            echo "ludo.html already points at fresh assets"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ludo.html
+          git commit -m "Force fresh Ludo active-room recovery assets"
+          git push
