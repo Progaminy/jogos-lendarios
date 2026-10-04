@@ -36,9 +36,7 @@ async function rpc(req: Request, name: string, args: unknown) {
   const raw = await response.text();
   let payload: any = null;
   try { payload = raw ? JSON.parse(raw) : null; } catch { payload = raw; }
-  if (!response.ok) {
-    throw new Error(payload?.message || payload?.error || payload?.hint || `RPC_${response.status}`);
-  }
+  if (!response.ok) throw new Error(payload?.message || payload?.error || payload?.hint || `RPC_${response.status}`);
   return payload;
 }
 
@@ -59,11 +57,11 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const access = await rpc(req, "jl_dama_analysis_access", {
+    const context = await rpc(req, "jl_dama_analysis_context", {
       p_token: token,
       p_room: roomId
     });
-    if (!access?.enabled) return respond({ error: access?.reason || "NOT_ALLOWED" }, 403);
+    if (!context?.enabled) return respond({ error: context?.reason || "NOT_ALLOWED" }, 403);
 
     const snapshot = await rpc(req, "jl_dama_room_state", {
       p_token: token,
@@ -76,6 +74,7 @@ Deno.serve(async (req: Request) => {
       return respond({ error: "NO_LEGAL_MOVES" }, 404);
     }
 
+    snapshot.analysis_context = context;
     const hint = analyze(snapshot);
     return respond({ ok: true, hint });
   } catch (error) {
