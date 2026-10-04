@@ -17,13 +17,16 @@ test('modal da Dama responde diretamente sem depender dos botões escondidos', (
   assert.doesNotMatch(source, /damaDeclineSettings'\)\?\.click\(\)/);
 });
 
-test('recusar ou sair antes do início liberta a sala', () => {
+test('recusar ou sair antes do início liberta a sala e bloqueia reabertura durante a saída', () => {
   assert.match(source, /localStorage\.removeItem\(ROOM_KEY\)/);
   assert.match(source, /jl_dama_cancel/);
   assert.match(source, /location\.replace\(cleanDamaUrl\(\)\)/);
+  assert.match(source, /let leaving = false/);
+  assert.match(source, /freezeLeavingUi/);
+  assert.match(source, /if \(busy \|\| leaving\) return/);
 });
 
-test('confirmação da aposta usa RPC direto e hotfix está carregado', () => {
+test('confirmação da aposta usa RPC direto e hotfix versionado está carregado', () => {
   assert.match(source, /jl_dama_commit_stake/);
-  assert.match(html, /dama-flow-actions-fix\.js\?v=20261004-1/);
+  assert.match(html, /dama-flow-actions-fix\.js\?v=\d{8}-\d+/);
 });
