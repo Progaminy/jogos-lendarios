@@ -24,14 +24,8 @@ window.JL_CONFIG = Object.freeze({
 
   const isLudoPage = location.pathname.includes('ludo');
   if (!document.querySelector('a[href*="ludo"]') && !isLudoPage) return;
-  if (!isLudoPage) add('./ludo-challenge-badge.js?v=5');
 
-  if (isLudoPage) {
-    // A sala e o tabuleiro têm uma única fonte de estado: ludo.js.
-    // O módulo público cuida apenas da descoberta/entrada em desafios.
-    // ludo-stable-ui é somente apresentação e não consulta o servidor.
-    add('./ludo-public-challenges-v3.js?v=7');
-    add('./ludo-stable-ui.js?v=1');
-    add('./ludo-resilience-fix.js?v=20261004-1');
-  }
+  // A página Ludo carrega apenas o núcleo reconstruído em ludo.html/ludo.js.
+  // Nenhum patch de recovery, policy ou UI é injetado aqui.
+  if (!isLudoPage) add('./ludo-challenge-badge.js?v=5');
 })();
