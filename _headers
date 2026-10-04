@@ -27,6 +27,9 @@
 /site-auth.css
   Cache-Control: no-cache, must-revalidate
 
+/site-auth-priority.js
+  Cache-Control: no-cache, must-revalidate
+
 /site-ui.js
   Cache-Control: no-cache, must-revalidate
 
