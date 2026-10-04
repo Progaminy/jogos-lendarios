@@ -117,8 +117,36 @@ function authenticated(){
 idle('notifications',700,hasToken);
 idle('social',1200,hasToken);
 }
+function restoreLobbyIfStranded(){
+if(!hasToken())return;
+const lobby=document.getElementById('lobby');
+const room=document.getElementById('room');
+if(!lobby||!room)return;
+const roomVisible=!room.classList.contains('hidden');
+const lobbyVisible=!lobby.classList.contains('hidden');
+if(roomVisible||lobbyVisible)return;
+// Estado quebrado observado em produção: sessão ativa, mas nem sala nem lobby aparecem.
+// Nessa situação o jogador fica sem poder criar sala, enviar convite ou entrar na fila.
+lobby.classList.remove('hidden');
+document.getElementById('loggedOut')?.classList.add('hidden');
+document.getElementById('notificationCenter')?.classList.remove('hidden');
+document.getElementById('ludoStatusStrip')?.classList.remove('hidden');
+document.getElementById('boardLobby')?.classList.remove('hidden');
+}
+function installLobbyRecovery(){
+const run=()=>restoreLobbyIfStranded();
+setTimeout(run,1800);
+setTimeout(run,4200);
+window.addEventListener('pageshow',run);
+window.addEventListener('jl-player-session-changed',event=>{
+if(event.detail?.authenticated)setTimeout(run,180);
+});
+document.addEventListener('visibilitychange',()=>{
+if(document.visibilityState==='visible')setTimeout(run,180);
+});
+}
 function init(){
-notifications();support();recovery();account();
+notifications();support();recovery();account();installLobbyRecovery();
 idle('policy',350);
 if(hasToken())authenticated();
 window.addEventListener('jl-player-session-changed',event=>{
