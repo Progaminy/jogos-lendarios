@@ -90,6 +90,17 @@ jobs:
             echo "::endgroup::"
           done
 
+      - name: Run Ludo transactional and rules regression checks
+        env:
+          JL_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+        run: |
+          set -euo pipefail
+          for file in tests/sql/ludo-*.sql; do
+            echo "::group::$file"
+            psql "$JL_TEST_DATABASE_URL" -X -v ON_ERROR_STOP=1 -f "$file"
+            echo "::endgroup::"
+          done
+
       - name: Run Aviator transactional regression checks
         env:
           JL_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
