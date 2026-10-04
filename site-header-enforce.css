@@ -1,0 +1,88 @@
+/* Canonical Jogos Lendários header guard.
+   Page-specific styles must never change the shared header structure or hide its items. */
+body>.topbar[data-jl-shared-header="1"]{
+  position:fixed!important;
+  inset:0 0 auto!important;
+  z-index:120!important;
+  width:100%!important;
+  max-width:none!important;
+  min-height:var(--nav-desktop-height,118px)!important;
+  margin:0!important;
+  padding:0 max(12px,calc((100vw - 1320px)/2))!important;
+  display:grid!important;
+  grid-template-columns:minmax(180px,1fr) auto minmax(180px,1fr)!important;
+  grid-template-rows:50px 65px!important;
+  align-items:center!important;
+  gap:0 14px!important;
+}
+body>.topbar[data-jl-shared-header="1"]>.brand{
+  grid-column:1!important;
+  grid-row:1!important;
+  align-self:center!important;
+  font-size:1.2rem!important;
+}
+body>.topbar[data-jl-shared-header="1"]>.top-actions{
+  grid-column:3!important;
+  grid-row:1!important;
+  justify-self:end!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:8px!important;
+}
+body>.topbar[data-jl-shared-header="1"]>.game-nav{
+  grid-column:1/-1!important;
+  grid-row:2!important;
+  align-self:stretch!important;
+  width:100%!important;
+  display:grid!important;
+  grid-template-columns:repeat(5,minmax(0,1fr))!important;
+  gap:0!important;
+  overflow:visible!important;
+}
+body>.topbar[data-jl-shared-header="1"]>.game-nav>a{
+  display:flex!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:none!important;
+  height:65px!important;
+  align-items:center!important;
+  justify-content:center!important;
+  flex-direction:column!important;
+}
+body>.topbar[data-jl-shared-header="1"] .game-nav [data-jl-nav="todos"]::before{content:"🎮"!important;display:block!important}
+body>.topbar[data-jl-shared-header="1"] .game-nav [data-jl-nav="sorteios"]::before{content:"🎯"!important;display:block!important}
+body>.topbar[data-jl-shared-header="1"] .game-nav [data-jl-nav="conta"]::before{content:"👤"!important;display:block!important}
+body>.topbar[data-jl-shared-header="1"] .game-nav [data-jl-nav="aviator"]::before{content:none!important}
+body>.topbar[data-jl-shared-header="1"] .game-nav [data-jl-nav="aviator"]>span{display:block!important}
+
+@media(max-width:900px){
+  body>.topbar[data-jl-shared-header="1"]{
+    min-height:var(--nav-mobile-height,91px)!important;
+    padding:0 6px!important;
+    grid-template-columns:minmax(0,1fr) auto!important;
+    grid-template-rows:44px 44px!important;
+    gap:0 6px!important;
+  }
+  body>.topbar[data-jl-shared-header="1"]>.brand{
+    grid-column:1!important;
+    grid-row:1!important;
+    font-size:1rem!important;
+  }
+  body>.topbar[data-jl-shared-header="1"]>.top-actions{
+    grid-column:2!important;
+    grid-row:1!important;
+    gap:6px!important;
+    flex-wrap:nowrap!important;
+  }
+  body>.topbar[data-jl-shared-header="1"]>.game-nav{
+    grid-column:1/-1!important;
+    grid-row:2!important;
+    grid-template-columns:repeat(5,minmax(0,1fr))!important;
+  }
+  body>.topbar[data-jl-shared-header="1"]>.game-nav>a{
+    height:44px!important;
+    min-width:0!important;
+    padding:2px 1px!important;
+    font-size:.56rem!important;
+  }
+}
