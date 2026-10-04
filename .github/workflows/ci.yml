@@ -42,8 +42,46 @@ jobs:
         run: node --test tests/frontend/dama-*.test.cjs
       - name: Ludo frontend regression tests
         run: node --test tests/frontend/ludo-*.test.cjs tests/frontend/admin-ludo-*.test.cjs
-      - name: Aviator frontend regression tests
-        run: node --test tests/frontend/aviator-*.test.cjs tests/frontend/home-aviator-*.test.cjs
+      - name: Aviator admin frontend tests
+        run: node --test tests/frontend/aviator-admin-*.test.cjs
+      - name: Aviator betting and cash-out frontend tests
+        run: >-
+          node --test
+          tests/frontend/aviator-amount-stepper.test.cjs
+          tests/frontend/aviator-auto-cashout-sync.test.cjs
+          tests/frontend/aviator-balance.test.cjs
+          tests/frontend/aviator-bet-history-details.test.cjs
+          tests/frontend/aviator-bet-result-state.test.cjs
+          tests/frontend/aviator-live-return-confirmation.test.cjs
+          tests/frontend/aviator-min-bet.test.cjs
+          tests/frontend/aviator-next-round-bet.test.cjs
+          tests/frontend/aviator-one-click-bet.test.cjs
+          tests/frontend/aviator-personal-history.test.cjs
+          tests/frontend/aviator-player-cancel.test.cjs
+          tests/frontend/aviator-priority-cashout.test.cjs
+          tests/frontend/aviator-single-click-cashout.test.cjs
+          tests/frontend/aviator-stable-bet-button.test.cjs
+          tests/frontend/aviator-two-bet-panels.test.cjs
+      - name: Aviator flight runtime and performance frontend tests
+        run: >-
+          node --test
+          tests/frontend/aviator-approved-reference-flow.test.cjs
+          tests/frontend/aviator-countdown-separation.test.cjs
+          tests/frontend/aviator-crash-animation.test.cjs
+          tests/frontend/aviator-db-call-budget.test.cjs
+          tests/frontend/aviator-haptics-preference.test.cjs
+          tests/frontend/aviator-maintenance-polling.test.cjs
+          tests/frontend/aviator-mobile-performance.test.cjs
+          tests/frontend/aviator-module-boundaries.test.cjs
+          tests/frontend/aviator-no-frame-persistence.test.cjs
+          tests/frontend/aviator-observability-release-gate.test.cjs
+          tests/frontend/aviator-offline-reconnect.test.cjs
+          tests/frontend/aviator-realtime.test.cjs
+          tests/frontend/aviator-refresh-during-flight.test.cjs
+          tests/frontend/aviator-runtime.test.cjs
+          tests/frontend/aviator-server-clock.test.cjs
+          tests/frontend/aviator-sound-preference.test.cjs
+          tests/frontend/home-aviator-nav-icon.test.cjs
       - name: Platform frontend regression tests
         run: node --test tests/frontend/lazy-game-loading.test.cjs tests/frontend/player-session-invalidation.test.cjs tests/frontend/point27-page-weight.test.cjs
 
