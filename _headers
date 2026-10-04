@@ -10,7 +10,10 @@
   X-Robots-Tag: noindex, nofollow, noarchive
 
 /ludo.html
-  Cache-Control: no-cache, must-revalidate
+  Cache-Control: no-store, max-age=0
+
+/ludo.js
+  Cache-Control: no-store, max-age=0
 
 /site-header.js
   Cache-Control: no-cache, must-revalidate
@@ -51,8 +54,11 @@
 /js/ludo/render.js
   Cache-Control: no-cache, must-revalidate
 
+/js/ludo/active-room-recovery.js
+  Cache-Control: no-store, max-age=0
+
 /js/ludo/room-authority-v1.js
-  Cache-Control: no-cache, must-revalidate
+  Cache-Control: no-store, max-age=0
 
 /js/platform/ludo-feature-loader.js
   Cache-Control: no-cache, must-revalidate
