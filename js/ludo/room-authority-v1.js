@@ -11,7 +11,6 @@
     snapshot: null,
     activeRoomId: '',
     running: false,
-    enforceTimer: 0,
     refreshTimer: 0,
     scrolledRoomId: ''
   };
@@ -40,7 +39,21 @@
     return state;
   }
 
-  captureRuntimeState();
+  function installLayoutStability() {
+    if (document.getElementById('jl-ludo-player-layout-stability')) return;
+    const style = document.createElement('style');
+    style.id = 'jl-ludo-player-layout-stability';
+    style.textContent = `
+      @media (max-width: 600px) {
+        #playersPanel .player-card { min-height: 118px; }
+        #playersPanel .player-flags {
+          min-height: 38px;
+          align-content: flex-start;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
 
   function money(value) {
     return Number(value || 0).toLocaleString('pt-MZ', {
@@ -64,78 +77,115 @@
     return room?.status === 'playing' && Boolean(room?.started_at);
   }
 
-  // Once ludo.js has rendered the real player cards, it owns playersPanel.
-  // The authority module is a recovery/visibility guard and must not keep
-  // replacing the primary markup every 500 ms, otherwise mobile layout shifts.
-  function primaryPlayersRendererReady() {
-    const target = document.getElementById('playersPanel');
-    return Boolean(target?.querySelector('.player-card .color-dot'));
+  function ensureRoomVisible(roomId = authority.activeRoomId) {
+    const id = String(roomId || '').trim();
+    if (!id) return false;
+    const room = document.getElementById('room');
+    if (!room) return false;
+
+    document.getElementById('lobby')?.classList.add('hidden');
+    document.getElementById('boardLobby')?.classList.add('hidden');
+    document.getElementById('loggedOut')?.classList.add('hidden');
+    document.getElementById('notificationCenter')?.classList.remove('hidden');
+    document.getElementById('ludoStatusStrip')?.classList.remove('hidden');
+
+    room.hidden = false;
+    room.removeAttribute('hidden');
+    room.removeAttribute('aria-hidden');
+    room.style.removeProperty('display');
+    room.classList.remove('hidden');
+    return true;
   }
 
-  function renderPlayers(snapshot) {
+  function renderFallbackPlayersOnce(snapshot) {
     const target = document.getElementById('playersPanel');
     const room = snapshot?.room;
-    if (!target || !room) return;
+    if (!target || !room || target.childElementCount > 0) return false;
+
     const players = Array.isArray(snapshot.players) ? snapshot.players : [];
-    target.replaceChildren();
     const count = Math.max(2, Number(room.player_count) || 2);
+    const fragment = document.createDocumentFragment();
 
     for (let seat = 1; seat <= count; seat += 1) {
       const player = players.find(item => Number(item.seat) === seat);
       const card = document.createElement('div');
-      card.className = `player-card ${player?.color || ''}`.trim();
-      const small = document.createElement('small');
-      small.textContent = player ? `posição ${seat}` : `Vaga ${seat}`;
-      const title = document.createElement('h3');
-      title.textContent = player?.name || 'Aguardando jogador…';
-      card.append(small, title);
-      if (player) {
-        const code = document.createElement('small');
-        code.textContent = player.code || '';
-        const flags = document.createElement('div');
-        flags.className = 'player-flags';
-        const rules = document.createElement('span');
-        rules.className = `flag ${player.accepted_rules_version === room.rules_version ? 'ok' : 'wait'}`;
-        rules.textContent = player.accepted_rules_version === room.rules_version ? '✓ regras' : 'regras…';
-        const stake = document.createElement('span');
-        stake.className = `flag ${player.stake_paid ? 'ok' : 'wait'}`;
-        stake.textContent = player.stake_paid ? '✓ aposta' : 'aposta…';
-        flags.append(rules, stake);
-        card.append(code, flags);
+      const current = Boolean(player && room.current_player_id === player.player_id);
+      card.className = `player-card ${player?.color || ''} ${current ? 'current' : ''}`.trim();
+
+      if (!player) {
+        const small = document.createElement('small');
+        small.textContent = `Vaga ${seat}`;
+        const title = document.createElement('h3');
+        title.textContent = 'Aguardando jogador…';
+        card.append(small, title);
+        fragment.appendChild(card);
+        continue;
       }
-      target.appendChild(card);
+
+      const dot = document.createElement('span');
+      dot.className = 'color-dot';
+      const position = document.createElement('small');
+      position.textContent = `${player.team ? `Equipa ${player.team} · ` : ''}posição ${player.seat || seat}`;
+      const title = document.createElement('h3');
+      title.textContent = player.name || player.code || 'Jogador';
+      const code = document.createElement('small');
+      code.textContent = player.code || '';
+      const flags = document.createElement('div');
+      flags.className = 'player-flags';
+
+      const accepted = player.accepted_rules_version === room.rules_version;
+      const rules = document.createElement('span');
+      rules.className = `flag ${accepted ? 'ok' : 'wait'}`;
+      rules.textContent = accepted ? '✓ regras' : 'regras…';
+
+      const stake = document.createElement('span');
+      stake.className = `flag ${player.stake_paid ? 'ok' : 'wait'}`;
+      stake.textContent = player.stake_paid ? '✓ aposta' : 'aposta…';
+
+      const status = document.createElement('span');
+      status.className = 'flag';
+      status.textContent = player.status || 'active';
+
+      flags.append(rules, stake, status);
+      if (player.timeout_strikes) {
+        const strikes = document.createElement('span');
+        strikes.className = 'flag wait';
+        strikes.textContent = `${player.timeout_strikes} atraso(s)`;
+        flags.appendChild(strikes);
+      }
+
+      card.append(dot, position, title, code, flags);
+      fragment.appendChild(card);
     }
+
+    target.replaceChildren(fragment);
+    return true;
   }
 
-  function renderDeadline(snapshot) {
-    const room = snapshot?.room;
-    const bar = document.getElementById('deadlineBar');
-    if (!room || !bar) return;
-    let label = 'Sala ativa';
-    if (room.status === 'waiting') label = 'Aguardando completar a sala';
-    if (room.status === 'negotiating') label = 'Aceitação das regras · sem prazo';
-    if (room.status === 'funding') label = 'Confirmar aposta';
-    if (room.status === 'playing') label = 'Tempo da jogada';
-    setText('deadlineLabel', label);
-    bar.classList.remove('hidden');
-    bar.removeAttribute('aria-hidden');
-
-    const deadline = room.action_deadline ? Date.parse(room.action_deadline) : NaN;
-    if (!Number.isFinite(deadline)) {
-      setText('deadlineClock', '--:--');
-      return;
-    }
-    const seconds = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
-    setText('deadlineClock', `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`);
-  }
-
-  function enforceRoom(snapshot = authority.snapshot) {
+  function updateRecoveryMetadata(snapshot) {
     const roomData = snapshot?.room;
-    const room = document.getElementById('room');
-    if (!roomData || !room) return false;
+    if (!roomData) return;
+
+    setText('roomCode', roomData.code || 'SALA');
+    setText(
+      'roomMeta',
+      `${roomData.player_count || 0} jogadores · ${roomData.mode === 'partners' ? 'Parceiros 2 × 2' : 'Cada um por si'} · ${money(roomData.bet_amount)} MZN por jogador · ${roomData.is_public ? 'Pública' : 'Privada'}`
+    );
+    setText('roomPot', `${money(roomData.pot)} MZN`);
+    setText('rulesVersion', `v${roomData.rules_version || 1}`);
+
+    document.getElementById('leaveRoom')?.classList.toggle('hidden', started(roomData));
+    document.getElementById('forfeitRoom')?.classList.toggle('hidden', !started(roomData));
+    document.querySelector('.invite-panel')?.classList.toggle('hidden', !roomCanInvite(snapshot));
+  }
+
+  function applySnapshot(snapshot = authority.snapshot) {
+    const roomData = snapshot?.room;
+    if (!roomData) return false;
 
     authority.snapshot = snapshot;
-    authority.activeRoomId = String(roomData.id || '');
+    authority.activeRoomId = String(roomData.id || authority.activeRoomId || '');
+    ensureRoomVisible(authority.activeRoomId);
 
     const state = authority.runtimeState || captureRuntimeState();
     if (state) {
@@ -145,32 +195,17 @@
       state.status.active_room_id = roomData.id;
     }
 
-    document.getElementById('lobby')?.classList.add('hidden');
-    document.getElementById('boardLobby')?.classList.add('hidden');
-    document.getElementById('loggedOut')?.classList.add('hidden');
-    document.getElementById('notificationCenter')?.classList.remove('hidden');
-    document.getElementById('ludoStatusStrip')?.classList.remove('hidden');
-    room.hidden = false;
-    room.removeAttribute('hidden');
-    room.removeAttribute('aria-hidden');
-    room.style.removeProperty('display');
-    room.classList.remove('hidden');
-
-    setText('roomCode', roomData.code || 'SALA');
-    setText('roomMeta', `${roomData.player_count || 0} jogadores · ${roomData.mode === 'partners' ? 'Parceiros 2 × 2' : 'Cada um por si'} · ${money(roomData.bet_amount)} MZN por jogador · ${roomData.is_public ? 'Pública' : 'Privada'}`);
-    setText('roomPot', `${money(roomData.pot)} MZN`);
-    setText('rulesVersion', `v${roomData.rules_version || 1}`);
-
-    document.getElementById('leaveRoom')?.classList.toggle('hidden', started(roomData));
-    document.getElementById('forfeitRoom')?.classList.toggle('hidden', !started(roomData));
-    document.querySelector('.invite-panel')?.classList.toggle('hidden', !roomCanInvite(snapshot));
-
-    if (!primaryPlayersRendererReady()) renderPlayers(snapshot);
-    renderDeadline(snapshot);
+    updateRecoveryMetadata(snapshot);
+    renderFallbackPlayersOnce(snapshot);
 
     if (authority.scrolledRoomId !== authority.activeRoomId) {
       authority.scrolledRoomId = authority.activeRoomId;
-      requestAnimationFrame(() => room.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+      requestAnimationFrame(() => {
+        const room = document.getElementById('room');
+        if (room && !room.classList.contains('hidden')) {
+          room.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
     }
     return true;
   }
@@ -179,12 +214,14 @@
     authority.snapshot = null;
     authority.activeRoomId = '';
     authority.scrolledRoomId = '';
+
     const state = authority.runtimeState || captureRuntimeState();
     if (state) {
       state.token = token();
       state.room = null;
       if (status) state.status = status;
     }
+
     document.getElementById('room')?.classList.add('hidden');
     document.getElementById('lobby')?.classList.remove('hidden');
     document.getElementById('boardLobby')?.classList.remove('hidden');
@@ -196,9 +233,13 @@
   async function refreshAuthority(reason = 'refresh') {
     if (authority.running) return;
     const playerToken = token();
-    if (!playerToken) return;
+    if (!playerToken) {
+      showLobby();
+      return;
+    }
+
     if (typeof window.JLApi?.rpc !== 'function') {
-      setTimeout(() => void refreshAuthority('api-retry'), 250);
+      window.setTimeout(() => void refreshAuthority('api-retry'), 250);
       return;
     }
 
@@ -210,21 +251,28 @@
         state.token = playerToken;
         state.status = status;
       }
+
       const roomId = String(status?.active_room_id || '').trim();
       if (!roomId) {
         showLobby(status);
         return;
       }
+
+      authority.activeRoomId = roomId;
+      ensureRoomVisible(roomId);
+
       const snapshot = await rpc('jl_ludo_room_state_light', { p_token: playerToken, p_room: roomId });
       authority.snapshot = snapshot;
-      authority.activeRoomId = roomId;
       if (state) state.room = snapshot;
-      enforceRoom(snapshot);
-      window.dispatchEvent(new CustomEvent('jl-ludo-authoritative-room', { detail: { roomId, snapshot, reason } }));
+      applySnapshot(snapshot);
+
+      window.dispatchEvent(new CustomEvent('jl-ludo-authoritative-room', {
+        detail: { roomId, snapshot, reason }
+      }));
       window.JLLudoSync?.kick?.('ludo-state');
     } catch (error) {
       console.warn('ludo room authority', reason, error?.message || error);
-      if (authority.snapshot?.room) enforceRoom(authority.snapshot);
+      if (authority.activeRoomId) ensureRoomVisible(authority.activeRoomId);
     } finally {
       authority.running = false;
     }
@@ -233,25 +281,30 @@
   function installDomGuard() {
     const root = document.querySelector('main.shell') || document.body;
     if (!root) return;
+
     new MutationObserver(() => {
-      if (!authority.snapshot?.room) return;
+      if (!authority.activeRoomId) return;
       const room = document.getElementById('room');
       const board = document.getElementById('boardLobby');
       const lobby = document.getElementById('lobby');
-      if (room?.classList.contains('hidden') || !board?.classList.contains('hidden') || !lobby?.classList.contains('hidden')) {
-        queueMicrotask(() => enforceRoom(authority.snapshot));
-      }
-    }).observe(root, { attributes: true, subtree: true, attributeFilter: ['class', 'hidden', 'style'] });
+      const wrongVisibility =
+        room?.classList.contains('hidden') ||
+        !board?.classList.contains('hidden') ||
+        !lobby?.classList.contains('hidden');
+      if (wrongVisibility) queueMicrotask(() => ensureRoomVisible(authority.activeRoomId));
+    }).observe(root, {
+      attributes: true,
+      subtree: true,
+      attributeFilter: ['class', 'hidden', 'style']
+    });
   }
 
   function install() {
+    installLayoutStability();
     captureRuntimeState();
     installDomGuard();
     void refreshAuthority('startup');
-    clearInterval(authority.enforceTimer);
-    authority.enforceTimer = window.setInterval(() => {
-      if (authority.snapshot?.room) enforceRoom(authority.snapshot);
-    }, 500);
+
     clearInterval(authority.refreshTimer);
     authority.refreshTimer = window.setInterval(() => void refreshAuthority('periodic'), 5000);
 
@@ -262,13 +315,13 @@
     });
     window.addEventListener('jl-player-session-changed', event => {
       if (event.detail?.authenticated) void refreshAuthority('session');
-      else {
-        authority.snapshot = null;
-        authority.activeRoomId = '';
-      }
+      else showLobby();
     });
   }
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install, { once: true });
-  else install();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', install, { once: true });
+  } else {
+    install();
+  }
 })();
