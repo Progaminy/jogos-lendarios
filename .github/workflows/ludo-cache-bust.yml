@@ -27,7 +27,8 @@ jobs:
           text = path.read_text(encoding='utf-8')
           replacements = {
               './js/ludo/room-state.js?v=20260928-1': './js/ludo/room-state.js?v=20261004-3',
-              './js/platform/ludo-feature-loader.js?v=20261003-2': './js/platform/ludo-feature-loader.js?v=20261004-7',
+              './js/platform/ludo-feature-loader.js?v=20261003-2': './js/platform/ludo-feature-loader.js?v=20261004-8',
+              './js/platform/ludo-feature-loader.js?v=20261004-7': './js/platform/ludo-feature-loader.js?v=20261004-8',
               './ludo.js?v=20261004-2': './ludo.js?v=20261004-7',
           }
           for old, new in replacements.items():
@@ -49,5 +50,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add ludo.html
-          git commit -m "Force fresh Ludo active-room recovery assets"
+          git commit -m "Force fresh Ludo invite lobby assets"
           git push
