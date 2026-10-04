@@ -8,7 +8,7 @@
 
   const els = Object.fromEntries([
     'damaToast','damaBalance','damaLoggedOut','damaLoginForm','damaLoginPhone','damaLoginPin',
-    'damaLobby','refreshDamaLobby','damaCreateForm','damaBet','damaTime','damaColor','damaFirst','damaPublic',
+    'damaLobby','damaLobbyBoard','refreshDamaLobby','damaCreateForm','damaBet','damaTime','damaColor','damaFirst','damaPublic',
     'damaPublicRooms','damaJoinCodeForm','damaJoinCode','damaRoom','damaRoomCode','damaRoomMeta',
     'damaCancel','damaOfferDraw','damaForfeit','damaPlayers','damaSettingsPanel','damaSettingsSummary',
     'damaGuestDecision','damaDeclineSettings','damaAcceptSettings','damaFunding','damaFund',
@@ -99,6 +99,28 @@
     els.damaLoggedOut.classList.toggle('hidden', which !== 'loggedout');
     els.damaLobby.classList.toggle('hidden', which !== 'lobby');
     els.damaRoom.classList.toggle('hidden', which !== 'room');
+  }
+
+  function renderLobbyBoard() {
+    if (!els.damaLobbyBoard || els.damaLobbyBoard.childElementCount) return;
+
+    const frag = document.createDocumentFragment();
+    for (let row = 0; row < 8; row++) {
+      for (let col = 0; col < 8; col++) {
+        const cell = document.createElement('span');
+        const dark = (row + col) % 2 === 1;
+        cell.className = `dama-cell ${dark ? 'dark' : 'light'}`;
+
+        if (dark && (row <= 2 || row >= 5)) {
+          const piece = document.createElement('span');
+          piece.className = `dama-piece ${row <= 2 ? 'red' : 'white'}`;
+          cell.appendChild(piece);
+        }
+
+        frag.appendChild(cell);
+      }
+    }
+    els.damaLobbyBoard.replaceChildren(frag);
   }
 
   function installChoiceGroups() {
@@ -1012,6 +1034,7 @@
     if (!document.hidden && state.room) refreshRoom(true);
   });
 
+  renderLobbyBoard();
   installChoiceGroups();
   setInterval(updateTimer, 250);
   loadApp();
