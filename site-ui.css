@@ -1,0 +1,50 @@
+/* Shared visual language for forms and common actions across Jogos Lendários. */
+:root{--jl-control-bg:#091522;--jl-control-bg2:#0d1b2c;--jl-control-line:#2a3e59;--jl-control-focus:#f4bd42;--jl-control-text:#f5f7fb;--jl-control-muted:#8fa1b7}
+
+main input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+main select,
+main textarea,
+.jl-account-footer input:not([type="hidden"]),
+.jl-account-footer select,
+.jl-account-footer textarea{
+  min-height:46px;
+  border:1px solid var(--jl-control-line);
+  border-radius:12px;
+  background:linear-gradient(180deg,var(--jl-control-bg2),var(--jl-control-bg));
+  color:var(--jl-control-text);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025);
+  outline:none;
+  transition:border-color .15s ease,box-shadow .15s ease,background .15s ease;
+}
+main input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus,
+main select:focus,
+main textarea:focus,
+.jl-account-footer input:focus,
+.jl-account-footer select:focus,
+.jl-account-footer textarea:focus{
+  border-color:var(--jl-control-focus)!important;
+  box-shadow:0 0 0 3px rgba(244,189,66,.12)!important;
+}
+main input::placeholder,main textarea::placeholder,.jl-account-footer input::placeholder,.jl-account-footer textarea::placeholder{color:#667a91}
+main label>span,.jl-account-footer label>span{font-weight:850;letter-spacing:.01em}
+
+/* Keep game-specific compact controls compact while improving their finish. */
+.aviator-controls input[type="number"],.stake-stepper input,.money-input input,.money input{box-shadow:none!important}
+
+.jl-symbolized::before{content:attr(data-jl-symbol);display:inline-block;margin-right:.42em;font-weight:900;line-height:1}
+.jl-symbolized.jl-symbol-only::before{margin-right:0}
+
+/* Logged-out pages use the same account callout instead of raw forms. */
+.jl-shared-login-callout{display:grid;gap:12px;justify-items:stretch;text-align:left;margin-top:14px}
+.jl-shared-login-callout p{margin:0;color:#91a4bd;line-height:1.45}
+.jl-shared-login-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.jl-shared-login-actions .button{min-height:45px}
+.jl-legacy-inline-auth{display:none!important}
+
+/* Common action menu symbols. */
+.account-menu-actions .button{display:flex;align-items:center;justify-content:center;gap:4px}
+
+@media(max-width:520px){
+  main input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="range"]),main select,main textarea{min-height:44px;border-radius:10px}
+  .jl-shared-login-actions{grid-template-columns:1fr}
+}
