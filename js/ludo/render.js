@@ -240,6 +240,10 @@
       applyPlayerOrientation(els.ludoBoard);
     }
 
+    // O tabuleiro de entrada é puramente visual e não deve depender do estado remoto.
+    // Renderizá-lo já na criação evita o quadro branco enquanto loadStatus/RPC carrega ou falha.
+    renderLobbyBoard();
+
     return Object.freeze({
       renderStaticBoard,
       renderLobbyBoard,
