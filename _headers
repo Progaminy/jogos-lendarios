@@ -12,6 +12,9 @@
 /site-header.js
   Cache-Control: no-cache, must-revalidate
 
+/site-header-enforce.css
+  Cache-Control: no-cache, must-revalidate
+
 /site-account.css
   Cache-Control: no-cache, must-revalidate
 
