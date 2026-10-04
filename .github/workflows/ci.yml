@@ -25,9 +25,12 @@ jobs:
           node-version: '22'
       - name: JavaScript syntax
         run: |
+          set -euo pipefail
           node --check ludo.js
           node --check aviator.js
           for file in js/aviator/*.js; do node --check "$file"; done
+          for file in dama*.js; do node --check "$file"; done
+          node --check admin-ludo-emergency.js
           node --check app.js
           node --check social.js
           node --check js/platform/ludo-feature-loader.js
