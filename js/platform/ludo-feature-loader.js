@@ -122,7 +122,16 @@ function activeRoomRecoveryState(){
 const recovery=window.__JL_LUDO_ACTIVE_ROOM_RECOVERY__;
 return recovery&&typeof recovery==='object'?recovery:null;
 }
-function restoreLobbyIfStranded(){
+function showLobby(){
+const lobby=document.getElementById('lobby');
+if(!lobby)return;
+lobby.classList.remove('hidden');
+document.getElementById('loggedOut')?.classList.add('hidden');
+document.getElementById('notificationCenter')?.classList.remove('hidden');
+document.getElementById('ludoStatusStrip')?.classList.remove('hidden');
+document.getElementById('boardLobby')?.classList.remove('hidden');
+}
+function restoreLobbyIfStranded(force=false){
 if(!hasToken())return;
 const lobby=document.getElementById('lobby');
 const room=document.getElementById('room');
@@ -131,26 +140,25 @@ const roomVisible=!room.classList.contains('hidden');
 const lobbyVisible=!lobby.classList.contains('hidden');
 if(roomVisible||lobbyVisible)return;
 const recovery=activeRoomRecoveryState();
-// Nunca reabrir o lobby enquanto a sala ativa ainda está a ser resolvida.
-// O lobby só pode ser restaurado depois de uma resposta explícita de "sem sala ativa".
-if(!recovery||recovery.pending||recovery.resolved!==true||recovery.activeRoomId)return;
-lobby.classList.remove('hidden');
-document.getElementById('loggedOut')?.classList.add('hidden');
-document.getElementById('notificationCenter')?.classList.remove('hidden');
-document.getElementById('ludoStatusStrip')?.classList.remove('hidden');
-document.getElementById('boardLobby')?.classList.remove('hidden');
+// Uma sala ativa confirmada continua a ter prioridade sobre o lobby.
+if(recovery?.activeRoomId)return;
+// Enquanto a consulta ainda está em curso damos uma pequena janela para recuperar a sala.
+// Se a consulta travar/falhar, o lobby volta obrigatoriamente para não apagar Convidar/Nova partida.
+if(!force&&recovery?.pending&&recovery?.resolved!==true)return;
+showLobby();
 }
 function installLobbyRecovery(){
-const run=()=>restoreLobbyIfStranded();
-setTimeout(run,1800);
-setTimeout(run,4200);
-window.addEventListener('pageshow',run);
+const run=()=>restoreLobbyIfStranded(false);
+setTimeout(run,900);
+setTimeout(()=>restoreLobbyIfStranded(true),2600);
+setTimeout(()=>restoreLobbyIfStranded(true),5000);
+window.addEventListener('pageshow',()=>setTimeout(()=>restoreLobbyIfStranded(true),300));
 window.addEventListener('jl-ludo-active-room-recovery',run);
 window.addEventListener('jl-player-session-changed',event=>{
-if(event.detail?.authenticated)setTimeout(run,180);
+if(event.detail?.authenticated)setTimeout(()=>restoreLobbyIfStranded(true),500);
 });
 document.addEventListener('visibilitychange',()=>{
-if(document.visibilityState==='visible')setTimeout(run,180);
+if(document.visibilityState==='visible')setTimeout(()=>restoreLobbyIfStranded(true),300);
 });
 }
 function installActiveRoomRecovery(){
