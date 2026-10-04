@@ -5,8 +5,13 @@
   const token = () => window.JLSession?.getPlayerToken?.() || localStorage.getItem('jl_player_token') || '';
   const rpc = (name, args = {}) => window.JLApi?.rpc?.(name, args);
 
+  function isAdminMode() {
+    return document.body?.dataset?.jlHeaderMode === 'admin';
+  }
+
   function pageKind() {
     const path = location.pathname.toLowerCase();
+    if (isAdminMode()) return 'admin';
     if (path.endsWith('/ludo.html')) return 'tabuleiro';
     if (path.endsWith('/dama.html')) return 'tabuleiro';
     if (path.endsWith('/tabuleiro.html')) return 'tabuleiro';
@@ -41,7 +46,7 @@
       bar.appendChild(actions);
     }
 
-    if (!$('#refreshLobby') && !$('#jlHeaderRefresh')) {
+    if (!$('#refreshLobby') && !$('#refreshAdmin') && !$('#jlHeaderRefresh')) {
       const refresh = document.createElement('button');
       refresh.id = 'jlHeaderRefresh';
       refresh.className = 'top-refresh-button';
@@ -60,7 +65,7 @@
       actions.prepend(refresh);
     }
 
-    if (!$('#accountButton') && !$('#jlHeaderAccount')) {
+    if (!isAdminMode() && !$('#accountButton') && !$('#jlHeaderAccount')) {
       const account = document.createElement('a');
       account.id = 'jlHeaderAccount';
       account.className = 'button ghost small';
@@ -87,7 +92,7 @@
   }
 
   function ensureStatusStrip() {
-    if ($('#ludoStatusStrip') || $('#jlGlobalStatusStrip')) return;
+    if (isAdminMode() || $('#ludoStatusStrip') || $('#jlGlobalStatusStrip')) return;
     const main = document.querySelector('main');
     if (!main) return;
 
@@ -106,6 +111,7 @@
   }
 
   async function refreshGlobal() {
+    if (isAdminMode()) return;
     const t = token();
     const strip = $('#jlGlobalStatusStrip');
     const genericAccount = $('#jlHeaderAccount');
