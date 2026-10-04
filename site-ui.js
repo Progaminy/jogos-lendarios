@@ -65,13 +65,17 @@
       if(el.dataset.openAuth==='register'&&!/criar conta/i.test(el.textContent||''))return;
       decorate(el.parentElement||document);
     });
-    standardizeDamaLoggedOut();
   }
 
   function refresh(){
     ensureStyle();
     decorate();
     standardizeLoggedOutCallouts();
+  }
+
+  function afterPageInit(){
+    standardizeDamaLoggedOut();
+    decorate();
   }
 
   function boot(){
@@ -88,6 +92,8 @@
     window.addEventListener('jl-player-session-changed',()=>{
       if(!token())setTimeout(refresh,0);
     });
+    if(document.readyState==='complete')setTimeout(afterPageInit,0);
+    else window.addEventListener('load',()=>setTimeout(afterPageInit,0),{once:true});
   }
 
   window.JLSiteUI=Object.freeze({refresh,decorate});
