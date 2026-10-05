@@ -1,5 +1,5 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { analyze } from "./engine-fast.js";
+import { analyze } from "./engine-verified.js";
 
 const ORIGIN = "https://jogoslendarios.adadpsf.shop";
 const HEADERS = {
