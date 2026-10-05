@@ -56,6 +56,16 @@
     if (el) el.textContent = String(value ?? '');
   }
 
+  function releaseStaleModalScrollLock() {
+    const rulesModal = document.getElementById('rulesAcceptModal');
+    const stakeModal = document.getElementById('stakeAcceptModal');
+    const rulesVisible = Boolean(rulesModal && !rulesModal.classList.contains('hidden'));
+    const stakeVisible = Boolean(stakeModal && !stakeModal.classList.contains('hidden'));
+    if (!rulesVisible && !stakeVisible) {
+      document.body.classList.remove('flow-modal-open');
+    }
+  }
+
   function ensureRoomVisible(roomId = authority.activeRoomId) {
     const id = String(roomId || '').trim();
     if (!id) return false;
@@ -161,6 +171,7 @@
     authority.snapshot = snapshot;
     authority.activeRoomId = String(roomData.id || authority.activeRoomId || '');
     ensureRoomVisible(authority.activeRoomId);
+    releaseStaleModalScrollLock();
     updateRecoveryMetadata(snapshot);
     renderFallbackPlayersOnce(snapshot);
     return true;
@@ -170,6 +181,9 @@
     authority.snapshot = null;
     authority.activeRoomId = '';
 
+    document.body.classList.remove('flow-modal-open');
+    document.getElementById('rulesAcceptModal')?.classList.add('hidden');
+    document.getElementById('stakeAcceptModal')?.classList.add('hidden');
     document.getElementById('room')?.classList.add('hidden');
     document.getElementById('lobby')?.classList.remove('hidden');
     document.getElementById('boardLobby')?.classList.remove('hidden');
@@ -224,6 +238,7 @@
     if (!root) return;
 
     new MutationObserver(() => {
+      releaseStaleModalScrollLock();
       if (!authority.activeRoomId) return;
       const room = document.getElementById('room');
       const board = document.getElementById('boardLobby');
@@ -243,15 +258,25 @@
   function install() {
     installLayoutStability();
     installDomGuard();
+    releaseStaleModalScrollLock();
     void refreshAuthority('startup');
 
     clearInterval(authority.refreshTimer);
     authority.refreshTimer = window.setInterval(() => void refreshAuthority('periodic'), 5000);
 
-    window.addEventListener('pageshow', () => void refreshAuthority('pageshow'));
-    window.addEventListener('focus', () => void refreshAuthority('focus'));
+    window.addEventListener('pageshow', () => {
+      releaseStaleModalScrollLock();
+      void refreshAuthority('pageshow');
+    });
+    window.addEventListener('focus', () => {
+      releaseStaleModalScrollLock();
+      void refreshAuthority('focus');
+    });
     document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') void refreshAuthority('visible');
+      if (document.visibilityState === 'visible') {
+        releaseStaleModalScrollLock();
+        void refreshAuthority('visible');
+      }
     });
     window.addEventListener('jl-player-session-changed', event => {
       if (event.detail?.authenticated) void refreshAuthority('session');
