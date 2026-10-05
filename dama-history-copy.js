@@ -47,6 +47,7 @@
       await navigator.clipboard.writeText(text);
       return;
     }
+
     const area = document.createElement('textarea');
     area.value = text;
     area.setAttribute('readonly', '');
@@ -61,18 +62,32 @@
 
   function injectStyle() {
     if ($('#jlDamaHistoryCopyStyle')) return;
+
     const style = document.createElement('style');
     style.id = 'jlDamaHistoryCopyStyle';
     style.textContent = `
-      .dama-history summary{display:flex;align-items:center;gap:8px}
-      .dama-history summary::marker{margin-right:4px}
-      .dama-history-copy{
-        margin-left:auto;width:30px;height:30px;min-width:30px;padding:0;border-radius:9px;
-        display:grid;place-items:center;border:1px solid rgba(255,255,255,.12);
-        background:rgba(255,255,255,.055);color:#f4bd42;font-size:1rem;font-weight:900;cursor:pointer
+      .dama-history summary{
+        display:flex;align-items:center;gap:8px;list-style:none;user-select:none
       }
-      .dama-history-copy:hover{background:rgba(244,189,66,.12);border-color:rgba(244,189,66,.36)}
-      .dama-history-copy:disabled{opacity:.32;cursor:default}
+      .dama-history summary::-webkit-details-marker{display:none}
+      .dama-history summary::after{
+        content:'⌄';margin-left:auto;color:#8fa0b4;font-size:1rem;font-weight:900;
+        transform:rotate(0deg);transition:transform .16s ease,color .16s ease
+      }
+      .dama-history[open] summary::after{transform:rotate(180deg);color:#f4bd42}
+      .dama-history-tools{
+        display:flex;align-items:center;justify-content:flex-end;padding:0 14px 8px
+      }
+      .dama-history-copy{
+        min-height:28px;padding:4px 9px;border-radius:8px;display:inline-flex;align-items:center;gap:5px;
+        border:1px solid rgba(255,255,255,.11);background:rgba(255,255,255,.045);
+        color:#dce5ef;font-size:.7rem;font-weight:850;line-height:1;cursor:pointer
+      }
+      .dama-history-copy:hover,.dama-history-copy:focus-visible{
+        background:rgba(244,189,66,.1);border-color:rgba(244,189,66,.32);color:#f4bd42
+      }
+      .dama-history-copy:disabled{opacity:.34;cursor:default}
+      .dama-history-copy-icon{font-size:.85rem;line-height:1}
     `;
     document.head.appendChild(style);
   }
@@ -80,33 +95,41 @@
   function syncButton() {
     const button = $('#damaCopyHistory');
     if (!button) return;
+
     const hasMoves = historyRows().length > 0;
     button.disabled = !hasMoves;
     button.setAttribute('aria-disabled', hasMoves ? 'false' : 'true');
-    button.title = hasMoves ? 'Copiar histórico' : 'Ainda sem jogadas';
+    button.title = hasMoves ? 'Copiar histórico do jogo' : 'Ainda sem jogadas';
   }
 
   function install() {
     injectStyle();
+
     const details = $('.dama-history');
     const summary = details?.querySelector('summary');
     const history = $('#damaHistory');
     if (!details || !summary || !history) return setTimeout(install, 200);
+
+    summary.textContent = 'Histórico do jogo';
     if ($('#damaCopyHistory')) return syncButton();
+
+    const tools = document.createElement('div');
+    tools.className = 'dama-history-tools';
 
     const button = document.createElement('button');
     button.id = 'damaCopyHistory';
     button.className = 'dama-history-copy';
     button.type = 'button';
-    button.setAttribute('aria-label', 'Copiar histórico de jogadas');
-    button.textContent = '⧉';
-    summary.appendChild(button);
+    button.setAttribute('aria-label', 'Copiar histórico do jogo');
+    button.innerHTML = '<span class="dama-history-copy-icon" aria-hidden="true">⧉</span><span>Copiar</span>';
 
-    button.addEventListener('click', async (event) => {
-      event.preventDefault();
-      event.stopPropagation();
+    tools.appendChild(button);
+    history.insertAdjacentElement('beforebegin', tools);
+
+    button.addEventListener('click', async () => {
       const text = buildHistoryText();
       if (!text) return toast('Ainda sem jogadas.', 'error');
+
       try {
         await copyText(text);
         toast('Histórico copiado.', 'success');
@@ -115,10 +138,17 @@
       }
     });
 
-    new MutationObserver(syncButton).observe(history, { childList: true, subtree: true, characterData: true });
+    new MutationObserver(syncButton).observe(history, {
+      childList: true,
+      subtree: true,
+      characterData: true
+    });
     syncButton();
   }
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install, { once: true });
-  else install();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', install, { once: true });
+  } else {
+    install();
+  }
 })();
