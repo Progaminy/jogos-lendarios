@@ -12,6 +12,15 @@
     document.head.appendChild(script);
   }
 
+  function loadFreeAdmin() {
+    if (document.querySelector('script[data-jl-admin-free="1"]') || document.getElementById('freeAccessAdmin')) return;
+    const script = document.createElement('script');
+    script.src = './admin-free.js?v=20261005-2';
+    script.defer = true;
+    script.dataset.jlAdminFree = '1';
+    document.head.appendChild(script);
+  }
+
   function readState() {
     try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
     catch { return {}; }
@@ -103,6 +112,7 @@
 
     [...new Set(cards)].forEach((card, index) => makeCollapsible(card, index, saved));
     loadDamaTimeAdmin();
+    loadFreeAdmin();
   }
 
   if (document.readyState === 'loading') {
