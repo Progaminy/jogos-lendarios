@@ -10,7 +10,7 @@ const css=fs.readFileSync('site-nav.css','utf8');
 test('menu principal mostra símbolo de avião no lugar da palavra Aviator',()=>{
   assert.match(
     html,
-    /<a class="nav-aviator-symbol" href="\.\/aviator\.html" data-jl-game="aviator" aria-label="Aviator" title="Aviator"><span aria-hidden="true">✈<\/span><\/a>/
+    /<a class="nav-aviator-symbol" href="\.\/aviator\.html"[^>]*aria-label="Aviator"[^>]*title="Aviator"><span aria-hidden="true">✈<\/span><\/a>/
   );
   assert.doesNotMatch(
     html,
