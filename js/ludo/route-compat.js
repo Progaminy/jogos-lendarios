@@ -92,20 +92,46 @@
         min-width: 0 !important;
       }
 
-      #gamePanel .dice-tools {
-        display: flex !important;
+      #gamePanel .board-game-head {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) auto !important;
         align-items: center !important;
-        justify-content: flex-end !important;
-        flex-wrap: wrap !important;
+        gap: 8px !important;
+      }
+
+      #gamePanel .board-game-head > .dice-tools {
+        grid-column: 1 / -1 !important;
+        width: 100% !important;
+      }
+
+      #gamePanel .dice-tools {
+        display: grid !important;
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        align-items: stretch !important;
         gap: 6px !important;
       }
 
-      #muteOpponent.quick-listen,
-      #pinLudo.quick-pin {
-        width: auto !important;
+      #gamePanel .dice-tools > button {
+        width: 100% !important;
         min-width: 0 !important;
+        max-width: 100% !important;
         margin: 0 !important;
+        overflow: hidden !important;
         white-space: nowrap !important;
+        text-overflow: ellipsis !important;
+      }
+
+      #micQuickButton {
+        font-size: 0 !important;
+      }
+
+      #micQuickButton::after {
+        content: '🎙️ Micro';
+        font-size: .82rem;
+      }
+
+      #micQuickButton[aria-pressed='true']::after {
+        content: '🔇 Micro';
       }
 
       #muteOpponent.quick-listen {
@@ -119,6 +145,21 @@
 
       #muteOpponent.quick-listen[aria-pressed='true']::after {
         content: '🔇 Mudo';
+      }
+
+      #gamePanel .game-controls.dice-roll-controls {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        align-items: center !important;
+        gap: 8px !important;
+      }
+
+      #pinLudo.quick-pin {
+        order: 99 !important;
+        flex: 0 0 100% !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        margin: 6px 0 0 !important;
       }
 
       #turnTitle .turn-player-name {
@@ -165,7 +206,13 @@
 
       @media (max-width: 600px) {
         #gamePanel .dice-tools {
-          justify-content: flex-start !important;
+          gap: 4px !important;
+        }
+
+        #gamePanel .dice-tools > button,
+        #micQuickButton::after,
+        #muteOpponent.quick-listen::after {
+          font-size: .74rem !important;
         }
 
         html body.ludo-pinned #gamePanel > .board-panel {
@@ -188,6 +235,7 @@
     }
 
     const tools = document.querySelector('#gamePanel .dice-tools');
+    const controls = document.querySelector('#gamePanel .game-controls.dice-roll-controls');
     const listen = document.getElementById('muteOpponent');
     const pin = document.getElementById('pinLudo');
 
@@ -198,9 +246,10 @@
       tools.appendChild(listen);
     }
 
-    if (tools && pin && pin.parentElement !== tools) {
-      pin.classList.add('sound-toggle', 'quick-pin');
-      tools.appendChild(pin);
+    if (controls && pin) {
+      pin.classList.remove('sound-toggle');
+      pin.classList.add('quick-pin');
+      if (controls.lastElementChild !== pin) controls.appendChild(pin);
     }
   }
 
@@ -210,7 +259,8 @@
 
     const fresh = current.cloneNode(true);
     fresh.dataset.jlSinglePin = '1';
-    fresh.classList.add('sound-toggle', 'quick-pin');
+    fresh.classList.remove('sound-toggle');
+    fresh.classList.add('quick-pin');
     fresh.setAttribute('aria-pressed', 'false');
     fresh.textContent = '📌 Fixar';
     current.replaceWith(fresh);
