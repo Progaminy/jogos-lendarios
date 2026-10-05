@@ -3,6 +3,15 @@
 
   const STORAGE_KEY = 'jl_admin_collapsed_v1';
 
+  function loadDamaTimeAdmin() {
+    if (document.querySelector('script[data-jl-admin-dama-time="1"]') || document.getElementById('adminDamaTimeCard')) return;
+    const script = document.createElement('script');
+    script.src = './admin-dama-time.js?v=20261005-1';
+    script.defer = true;
+    script.dataset.jlAdminDamaTime = '1';
+    document.head.appendChild(script);
+  }
+
   function readState() {
     try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
     catch { return {}; }
@@ -93,6 +102,7 @@
     ];
 
     [...new Set(cards)].forEach((card, index) => makeCollapsible(card, index, saved));
+    loadDamaTimeAdmin();
   }
 
   if (document.readyState === 'loading') {
