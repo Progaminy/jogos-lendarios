@@ -15,6 +15,15 @@
 /ludo.js
   Cache-Control: no-store, max-age=0
 
+/dama.html
+  Cache-Control: no-store, max-age=0
+
+/dama.js
+  Cache-Control: no-store, max-age=0
+
+/dama-pin.js
+  Cache-Control: no-store, max-age=0
+
 /site-header.js
   Cache-Control: no-cache, must-revalidate
 
@@ -67,4 +76,4 @@
   Cache-Control: no-store, max-age=0
 
 /js/platform/ludo-feature-loader.js
-  Cache-Control: no-cache, must-revalidate
+  Cache-Control: no-store, max-age=0
