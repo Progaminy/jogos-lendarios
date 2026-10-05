@@ -41,11 +41,23 @@ async function rpc(name,args={},options={}){
   return p;
 }
 window.JLApi=Object.freeze({rpc});
-if(!document.querySelector('script[data-jl-free-access-ui]')){
-  const s=document.createElement('script');
-  s.src='./free-access-ui.js?v=20261005-1';
-  s.defer=true;
-  s.dataset.jlFreeAccessUi='1';
-  document.head.appendChild(s);
+function injectFreeAccount(){
+  const a=document.querySelector('.account-menu-actions');
+  if(!a||document.getElementById('accountMenuFree'))return Boolean(document.getElementById('accountMenuFree'));
+  const b=document.createElement('button');b.id='accountMenuFree';b.type='button';b.className='button ghost small';b.textContent='FREE';
+  b.style.cssText='border-color:rgba(219,174,76,.72);color:#f0cd7b';
+  b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();location.href='./tabuleiro.html?mode=free'});a.prepend(b);return true;
 }
+function installFreeAccount(){
+  if(injectFreeAccount())return;
+  const o=new MutationObserver(()=>{if(injectFreeAccount())o.disconnect()});o.observe(document.documentElement,{subtree:true,childList:true});setTimeout(()=>o.disconnect(),5000);
+}
+function loadFreeUi(){
+  const p=String(location.pathname||'').toLowerCase();
+  if(!/(?:\/|^)(?:tabuleiro|ludo|dama)\.html$/.test(p))return;
+  if(document.querySelector('script[data-jl-free-access-ui]'))return;
+  const s=document.createElement('script');s.src='./free-access-ui.js?v=20261005-2';s.defer=true;s.dataset.jlFreeAccessUi='1';document.head.appendChild(s);
+}
+document.readyState==='loading'?document.addEventListener('DOMContentLoaded',installFreeAccount,{once:true}):installFreeAccount();
+loadFreeUi();
 })();
