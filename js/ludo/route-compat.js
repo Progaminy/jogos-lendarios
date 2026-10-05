@@ -80,11 +80,6 @@
     const style = document.createElement('style');
     style.id = 'jl-ludo-route-flow-fix';
     style.textContent = `
-      #pinLudo,
-      .pin-ludo-button {
-        display: none !important;
-      }
-
       html body.jl-ludo-leaving #room {
         display: none !important;
       }
@@ -102,12 +97,7 @@
 
   function disablePinMode() {
     document.body.classList.remove('ludo-pinned');
-    const button = document.getElementById('pinLudo');
-    if (!button) return;
-    button.hidden = true;
-    button.classList.add('hidden');
-    button.setAttribute('aria-hidden', 'true');
-    button.setAttribute('tabindex', '-1');
+    document.getElementById('pinLudo')?.remove();
   }
 
   function showLobbyAfterLeave() {
@@ -266,14 +256,6 @@
     document.addEventListener('submit', event => {
       if (event.target?.id !== 'createRoomForm') return;
       createRoomFocusPending = true;
-      disablePinMode();
-    }, true);
-
-    document.addEventListener('click', event => {
-      const pin = event.target?.closest?.('#pinLudo');
-      if (!pin) return;
-      event.preventDefault();
-      event.stopImmediatePropagation();
       disablePinMode();
     }, true);
   }
