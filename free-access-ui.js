@@ -2,11 +2,15 @@
   'use strict';
 
   const $ = (s, r = document) => r.querySelector(s);
-  const path = String(location.pathname || '').toLowerCase();
+  const path = String(location.pathname || '').toLowerCase().replace(/\\/+$/, '');
+  const page = path.split('/').pop()?.replace(/\\.html$/, '') || '';
   const query = new URL(location.href).searchParams;
-  const board = path.endsWith('/tabuleiro.html');
-  const ludo = path.endsWith('/ludo.html');
-  const dama = path.endsWith('/dama.html');
+  // The production site rewrites *.html routes to extensionless paths
+  // (/tabuleiro, /ludo, /dama). Accept both forms so the FREE interceptor
+  // is installed on the real published URL as well as the source URL.
+  const board = page === 'tabuleiro';
+  const ludo = page === 'ludo';
+  const dama = page === 'dama';
   const freeMode = query.get('mode') === 'free';
   const gameKey = ludo ? 'ludo' : dama ? 'dama' : '';
   const token = () => window.JLSession?.getPlayerToken?.() || localStorage.getItem('jl_player_token') || '';
