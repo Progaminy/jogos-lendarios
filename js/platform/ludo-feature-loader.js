@@ -10,7 +10,6 @@ policy:{js:['./js/ludo/policy.js?v=20261003-3']}
 });
 const state=new Map(),queue=[];
 let facade=null,replaying=false;
-let boardDirectionTimer=0,boardDirectionUntil=0;
 const absolute=(url)=>new URL(url,document.baseURI).href;
 function loaded(kind,url){
 const target=absolute(url);
@@ -158,73 +157,50 @@ document.addEventListener('visibilitychange',()=>{
 if(document.visibilityState==='visible')setTimeout(()=>restoreLobbyIfStranded(true),300);
 });
 }
-function ludoBoardDestination(){
-const room=document.getElementById('room');
-const game=document.getElementById('gamePanel');
-const board=document.getElementById('ludoBoard');
-if(!room||room.classList.contains('hidden')||room.hidden)return null;
-if(!game||game.classList.contains('hidden')||game.hidden||!board||!board.childElementCount)return null;
-return document.querySelector('#gamePanel>.board-panel')||board;
-}
-function directToLudoBoard(behavior='auto',force=false){
-const target=ludoBoardDestination();
-if(!target)return false;
-const board=document.getElementById('ludoBoard');
-const topbar=document.querySelector('.topbar')?.getBoundingClientRect().height||0;
-target.style.scrollMarginTop=`${Math.ceil(topbar+8)}px`;
-try{
-const url=new URL(window.location.href);
-const roomId=window.__JL_LUDO_RUNTIME_STATE__?.room?.room?.id
-||activeRoomRecoveryState()?.activeRoomId
-||document.documentElement.dataset.jlConfirmedActiveLudoRoom
-||'';
-if(roomId)url.searchParams.set('room',String(roomId));
-url.hash='ludoBoard';
-window.history.replaceState(window.history.state,'',url.toString());
-}catch{window.location.hash='ludoBoard';}
-const expected=topbar+8;
-const rect=target.getBoundingClientRect();
-if(force||Math.abs(rect.top-expected)>18)target.scrollIntoView({behavior,block:'start'});
-if(board&&target!==board){
-requestAnimationFrame(()=>{
-const panel=document.querySelector('#gamePanel>.board-panel');
-if(panel&&panel.scrollHeight>panel.clientHeight){
-const offset=Math.max(0,Number(board.offsetTop)-8);
-panel.scrollTo({top:offset,behavior:'auto'});
-}
-});
-}
-return true;
-}
-function armLudoBoardDirection(duration=2600){
-boardDirectionUntil=Math.max(boardDirectionUntil,Date.now()+duration);
-clearTimeout(boardDirectionTimer);
-let first=true;
-const tick=()=>{
-const found=directToLudoBoard(first?'smooth':'auto',first);
-if(found)first=false;
-if(Date.now()<boardDirectionUntil)boardDirectionTimer=setTimeout(tick,120);
-else boardDirectionTimer=0;
+function installPinGestureGuard(){
+const button=document.getElementById('pinLudo');
+if(!button||button.dataset.jlPinGestureGuard==='1')return;
+button.dataset.jlPinGestureGuard='1';
+button.style.touchAction='pan-y';
+let pointer=null;
+let suppressClickUntil=0;
+const now=()=>window.performance?.now?.()??Date.now();
+const movedEnough=(event)=>{
+if(!pointer||event.pointerId!==pointer.id)return false;
+const dx=Number(event.clientX)-pointer.x;
+const dy=Number(event.clientY)-pointer.y;
+const scrolled=Math.abs(window.scrollY-pointer.scrollY)>4;
+return Math.hypot(dx,dy)>10||scrolled;
 };
-boardDirectionTimer=setTimeout(tick,0);
+document.addEventListener('pointerdown',event=>{
+if(!event.target.closest?.('#pinLudo'))return;
+pointer={id:event.pointerId,x:Number(event.clientX),y:Number(event.clientY),scrollY:window.scrollY,moved:false};
+},{capture:true,passive:true});
+document.addEventListener('pointermove',event=>{
+if(pointer&&movedEnough(event))pointer.moved=true;
+},{capture:true,passive:true});
+document.addEventListener('pointerup',event=>{
+if(!pointer||event.pointerId!==pointer.id)return;
+if(pointer.moved||movedEnough(event))suppressClickUntil=now()+700;
+pointer=null;
+},{capture:true,passive:true});
+document.addEventListener('pointercancel',event=>{
+if(!pointer||event.pointerId!==pointer.id)return;
+suppressClickUntil=now()+700;
+pointer=null;
+},{capture:true,passive:true});
+button.addEventListener('click',event=>{
+if(now()<suppressClickUntil){
+event.preventDefault();
+event.stopImmediatePropagation();
+return;
 }
-function installBoardDirection(){
-document.addEventListener('submit',event=>{
-if(!['createRoomForm','joinCodeForm'].includes(event.target?.id))return;
-armLudoBoardDirection(3400);
+// Keep the click on the button itself: ludo.js is the sole pin/scroll owner.
+event.stopPropagation();
 },true);
-document.addEventListener('click',event=>{
-if(event.target.closest?.('#pinLudo,[data-invite-accept],[data-public-accept]'))armLudoBoardDirection(2600);
-},true);
-window.addEventListener('jl-ludo-authoritative-room',()=>armLudoBoardDirection(2600));
-const game=document.getElementById('gamePanel');
-if(game)new MutationObserver(()=>{
-if(!game.classList.contains('hidden'))armLudoBoardDirection(1800);
-}).observe(game,{attributes:true,attributeFilter:['class','hidden']});
 }
 function init(){
-notifications();support();recovery();account();installLobbyRecovery();
-// Board pinning and scrolling belong exclusively to ludo.js via #pinLudo.
+notifications();support();recovery();account();installLobbyRecovery();installPinGestureGuard();
 idle('policy',350);
 if(hasToken())authenticated();
 window.addEventListener('jl-player-session-changed',event=>{
