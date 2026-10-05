@@ -24,11 +24,10 @@ test('home não inclui bundle do Aviator',()=>{
   }
 });
 
-test('links do Aviator são lazy e não fazem route prefetch',()=>{
+test('links do Aviator usam navegação nativa sem route prefetch',()=>{
   const aviatorLinks=[...html.matchAll(/<a[^>]+href="\.\/aviator\.html"[^>]*>/g)].map(m=>m[0]);
   assert.ok(aviatorLinks.length>=2,'deve haver links Aviator na home');
   for(const link of aviatorLinks){
-    assert.match(link,/data-jl-game="aviator"/);
     assert.doesNotMatch(link,/data-jl-route-prefetch/);
   }
 });
@@ -54,7 +53,7 @@ test('todo jogo live isolado segue política lazy por padrão',()=>{
 });
 
 test('navegação nativa é a fronteira lazy, sem loader de bundle do jogo',()=>{
-  assert.match(html,/href="\.\/aviator\.html"[^>]*data-jl-game="aviator"/);
+  assert.match(html,/href="\.\/aviator\.html"/);
   assert.doesNotMatch(html,/href="\.\/aviator\.html"[^>]*data-jl-route-prefetch/);
   assert.doesNotMatch(loader,/installLazyGameNavigation/);
   assert.doesNotMatch(loader,/item\.assets/);
