@@ -3,7 +3,6 @@
 
   const TOKEN_KEY = 'jl_player_token';
   const AUTHORITY_KEY = '__JL_LUDO_ROOM_AUTHORITY_V1__';
-  const SCROLL_GUARD_KEY = '__JL_LUDO_SCROLL_OWNERSHIP_V1__';
   if (window[AUTHORITY_KEY]?.installed) return;
 
   const authority = {
@@ -27,25 +26,6 @@
     const fn = window.JLApi?.rpc;
     if (typeof fn !== 'function') throw new Error('API do Ludo ainda não está pronta.');
     return fn(name, args);
-  }
-
-  function installScrollOwnership() {
-    if (window[SCROLL_GUARD_KEY]?.installed) return;
-    const original = Element.prototype.scrollIntoView;
-    if (typeof original !== 'function') return;
-
-    window[SCROLL_GUARD_KEY] = { installed: true, original };
-    Element.prototype.scrollIntoView = function (...args) {
-      const isLudoAutoTarget =
-        this?.id === 'room' ||
-        this?.id === 'ludoBoard' ||
-        this?.matches?.('#gamePanel > .board-panel');
-
-      if (isLudoAutoTarget && !document.body.classList.contains('ludo-pinned')) {
-        return;
-      }
-      return original.apply(this, args);
-    };
   }
 
   function installLayoutStability() {
@@ -261,7 +241,6 @@
   }
 
   function install() {
-    installScrollOwnership();
     installLayoutStability();
     installDomGuard();
     void refreshAuthority('startup');
