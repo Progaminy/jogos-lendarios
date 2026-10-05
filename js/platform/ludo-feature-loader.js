@@ -157,6 +157,47 @@ document.addEventListener('visibilitychange',()=>{
 if(document.visibilityState==='visible')setTimeout(()=>restoreLobbyIfStranded(true),300);
 });
 }
+function pinViewportTop(){
+const topbar=document.querySelector('.topbar');
+const strip=document.getElementById('ludoStatusStrip');
+const topbarHeight=topbar?Math.max(0,topbar.getBoundingClientRect().height):0;
+const stripVisible=strip&&getComputedStyle(strip).display!=='none'&&!strip.classList.contains('hidden');
+const stripHeight=stripVisible?Math.max(0,strip.getBoundingClientRect().height):0;
+return Math.ceil(topbarHeight+stripHeight+10);
+}
+function fitPinnedBoard(panel,board,top){
+board.style.removeProperty('width');
+board.style.removeProperty('max-width');
+panel.scrollTop=0;
+const viewportHeight=window.visualViewport?.height||window.innerHeight||0;
+if(!viewportHeight)return;
+const available=Math.max(260,viewportHeight-top-12);
+const boardHeight=Math.max(1,board.getBoundingClientRect().height||board.offsetHeight||1);
+const chrome=Math.max(0,panel.scrollHeight-boardHeight);
+const currentWidth=Math.max(1,board.getBoundingClientRect().width||board.offsetWidth||1);
+const target=Math.floor(Math.min(currentWidth,available-chrome-4));
+if(target>220&&target<currentWidth-2){
+board.style.setProperty('width',`${target}px`,'important');
+board.style.setProperty('max-width',`${target}px`,'important');
+}
+}
+function clearPinnedViewport(panel,board){
+board?.style.removeProperty('width');
+board?.style.removeProperty('max-width');
+panel?.style.removeProperty('scroll-margin-top');
+document.documentElement.style.removeProperty('--ludo-sticky-top');
+}
+function showPinnedViewport(panel,board,naturalTop){
+const top=pinViewportTop();
+document.documentElement.style.setProperty('--ludo-sticky-top',`${top}px`);
+panel.style.setProperty('scroll-margin-top',`${top+8}px`);
+fitPinnedBoard(panel,board,top);
+requestAnimationFrame(()=>{
+panel.scrollTop=0;
+const destination=Math.max(0,naturalTop-top-8);
+window.scrollTo({top:destination,behavior:'auto'});
+});
+}
 function installPinGestureGuard(){
 const button=document.getElementById('pinLudo');
 if(!button||button.dataset.jlPinGestureGuard==='1')return;
@@ -190,13 +231,19 @@ suppressClickUntil=now()+700;
 pointer=null;
 },{capture:true,passive:true});
 button.addEventListener('click',event=>{
-if(now()<suppressClickUntil){
 event.preventDefault();
 event.stopImmediatePropagation();
-return;
-}
-// Keep the click on the button itself: ludo.js is the sole pin/scroll owner.
-event.stopPropagation();
+if(now()<suppressClickUntil)return;
+const panel=document.querySelector('#gamePanel>.board-panel');
+const board=document.getElementById('ludoBoard');
+if(!panel||!board)return;
+const naturalTop=window.scrollY+panel.getBoundingClientRect().top;
+const pinned=!document.body.classList.contains('ludo-pinned');
+document.body.classList.toggle('ludo-pinned',pinned);
+button.setAttribute('aria-pressed',pinned?'true':'false');
+button.textContent=pinned?'Desafixar':'Fixar Ludo';
+if(pinned)showPinnedViewport(panel,board,naturalTop);
+else clearPinnedViewport(panel,board);
 },true);
 }
 function init(){
