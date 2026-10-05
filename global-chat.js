@@ -140,8 +140,7 @@
       <section class="jl-global-chat-panel" role="dialog" aria-modal="true" aria-labelledby="jlGlobalChatTitle">
         <header class="jl-global-chat-head">
           <div class="jl-global-chat-title">
-            <strong id="jlGlobalChatTitle">Chat dos Jogos Lendários</strong>
-            <small>Conversa entre jogadores</small>
+            <strong id="jlGlobalChatTitle">Chat Jogos Lendários</strong>
           </div>
           <button class="jl-global-chat-close" type="button" aria-label="Fechar chat">×</button>
         </header>
