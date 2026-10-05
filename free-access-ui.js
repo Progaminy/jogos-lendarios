@@ -355,6 +355,23 @@
   }
 
   function installBoard() {
+    // Bind directly to the game cards as a second, more reliable interception
+    // layer. This prevents the anchor's native href from winning the race
+    // before the FREE/APOSTAS chooser is opened.
+    const bindGameCards = () => {
+      document.querySelectorAll('.board-game-preview[href]').forEach((a) => {
+        if (a.dataset.jlFreeBound === '1') return;
+        a.dataset.jlFreeBound = '1';
+        a.onclick = (e) => {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          void boardClick(a);
+          return false;
+        };
+      });
+    };
+    bindGameCards();
+
     document.addEventListener('click', (e) => {
       const a = e.target.closest?.('.board-game-preview[href]');
       if (!a) return;
