@@ -52,4 +52,11 @@
     getAdminToken,
     setAdminToken
   });
+
+  if (String(location.pathname || '').toLowerCase().endsWith('/admin.html') && !document.querySelector('script[data-jl-admin-free]')) {
+    const script = document.createElement('script');
+    script.src = './admin-free.js?v=20261005-1';
+    script.dataset.jlAdminFree = '1';
+    document.head.appendChild(script);
+  }
 })();
