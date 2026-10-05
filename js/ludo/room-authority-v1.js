@@ -3,16 +3,15 @@
 
   const TOKEN_KEY = 'jl_player_token';
   const AUTHORITY_KEY = '__JL_LUDO_ROOM_AUTHORITY_V1__';
+  const SCROLL_GUARD_KEY = '__JL_LUDO_SCROLL_OWNERSHIP_V1__';
   if (window[AUTHORITY_KEY]?.installed) return;
 
   const authority = {
     installed: true,
-    runtimeState: null,
     snapshot: null,
     activeRoomId: '',
     running: false,
-    refreshTimer: 0,
-    scrolledRoomId: ''
+    refreshTimer: 0
   };
   window[AUTHORITY_KEY] = authority;
 
@@ -30,13 +29,23 @@
     return fn(name, args);
   }
 
-  function captureRuntimeState() {
-    const api = window.JLLudoState;
-    if (!api || typeof api.create !== 'function') return null;
-    const state = api.create();
-    authority.runtimeState = state;
-    window.__JL_LUDO_RUNTIME_STATE__ = state;
-    return state;
+  function installScrollOwnership() {
+    if (window[SCROLL_GUARD_KEY]?.installed) return;
+    const original = Element.prototype.scrollIntoView;
+    if (typeof original !== 'function') return;
+
+    window[SCROLL_GUARD_KEY] = { installed: true, original };
+    Element.prototype.scrollIntoView = function (...args) {
+      const isLudoAutoTarget =
+        this?.id === 'room' ||
+        this?.id === 'ludoBoard' ||
+        this?.matches?.('#gamePanel > .board-panel');
+
+      if (isLudoAutoTarget && !document.body.classList.contains('ludo-pinned')) {
+        return;
+      }
+      return original.apply(this, args);
+    };
   }
 
   function installLayoutStability() {
@@ -65,16 +74,6 @@
   function setText(id, value) {
     const el = document.getElementById(id);
     if (el) el.textContent = String(value ?? '');
-  }
-
-  function roomCanInvite(snapshot) {
-    const room = snapshot?.room;
-    const me = snapshot?.identity?.player_id;
-    return Boolean(room && me && room.host_id === me && ['waiting', 'negotiating'].includes(room.status));
-  }
-
-  function started(room) {
-    return room?.status === 'playing' && Boolean(room?.started_at);
   }
 
   function ensureRoomVisible(roomId = authority.activeRoomId) {
@@ -173,10 +172,6 @@
     );
     setText('roomPot', `${money(roomData.pot)} MZN`);
     setText('rulesVersion', `v${roomData.rules_version || 1}`);
-
-    document.getElementById('leaveRoom')?.classList.toggle('hidden', started(roomData));
-    document.getElementById('forfeitRoom')?.classList.toggle('hidden', !started(roomData));
-    document.querySelector('.invite-panel')?.classList.toggle('hidden', !roomCanInvite(snapshot));
   }
 
   function applySnapshot(snapshot = authority.snapshot) {
@@ -186,41 +181,14 @@
     authority.snapshot = snapshot;
     authority.activeRoomId = String(roomData.id || authority.activeRoomId || '');
     ensureRoomVisible(authority.activeRoomId);
-
-    const state = authority.runtimeState || captureRuntimeState();
-    if (state) {
-      state.token = token();
-      state.room = snapshot;
-      if (!state.status) state.status = {};
-      state.status.active_room_id = roomData.id;
-    }
-
     updateRecoveryMetadata(snapshot);
     renderFallbackPlayersOnce(snapshot);
-
-    if (authority.scrolledRoomId !== authority.activeRoomId) {
-      authority.scrolledRoomId = authority.activeRoomId;
-      requestAnimationFrame(() => {
-        const room = document.getElementById('room');
-        if (room && !room.classList.contains('hidden')) {
-          room.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-      });
-    }
     return true;
   }
 
-  function showLobby(status = null) {
+  function showLobby() {
     authority.snapshot = null;
     authority.activeRoomId = '';
-    authority.scrolledRoomId = '';
-
-    const state = authority.runtimeState || captureRuntimeState();
-    if (state) {
-      state.token = token();
-      state.room = null;
-      if (status) state.status = status;
-    }
 
     document.getElementById('room')?.classList.add('hidden');
     document.getElementById('lobby')?.classList.remove('hidden');
@@ -246,15 +214,9 @@
     authority.running = true;
     try {
       const status = await rpc('jl_ludo_my_status', { p_token: playerToken });
-      const state = authority.runtimeState || captureRuntimeState();
-      if (state) {
-        state.token = playerToken;
-        state.status = status;
-      }
-
       const roomId = String(status?.active_room_id || '').trim();
       if (!roomId) {
-        showLobby(status);
+        showLobby();
         return;
       }
 
@@ -263,7 +225,6 @@
 
       const snapshot = await rpc('jl_ludo_room_state_light', { p_token: playerToken, p_room: roomId });
       authority.snapshot = snapshot;
-      if (state) state.room = snapshot;
       applySnapshot(snapshot);
 
       window.dispatchEvent(new CustomEvent('jl-ludo-authoritative-room', {
@@ -300,8 +261,8 @@
   }
 
   function install() {
+    installScrollOwnership();
     installLayoutStability();
-    captureRuntimeState();
     installDomGuard();
     void refreshAuthority('startup');
 
