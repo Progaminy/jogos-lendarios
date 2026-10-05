@@ -52,19 +52,57 @@
     style.id = 'jlDamaAnalysisStyle';
     style.textContent = `
       #damaBoard{position:relative}
-      #jlDamaHintStatus{display:none;box-sizing:border-box;width:100%;margin:8px 0 10px;padding:9px 12px;border-radius:10px;font-size:13px;font-weight:700;line-height:1.35;text-align:center;border:1px solid rgba(255,255,255,.18);background:rgba(12,18,29,.88);color:#eef6ff}
-      #jlDamaHintStatus[data-kind="loading"]{border-color:rgba(24,168,255,.55);color:#bfe9ff}
-      #jlDamaHintStatus[data-kind="ready"]{border-color:rgba(92,255,119,.55);color:#bfffc9}
-      #jlDamaHintStatus[data-kind="waiting"]{border-color:rgba(255,214,102,.48);color:#ffe79b}
-      #jlDamaHintStatus[data-kind="error"]{border-color:rgba(255,98,98,.6);color:#ffc1c1}
-      #damaBoard .dama-ai-origin{box-shadow:inset 0 0 0 4px #18a8ff,inset 0 0 18px rgba(24,168,255,.72)!important}
-      #damaBoard .dama-ai-origin .dama-piece{outline:4px solid #18a8ff;outline-offset:2px;filter:drop-shadow(0 0 8px rgba(24,168,255,.95))}
-      #damaBoard .dama-ai-target{box-shadow:inset 0 0 0 4px #5cff77,inset 0 0 20px rgba(92,255,119,.75)!important}
-      #damaBoard .dama-ai-target::after{content:'';position:absolute;inset:28%;border-radius:50%;background:#5cff77;box-shadow:0 0 14px rgba(92,255,119,.95);z-index:5;pointer-events:none}
-      #damaBoard .dama-ai-path{box-shadow:inset 0 0 0 2px rgba(92,255,119,.42)}
-      #damaBoard .dama-ai-overlay{position:absolute;inset:0;width:100%;height:100%;z-index:7;pointer-events:none;overflow:visible}
-      #damaBoard .dama-ai-overlay polyline{fill:none;stroke:#5cff77;stroke-width:4.5;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 5px rgba(92,255,119,.95))}
-      @media (max-width:640px){#jlDamaHintStatus{font-size:12px;padding:8px 10px}#damaBoard .dama-ai-overlay polyline{stroke-width:3.8}#damaBoard .dama-ai-origin{box-shadow:inset 0 0 0 3px #18a8ff,inset 0 0 14px rgba(24,168,255,.7)!important}#damaBoard .dama-ai-target{box-shadow:inset 0 0 0 3px #5cff77,inset 0 0 15px rgba(92,255,119,.72)!important}}
+      #jlDamaHintStatus{display:none;box-sizing:border-box;width:100%;margin:8px 0 10px;padding:10px 12px;border-radius:10px;font-size:13px;font-weight:800;line-height:1.35;text-align:center;border:1px solid rgba(255,255,255,.18);background:rgba(12,18,29,.94);color:#eef6ff;box-shadow:0 4px 16px rgba(0,0,0,.28)}
+      #jlDamaHintStatus[data-kind="loading"]{border-color:rgba(24,168,255,.72);color:#c9efff}
+      #jlDamaHintStatus[data-kind="ready"]{border-color:rgba(92,255,119,.8);color:#d2ffda;box-shadow:0 0 0 2px rgba(92,255,119,.12),0 4px 16px rgba(0,0,0,.28)}
+      #jlDamaHintStatus[data-kind="waiting"]{border-color:rgba(255,214,102,.62);color:#ffe79b}
+      #jlDamaHintStatus[data-kind="error"]{border-color:rgba(255,98,98,.78);color:#ffc1c1}
+
+      @keyframes jlDamaOriginPulse{
+        0%,100%{box-shadow:inset 0 0 0 5px #10baff,inset 0 0 18px rgba(16,186,255,.85),0 0 0 2px rgba(255,255,255,.92),0 0 18px rgba(16,186,255,.95)}
+        50%{box-shadow:inset 0 0 0 7px #10baff,inset 0 0 28px rgba(16,186,255,1),0 0 0 4px #fff,0 0 34px rgba(16,186,255,1)}
+      }
+      @keyframes jlDamaPiecePulse{
+        0%,100%{transform:scale(1);filter:drop-shadow(0 0 7px #10baff)}
+        50%{transform:scale(1.13);filter:drop-shadow(0 0 15px #fff) drop-shadow(0 0 18px #10baff)}
+      }
+      @keyframes jlDamaTargetPulse{
+        0%,100%{box-shadow:inset 0 0 0 5px #5cff77,inset 0 0 22px rgba(92,255,119,.9),0 0 0 2px rgba(255,255,255,.9),0 0 18px rgba(92,255,119,.95)}
+        50%{box-shadow:inset 0 0 0 8px #5cff77,inset 0 0 34px rgba(92,255,119,1),0 0 0 4px #fff,0 0 36px rgba(92,255,119,1)}
+      }
+      @keyframes jlDamaTargetDot{
+        0%,100%{transform:scale(.82);opacity:.76}
+        50%{transform:scale(1.22);opacity:1}
+      }
+      @keyframes jlDamaBadgePulse{
+        0%,100%{transform:translateX(-50%) scale(1)}
+        50%{transform:translateX(-50%) scale(1.06)}
+      }
+
+      #damaBoard .dama-ai-origin,
+      #damaBoard .dama-ai-target{position:relative!important;overflow:visible!important;z-index:8!important}
+      #damaBoard .dama-ai-origin{animation:jlDamaOriginPulse .72s ease-in-out infinite!important}
+      #damaBoard .dama-ai-origin .dama-piece{position:relative;z-index:10;outline:5px solid #10baff!important;outline-offset:2px;animation:jlDamaPiecePulse .72s ease-in-out infinite!important}
+      #damaBoard .dama-ai-origin::before,
+      #damaBoard .dama-ai-target::before{position:absolute;left:50%;top:-11px;transform:translateX(-50%);z-index:15;pointer-events:none;white-space:nowrap;padding:4px 7px;border-radius:999px;font-size:9px;font-weight:1000;line-height:1;letter-spacing:.35px;border:2px solid #fff;box-shadow:0 3px 9px rgba(0,0,0,.72);text-shadow:0 1px 2px rgba(0,0,0,.8);animation:jlDamaBadgePulse .85s ease-in-out infinite}
+      #damaBoard .dama-ai-origin::before{content:'MEXER ESTA';background:#009ee8;color:#fff}
+      #damaBoard .dama-ai-target{animation:jlDamaTargetPulse .72s ease-in-out infinite!important}
+      #damaBoard .dama-ai-target::before{content:'JOGAR AQUI';background:#14a936;color:#fff}
+      #damaBoard .dama-ai-target::after{content:'';position:absolute;inset:22%;border-radius:50%;background:#5cff77;border:4px solid #fff;box-shadow:0 0 0 4px rgba(92,255,119,.38),0 0 22px rgba(92,255,119,1);z-index:9;pointer-events:none;animation:jlDamaTargetDot .72s ease-in-out infinite}
+      #damaBoard .dama-ai-path{box-shadow:inset 0 0 0 3px rgba(92,255,119,.68),inset 0 0 14px rgba(92,255,119,.28)!important}
+      #damaBoard .dama-ai-overlay{position:absolute;inset:0;width:100%;height:100%;z-index:12;pointer-events:none;overflow:visible}
+      #damaBoard .dama-ai-overlay .dama-ai-arrow-shadow{fill:none;stroke:rgba(0,0,0,.82);stroke-width:12;stroke-linecap:round;stroke-linejoin:round}
+      #damaBoard .dama-ai-overlay .dama-ai-arrow-main{fill:none;stroke:#77ff8b;stroke-width:7;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 4px #fff) drop-shadow(0 0 8px rgba(92,255,119,1))}
+
+      @media (max-width:640px){
+        #jlDamaHintStatus{font-size:12px;padding:9px 10px}
+        #damaBoard .dama-ai-origin::before,#damaBoard .dama-ai-target::before{top:-8px;font-size:7.5px;padding:3px 5px;border-width:1.5px}
+        #damaBoard .dama-ai-overlay .dama-ai-arrow-shadow{stroke-width:10}
+        #damaBoard .dama-ai-overlay .dama-ai-arrow-main{stroke-width:6}
+      }
+      @media (prefers-reduced-motion:reduce){
+        #damaBoard .dama-ai-origin,#damaBoard .dama-ai-origin .dama-piece,#damaBoard .dama-ai-target,#damaBoard .dama-ai-target::before,#damaBoard .dama-ai-origin::before,#damaBoard .dama-ai-target::after{animation:none!important}
+      }
     `;
     document.head.appendChild(style);
   }
@@ -171,21 +209,29 @@
     const defs = document.createElementNS(ns, 'defs');
     const marker = document.createElementNS(ns, 'marker');
     marker.setAttribute('id', 'jlDamaHintArrow');
-    marker.setAttribute('viewBox', '0 0 10 10');
-    marker.setAttribute('refX', '8');
-    marker.setAttribute('refY', '5');
-    marker.setAttribute('markerWidth', '5');
-    marker.setAttribute('markerHeight', '5');
+    marker.setAttribute('viewBox', '0 0 12 12');
+    marker.setAttribute('refX', '10');
+    marker.setAttribute('refY', '6');
+    marker.setAttribute('markerWidth', '7');
+    marker.setAttribute('markerHeight', '7');
     marker.setAttribute('orient', 'auto-start-reverse');
     const arrow = document.createElementNS(ns, 'path');
-    arrow.setAttribute('d', 'M 0 0 L 10 5 L 0 10 z');
-    arrow.setAttribute('fill', '#5cff77');
+    arrow.setAttribute('d', 'M 0 0 L 12 6 L 0 12 z');
+    arrow.setAttribute('fill', '#77ff8b');
+    arrow.setAttribute('stroke', '#ffffff');
+    arrow.setAttribute('stroke-width', '1');
     marker.appendChild(arrow);
     defs.appendChild(marker);
     svg.appendChild(defs);
 
+    const shadow = document.createElementNS(ns, 'polyline');
+    shadow.setAttribute('points', points);
+    shadow.setAttribute('class', 'dama-ai-arrow-shadow');
+    svg.appendChild(shadow);
+
     const line = document.createElementNS(ns, 'polyline');
     line.setAttribute('points', points);
+    line.setAttribute('class', 'dama-ai-arrow-main');
     line.setAttribute('marker-end', 'url(#jlDamaHintArrow)');
     svg.appendChild(line);
     board.appendChild(svg);
@@ -299,7 +345,7 @@
       state.hint = payload.hint;
       state.hintSignature = signature;
       if (drawHint(state.hint)) {
-        setStatus('Dica pronta: siga a seta destacada no tabuleiro.', 'ready');
+        setStatus('Dica pronta: AZUL = peça a mexer • VERDE = jogar aqui.', 'ready');
       } else {
         setStatus('A jogada foi calculada, mas não pôde ser desenhada no tabuleiro. Recalculando…', 'error');
         state.hint = null;
@@ -380,7 +426,7 @@
     }
 
     if (state.hint && state.hintSignature === signature) {
-      if (drawHint(state.hint)) setStatus('Dica pronta: siga a seta destacada no tabuleiro.', 'ready');
+      if (drawHint(state.hint)) setStatus('Dica pronta: AZUL = peça a mexer • VERDE = jogar aqui.', 'ready');
       else {
         state.hint = null;
         state.hintSignature = '';
@@ -411,7 +457,7 @@
 
     window.addEventListener('resize', () => {
       if (state.hint && state.hintSignature === boardSignature() && ownTurn()) {
-        if (drawHint(state.hint)) setStatus('Dica pronta: siga a seta destacada no tabuleiro.', 'ready');
+        if (drawHint(state.hint)) setStatus('Dica pronta: AZUL = peça a mexer • VERDE = jogar aqui.', 'ready');
       }
     }, { passive: true });
     document.addEventListener('visibilitychange', () => { if (!document.hidden) schedule(); });
