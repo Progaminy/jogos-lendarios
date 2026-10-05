@@ -326,27 +326,32 @@
     await openAccess(key);
   }
 
-  async function boardClick(anchor) {
+  function boardClick(anchor) {
     const key = keyFromHref(anchor.href, anchor);
     if (!key) return;
-    const list = await loadCatalog();
-    const cfg = list.find((g) => g.game_key === key) || { free_enabled: false, bet_enabled: true };
 
+    // FREE hub keeps its direct-entry behaviour; normal board opens the
+    // choice immediately, without waiting for a network/RPC response.
     if (freeMode) {
-      if (!cfg.free_enabled) return;
-      await directFree(anchor, key);
+      void loadCatalog().then((list) => {
+        const cfg = (Array.isArray(list) ? list : list?.games || [])
+          .find((g) => g.game_key === key);
+        if (cfg?.free_enabled) void directFree(anchor, key);
+      });
       return;
     }
 
-    if (cfg.free_enabled && cfg.bet_enabled) {
-      await openChooser(anchor, cfg);
-      return;
-    }
-    if (cfg.free_enabled && !cfg.bet_enabled) {
-      await directFree(anchor, key);
-      return;
-    }
-    location.href = anchor.href;
+    void openChooser(anchor, { free_enabled: true, bet_enabled: true });
+    void loadCatalog().then((list) => {
+      const cfg = (Array.isArray(list) ? list : list?.games || [])
+        .find((g) => g.game_key === key);
+      if (!cfg) return;
+      const modal = $('#jlFreeModal');
+      if (!modal || modal.classList.contains('hidden') || selectedGame !== key) return;
+      $('#jlFreeMode', modal)?.classList.toggle('hidden', cfg.free_enabled === false);
+      $('#jlFreeBet', modal)?.classList.toggle('hidden', cfg.bet_enabled === false);
+      if (cfg.free_enabled && !cfg.bet_enabled) void directFree(anchor, key);
+    });
   }
 
   function installBoard() {
