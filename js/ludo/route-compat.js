@@ -4,10 +4,6 @@
   const TOKEN_KEY = 'jl_player_token';
   let stickyRoomId = '';
   let confirmTimer = 0;
-  let scrollRoomId = '';
-  let createBoardFocusPending = false;
-  let createBoardFocusTimer = 0;
-  let createBoardFocusDeadline = 0;
   let leaveRoomPending = false;
   let leaveRoomConfirmTimer = 0;
 
@@ -55,7 +51,6 @@
 
   function clearRememberedRoom() {
     stickyRoomId = '';
-    scrollRoomId = '';
     delete document.documentElement.dataset.jlConfirmedActiveLudoRoom;
   }
 
@@ -72,7 +67,6 @@
     if (authority && typeof authority === 'object') {
       authority.snapshot = null;
       authority.activeRoomId = '';
-      authority.scrolledRoomId = '';
     }
   }
 
@@ -140,11 +134,8 @@
     try {
       const status = await rpc('jl_ludo_my_status', { p_token: playerToken });
       const roomId = String(status?.active_room_id || '').trim();
-      if (roomId) {
-        finishLeaveTransition({ restoreRoomId: roomId });
-      } else {
-        finishLeaveTransition();
-      }
+      if (roomId) finishLeaveTransition({ restoreRoomId: roomId });
+      else finishLeaveTransition();
     } catch {
       leaveRoomConfirmTimer = window.setTimeout(() => void confirmLeaveResult(), 350);
     }
@@ -153,10 +144,6 @@
   function armLeaveRoomTransition() {
     if (leaveRoomPending) return;
     leaveRoomPending = true;
-    createBoardFocusPending = false;
-    clearTimeout(createBoardFocusTimer);
-    createBoardFocusTimer = 0;
-    createBoardFocusDeadline = 0;
     showLobbyAfterLeave();
     clearTimeout(leaveRoomConfirmTimer);
     leaveRoomConfirmTimer = window.setTimeout(() => void confirmLeaveResult(), 220);
@@ -228,12 +215,6 @@
     document.head.appendChild(style);
   }
 
-  function boardFocusTarget() {
-    return document.querySelector('#gamePanel .board-panel')
-      || document.getElementById('ludoBoard')
-      || document.getElementById('gamePanel');
-  }
-
   function elementDocumentTop(element) {
     let top = 0;
     let current = element;
@@ -266,7 +247,6 @@
       if (!document.body.classList.contains('ludo-pinned')) return;
       const topbarHeight = document.querySelector('.topbar')?.getBoundingClientRect().height || 0;
       const destination = Math.max(0, elementDocumentTop(panel) - topbarHeight - 6);
-
       panel.scrollTop = 0;
       window.scrollTo({ top: destination, behavior });
 
@@ -304,69 +284,6 @@
     }, true);
   }
 
-  function focusCreatedRoomBoard() {
-    if (!createBoardFocusPending || leaveRoomPending) return false;
-
-    const room = document.getElementById('room');
-    const gamePanel = document.getElementById('gamePanel');
-    const board = document.getElementById('ludoBoard');
-    const target = boardFocusTarget();
-    const roomVisible = Boolean(room && !room.classList.contains('hidden') && !room.hidden);
-    const boardReady = Boolean(
-      target &&
-      gamePanel &&
-      !gamePanel.classList.contains('hidden') &&
-      board &&
-      board.childElementCount > 0
-    );
-
-    if (!roomVisible || !boardReady) return false;
-
-    createBoardFocusPending = false;
-    clearTimeout(createBoardFocusTimer);
-    createBoardFocusTimer = 0;
-    createBoardFocusDeadline = 0;
-    if (stickyRoomId) scrollRoomId = stickyRoomId;
-
-    try {
-      const url = new URL(window.location.href);
-      if (stickyRoomId) url.searchParams.set('room', stickyRoomId);
-      url.hash = 'ludoBoard';
-      window.history.replaceState(window.history.state, '', url.toString());
-    } catch {
-      window.location.hash = 'ludoBoard';
-    }
-
-    target.style.scrollMarginTop = 'calc(var(--ludo-sticky-top, 64px) + 10px)';
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      });
-    });
-    return true;
-  }
-
-  function armCreateBoardFocus() {
-    if (leaveRoomPending) return;
-    createBoardFocusPending = true;
-    createBoardFocusDeadline = Date.now() + 12000;
-    clearTimeout(createBoardFocusTimer);
-
-    const tick = () => {
-      if (!createBoardFocusPending) return;
-      if (focusCreatedRoomBoard()) return;
-      if (Date.now() >= createBoardFocusDeadline) {
-        createBoardFocusPending = false;
-        createBoardFocusTimer = 0;
-        createBoardFocusDeadline = 0;
-        return;
-      }
-      createBoardFocusTimer = window.setTimeout(tick, 80);
-    };
-
-    createBoardFocusTimer = window.setTimeout(tick, 0);
-  }
-
   function forceRoomVisible(roomId = '') {
     if (!isLudoPath() || leaveRoomPending) return false;
     const id = String(roomId || stickyRoomId || recoveryState()?.activeRoomId || '').trim();
@@ -387,18 +304,6 @@
     document.getElementById('loggedOut')?.classList.add('hidden');
     document.getElementById('ludoStatusStrip')?.classList.remove('hidden');
     document.getElementById('notificationCenter')?.classList.remove('hidden');
-
-    if (createBoardFocusPending) {
-      focusCreatedRoomBoard();
-    } else if (scrollRoomId !== id) {
-      scrollRoomId = id;
-      requestAnimationFrame(() => {
-        const currentRoom = document.getElementById('room');
-        if (currentRoom && !currentRoom.classList.contains('hidden')) {
-          currentRoom.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-      });
-    }
     return true;
   }
 
@@ -407,7 +312,6 @@
     const stateRoomId = String(recoveryState()?.activeRoomId || '').trim();
     if (stateRoomId) rememberRoom(stateRoomId);
     if (stickyRoomId) forceRoomVisible(stickyRoomId);
-    if (createBoardFocusPending) focusCreatedRoomBoard();
   }
 
   async function confirmAuthoritativeRoom() {
@@ -431,7 +335,6 @@
       if (roomId) {
         rememberRoom(roomId);
         forceRoomVisible(roomId);
-        focusCreatedRoomBoard();
       } else {
         clearRememberedRoom();
         clearLegacyActiveRoomState();
@@ -461,13 +364,8 @@
     });
   }
 
-  function installCreateRoomBoardRedirect() {
+  function installRoomTracking() {
     if (!isLudoPath()) return;
-    document.addEventListener('submit', event => {
-      if (event.target?.id !== 'createRoomForm') return;
-      armCreateBoardFocus();
-    }, true);
-
     window.addEventListener('jl-ludo-authoritative-room', event => {
       if (leaveRoomPending) return;
       const roomId = String(event.detail?.roomId || event.detail?.snapshot?.room?.id || '').trim();
@@ -475,7 +373,6 @@
         rememberRoom(roomId);
         forceRoomVisible(roomId);
       }
-      focusCreatedRoomBoard();
     });
   }
 
@@ -523,7 +420,7 @@
   repairLudoHeader();
   installPinButtonRedirect();
   installLeaveRoomGuard();
-  installCreateRoomBoardRedirect();
+  installRoomTracking();
   installActiveRoomVisibilityGuard();
   document.addEventListener('DOMContentLoaded', () => {
     installPinnedBoardFix();
