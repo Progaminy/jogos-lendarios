@@ -73,12 +73,6 @@
       authority.snapshot = null;
       authority.activeRoomId = '';
       authority.scrolledRoomId = '';
-      if (authority.runtimeState && typeof authority.runtimeState === 'object') {
-        authority.runtimeState.room = null;
-        if (authority.runtimeState.status && typeof authority.runtimeState.status === 'object') {
-          authority.runtimeState.status.active_room_id = null;
-        }
-      }
     }
   }
 
