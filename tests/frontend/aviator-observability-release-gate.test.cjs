@@ -23,7 +23,8 @@ test('pontos 65-67: admin mostra métricas, alarme financeiro e certificação r
   assert.match(js,/jl_aviator_admin_observability/);
   assert.match(js,/jl_aviator_admin_release_gate_state/);
   assert.match(js,/jl_aviator_admin_release_gate/);
-  assert.match(js,/NÃO ABRIR · CERTIFICAÇÃO NECESSÁRIA/);
+  assert.match(js,/NÃO CERTIFICADO/);
+  assert.match(js,/FECHADO · NÃO CERTIFICADO/);
   assert.match(js,/CERTIFICADO/);
   assert.match(js,/DIVERGÊNCIA/);
   assert.match(js,/latency_p95_ms_15m/);
