@@ -70,10 +70,170 @@
     }
   }
 
+  function installBoardLayoutStyle() {
+    if (document.getElementById('jl-ludo-board-first-style')) return;
+    const style = document.createElement('style');
+    style.id = 'jl-ludo-board-first-style';
+    style.textContent = `
+      #room > #gamePanel.game-grid:not(.hidden) {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 12px !important;
+        margin-top: 0 !important;
+      }
+
+      #gamePanel > .board-panel {
+        width: 100% !important;
+        min-width: 0 !important;
+      }
+
+      #gamePanel > .side-column {
+        width: 100% !important;
+        min-width: 0 !important;
+      }
+
+      #gamePanel .dice-tools {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        flex-wrap: wrap !important;
+        gap: 6px !important;
+      }
+
+      #muteOpponent.quick-listen,
+      #pinLudo.quick-pin {
+        width: auto !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+        white-space: nowrap !important;
+      }
+
+      #muteOpponent.quick-listen {
+        font-size: 0 !important;
+      }
+
+      #muteOpponent.quick-listen::after {
+        content: '🔊 Ouvir';
+        font-size: .82rem;
+      }
+
+      #muteOpponent.quick-listen[aria-pressed='true']::after {
+        content: '🔇 Mudo';
+      }
+
+      #turnTitle .turn-player-name {
+        font-size: 1.14em !important;
+        font-weight: 850 !important;
+      }
+
+      html body.ludo-pinned {
+        overflow: hidden !important;
+      }
+
+      html body.ludo-pinned #room {
+        content-visibility: visible !important;
+        contain: none !important;
+        overflow: visible !important;
+      }
+
+      html body.ludo-pinned #gamePanel > .board-panel {
+        position: fixed !important;
+        top: calc(var(--ludo-sticky-top, 64px) + 4px) !important;
+        left: 50% !important;
+        right: auto !important;
+        bottom: auto !important;
+        transform: translateX(-50%) !important;
+        z-index: 80 !important;
+        width: min(calc(100vw - 16px), 1120px) !important;
+        max-width: 1120px !important;
+        max-height: calc(100dvh - var(--ludo-sticky-top, 64px) - 8px) !important;
+        overflow: auto !important;
+        overscroll-behavior: contain !important;
+      }
+
+      html body.jl-ludo-leaving #room {
+        display: none !important;
+      }
+
+      html body.jl-ludo-leaving #lobby {
+        display: grid !important;
+      }
+
+      html body.jl-ludo-leaving #boardLobby {
+        display: block !important;
+      }
+
+      @media (max-width: 600px) {
+        #gamePanel .dice-tools {
+          justify-content: flex-start !important;
+        }
+
+        html body.ludo-pinned #gamePanel > .board-panel {
+          top: calc(var(--ludo-sticky-top, 56px) + 3px) !important;
+          width: calc(100vw - 8px) !important;
+          max-height: calc(100dvh - var(--ludo-sticky-top, 56px) - 6px) !important;
+          padding: 8px !important;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  function installBoardFirstLayout() {
+    if (!isLudoPath()) return;
+    const room = document.getElementById('room');
+    const gamePanel = document.getElementById('gamePanel');
+    if (room && gamePanel && room.firstElementChild !== gamePanel) {
+      room.insertBefore(gamePanel, room.firstElementChild);
+    }
+
+    const tools = document.querySelector('#gamePanel .dice-tools');
+    const listen = document.getElementById('muteOpponent');
+    const pin = document.getElementById('pinLudo');
+
+    if (tools && listen && listen.parentElement !== tools) {
+      listen.classList.remove('wide');
+      listen.classList.add('sound-toggle', 'quick-listen');
+      listen.setAttribute('aria-label', 'Ouvir ou silenciar adversário');
+      tools.appendChild(listen);
+    }
+
+    if (tools && pin && pin.parentElement !== tools) {
+      pin.classList.add('sound-toggle', 'quick-pin');
+      tools.appendChild(pin);
+    }
+  }
+
+  function installSinglePinControl() {
+    const current = document.getElementById('pinLudo');
+    if (!current || current.dataset.jlSinglePin === '1') return;
+
+    const fresh = current.cloneNode(true);
+    fresh.dataset.jlSinglePin = '1';
+    fresh.classList.add('sound-toggle', 'quick-pin');
+    fresh.setAttribute('aria-pressed', 'false');
+    fresh.textContent = '📌 Fixar';
+    current.replaceWith(fresh);
+
+    fresh.addEventListener('click', () => {
+      const pinned = document.body.classList.toggle('ludo-pinned');
+      fresh.setAttribute('aria-pressed', pinned ? 'true' : 'false');
+      fresh.textContent = pinned ? '↩ Desfixar' : '📌 Fixar';
+    });
+  }
+
+  function resetPinState() {
+    document.body.classList.remove('ludo-pinned');
+    const pin = document.getElementById('pinLudo');
+    if (!pin) return;
+    pin.setAttribute('aria-pressed', 'false');
+    pin.textContent = '📌 Fixar';
+  }
+
   function showLobbyAfterLeave() {
     clearRememberedRoom();
     clearLegacyActiveRoomState();
-    document.body.classList.remove('ludo-pinned');
+    resetPinState();
     document.body.classList.add('jl-ludo-leaving');
 
     const room = document.getElementById('room');
@@ -147,133 +307,6 @@
     showLobbyAfterLeave();
     clearTimeout(leaveRoomConfirmTimer);
     leaveRoomConfirmTimer = window.setTimeout(() => void confirmLeaveResult(), 220);
-  }
-
-  function installPinnedBoardFix() {
-    if (document.getElementById('jl-ludo-pin-fix')) return;
-    const style = document.createElement('style');
-    style.id = 'jl-ludo-pin-fix';
-    style.textContent = `
-      html body.ludo-pinned #room {
-        content-visibility: visible !important;
-        contain: none !important;
-        overflow: visible !important;
-      }
-
-      html body.ludo-pinned #gamePanel {
-        overflow: visible !important;
-      }
-
-      html body.ludo-pinned #gamePanel > .board-panel {
-        position: sticky !important;
-        top: calc(var(--ludo-sticky-top, 64px) + 6px) !important;
-        right: auto !important;
-        bottom: auto !important;
-        left: auto !important;
-        inset: auto !important;
-        z-index: 35 !important;
-        transform: none !important;
-        width: 100% !important;
-        max-width: none !important;
-        max-height: calc(100dvh - var(--ludo-sticky-top, 64px) - 12px) !important;
-        overflow: auto !important;
-        overscroll-behavior: contain;
-      }
-
-      html body.ludo-pinned #ludoBoard {
-        position: relative !important;
-        z-index: 1 !important;
-        scroll-margin-top: 4px !important;
-      }
-
-      html body.ludo-pinned .pin-ludo-button {
-        position: sticky;
-        bottom: 8px;
-        z-index: 4;
-      }
-
-      html body.jl-ludo-leaving #room {
-        display: none !important;
-      }
-
-      html body.jl-ludo-leaving #lobby {
-        display: grid !important;
-      }
-
-      html body.jl-ludo-leaving #boardLobby {
-        display: block !important;
-      }
-
-      @media (max-width: 600px) {
-        html body.ludo-pinned #gamePanel > .board-panel {
-          top: calc(var(--ludo-sticky-top, 56px) + 4px) !important;
-          max-height: calc(100dvh - var(--ludo-sticky-top, 56px) - 8px) !important;
-          padding: 10px !important;
-        }
-      }
-    `;
-    document.head.appendChild(style);
-  }
-
-  function elementDocumentTop(element) {
-    let top = 0;
-    let current = element;
-    while (current) {
-      top += Number(current.offsetTop) || 0;
-      current = current.offsetParent;
-    }
-    return top;
-  }
-
-  function directPinnedBoardIntoView(button = null) {
-    if (!document.body.classList.contains('ludo-pinned')) return false;
-    const gamePanel = document.getElementById('gamePanel');
-    const panel = document.querySelector('#gamePanel > .board-panel');
-    const board = document.getElementById('ludoBoard');
-    if (!panel || !gamePanel || gamePanel.classList.contains('hidden') || !board) return false;
-
-    button?.blur?.();
-
-    try {
-      const url = new URL(window.location.href);
-      if (stickyRoomId) url.searchParams.set('room', stickyRoomId);
-      url.hash = 'ludoBoard';
-      window.history.replaceState(window.history.state, '', url.toString());
-    } catch {
-      window.location.hash = 'ludoBoard';
-    }
-
-    const moveToBoard = (behavior = 'auto') => {
-      if (!document.body.classList.contains('ludo-pinned')) return;
-      const topbarHeight = document.querySelector('.topbar')?.getBoundingClientRect().height || 0;
-      const destination = Math.max(0, elementDocumentTop(panel) - topbarHeight - 6);
-      panel.scrollTop = 0;
-      window.scrollTo({ top: destination, behavior });
-
-      requestAnimationFrame(() => {
-        if (!document.body.classList.contains('ludo-pinned')) return;
-        const boardInsidePanel = Math.max(0, Number(board.offsetTop) - 4);
-        panel.scrollTo({ top: boardInsidePanel, behavior: 'auto' });
-      });
-    };
-
-    requestAnimationFrame(() => requestAnimationFrame(() => moveToBoard('auto')));
-    window.setTimeout(() => moveToBoard('smooth'), 120);
-    window.setTimeout(() => moveToBoard('auto'), 320);
-    return true;
-  }
-
-  function installPinButtonRedirect() {
-    if (!isLudoPath()) return;
-    document.addEventListener('click', event => {
-      const button = event.target?.closest?.('#pinLudo');
-      if (!button) return;
-      window.setTimeout(() => {
-        if (document.body.classList.contains('ludo-pinned')) {
-          directPinnedBoardIntoView(button);
-        }
-      }, 0);
-    });
   }
 
   function installLeaveRoomGuard() {
@@ -402,6 +435,7 @@
 
     window.addEventListener('pageshow', () => {
       repairLudoHeader();
+      installBoardFirstLayout();
       syncConfirmedRoom();
       scheduleAuthoritativeConfirm(120);
     });
@@ -416,14 +450,17 @@
     scheduleAuthoritativeConfirm(250);
   }
 
-  installPinnedBoardFix();
+  installBoardLayoutStyle();
+  installBoardFirstLayout();
   repairLudoHeader();
-  installPinButtonRedirect();
   installLeaveRoomGuard();
   installRoomTracking();
   installActiveRoomVisibilityGuard();
+
   document.addEventListener('DOMContentLoaded', () => {
-    installPinnedBoardFix();
+    installBoardLayoutStyle();
+    installBoardFirstLayout();
+    installSinglePinControl();
     repairLudoHeader();
     syncConfirmedRoom();
     scheduleAuthoritativeConfirm(120);
