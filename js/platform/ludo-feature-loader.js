@@ -10,6 +10,7 @@ policy:{js:['./js/ludo/policy.js?v=20261003-3']}
 });
 const state=new Map(),queue=[];
 let facade=null,replaying=false;
+let boardDirectionTimer=0,boardDirectionUntil=0;
 const absolute=(url)=>new URL(url,document.baseURI).href;
 function loaded(kind,url){
 const target=absolute(url);
@@ -157,8 +158,72 @@ document.addEventListener('visibilitychange',()=>{
 if(document.visibilityState==='visible')setTimeout(()=>restoreLobbyIfStranded(true),300);
 });
 }
+function ludoBoardDestination(){
+const room=document.getElementById('room');
+const game=document.getElementById('gamePanel');
+const board=document.getElementById('ludoBoard');
+if(!room||room.classList.contains('hidden')||room.hidden)return null;
+if(!game||game.classList.contains('hidden')||game.hidden||!board||!board.childElementCount)return null;
+return document.querySelector('#gamePanel>.board-panel')||board;
+}
+function directToLudoBoard(behavior='auto',force=false){
+const target=ludoBoardDestination();
+if(!target)return false;
+const board=document.getElementById('ludoBoard');
+const topbar=document.querySelector('.topbar')?.getBoundingClientRect().height||0;
+target.style.scrollMarginTop=`${Math.ceil(topbar+8)}px`;
+try{
+const url=new URL(window.location.href);
+const roomId=window.__JL_LUDO_RUNTIME_STATE__?.room?.room?.id
+||activeRoomRecoveryState()?.activeRoomId
+||document.documentElement.dataset.jlConfirmedActiveLudoRoom
+||'';
+if(roomId)url.searchParams.set('room',String(roomId));
+url.hash='ludoBoard';
+window.history.replaceState(window.history.state,'',url.toString());
+}catch{window.location.hash='ludoBoard';}
+const expected=topbar+8;
+const rect=target.getBoundingClientRect();
+if(force||Math.abs(rect.top-expected)>18)target.scrollIntoView({behavior,block:'start'});
+if(board&&target!==board){
+requestAnimationFrame(()=>{
+const panel=document.querySelector('#gamePanel>.board-panel');
+if(panel&&panel.scrollHeight>panel.clientHeight){
+const offset=Math.max(0,Number(board.offsetTop)-8);
+panel.scrollTo({top:offset,behavior:'auto'});
+}
+});
+}
+return true;
+}
+function armLudoBoardDirection(duration=2600){
+boardDirectionUntil=Math.max(boardDirectionUntil,Date.now()+duration);
+clearTimeout(boardDirectionTimer);
+let first=true;
+const tick=()=>{
+const found=directToLudoBoard(first?'smooth':'auto',first);
+if(found)first=false;
+if(Date.now()<boardDirectionUntil)boardDirectionTimer=setTimeout(tick,120);
+else boardDirectionTimer=0;
+};
+boardDirectionTimer=setTimeout(tick,0);
+}
+function installBoardDirection(){
+document.addEventListener('submit',event=>{
+if(!['createRoomForm','joinCodeForm'].includes(event.target?.id))return;
+armLudoBoardDirection(3400);
+},true);
+document.addEventListener('click',event=>{
+if(event.target.closest?.('#pinLudo,[data-invite-accept],[data-public-accept]'))armLudoBoardDirection(2600);
+},true);
+window.addEventListener('jl-ludo-authoritative-room',()=>armLudoBoardDirection(2600));
+const game=document.getElementById('gamePanel');
+if(game)new MutationObserver(()=>{
+if(!game.classList.contains('hidden'))armLudoBoardDirection(1800);
+}).observe(game,{attributes:true,attributeFilter:['class','hidden']});
+}
 function init(){
-notifications();support();recovery();account();installLobbyRecovery();
+notifications();support();recovery();account();installLobbyRecovery();installBoardDirection();
 idle('policy',350);
 if(hasToken())authenticated();
 window.addEventListener('jl-player-session-changed',event=>{
