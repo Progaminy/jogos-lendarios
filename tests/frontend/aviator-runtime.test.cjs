@@ -405,8 +405,10 @@ test('tela do Aviator mantém voo como foco e multiplicadores recentes no topo',
   );
   assert.match(html,/class="aviator-controls"/);
   assert.doesNotMatch(html,/class="card aviator-controls"/);
-  assert.match(html,/class="aviator-ticket-main aviator-ticket-return"/);
-  assert.match(html,/class="aviator-ticket-meta"/);
+  assert.equal((html.match(/class="aviator-bet-panel"/g)||[]).length,2);
+  assert.equal((html.match(/class="aviator-primary-action-slot"/g)||[]).length,2);
+  assert.match(html,/id="cashoutAction" class="aviator-cashout-action hidden"/);
+  assert.match(html,/id="cashoutAction2" class="aviator-cashout-action hidden"/);
 
   assert.match(css,/\.flight-area\{height:405px/);
   assert.match(css,/\.multiplier\{font-size:clamp\(72px,16vw,145px\)/);
