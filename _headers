@@ -8,6 +8,13 @@
 
 /admin.html
   X-Robots-Tag: noindex, nofollow, noarchive
+  Cache-Control: no-store, max-age=0
+
+/admin-collapse.js
+  Cache-Control: no-store, max-age=0
+
+/admin-dama-time.js
+  Cache-Control: no-store, max-age=0
 
 /ludo.html
   Cache-Control: no-store, max-age=0
@@ -22,6 +29,9 @@
   Cache-Control: no-store, max-age=0
 
 /dama-pin.js
+  Cache-Control: no-store, max-age=0
+
+/dama-stake-edit.js
   Cache-Control: no-store, max-age=0
 
 /site-header.js
