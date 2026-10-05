@@ -10,6 +10,7 @@ policy:{js:['./js/ludo/policy.js?v=20261003-3']}
 });
 const state=new Map(),queue=[];
 let facade=null,replaying=false;
+const pinState={active:false,scrollY:0,refreshTimer:0};
 const absolute=(url)=>new URL(url,document.baseURI).href;
 function loaded(kind,url){
 const target=absolute(url);
@@ -157,50 +158,129 @@ document.addEventListener('visibilitychange',()=>{
 if(document.visibilityState==='visible')setTimeout(()=>restoreLobbyIfStranded(true),300);
 });
 }
+function installPinnedViewportStyle(){
+if(document.getElementById('jl-ludo-static-pin-style'))return;
+const style=document.createElement('style');
+style.id='jl-ludo-static-pin-style';
+style.textContent=`
+html.jl-ludo-pin-locked,
+html.jl-ludo-pin-locked body{
+  overflow:hidden!important;
+  overscroll-behavior:none!important;
+}
+html body.ludo-pinned #gamePanel>.board-panel{
+  position:fixed!important;
+  top:var(--jl-ludo-pin-top,160px)!important;
+  left:50%!important;
+  right:auto!important;
+  bottom:auto!important;
+  inset:auto!important;
+  transform:translateX(-50%)!important;
+  width:min(760px,calc(100vw - 16px))!important;
+  max-width:calc(100vw - 16px)!important;
+  max-height:calc(100dvh - var(--jl-ludo-pin-top,160px) - 10px)!important;
+  margin:0!important;
+  overflow:hidden!important;
+  overscroll-behavior:contain!important;
+  z-index:110!important;
+}
+html body.ludo-pinned #gamePanel{
+  overflow:visible!important;
+}
+html body.ludo-pinned #ludoBoard{
+  position:relative!important;
+  z-index:1!important;
+  margin-top:10px!important;
+  margin-bottom:10px!important;
+}
+html body.ludo-pinned .pin-ludo-button{
+  position:relative!important;
+  bottom:auto!important;
+  z-index:4!important;
+}
+@media(max-width:600px){
+  html body.ludo-pinned #gamePanel>.board-panel{
+    width:calc(100vw - 16px)!important;
+    max-width:calc(100vw - 16px)!important;
+    padding:10px!important;
+  }
+}
+`;
+document.head.appendChild(style);
+}
 function pinViewportTop(){
 const topbar=document.querySelector('.topbar');
 const strip=document.getElementById('ludoStatusStrip');
-const topbarHeight=topbar?Math.max(0,topbar.getBoundingClientRect().height):0;
+const topbarBottom=topbar?Math.max(0,topbar.getBoundingClientRect().bottom):0;
 const stripVisible=strip&&getComputedStyle(strip).display!=='none'&&!strip.classList.contains('hidden');
-const stripHeight=stripVisible?Math.max(0,strip.getBoundingClientRect().height):0;
-return Math.ceil(topbarHeight+stripHeight+10);
+const stripBottom=stripVisible?Math.max(0,strip.getBoundingClientRect().bottom):0;
+return Math.ceil(Math.max(topbarBottom,stripBottom)+8);
 }
-function fitPinnedBoard(panel,board,top){
+function fitPinnedBoard(panel,board){
+if(!pinState.active)return;
 board.style.removeProperty('width');
 board.style.removeProperty('max-width');
 panel.scrollTop=0;
 const viewportHeight=window.visualViewport?.height||window.innerHeight||0;
+const top=pinViewportTop();
 if(!viewportHeight)return;
-const available=Math.max(260,viewportHeight-top-12);
-const boardHeight=Math.max(1,board.getBoundingClientRect().height||board.offsetHeight||1);
+document.documentElement.style.setProperty('--jl-ludo-pin-top',`${top}px`);
+const available=Math.max(240,viewportHeight-top-10);
+const panelWidth=Math.max(1,panel.clientWidth||panel.getBoundingClientRect().width||1);
+const boardRect=board.getBoundingClientRect();
+const boardHeight=Math.max(1,boardRect.height||board.offsetHeight||1);
+const naturalWidth=Math.max(1,Math.min(boardRect.width||board.offsetWidth||1,panelWidth-20));
 const chrome=Math.max(0,panel.scrollHeight-boardHeight);
-const currentWidth=Math.max(1,board.getBoundingClientRect().width||board.offsetWidth||1);
-const target=Math.floor(Math.min(currentWidth,available-chrome-4));
-if(target>220&&target<currentWidth-2){
+const target=Math.floor(Math.min(naturalWidth,available-chrome-4));
+if(target>180&&target<naturalWidth-1){
 board.style.setProperty('width',`${target}px`,'important');
 board.style.setProperty('max-width',`${target}px`,'important');
 }
 }
-function clearPinnedViewport(panel,board){
+function refreshPinnedViewport(){
+if(!pinState.active)return;
+clearTimeout(pinState.refreshTimer);
+pinState.refreshTimer=setTimeout(()=>{
+const panel=document.querySelector('#gamePanel>.board-panel');
+const board=document.getElementById('ludoBoard');
+if(!panel||!board)return;
+fitPinnedBoard(panel,board);
+},0);
+}
+function releasePinnedViewport({restore=true}={}){
+const panel=document.querySelector('#gamePanel>.board-panel');
+const board=document.getElementById('ludoBoard');
+const button=document.getElementById('pinLudo');
+const restoreY=pinState.scrollY;
+pinState.active=false;
+clearTimeout(pinState.refreshTimer);
+pinState.refreshTimer=0;
+document.documentElement.classList.remove('jl-ludo-pin-locked');
+document.body.classList.remove('ludo-pinned');
+document.documentElement.style.removeProperty('--jl-ludo-pin-top');
 board?.style.removeProperty('width');
 board?.style.removeProperty('max-width');
 panel?.style.removeProperty('scroll-margin-top');
-document.documentElement.style.removeProperty('--ludo-sticky-top');
+if(button){
+button.setAttribute('aria-pressed','false');
+button.textContent='Fixar Ludo';
 }
-function showPinnedViewport(panel,board,naturalTop){
-const top=pinViewportTop();
-document.documentElement.style.setProperty('--ludo-sticky-top',`${top}px`);
-panel.style.setProperty('scroll-margin-top',`${top+8}px`);
-fitPinnedBoard(panel,board,top);
-requestAnimationFrame(()=>{
-panel.scrollTop=0;
-const destination=Math.max(0,naturalTop-top-8);
-window.scrollTo({top:destination,behavior:'auto'});
-});
+if(restore&&Number.isFinite(restoreY))requestAnimationFrame(()=>window.scrollTo({top:restoreY,behavior:'auto'}));
+}
+function activatePinnedViewport(panel,board,button){
+pinState.scrollY=window.scrollY;
+pinState.active=true;
+document.body.classList.add('ludo-pinned');
+document.documentElement.classList.add('jl-ludo-pin-locked');
+button.setAttribute('aria-pressed','true');
+button.textContent='Desafixar';
+fitPinnedBoard(panel,board);
+requestAnimationFrame(()=>fitPinnedBoard(panel,board));
 }
 function installPinGestureGuard(){
 const button=document.getElementById('pinLudo');
 if(!button||button.dataset.jlPinGestureGuard==='1')return;
+installPinnedViewportStyle();
 button.dataset.jlPinGestureGuard='1';
 button.style.touchAction='pan-y';
 let pointer=null;
@@ -237,14 +317,18 @@ if(now()<suppressClickUntil)return;
 const panel=document.querySelector('#gamePanel>.board-panel');
 const board=document.getElementById('ludoBoard');
 if(!panel||!board)return;
-const naturalTop=window.scrollY+panel.getBoundingClientRect().top;
-const pinned=!document.body.classList.contains('ludo-pinned');
-document.body.classList.toggle('ludo-pinned',pinned);
-button.setAttribute('aria-pressed',pinned?'true':'false');
-button.textContent=pinned?'Desafixar':'Fixar Ludo';
-if(pinned)showPinnedViewport(panel,board,naturalTop);
-else clearPinnedViewport(panel,board);
+if(pinState.active||document.body.classList.contains('ludo-pinned'))releasePinnedViewport();
+else activatePinnedViewport(panel,board,button);
 },true);
+new MutationObserver(()=>{
+if(pinState.active&&!document.body.classList.contains('ludo-pinned'))releasePinnedViewport({restore:false});
+}).observe(document.body,{attributes:true,attributeFilter:['class']});
+window.addEventListener('resize',refreshPinnedViewport,{passive:true});
+window.visualViewport?.addEventListener('resize',refreshPinnedViewport,{passive:true});
+window.JLLudoPinViewport=Object.freeze({
+release:()=>releasePinnedViewport({restore:false}),
+isPinned:()=>pinState.active
+});
 }
 function init(){
 notifications();support();recovery();account();installLobbyRecovery();installPinGestureGuard();
@@ -252,7 +336,10 @@ idle('policy',350);
 if(hasToken())authenticated();
 window.addEventListener('jl-player-session-changed',event=>{
 if(event.detail?.authenticated)authenticated();
-else queue.length=0;
+else{
+queue.length=0;
+if(pinState.active)releasePinnedViewport({restore:false});
+}
 });
 }
 window.JLFeatureLoader=Object.freeze({load,idle,isLoaded});
