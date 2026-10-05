@@ -59,6 +59,7 @@
       #jlDamaHintStatus[data-kind="error"]{border-color:rgba(255,98,98,.6);color:#ffc1c1}
       #damaBoard .dama-ai-origin{box-shadow:inset 0 0 0 4px #18a8ff,inset 0 0 18px rgba(24,168,255,.72),0 0 0 2px rgba(255,255,255,.62)!important}
       #damaBoard .dama-ai-origin .dama-piece{outline:5px solid #18a8ff;outline-offset:2px;filter:drop-shadow(0 0 10px rgba(24,168,255,.95))}
+      #damaBoard .dama-ai-origin .dama-piece.selected{outline-color:#ff4d57!important;box-shadow:inset 0 0 0 3px rgba(255,255,255,.2),0 0 0 5px #ff4d57,0 6px 12px rgba(0,0,0,.34)!important;filter:drop-shadow(0 0 8px rgba(255,77,87,.82))}
       #damaBoard .dama-ai-target{box-shadow:inset 0 0 0 4px #5cff77,inset 0 0 20px rgba(92,255,119,.75)!important}
       #damaBoard .dama-ai-target::after{content:'';position:absolute;inset:28%;border-radius:50%;background:#5cff77;box-shadow:0 0 14px rgba(92,255,119,.95);z-index:5;pointer-events:none}
       #damaBoard .dama-ai-path{box-shadow:inset 0 0 0 2px rgba(92,255,119,.42)}
