@@ -10,6 +10,36 @@
     });
   }
 
+  function loadGlobalChat() {
+    if (location.pathname.toLowerCase().includes('admin')) return;
+
+    const chatCss = './global-chat.css?v=20261005-1';
+    const cssUrl = new URL(chatCss, location.href).href;
+    const hasCss = [...document.querySelectorAll('link[rel="stylesheet"][href]')].some((link) => {
+      try { return new URL(link.href, location.href).href === cssUrl; } catch { return false; }
+    });
+    if (!hasCss) {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = chatCss;
+      link.dataset.jlGlobalChatStyle = '1';
+      document.head.appendChild(link);
+    }
+
+    const chatJs = './global-chat.js?v=20261005-1';
+    const jsUrl = new URL(chatJs, location.href).href;
+    const hasJs = [...document.scripts].some((script) => {
+      try { return new URL(script.src, location.href).href === jsUrl; } catch { return false; }
+    });
+    if (!hasJs) {
+      const script = document.createElement('script');
+      script.src = chatJs;
+      script.async = true;
+      script.dataset.jlGlobalChatLoader = '1';
+      document.head.appendChild(script);
+    }
+  }
+
   function injectStyles() {
     if (document.getElementById('jlBetSuccessStyles')) return;
     const style = document.createElement('style');
@@ -144,6 +174,7 @@
   }
 
   function init() {
+    loadGlobalChat();
     const toast = document.getElementById('toast');
     if (!toast) return;
     injectStyles();
