@@ -30,10 +30,10 @@ test('botão manual executa certificação completa no servidor',()=>{
   assert.match(admin,/financial_consistency/);
 });
 
-test('reabertura comunica que o preflight foi executado',()=>{
+test('reabertura permanece decisão administrativa separada da certificação',()=>{
   const block=admin.match(/\$\('aviatorMaintenanceReopen'\)\?\.addEventListener\('click',[\s\S]*?\n    \}\);/)?.[0]||'';
   assert.match(block,/jl_aviator_admin_reopen/);
-  assert.match(block,/engine_test/);
-  assert.match(block,/Testando e reabrindo/);
-  assert.doesNotMatch(block,/jl_aviator_admin_set_enabled/);
+  assert.match(block,/Reabrindo…/);
+  assert.match(block,/Aviator reaberto\. Novas rodadas e apostas estão permitidas/);
+  assert.doesNotMatch(block,/engine_test|jl_aviator_admin_release_gate|jl_aviator_admin_set_enabled/);
 });
