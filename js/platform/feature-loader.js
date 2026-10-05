@@ -27,6 +27,10 @@
     },
     social: {
       js: ['./social.js?v=20260929-2']
+    },
+    globalChat: {
+      css: ['./global-chat.css?v=20261005-1'],
+      js: ['./global-chat.js?v=20261005-1']
     }
   });
 
@@ -266,6 +270,7 @@
     installAccountIntentLoading();
     installRouteIntentPrefetch();
     observeRecoveryNeed();
+    load('globalChat').catch(() => {});
 
     visible('#heroPromo', 'promo', '120px');
     visible('#sorteios', 'numberOrbs', '260px');
