@@ -223,7 +223,8 @@ if(!game.classList.contains('hidden'))armLudoBoardDirection(1800);
 }).observe(game,{attributes:true,attributeFilter:['class','hidden']});
 }
 function init(){
-notifications();support();recovery();account();installLobbyRecovery();installBoardDirection();
+notifications();support();recovery();account();installLobbyRecovery();
+// Board pinning and scrolling belong exclusively to ludo.js via #pinLudo.
 idle('policy',350);
 if(hasToken())authenticated();
 window.addEventListener('jl-player-session-changed',event=>{
