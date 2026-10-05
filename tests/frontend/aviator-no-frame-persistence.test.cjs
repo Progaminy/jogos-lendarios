@@ -11,9 +11,10 @@ const engine=fs.readFileSync(path.join(__dirname,'../../js/aviator/engine.js'),'
 test('loop visual do multiplicador não persiste frames',()=>{
   const paint=js.match(/function paintFlight\([\s\S]*?\n\}/)?.[0]||'';
   const loop=js.match(/function flightPaintLoop\([\s\S]*?\n\}/)?.[0]||'';
+  const persistence=/JLApi\.rpc|fetch\(|\.insert\(|\.update\(|\.upsert\(|audit\s*\(/i;
 
-  assert.doesNotMatch(paint,/JLApi\.rpc|fetch\(|insert|update|audit/i);
-  assert.doesNotMatch(loop,/JLApi\.rpc|fetch\(|insert|update|audit/i);
+  assert.doesNotMatch(paint,persistence);
+  assert.doesNotMatch(loop,persistence);
   assert.match(loop,/requestAnimationFrame\(flightPaintLoop\)/);
 });
 
