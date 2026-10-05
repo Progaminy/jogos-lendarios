@@ -43,6 +43,7 @@ test('engine é apresentação/tempo e não financeiro',()=>{
 test('UI não chama RPC nem conhece endpoints financeiros',()=>{
   assert.match(ui,/JLAviatorUI/);
   assert.match(ui,/renderMultiplier/);
+  assert.match(ui,/renderTicket/);
   assert.doesNotMatch(ui,/JLApi\.rpc|jl_aviator_|fetch\(/);
 });
 
