@@ -3,7 +3,7 @@
 
   const $ = (s, r = document) => r.querySelector(s);
   const path = String(location.pathname || '').toLowerCase().replace(/\\/+$/, '');
-  const page = path.split('/').pop()?.replace(/\\.html$/, '') || '';
+  const page = path.split('/').pop()?.replace(/\.html$/, '') || '';
   const query = new URL(location.href).searchParams;
   // The production site rewrites *.html routes to extensionless paths
   // (/tabuleiro, /ludo, /dama). Accept both forms so the FREE interceptor
