@@ -430,6 +430,7 @@
 
   const BOARD_INVITE_ID=new URL(location.href).searchParams.get('board_invite')||'';
   const FREE_MODE=new URL(location.href).searchParams.get('mode')==='free';
+  if(FREE_MODE){ const step=els.createBet?.closest('.quick-start-step'); if(step) step.remove(); }
   const LUDO_COLOR_KEY='jl_ludo_preferred_color';
   const LUDO_COLORS=new Set(['red','green','yellow','blue']);
   function preferredLudoColor(){
