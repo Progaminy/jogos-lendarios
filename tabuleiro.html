@@ -235,7 +235,7 @@
       // native modal remains the fallback if that controller is unavailable.
       window.addEventListener('click', (event) => {
         const anchor = event.target?.closest?.('.board-game-preview[href]');
-        if (!anchor) return;
+        if (!anchor || String(anchor.getAttribute('href') || '').startsWith('#jlBoardMode')) return;
         event.preventDefault();
         event.stopPropagation();
         event.stopImmediatePropagation();
