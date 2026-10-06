@@ -2,7 +2,7 @@
 -- Supports per-day or per-month pricing while preserving the existing API.
 
 alter table public.free_access_settings
-  add column if not exists period_unit text not null default 'month';
+  add column if not exists period_unit text not null default 'month',\n  add column if not exists trial_limit integer not null default 10;
 
 do $$ begin
   alter table public.free_access_settings
