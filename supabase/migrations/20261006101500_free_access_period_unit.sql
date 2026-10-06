@@ -203,7 +203,7 @@ language sql
 security definer
 set search_path='pg_catalog','public'
 as $$
-  select public.jl_admin_free_access_settings(p_token,p_price,p_enabled,'month');
+  select public.jl_admin_free_access_settings(p_token,p_price,p_enabled,'month',coalesce((select trial_limit from public.free_access_settings where id=1),10));
 $$;
 
 create or replace function public.jl_admin_free_access_overview(p_token text)
@@ -223,6 +223,7 @@ begin
       'enabled',s.enabled,
       'price',s.price,
       'period_unit',s.period_unit,
+      'trial_limit',s.trial_limit,
       'updated_at',s.updated_at
     ),
     'games',coalesce((
