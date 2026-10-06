@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="./site-nav.css?v=20261004-7">
   <link rel="stylesheet" href="./dama.css?v=20261004-3">
   <link rel="stylesheet" href="./dama-pin.css?v=20261004-1">
-</head>
+<style>.dama-lobby-board-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.dama-mode-badge{display:inline-flex;align-items:center;padding:6px 14px;border-radius:999px;font-weight:900;letter-spacing:.08em;font-size:.78rem;background:#f0b90b;color:#111}.dama-mode-badge.free{background:#d90429;color:#fff}.dama-mode-badge.bet{background:#f0b90b;color:#111}</style></head>
 <body>
   <div id="damaToast" class="toast" role="status" aria-live="polite"></div>
 
@@ -33,7 +33,7 @@
 
     <section id="damaLobby" class="hidden">
       <section class="card dama-lobby-board-panel" aria-label="Tabuleiro inicial da Dama">
-        <div class="dama-lobby-board-head"><p class="eyebrow">TABULEIRO · DAMA LENDÁRIA</p></div>
+        <div class="dama-lobby-board-head"><p class="eyebrow">TABULEIRO · DAMA LENDÁRIA</p><span id="damaModeBadge" class="dama-mode-badge">APOSTAS</span></div>
         <div id="damaLobbyBoard" class="dama-board dama-lobby-board" aria-label="Tabuleiro de Dama"></div>
       </section>
 
