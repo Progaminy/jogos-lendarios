@@ -75,16 +75,48 @@
     return true;
   }
 
+  function gameLabel(item, fallback = 'Tabuleiro') {
+    const raw = String(
+      item?.game ?? item?.game_type ?? item?.target_game ?? item?.game_name ??
+      item?.board_game ?? item?.kind ?? fallback
+    ).toLowerCase();
+    if (raw.includes('dama') || raw.includes('checkers')) return 'Dama';
+    if (raw.includes('ludo')) return 'Ludo';
+    return fallback;
+  }
+
+  function modeLabel(item) {
+    return String(item?.play_mode ?? item?.mode ?? '').toLowerCase();
+  }
+
+  function modeMessage(item) {
+    const mode = modeLabel(item);
+    if (mode === 'free') return 'FREE · sem aposta';
+    if (mode === 'bet' || mode === 'apostas') {
+      const amount = Number(item?.bet_amount ?? item?.stake_amount ?? 0);
+      return amount > 0
+        ? `APOSTAS · ${amount.toLocaleString('pt-MZ')} MZN por jogador`
+        : 'APOSTAS';
+    }
+    return 'modo não informado';
+  }
+
+  function modeHref(path, item) {
+    const mode = modeLabel(item);
+    return mode === 'free' ? `${path}?mode=free#notificationCenter` : `${path}#notificationCenter`;
+  }
+
   function bridgeDirectNotifications(boardInvites, ludoInvites) {
     boardInvites.forEach((invite, index) => {
       const id = requestId(invite, 'board', index);
       const name = requestName(invite);
+      const game = gameLabel(invite);
       pushNotification({
         id: `request-board:${id}`,
-        title: 'Convite individual',
-        message: `${name} convidou você para jogar.`,
+        title: `Convite · ${game}`,
+        message: `${name} convidou você para ${game}. ${modeMessage(invite)}.`,
         type: 'invite',
-        href: './tabuleiro.html#boardSocial',
+        href: game === 'Ludo' ? modeHref('./ludo.html', invite) : modeHref('./dama.html', invite),
         createdAt: invite?.created_at || invite?.updated_at || new Date().toISOString()
       });
     });
@@ -94,10 +126,10 @@
       const name = requestName(invite);
       pushNotification({
         id: `request-ludo:${id}`,
-        title: 'Convite individual',
-        message: `${name} convidou você para o Ludo.`,
+        title: `Convite · Ludo · ${modeLabel(invite) === 'free' ? 'FREE' : 'APOSTAS'}`,
+        message: `${name} convidou você para Ludo. ${modeMessage(invite)}.`,
         type: 'invite',
-        href: './ludo.html#notificationCenter',
+        href: modeHref('./ludo.html', invite),
         createdAt: invite?.created_at || invite?.updated_at || new Date().toISOString()
       });
     });
@@ -109,10 +141,10 @@
       const name = requestName(challenge);
       pushNotification({
         id: `request-public:${id}`,
-        title: 'Pedido público',
-        message: `${name} está à procura de jogadores.`,
+        title: `Convite público · Ludo · ${modeLabel(challenge) === 'free' ? 'FREE' : 'APOSTAS'}`,
+        message: `${name} procura jogadores para Ludo. ${modeMessage(challenge)}.`,
         type: 'invite',
-        href: './ludo.html#notificationCenter',
+        href: modeHref('./ludo.html', challenge),
         createdAt: challenge?.created_at || challenge?.updated_at || new Date().toISOString()
       });
     });
