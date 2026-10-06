@@ -46,7 +46,29 @@ begin
     if i.status='pending' then update public.ludo_invitations set status='accepted' where id=i.id; end if;
     return public.jl_ludo_room_state(p_token,i.room_id);
   end if;
-  if target_room.play_mode='bet' then perform public.jl_require_cash_balance(me,target_room.bet_amount); end if;
+  if target_room.play_mode='bet' then
+    perform public.jl_require_cash_balance(me,target_room.bet_amount);
+  end if;
+  select r.id into current_id
+  from public.ludo_room_players rp join public.ludo_rooms r on r.id=rp.room_id
+  where rp.player_id=me and rp.status<>'left' and r.status in ('waiting','negotiating','funding','playing') and r.id<>i.room_id
+  order by r.created_at desc limit 1;
+  if current_id is not null then
+    select * into current_room from public.ludo_rooms where id=current_id for update;
+    if current_room.host_id<>me or current_room.status not in ('waiting','negotiating') then raise exception 'Termine ou saia da sala atual antes de aceitar este convite.'; end if;
+    select count(*) into others_count from public.ludo_room_players where room_id=current_id and status<>'left' and player_id<>me;
+    if others_count=0 then
+      update public.ludo_invitations set status='cancelled' where room_id=current_id and status='pending';
+      update public.ludo_room_players set status='left' where room_id=current_id and player_id=me;
+      update public.ludo_rooms set status='cancelled',action_deadline=null,updated_at=now() where id=current_id;
+      perform public.jl_ludo_event(current_id,me,'host_switched_to_invited_room',jsonb_build_object('cancelled_empty_room',true,'target_room',i.room_id));
+    else
+      select player_id into replacement_host from public.ludo_room_players where room_id=current_id and status<>'left' and player_id<>me order by seat limit 1;
+      update public.ludo_room_players set status='left' where room_id=current_id and player_id=me;
+      update public.ludo_rooms set host_id=replacement_host,status='waiting',action_deadline=null,negotiation_grace_used=false,updated_at=now() where id=current_id;
+      perform public.jl_ludo_event(current_id,me,'host_transferred_for_invite',jsonb_build_object('new_host',replacement_host,'target_room',i.room_id));
+    end if;
+  end if;
   perform public.jl_ludo_join_room_internal(i.room_id,me);
   if not exists(select 1 from public.ludo_room_players where room_id=i.room_id and player_id=me and status<>'left') then raise exception 'Não foi possível concluir a entrada na sala convidada.'; end if;
   update public.ludo_invitations set status='accepted' where id=i.id;
