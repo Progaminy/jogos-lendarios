@@ -728,7 +728,8 @@
       els.queueStatus.classList.add('hidden');els.queueButton.textContent='Quero jogar';delete els.queueButton.dataset.queued;
     }
 
-    const invites=s.invites||[];
+    const allInvites=s.invites||[];
+    const invites=allInvites.filter(i=>FREE_MODE ? i.play_mode==='free' : i.play_mode!=='free');
     for(const i of invites){
       window.JLNotifications?.push({
         id:`ludo-invite:${i.id}`,
@@ -739,7 +740,8 @@
         createdAt:i.created_at||new Date().toISOString()
       });
     }
-    const challenges=s.public_challenges||[];
+    const allChallenges=s.public_challenges||[];
+    const challenges=allChallenges.filter(r=>FREE_MODE ? r.play_mode==='free' : r.play_mode!=='free');
     const roomBusy=Boolean(state.room);
     const canSwitchOwnRoom=Boolean(state.room&&isHost()&&['waiting','negotiating'].includes(roomData()?.status));
     const onlineCount=Math.max(0,Number(s.online_count)||0);
@@ -749,6 +751,7 @@
     if(els.publicChallengeCount)els.publicChallengeCount.textContent=String(challenges.length);
     if(els.topPublicInviteCount)els.topPublicInviteCount.textContent=String(challenges.length);
     els.directNotificationMetric?.classList.toggle('has-items',invites.length>0);
+    const modeBadge=document.getElementById('ludoModeBadge'); if(modeBadge){ modeBadge.textContent=FREE_MODE?'FREE':'APOSTAS'; modeBadge.classList.toggle('free',FREE_MODE); modeBadge.classList.toggle('bet',!FREE_MODE); }
     els.publicNotificationMetric?.classList.toggle('has-items',challenges.length>0);
     els.directListShortcut?.classList.toggle('has-items',invites.length>0);
     els.publicListShortcut?.classList.toggle('has-items',challenges.length>0);
