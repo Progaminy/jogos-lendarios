@@ -7,8 +7,6 @@
   const BOARD_INVITE_ID = new URL(location.href).searchParams.get('board_invite') || '';
   const FREE_MODE = new URL(location.href).searchParams.get('mode') === 'free';
   const damaModeBadge=document.getElementById('damaModeBadge'); if(damaModeBadge){damaModeBadge.textContent=FREE_MODE?'FREE':'APOSTAS';damaModeBadge.classList.toggle('free',FREE_MODE);damaModeBadge.classList.toggle('bet',!FREE_MODE);}
-  if(FREE_MODE){ const field=els.damaBet?.closest('label'); if(field) field.remove(); }
-
   const els = Object.fromEntries([
     'damaToast','damaBalance','damaLoggedOut','damaLoginForm','damaLoginPhone','damaLoginPin',
     'damaLobby','damaLobbyBoard','refreshDamaLobby','damaCreateForm','damaBet','damaTime','damaColor','damaFirst','damaPublic',
@@ -22,6 +20,11 @@
     'damaRouteModal','damaRouteChoices','damaRouteClose',
     'damaConfirmModal','damaConfirmTitle','damaConfirmText','damaConfirmNo','damaConfirmYes'
   ].map((id) => [id, $(id)]));
+
+  if (FREE_MODE && els.damaBet) {
+    const betField = els.damaBet.closest('label');
+    if (betField) betField.style.display = 'none';
+  }
 
   const state = {
     token: window.JLSession?.getPlayerToken?.() || '',
