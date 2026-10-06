@@ -379,6 +379,17 @@
     };
     bindGameCards();
 
+    // Capture at window level as the first reliable interception layer.
+    // Some page scripts can stop propagation before a document listener runs.
+    window.addEventListener('click', (e) => {
+      const a = e.target?.closest?.('.board-game-preview[href]');
+      if (!a) return;
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      void boardClick(a);
+    }, true);
+
     document.addEventListener('click', (e) => {
       const a = e.target.closest?.('.board-game-preview[href]');
       if (!a) return;
@@ -443,6 +454,14 @@
     badge();
     void guardFreeGame();
   }
+
+  // Public bridge for the board page. Keeping this on window also lets
+  // inline/page-level handlers delegate to the same chooser without
+  // navigating directly to Ludo or Dama.
+  window.JLFreeAccess = {
+    openChooser,
+    boardClick
+  };
 
   function init() {
     addStyle();
