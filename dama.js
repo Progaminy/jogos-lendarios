@@ -6,6 +6,7 @@
   const ROOM_KEY = 'jl_dama_room_id';
   const BOARD_INVITE_ID = new URL(location.href).searchParams.get('board_invite') || '';
   const FREE_MODE = new URL(location.href).searchParams.get('mode') === 'free';
+  const damaModeBadge=document.getElementById('damaModeBadge'); if(damaModeBadge){damaModeBadge.textContent=FREE_MODE?'FREE':'APOSTAS';damaModeBadge.classList.toggle('free',FREE_MODE);damaModeBadge.classList.toggle('bet',!FREE_MODE);}
   if(FREE_MODE){ const field=els.damaBet?.closest('label'); if(field) field.remove(); }
 
   const els = Object.fromEntries([
@@ -229,7 +230,8 @@
   async function loadPublicRooms(silent = false) {
     if (!state.token) return;
     try {
-      const rows = await rpc('jl_dama_public_rooms', { p_token: state.token });
+      const rows0 = await rpc('jl_dama_public_rooms', { p_token: state.token });
+      const rows = rows0.filter(r => FREE_MODE ? r.play_mode === 'free' : r.play_mode !== 'free');
       els.damaPublicRooms.innerHTML = rows.length ? rows.map((r) => `
         <div class="dama-room-item">
           <div>
