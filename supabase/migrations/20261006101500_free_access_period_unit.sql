@@ -161,7 +161,8 @@ create or replace function public.jl_admin_free_access_settings(
   p_token text,
   p_price numeric,
   p_enabled boolean,
-  p_period_unit text
+  p_period_unit text,
+  p_trial_limit integer
 )
 returns jsonb
 language plpgsql
@@ -170,19 +171,21 @@ set search_path='pg_catalog','public'
 as $$
 begin
   perform public.jl_require_admin_elevated(p_token);
-
   if p_price is null or p_price < 0 or p_price > 1000000 then
     raise exception 'Valor inválido.';
   end if;
-
   if p_period_unit not in ('day','month') then
     raise exception 'Período inválido.';
+  end if;
+  if p_trial_limit is null or p_trial_limit not between 0 and 1000 then
+    raise exception 'Quantidade de jogos FREE inválida.';
   end if;
 
   update public.free_access_settings
   set price=round(p_price,2),
       enabled=coalesce(p_enabled,true),
       period_unit=p_period_unit,
+      trial_limit=p_trial_limit,
       updated_at=now()
   where id=1;
 
@@ -366,3 +369,7 @@ revoke execute on function public.jl_admin_free_access_settings(text,numeric,boo
 revoke execute on function public.jl_admin_free_access_settings(text,numeric,boolean) from public;
 grant execute on function public.jl_admin_free_access_settings(text,numeric,boolean,text) to anon,authenticated;
 grant execute on function public.jl_admin_free_access_settings(text,numeric,boolean) to anon,authenticated;
+
+
+revoke execute on function public.jl_admin_free_access_settings(text,numeric,boolean, text, integer) from public;
+grant execute on function public.jl_admin_free_access_settings(text,numeric,boolean,text,integer) to anon,authenticated;
