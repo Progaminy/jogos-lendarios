@@ -82,7 +82,7 @@
 
     <section class="board-game-grid" aria-label="Jogos de tabuleiro">
       <article class="card board-game-card">
-        <a class="board-game-preview" href="#jlBoardModeModal" data-game-href="./ludo.html" data-game-key="ludo" aria-label="Escolher modo do Ludo Lendário">
+        <a class="board-game-preview" href="#jlBoardModeLudo" data-game-href="./ludo.html" data-game-key="ludo" aria-label="Escolher modo do Ludo Lendário">
           <svg viewBox="0 0 220 220" aria-hidden="true">
             <rect x="2" y="2" width="216" height="216" rx="12" fill="#f7f7f2"/>
             <rect x="8" y="8" width="76" height="76" rx="8" fill="#e53935"/>
@@ -126,7 +126,7 @@
       </article>
 
       <article class="card board-game-card">
-        <a class="board-game-preview" href="#jlBoardModeModal" data-game-href="./dama.html" data-game-key="dama" aria-label="Escolher modo da Dama Lendária">
+        <a class="board-game-preview" href="#jlBoardModeDama" data-game-href="./dama.html" data-game-key="dama" aria-label="Escolher modo da Dama Lendária">
           <svg viewBox="0 0 240 220" aria-hidden="true">
             <defs>
               <pattern id="damas" width="50" height="50" patternUnits="userSpaceOnUse">
@@ -169,14 +169,24 @@
         <h2>Dama Lendária</h2>
       </article>
     </section>
-    <div id="jlBoardModeModal" class="jl-board-mode-modal hidden" aria-hidden="true">
-      <div class="jl-board-mode-card" role="dialog" aria-modal="true" aria-labelledby="jlBoardModeTitle">
-        <h2 id="jlBoardModeTitle">Jogar</h2>
+    <div id="jlBoardModeLudo" class="jl-board-mode-modal hidden" aria-hidden="true">
+      <div class="jl-board-mode-card" role="dialog" aria-modal="true" aria-labelledby="jlBoardModeLudoTitle">
+        <h2 id="jlBoardModeLudoTitle">Ludo Lendário</h2>
         <div class="jl-board-mode-actions">
-          <button id="jlBoardModeFree" class="button" type="button">🆓 FREE</button>
-          <button id="jlBoardModeBet" class="button" type="button">💰 APOSTAS</button>
+          <a class="button" href="./ludo.html?mode=free">🆓 FREE</a>
+          <a class="button" href="./ludo.html">💰 APOSTAS</a>
         </div>
-        <button id="jlBoardModeClose" class="button ghost" type="button">Fechar</button>
+        <a class="button ghost" href="#boardSocial">Fechar</a>
+      </div>
+    </div>
+    <div id="jlBoardModeDama" class="jl-board-mode-modal hidden" aria-hidden="true">
+      <div class="jl-board-mode-card" role="dialog" aria-modal="true" aria-labelledby="jlBoardModeDamaTitle">
+        <h2 id="jlBoardModeDamaTitle">Dama Lendária</h2>
+        <div class="jl-board-mode-actions">
+          <a class="button" href="./dama.html?mode=free">🆓 FREE</a>
+          <a class="button" href="./dama.html">💰 APOSTAS</a>
+        </div>
+        <a class="button ghost" href="#boardSocial">Fechar</a>
       </div>
     </div>
     <section id="boardSocial" class="card board-social hidden" aria-label="Jogadores e convites">
