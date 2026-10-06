@@ -5,6 +5,12 @@ alter table public.free_access_settings
   add column if not exists period_unit text not null default 'month',
   add column if not exists trial_limit integer not null default 10;
 
+do $ begin
+  alter table public.free_access_settings
+    add constraint free_access_settings_trial_limit_ck
+    check (trial_limit between 0 and 1000);
+exception when duplicate_object then null; end $;
+
 do $$ begin
   alter table public.free_access_settings
     add constraint free_access_settings_period_unit_ck
