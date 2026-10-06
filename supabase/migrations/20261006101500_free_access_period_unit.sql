@@ -372,5 +372,58 @@ grant execute on function public.jl_admin_free_access_settings(text,numeric,bool
 grant execute on function public.jl_admin_free_access_settings(text,numeric,boolean) to anon,authenticated;
 
 
-revoke execute on function public.jl_admin_free_access_settings(text,numeric,boolean, text, integer) from public;
+revoke execute on function public.jl_admin_free_access_settings(text,numeric,boolean) from public;
+revoke execute on function public.jl_admin_free_access_settings(text,numeric,boolean,text,integer) from public;
+grant execute on function public.jl_admin_free_access_settings(text,numeric,boolean) to anon,authenticated;
 grant execute on function public.jl_admin_free_access_settings(text,numeric,boolean,text,integer) to anon,authenticated;
+
+
+create or replace function public.jl_free_game_status(p_player uuid,p_game text)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path='pg_catalog','public'
+as $$
+declare
+  g public.free_game_catalog%rowtype;
+  s public.free_access_settings%rowtype;
+  used_count integer:=0;
+  paid boolean:=false;
+  expiry timestamptz;
+begin
+  select * into s from public.free_access_settings where id=1;
+  select * into g from public.free_game_catalog where game_key=lower(trim(p_game));
+
+  if g.game_key is null then
+    return jsonb_build_object(
+      'game_key',lower(trim(coalesce(p_game,''))),
+      'free_enabled',false,'bet_enabled',true,'trial_limit',0,
+      'used',0,'remaining_trials',0,'paid_active',false,'eligible',false
+    );
+  end if;
+
+  select count(*)::integer into used_count
+  from public.free_trial_usage u
+  where u.player_id=p_player;
+
+  paid:=public.jl_free_access_active(p_player);
+  select m.valid_until into expiry
+  from public.free_access_memberships m
+  where m.player_id=p_player;
+
+  return jsonb_build_object(
+    'game_key',g.game_key,
+    'label',g.label,
+    'free_enabled',g.free_enabled,
+    'bet_enabled',g.bet_enabled,
+    'trial_limit',coalesce(s.trial_limit,g.trial_limit),
+    'used',used_count,
+    'remaining_trials',greatest(0,coalesce(s.trial_limit,g.trial_limit)-used_count),
+    'paid_active',paid,
+    'valid_until',expiry,
+    'eligible',coalesce(s.enabled,false) and g.free_enabled and (paid or used_count<coalesce(s.trial_limit,g.trial_limit)),
+    'payment_required',coalesce(s.enabled,false) and g.free_enabled and not paid and used_count>=coalesce(s.trial_limit,g.trial_limit)
+  );
+end;
+$$;
