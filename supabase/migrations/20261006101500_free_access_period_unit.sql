@@ -366,9 +366,7 @@ begin
 end;
 $$;
 
-revoke execute on function public.jl_admin_free_access_settings(text,numeric,boolean,text) from public;
 revoke execute on function public.jl_admin_free_access_settings(text,numeric,boolean) from public;
-grant execute on function public.jl_admin_free_access_settings(text,numeric,boolean,text) to anon,authenticated;
 grant execute on function public.jl_admin_free_access_settings(text,numeric,boolean) to anon,authenticated;
 
 
