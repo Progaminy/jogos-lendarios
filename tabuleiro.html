@@ -219,17 +219,21 @@
         modal?.setAttribute('aria-hidden', 'true');
       }
 
-      document.querySelectorAll('.board-game-preview[href]').forEach((anchor) => {
-        anchor.addEventListener('click', (event) => {
-          event.preventDefault();
-          event.stopImmediatePropagation();
-          if (window.JLFreeAccess?.boardClick) {
-            void window.JLFreeAccess.boardClick(anchor);
-          } else {
-            openBoardMode(anchor);
-          }
-        }, true);
-      });
+      // Intercept at window level before any other page script can handle the
+      // anchor. The main FREE/APOSTAS controller gets first choice; the
+      // native modal remains the fallback if that controller is unavailable.
+      window.addEventListener('click', (event) => {
+        const anchor = event.target?.closest?.('.board-game-preview[href]');
+        if (!anchor) return;
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+        if (window.JLFreeAccess?.boardClick) {
+          void window.JLFreeAccess.boardClick(anchor);
+        } else {
+          openBoardMode(anchor);
+        }
+      }, true);
 
       free?.addEventListener('click', () => {
         if (!targetHref) return;
