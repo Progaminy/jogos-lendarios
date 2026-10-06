@@ -60,6 +60,11 @@
       #socialZone .jl-social-head{margin-top:0!important}
     }
   </style>
+<style>
+.ludo-mode-badge{display:inline-flex;align-items:center;margin-top:8px;padding:6px 14px;border-radius:999px;font-weight:900;letter-spacing:.08em;font-size:.78rem;background:#f0b90b;color:#111}
+.ludo-mode-badge.free{background:#d90429;color:#fff}
+.ludo-mode-badge.bet{background:#f0b90b;color:#111}
+</style>
 </head>
 <body>
   <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
@@ -108,7 +113,8 @@
     <section class="hero panel">
       <div>
         <p class="eyebrow">TABULEIRO · LUDO LENDÁRIO</p>
-</div>
+        <span id="ludoModeBadge" class="ludo-mode-badge">APOSTAS</span>
+      </div>
     </section>
 
     <section id="boardLobby" class="panel board-panel board-lobby">
