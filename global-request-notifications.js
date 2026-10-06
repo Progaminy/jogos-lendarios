@@ -162,7 +162,12 @@
       const publicCount = publicChallenges.length || (Number.isFinite(fallbackPublic) ? Math.max(0, fallbackPublic) : 0);
 
       applyCounts(incomingBoard.length + ludoDirectCount, publicCount);
-      bridgeDirectNotifications(incomingBoard, legacyInvites);
+      const freeMode = new URL(window.location.href).searchParams.get('mode') === 'free';
+      const modeFilteredLudo = legacyInvites.filter((invite) => {
+        const playMode = String(invite?.play_mode || '').toLowerCase();
+        return playMode ? (freeMode ? playMode === 'free' : playMode !== 'free') : true;
+      });
+      bridgeDirectNotifications(incomingBoard, modeFilteredLudo);
       bridgePublicNotifications(publicChallenges);
       window.JLNotifications?.refresh?.();
     } finally {
