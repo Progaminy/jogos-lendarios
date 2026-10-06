@@ -6,7 +6,7 @@
   const ROOM_KEY = 'jl_dama_room_id';
   const BOARD_INVITE_ID = new URL(location.href).searchParams.get('board_invite') || '';
   const FREE_MODE = new URL(location.href).searchParams.get('mode') === 'free';
-  if(FREE_MODE){ const field=els.damaBet?.closest('.field, .form-field, .dama-bet-field, [data-bet-field]'); if(field) field.remove(); else if(els.damaBet){ els.damaBet.closest('label')?.remove(); els.damaBet.style.display='none'; } }
+  if(FREE_MODE){ const field=els.damaBet?.closest('label'); if(field) field.remove(); }
 
   const els = Object.fromEntries([
     'damaToast','damaBalance','damaLoggedOut','damaLoginForm','damaLoginPhone','damaLoginPin',
