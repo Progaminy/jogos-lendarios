@@ -5,6 +5,7 @@
   const rpc = (name, args = {}) => window.JLApi.rpc(name, args);
   const ROOM_KEY = 'jl_dama_room_id';
   const BOARD_INVITE_ID = new URL(location.href).searchParams.get('board_invite') || '';
+  const FREE_MODE = new URL(location.href).searchParams.get('mode') === 'free';
 
   const els = Object.fromEntries([
     'damaToast','damaBalance','damaLoggedOut','damaLoginForm','damaLoginPhone','damaLoginPin',
@@ -845,20 +846,26 @@
       try {
         const args = {
           p_token: state.token,
-          p_bet_amount: Number(els.damaBet.value),
           p_turn_seconds: Number(els.damaTime.value),
           p_host_color: els.damaColor.value,
           p_first_player: els.damaFirst.value
         };
-        const room = BOARD_INVITE_ID
-          ? await rpc('jl_dama_create_from_board_invite', {
-              ...args,
-              p_board_invite: BOARD_INVITE_ID
-            })
-          : await rpc('jl_dama_create_room', {
+        const room = FREE_MODE
+          ? await rpc('jl_dama_create_free_room', {
               ...args,
               p_is_public: els.damaPublic.checked
-            });
+            })
+          : BOARD_INVITE_ID
+            ? await rpc('jl_dama_create_from_board_invite', {
+                ...args,
+                p_bet_amount: Number(els.damaBet.value),
+                p_board_invite: BOARD_INVITE_ID
+              })
+            : await rpc('jl_dama_create_room', {
+                ...args,
+                p_bet_amount: Number(els.damaBet.value),
+                p_is_public: els.damaPublic.checked
+              });
         setRoom(room);
         startRoomPolling();
         if (BOARD_INVITE_ID && room?.room?.id) {
