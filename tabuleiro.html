@@ -46,6 +46,7 @@
     }
     .jl-board-mode-modal{position:fixed;inset:0;z-index:20000;display:grid;place-items:center;padding:18px;background:rgba(2,7,13,.78);backdrop-filter:blur(7px)}
     .jl-board-mode-modal.hidden{display:none!important}
+    .jl-board-mode-modal:target{display:grid!important}
     .jl-board-mode-card{width:min(420px,100%);padding:20px;border:1px solid rgba(219,174,76,.42);border-radius:18px;background:#0b1420;box-shadow:0 22px 65px rgba(0,0,0,.5)}
     .jl-board-mode-card h2{margin:0 0 16px;font-size:1.08rem}
     .jl-board-mode-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -81,7 +82,7 @@
 
     <section class="board-game-grid" aria-label="Jogos de tabuleiro">
       <article class="card board-game-card">
-        <a class="board-game-preview" href="./ludo.html" aria-label="Entrar no Ludo Lendário">
+        <a class="board-game-preview" href="#jlBoardModeModal" data-game-href="./ludo.html" data-game-key="ludo" aria-label="Escolher modo do Ludo Lendário">
           <svg viewBox="0 0 220 220" aria-hidden="true">
             <rect x="2" y="2" width="216" height="216" rx="12" fill="#f7f7f2"/>
             <rect x="8" y="8" width="76" height="76" rx="8" fill="#e53935"/>
@@ -125,7 +126,7 @@
       </article>
 
       <article class="card board-game-card">
-        <a class="board-game-preview" href="./dama.html" aria-label="Entrar na Dama Lendária">
+        <a class="board-game-preview" href="#jlBoardModeModal" data-game-href="./dama.html" data-game-key="dama" aria-label="Escolher modo da Dama Lendária">
           <svg viewBox="0 0 240 220" aria-hidden="true">
             <defs>
               <pattern id="damas" width="50" height="50" patternUnits="userSpaceOnUse">
@@ -206,8 +207,8 @@
 
       function openBoardMode(anchor) {
         if (!modal || !anchor) return;
-        targetHref = anchor.getAttribute('href') || '';
-        targetGame = /dama(?:\.html)?$/i.test(targetHref) ? 'dama' : 'ludo';
+        targetHref = anchor.getAttribute('data-game-href') || anchor.getAttribute('href') || '';
+        targetGame = anchor.dataset.gameKey || (/dama(?:\.html)?$/i.test(targetHref) ? 'dama' : 'ludo');
         const label = targetGame === 'dama' ? 'Dama Lendária' : 'Ludo Lendário';
         if (title) title.textContent = label;
         modal.classList.remove('hidden');
