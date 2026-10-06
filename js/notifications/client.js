@@ -524,7 +524,20 @@
       const newUnread = [];
       const needRemoteRead = [];
 
-      const serverItems = rows.map((row) => {
+      const currentUrl = new URL(window.location.href);
+      const currentPath = currentUrl.pathname.toLowerCase();
+      const currentFreeMode = currentUrl.searchParams.get('mode') === 'free';
+      const modeRows = rows.filter((row) => {
+        const href = String(row?.href || '').toLowerCase();
+        const isDama = href.includes('/dama.html');
+        const isLudo = href.includes('/ludo.html');
+        if (!isDama && !isLudo) return true;
+        if (!currentPath.endsWith('/dama.html') && !currentPath.endsWith('/ludo.html')) return true;
+        const rowFreeMode = new URL(String(row?.href || ''), window.location.href).searchParams.get('mode') === 'free';
+        return (isDama || isLudo) ? (currentFreeMode ? rowFreeMode : !rowFreeMode) : true;
+      });
+
+      const serverItems = modeRows.map((row) => {
         const item = normalizeItem(Object.assign({}, row, { serverBacked: true }));
         serverIds.add(item.id);
         const old = oldById.get(item.id);
