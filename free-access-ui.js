@@ -126,9 +126,9 @@
         <div id="jlFreeAccess" class="jl-free-access hidden">
           <div id="jlFreeState" class="jl-free-state"></div>
           <div class="jl-free-months">
-            <button id="jlFreeMonthsMinus" type="button" aria-label="Menos um mês">−</button>
-            <input id="jlFreeMonths" type="number" min="1" max="120" step="1" value="1" inputmode="numeric" aria-label="Meses">
-            <button id="jlFreeMonthsPlus" type="button" aria-label="Mais um mês">+</button>
+            <button id="jlFreeMonthsMinus" type="button" aria-label="Menos um período">−</button>
+            <input id="jlFreeMonths" type="number" min="1" max="120" step="1" value="1" inputmode="numeric" aria-label="Quantidade de períodos">
+            <button id="jlFreeMonthsPlus" type="button" aria-label="Mais um período">+</button>
           </div>
           <div id="jlFreePrice" class="jl-free-price">—</div>
           <button id="jlFreePay" class="button primary" type="button">Pagar</button>
@@ -187,8 +187,9 @@
   function updatePrice() {
     const price = Number(status?.price || 0);
     const n = months();
+    const unit = status?.price_period === 'day' ? 'dia' : 'mês';
     const e = $('#jlFreePrice');
-    if (e) e.textContent = `${n} ${n === 1 ? 'mês' : 'meses'} · ${money(price * n)} MZN`;
+    if (e) e.textContent = `${n} ${n === 1 ? unit : unit === 'dia' ? 'dias' : 'meses'} · ${money(price * n)} MZN`;
   }
 
   async function loadStatus(silent = false) {
@@ -235,7 +236,9 @@
       return;
     }
     if (s.status === 'pending') {
-      setState(`Pendente · ${s.pending_months || 1} ${Number(s.pending_months || 1) === 1 ? 'mês' : 'meses'}`, 'warning');
+      const pendingUnit = s.pending_period_unit === 'day' ? 'dia' : 'mês';
+      const pendingCount = Number(s.pending_periods || s.pending_months || 1);
+      setState(`Pendente · ${pendingCount} ${pendingCount === 1 ? pendingUnit : pendingUnit === 'dia' ? 'dias' : 'meses'}`, 'warning');
       if (payBtn) { payBtn.disabled = true; payBtn.textContent = 'PENDENTE'; }
       return;
     }
