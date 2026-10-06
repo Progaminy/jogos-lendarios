@@ -1,4 +1,7 @@
 (() => {
+  if (window.__JL_NOTIFICATIONS_SINGLETON__) return;
+  window.__JL_NOTIFICATIONS_SINGLETON__ = true;
+
   'use strict';
 
   const cfg = window.JL_CONFIG || {};
