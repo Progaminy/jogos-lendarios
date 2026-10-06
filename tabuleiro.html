@@ -44,6 +44,13 @@
     @supports (content-visibility:auto){
       .board-game-card{content-visibility:auto;contain-intrinsic-size:250px}
     }
+    .jl-board-mode-modal{position:fixed;inset:0;z-index:20000;display:grid;place-items:center;padding:18px;background:rgba(2,7,13,.78);backdrop-filter:blur(7px)}
+    .jl-board-mode-modal.hidden{display:none!important}
+    .jl-board-mode-card{width:min(420px,100%);padding:20px;border:1px solid rgba(219,174,76,.42);border-radius:18px;background:#0b1420;box-shadow:0 22px 65px rgba(0,0,0,.5)}
+    .jl-board-mode-card h2{margin:0 0 16px;font-size:1.08rem}
+    .jl-board-mode-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .jl-board-mode-actions .button{min-height:52px}
+    .jl-board-mode-card>#jlBoardModeClose{width:100%;margin-top:10px}
     @media(max-width:640px){
       .board-game-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
       .board-game-card{min-height:0;padding:12px}
@@ -161,6 +168,16 @@
         <h2>Dama Lendária</h2>
       </article>
     </section>
+    <div id="jlBoardModeModal" class="jl-board-mode-modal hidden" aria-hidden="true">
+      <div class="jl-board-mode-card" role="dialog" aria-modal="true" aria-labelledby="jlBoardModeTitle">
+        <h2 id="jlBoardModeTitle">Jogar</h2>
+        <div class="jl-board-mode-actions">
+          <button id="jlBoardModeFree" class="button" type="button">🆓 FREE</button>
+          <button id="jlBoardModeBet" class="button" type="button">💰 APOSTAS</button>
+        </div>
+        <button id="jlBoardModeClose" class="button ghost" type="button">Fechar</button>
+      </div>
+    </div>
     <section id="boardSocial" class="card board-social hidden" aria-label="Jogadores e convites">
       <div class="board-social-head">
         <div><p class="eyebrow">JOGADORES</p><h2>Online e convites</h2></div>
@@ -177,6 +194,60 @@
     </section>
   </main>
 
+  <script>
+    (() => {
+      const modal = document.getElementById('jlBoardModeModal');
+      const title = document.getElementById('jlBoardModeTitle');
+      const free = document.getElementById('jlBoardModeFree');
+      const bet = document.getElementById('jlBoardModeBet');
+      const close = document.getElementById('jlBoardModeClose');
+      let targetHref = '';
+      let targetGame = '';
+
+      function openBoardMode(anchor) {
+        if (!modal || !anchor) return;
+        targetHref = anchor.getAttribute('href') || '';
+        targetGame = /dama(?:\.html)?$/i.test(targetHref) ? 'dama' : 'ludo';
+        const label = targetGame === 'dama' ? 'Dama Lendária' : 'Ludo Lendário';
+        if (title) title.textContent = label;
+        modal.classList.remove('hidden');
+        modal.setAttribute('aria-hidden', 'false');
+      }
+
+      function closeBoardMode() {
+        modal?.classList.add('hidden');
+        modal?.setAttribute('aria-hidden', 'true');
+      }
+
+      document.querySelectorAll('.board-game-preview[href]').forEach((anchor) => {
+        anchor.addEventListener('click', (event) => {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          if (window.JLFreeAccess?.boardClick) {
+            void window.JLFreeAccess.boardClick(anchor);
+          } else {
+            openBoardMode(anchor);
+          }
+        }, true);
+      });
+
+      free?.addEventListener('click', () => {
+        if (!targetHref) return;
+        const u = new URL(targetHref, location.href);
+        u.searchParams.set('mode', 'free');
+        location.href = u.href;
+      });
+
+      bet?.addEventListener('click', () => {
+        if (targetHref) location.href = new URL(targetHref, location.href).href;
+      });
+
+      close?.addEventListener('click', closeBoardMode);
+      modal?.addEventListener('click', (event) => {
+        if (event.target === modal) closeBoardMode();
+      });
+    })();
+  </script>
   <script src="./config.js"></script>
   <script src="./js/api/rpc.js?v=20261001-1"></script>
   <script src="./js/auth/session.js?v=20260928-2"></script>
