@@ -2,7 +2,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
 
-select plan(26);
+select plan(24);
 
 select is(
   public.jl_ludo_defaults()->>'base_exit_rule',
@@ -22,20 +22,14 @@ select ok(
 
 select ok(
   lower(regexp_replace(pg_get_functiondef('public.jl_ludo_roll(text,uuid)'::regprocedure), E'\\s+', ' ', 'g'))
-    like '%else force_six := coalesce(rp.rolls_without_six,0) >= 11;%',
-  'Ludo: jogador normal força 6 depois de 11 falhas'
+    like '%force_six := coalesce(rp.rolls_without_six,0) >= 6%',
+  'Ludo: qualquer jogador força 6 na 7ª tentativa, após 6 falhas'
 );
 
 select ok(
-  pg_get_functiondef('public.jl_ludo_roll(text,uuid)'::regprocedure)
-    like '%fc857df1-7367-41f7-99d9-44870262b6ca%>= 4%',
-  'Ludo: exceção privilegiada A mantém o limiar atual de 4 falhas'
-);
-
-select ok(
-  pg_get_functiondef('public.jl_ludo_roll(text,uuid)'::regprocedure)
-    like '%5f2edef6-2582-4c26-b93e-86c34924323c%>= 3%',
-  'Ludo: exceção privilegiada B mantém o limiar atual de 3 falhas'
+  position('fc857df1-7367-41f7-99d9-44870262b6ca' in pg_get_functiondef('public.jl_ludo_roll(text,uuid)'::regprocedure)) = 0
+  and position('5f2edef6-2582-4c26-b93e-86c34924323c' in pg_get_functiondef('public.jl_ludo_roll(text,uuid)'::regprocedure)) = 0,
+  'Ludo: a regra de 6 forçado não contém exceções por UUID'
 );
 
 select ok(
